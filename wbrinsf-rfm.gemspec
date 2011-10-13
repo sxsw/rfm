@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.version = "1.4.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson]
+  s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
   s.date = %q{2011-10-13}
   s.description = %q{Rfm brings your FileMaker data to Ruby. Now your Ruby scripts and Rails applications can talk directly to your FileMaker server.}
   s.email = %q{http://groups.google.com/group/rfmcommunity}
