@@ -189,31 +189,40 @@ module Rfm
     #
     # When you do, the change is noted, but *the data is not updated in FileMaker*. You must call
     # Record::save or Record::save_if_not_modified to actually save the data.
-    def []=(pname, value)
-      return super unless @loaded # keeps us from getting mods during initialization
-      name = pname
-      if self[name] != nil
-        @mods[name] = val
-      else
-        raise Rfm::Error::ParameterError.new("You attempted to modify a field called '#{name}' on the Rfm::Record object, but that field does not exist.")
-      end
+    def []=(name, value)
+      return super unless @loaded
+      raise Rfm::ParameterError, 
+        "You attempted to modify a field that does not exist in the current Filemaker layout." unless self.key?(name)
+      @mods[name] = value
     end
-    
-    def method_missing (symbol, *attrs)
-      # check for simple getter
-      return self[symbol.to_s] if self.include?(symbol.to_s) 
 
-      # check for setter
-      symbol_name = symbol.to_s
-      if symbol_name[-1..-1] == '=' && self.has_key?(symbol_name[0..-2])
-        return @mods[symbol_name[0..-2]] = attrs[0]
-      end
-      super
+    alias :_old_hash_reader :[]
+    def [](value)
+      read_attribute(value)
     end
-    
+
     def respond_to?(symbol, include_private = false)
-      return true if self[symbol.to_s] != nil
+      return true if self.include?(symbol.to_s)
       super
     end
+
+    private
+
+      def read_attribute(key)
+        raise NoMethodError, 
+                "#{key.to_s} does not exists as a field in the current Filemaker layout." unless self.key?(key)
+        self._old_hash_reader(key).empty? ? nil : self._old_hash_reader(key) if self._old_hash_reader(key)
+      end
+
+      def method_missing (symbol, *attrs, &block)
+        method = symbol.to_s
+        return read_attribute(method) if self.key?(method)
+      
+        if method =~ /(=)$/ && self.key?($`)
+          return @mods[$`] = attrs.first
+        end
+        super
+      end
+    
   end
 end
