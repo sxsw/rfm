@@ -19,4 +19,9 @@ module Rfm
   autoload :Layout,    'rfm/layout'
   autoload :Resultset, 'rfm/resultset'
   
+	module Metadata
+		autoload :Script, 'rfm/metadata/script'
+		autoload :Field, 'rfm/metadata/field'
+	end
+  
 end
