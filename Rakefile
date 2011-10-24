@@ -33,13 +33,16 @@ end
 
 task :default => :spec
 
-require 'rake/rdoctask'
+#require 'rake/rdoctask' # deprecated
+require 'rdoc/task'
 Rake::RDocTask.new do |rdoc|
   if File.exist?('VERSION.yml')
     config = YAML.load(File.read('VERSION.yml'))
     version = "#{config[:major]}.#{config[:minor]}.#{config[:patch]}"
+  elsif File.exist?('VERSION')
+    version = File.read('VERSION')
   else
-    version = ""
+  	version = ""
   end
 
   rdoc.rdoc_dir = 'rdoc'
@@ -47,4 +50,18 @@ Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
+
+
+# Rspec 2
+# require 'rspec/core/rake_task'
+# RSpec::Core::RakeTask.new(:spec) do |spec|
+#   spec.libs << 'lib' << 'spec'
+#   spec.spec_files = FileList['spec/**/*_spec.rb']
+# end
+# 
+# RSpec::Core::RakeTask.new(:rcov) do |spec|
+#   spec.libs << 'lib' << 'spec'
+#   spec.pattern = 'spec/**/*_spec.rb'
+#   spec.rcov = true
+# end
 

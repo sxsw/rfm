@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{wbrinsf-rfm}
-  s.version = "1.4.2"
+  s.version = "1.4.pre2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.email = %q{http://groups.google.com/group/rfmcommunity}
   s.extra_rdoc_files = [
     "LICENSE",
-     "README.rdoc"
+     "README.md"
   ]
   s.files = [
     "lib/rfm.rb",
