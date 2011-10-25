@@ -3,11 +3,15 @@ $:.unshift(path) unless $:.include?(path)
 
 require path + '/rfm/utilities/case_insensitive_hash'
 require path + '/rfm/utilities/factory'
+require path + '/rfm/version.rb'
 
 module Rfm
 
-	VERSION = File.read(File.join(File.expand_path(File.dirname(File.dirname(__FILE__))), 'VERSION')) rescue "no VERSION file found"
-  puts "Using wbrinsf-rfm version: #{VERSION}"
+	#VERSION = File.read(File.join(File.expand_path(File.dirname(File.dirname(__FILE__))), 'VERSION')) rescue "no VERSION file found"
+	VERSION = Version::STRING
+	if ENV['_'].match(/irb/)
+  	puts "Using gem wbrinsf-rfm version: #{VERSION}"
+  end
   
   class CommunicationError  < StandardError; end
   class ParameterError      < StandardError; end

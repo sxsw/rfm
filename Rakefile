@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'rake'
+require './lib/rfm/version'
 
 begin
   require 'jeweler'
@@ -13,6 +14,7 @@ begin
     gem.files = FileList['lib/**/*']
     gem.add_dependency('nokogiri')
     gem.rdoc_options = [ "--line-numbers", "--main", "README.rdoc" ]
+    gem.version = Rfm::Version::STRING
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
@@ -33,12 +35,13 @@ end
 
 task :default => :spec
 
-#require 'rake/rdoctask' # deprecated
 require 'rdoc/task'
 Rake::RDocTask.new do |rdoc|
   if File.exist?('VERSION.yml')
     config = YAML.load(File.read('VERSION.yml'))
     version = "#{config[:major]}.#{config[:minor]}.#{config[:patch]}"
+  elsif (Rfm::Version::STRING rescue nil)
+  	version = Rfm::Version::STRING
   elsif File.exist?('VERSION')
     version = File.read('VERSION')
   else
@@ -52,7 +55,7 @@ Rake::RDocTask.new do |rdoc|
 end
 
 
-# Rspec 2
+# Rspec 2 beginnings
 # require 'rspec/core/rake_task'
 # RSpec::Core::RakeTask.new(:spec) do |spec|
 #   spec.libs << 'lib' << 'spec'
