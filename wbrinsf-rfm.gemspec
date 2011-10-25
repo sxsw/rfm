@@ -5,9 +5,9 @@
 
 Gem::Specification.new do |s|
   s.name = %q{wbrinsf-rfm}
-  s.version = ""
+  s.version = "1.4.2.pre2"
 
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
+  s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
   s.date = %q{2011-10-25}
   s.description = %q{Rfm brings your FileMaker data to Ruby. Now your Ruby scripts and Rails applications can talk directly to your FileMaker server.}
@@ -29,7 +29,8 @@ Gem::Specification.new do |s|
     "lib/rfm/resultset.rb",
     "lib/rfm/server.rb",
     "lib/rfm/utilities/case_insensitive_hash.rb",
-    "lib/rfm/utilities/factory.rb"
+    "lib/rfm/utilities/factory.rb",
+    "lib/rfm/version.rb"
   ]
   s.homepage = %q{http://sixfriedrice.com/wp/products/rfm/}
   s.rdoc_options = ["--line-numbers", "--main", "README.rdoc"]
