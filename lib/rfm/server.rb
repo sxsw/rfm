@@ -270,7 +270,13 @@ module Rfm
     
     def load_layout(layout)
       post = {'-db' => layout.db.name, '-lay' => layout.name, '-view' => ''}
-      http_fetch(@host_name, @port, "/fmi/xml/FMPXMLLAYOUT.xml", layout.db.account_name, layout.db.password, post)
+      resp = http_fetch(@host_name, @port, "/fmi/xml/FMPXMLLAYOUT.xml", layout.db.account_name, layout.db.password, post)
+      remove_namespace(resp.body)
+    end
+    
+    # Removes namespace from fmpxmllayout, so xpath will work
+  	def remove_namespace(xml)
+      xml.gsub('xmlns="http://www.filemaker.com/fmpxmllayout"', '')
     end
     
     private
