@@ -5,7 +5,7 @@ require './lib/rfm/version'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "wbrinsf-rfm"
+    gem.name = "ginjo-rfm"
     gem.summary = "Ruby to Filemaker adapter"
     gem.description = "Rfm brings your FileMaker data to Ruby. Now your Ruby scripts and Rails applications can talk directly to your FileMaker server."
     gem.email = "http://groups.google.com/group/rfmcommunity"
@@ -16,7 +16,8 @@ begin
     gem.rdoc_options = [ "--line-numbers", "--main", "README.rdoc" ]
     gem.version = Rfm::Version::STRING
   end
-  Jeweler::GemcutterTasks.new
+  #Jeweler::GemcutterTasks.new
+  Jeweler::RubygemsDotOrgTasks.new
 rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"
 end
