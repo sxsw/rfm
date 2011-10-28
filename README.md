@@ -7,7 +7,7 @@ Rdoc location: http://rdoc.info/projects/lardawge/rfm
 Terminal:
 
 ```bash
-gem install lardawge-rfm
+gem install ginjo-rfm
 ```
 
 Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
@@ -21,7 +21,7 @@ require 'rfm'
 In the Gemfile:
 
 ```ruby
-gem 'lardawge-rfm'
+gem 'ginjo-rfm'
 ```
 
 ## Connecting
