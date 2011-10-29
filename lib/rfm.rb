@@ -10,7 +10,7 @@ module Rfm
 	#VERSION = File.read(File.join(File.expand_path(File.dirname(File.dirname(__FILE__))), 'VERSION')) rescue "no VERSION file found"
 	VERSION = Version::STRING
 	if ENV['_'].match(/irb/)
-  	puts "Using gem gingo-rfm version: #{VERSION}"
+  	puts "Using gem ginjo-rfm version: #{VERSION}"
   end
   
   class CommunicationError  < StandardError; end
