@@ -23,6 +23,7 @@ module Rfm
   autoload :Layout,    'rfm/layout'
   autoload :Resultset, 'rfm/resultset'
   autoload :Record,    'rfm/record'
+  autoload :Base,      'rfm/utilities/rfm_model'
   
 	module Metadata
 		autoload :Script, 'rfm/metadata/script'
