@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
-  s.date = %q{2011-10-28}
+  s.date = %q{2011-10-31}
   s.description = %q{Rfm brings your FileMaker data to Ruby. Now your Ruby scripts and Rails applications can talk directly to your FileMaker server.}
   s.email = %q{http://groups.google.com/group/rfmcommunity}
   s.extra_rdoc_files = [
@@ -30,6 +30,7 @@ Gem::Specification.new do |s|
     "lib/rfm/server.rb",
     "lib/rfm/utilities/case_insensitive_hash.rb",
     "lib/rfm/utilities/factory.rb",
+    "lib/rfm/utilities/rfm_model.rb",
     "lib/rfm/version.rb"
   ]
   s.homepage = %q{http://sixfriedrice.com/wp/products/rfm/}
