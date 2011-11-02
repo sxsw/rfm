@@ -23,6 +23,28 @@
 # This should work with latest noko.
 #
 #
+# Example model definitions:
+# class Person < Rfm::Base
+#   config :account_name=>'someaccount', :host=>'http://some.domain.com', :database=>'MyFmDatabase', :password=>'mypass'
+# end
+# 
+# class Memo < Rfm::Base
+#   config :layout, 'memo_xml'
+#   field_controls # pre-loads field controls from database
+#   def test
+#     "Memosubject: #{memosubject}; Memotext: #{memotext}"
+#   end
+# end
+# 
+# class ActionItem < RfmHelper::Base
+#   config :layout, 'action_items_xml'
+#   field_controls
+#   def rec
+#     "#{record_id} #{recordid}"
+#   end
+# end
+#
+#
 # TODO: make sure all methods return something (a record?) if successful, otherwise nil or error
 # TODO: move rfm methods & patches from fetch_mail_with_ruby to this file
 
@@ -61,23 +83,6 @@ module Rfm
       local_config = (@config rescue {})
       Hash.new.merge!(class_config).merge!(super_config).merge!(local_config)
     end
-    # Get composite config from all 3 levels (Base, sub, instance)
-    # def config_get_merged
-    #       return {} unless @config
-    #       conf_ary = [
-    #         Base.instance_variable_get('@config'),
-    #         self.class.instance_variable_get('@config'),
-    #         self.instance_variable_get('@config')
-    #   ]
-    #   conf = {}
-    #   conf_ary.each do |c|
-    #     begin
-    #       conf.merge! c
-    #     rescue
-    #     end
-    #   end
-    #   conf
-    # end
 	  
 	  # Returns dup of conf with merged args
 	  def config_merge_args(conf, args)
@@ -97,209 +102,6 @@ module Rfm
     end
 
 	end # module UniversalMethods
-	
-	
-# 	### Class Methods ###
-# 	# to be extended on RfmHelper::Base
-# 	module ClassMethods
-# 	  
-# 	  # Returns RFM layout object
-#     # Use: fm_layout('lay_name')
-#     # Use: fm_layout('lay_name', :server=>{:some=>'hash'})
-#     # Use: fm_layout(:layout=>'lay_name', :server=>{...})
-#   	def fm_layout(*args)
-#   		opt = args.last.is_a?(Hash) ? args.pop : {}
-#   	  layout_name = (args[0].class == String ? args[0] : nil)
-#       conf = config_merge_args(config_core.dup, opt)
-#       layout_name = (layout_name || conf[:layout])
-#       return [args,opt,conf,layout_name] unless layout_name
-#   	  server  = Rfm::Server.new(conf)
-#   	  db      = conf[:database]
-#   	  #server.instance_variable_set('@model', self.to_s)
-#   	  layout = server[db][layout_name]
-#   	  layout.instance_variable_set(:@model, self.to_s)
-#   	  layout
-#   	end
-# 	
-#   	# Returns RFM server object
-#   	def fm_server(*args)
-#       conf = config_merge_args(config_core.dup, args)
-#   	  server  = Rfm::Server.new(conf)
-# 	  end
-#   
-# 	  # Returns RFM db object
-# 	  def fm_db(*args)
-#       conf = config_merge_args(config_core.dup, args)
-#   	  server  = Rfm::Server.new(conf)
-#   	  db      = conf[:database]
-#   	  server[db]
-# 	  end
-#   
-# 	  # Convenience methods
-# 	  alias_method :fm, :fm_layout
-#     # alias_method :layout, :fm_layout
-#     # alias_method :server, :fm_server
-#     # alias_method :db,     :fm_db
-# 	
-#   	def find(*args)
-#   	  r = fm_layout.find(*args)
-#   	  if args[0].class != Hash and r.size == 1
-#   	    r[0]
-# 	    else
-# 	      r
-#       end
-#     rescue Rfm::Error::RecordMissingError
-#       nil
-#   	end
-# 	
-#   	def any(*args)
-#   	  fm_layout.any(*args)[0]
-#   	end
-# 	
-#   	def create(*args)
-#   	  new(*args).send :create
-#   	end
-#   	
-#   	def create_from_instance(*args)
-#   	  fm_layout.create(*args)[0]
-#   	end
-#   
-#     # Using this method will skip callbacks. Use instance 'update' instead
-# 	  def edit(*args)
-# 	    fm_layout.edit(*args)[0]
-#     end
-#   
-#     # Using this method will skip callbacks. Use instance 'destroy' instead
-#     def delete(*args)
-#       fm_layout.delete(*args)
-#     end
-#     
-#     def query(*args)
-#       fm_layout.query(*args)
-#     end
-#     
-#     def field_controls
-#       @field_controls ||= self.fm_layout.field_controls
-#     end
-#     
-#     def field_names
-#       field_controls.values.flatten.collect{|v| v.name}
-#     end
-# 
-# 	
-#   	# This will fire when a subclass is loaded (at the beginning of the subclass definition). Not currently used.
-#     # def inherited(sub)
-#     #   puts "SUB: " + sub.to_s
-#     # end
-#       
-#   end # module ClassMethods
-#   
-#   
-#   ### INSTANCE METHODS ###
-#   # to be included in RfmHelper::Base    	
-#   module InstanceMethods
-#   	
-#   	def new_record?
-#   		return true if self.record_id.blank?
-#   	end
-# 
-# 		# TODO: handle error when record has been deleted
-# 		def reload(force=false)
-# 	    if (@mods.empty? or force) and record_id
-# 	      self.replace self.class.find(self.record_id)
-#       end
-#     end
-#     
-#     # TODO: return error or nil if input hash contains no recognizable keys.
-#     def update_attributes(new_attr)
-#       # creates new special hash
-#       input_hash = Rfm::Utility::CaseInsensitiveHash.new
-#       # populate new hash with input, coercing keys to strings
-#       new_attr.each{|k,v| input_hash.merge! k.to_s=>v}
-#       # loop thru each layout field, adding data to @mods
-#       self.class.field_controls.keys.each do |field| 
-#         field_name = field.to_s
-#         if input_hash.has_key?(field_name)
-#           @mods.merge! field_name=>(input_hash[field_name] || '')
-#         end
-#       end
-#       # loop thru each input key-value,
-#       # creating new attribute if key doesn't exist in model.
-#       input_hash.each do |k,v| 
-#         if !self.class.field_controls.keys.include?(k) and self.respond_to?(k)
-#           self.instance_variable_set("@#{k}", v)
-#         end
-#       end            
-#       self.merge!(@mods) unless @mods == {}
-#     end
-#     
-#     def update_attributes!(new_attr)
-#       self.update_attributes(new_attr)
-#       self.save!
-#     end
-#     
-#     def save!
-#       #return unless @mods.size > 0
-#       raise "Record Invalid" unless valid?
-#       if @record_id
-#         self.update
-#       else
-#         self.create
-#       end
-#     end
-#     
-#   	def destroy
-#   	  return unless record_id
-#   	  run_callbacks :destroy do
-#   	    self.class.delete(record_id)
-#   	    @mods.clear
-# 	    end
-#   	  self
-# 	  end
-#     
-#   protected
-#   
-#     # shunt for callbacks pre rails 3
-#     def callback_deadend (*args)
-#       yield
-#     end
-#     
-#     
-#     def create
-#       #return unless @mods.size > 0
-#       run_callbacks :create do
-#         return unless @mods.size > 0
-#   	    merge_rfm_result self.class.create_from_instance(@mods)
-#   	  end
-#   	  self
-#   	end
-#   	
-#     def update(mod_id=nil)
-#       #return unless @mods.size > 0 and record_id
-#       return unless record_id
-#   	  run_callbacks :update do
-#   	    return unless @mods.size > 0
-#   	    unless mod_id
-#   	      # regular save
-#   	      merge_rfm_result self.class.edit(record_id, @mods)
-# 	      else
-# 	        # save_if_not_modified
-# 	        merge_rfm_result self.class.edit(record_id, @mods, :modification_id=>mod_id)
-#         end
-#   	  end
-#   	  self
-#   	end
-#   	
-#   	def merge_rfm_result(result_record)
-#       return unless @mods.size > 0
-#       @record_id ||= result_record.record_id
-#       self.merge! result_record
-#       @mods.clear
-#       self || {}
-#     end
-#     
-#     
-#   end # module InstanceMethods
 	
 
   ### RfmHelper::Base (base model for new records) ###
@@ -322,7 +124,7 @@ module Rfm
 		
 		class << self
 		
-		  # Returns RFM layout object
+		  # Returns new RFM layout object
 	    # Use: fm_layout('lay_name')
 	    # Use: fm_layout('lay_name', :server=>{:some=>'hash'})
 	    # Use: fm_layout(:layout=>'lay_name', :server=>{...})
@@ -340,13 +142,13 @@ module Rfm
 	  	  layout
 	  	end
 		
-	  	# Returns RFM server object
+	  	# Returns new RFM server object
 	  	def fm_server(*args)
 	      conf = config_merge_args(config_core.dup, args)
 	  	  server  = Rfm::Server.new(conf)
 		  end
 	  
-		  # Returns RFM db object
+		  # Returns new RFM db object
 		  def fm_db(*args)
 	      conf = config_merge_args(config_core.dup, args)
 	  	  server  = Rfm::Server.new(conf)
@@ -423,7 +225,7 @@ module Rfm
     # TODO: return error or nil if input hash contains no recognizable keys.
     def update_attributes(new_attr)
       # creates new special hash
-      input_hash = Rfm::Utility::CaseInsensitiveHash.new
+      input_hash = Rfm::CaseInsensitiveHash.new
       # populate new hash with input, coercing keys to strings
       new_attr.each{|k,v| input_hash.merge! k.to_s=>v}
       # loop thru each layout field, adding data to @mods
@@ -466,6 +268,18 @@ module Rfm
 	    end
   	  self
 	  end
+	  
+    def save
+      save!
+    rescue
+      self.errors[:base] << $!
+      return nil
+    end
+
+    def save_if_not_modified
+      update(@mod_id) if @mods.size > 0
+    end    
+    
     
   protected
   
@@ -507,29 +321,6 @@ module Rfm
       @mods.clear
       self || {}
     end
-    
-    
-    # --- #
-    
-    def save
-      save!
-    rescue
-      self.errors[:base] << $1
-      return nil
-    end
-
-    # Like Record::save, except it fails (and raises an error) if the underlying record in FileMaker was
-    # modified after the record was fetched but before it was saved. In other words, prevents you from
-    # accidentally overwriting changes someone else made to the record.
-    def save_if_not_modified
-      # was @layout.edit. Changed to handle before/after callbacks.
-      # r = self.merge(edit(@record_id, @mods, {:modification_id => @mod_id})[0]) if @mods.size > 0
-      # @mods.clear
-      # r || {}
-      update(@mod_id) if @mods.size > 0
-    end    
-    
-    
     
   	config FM_CONFIG if defined? FM_CONFIG
   end # class Base
@@ -594,56 +385,12 @@ module Rfm
 
 
 
-
   ### Rfm direct class mods ###
-
-	  
-  # Used in Esalen web app
-  class FMerror < Exception
-  end
-  BBerror = FMerror
   
   class Layout
   	require 'rfm/layout'
     include ComplexQuery
   end
-  
-  
-	#   class Resultset
-	#   	require 'rfm/resultset'    
-	#     def initialize(server, xml_response, layout, portals=nil)
-	#       @layout           = layout
-	#       @server           = server
-	#       @field_meta     ||= Rfm::CaseInsensitiveHash.new
-	#       @portal_meta    ||= Rfm::CaseInsensitiveHash.new
-	#       @include_portals  = portals 
-	#       
-	#       doc = Nokogiri.XML(remove_namespace(xml_response))
-	#       
-	#       error = doc.xpath('/fmresultset/error').attribute('code').value.to_i
-	#       check_for_errors(error, server.state[:raise_on_401])
-	# 
-	#       datasource        = doc.xpath('/fmresultset/datasource')
-	#       meta              = doc.xpath('/fmresultset/metadata')
-	#       resultset         = doc.xpath('/fmresultset/resultset')
-	# 
-	#       @date_format      = convert_date_time_format(datasource.attribute('date-format').value)
-	#       @time_format      = convert_date_time_format(datasource.attribute('time-format').value)
-	#       @timestamp_format = convert_date_time_format(datasource.attribute('timestamp-format').value)
-	# 
-	#       @foundset_count   = resultset.attribute('count').value.to_i
-	#       @total_count      = datasource.attribute('total-count').value.to_i
-	# 
-	#       parse_fields(meta)
-	#       parse_portals(meta) if @include_portals
-	#       
-	#       model = eval(@layout.instance_variable_get(:@model)) rescue Rfm::Record
-	#       model = model.superclass == Rfm::Record ? model : Rfm::Record
-	#       model.build_records(resultset.xpath('record'), self, @field_meta, @layout)
-	#       
-	#     end # def initialize
-	#     
-	#   end # class Resultset 
     
         
   class Record
@@ -668,7 +415,7 @@ module Rfm
 		alias_method :initialize_orig, :initialize
 		def initialize(record, result, field_meta, layout, portal)
 			if result == [] and !record.respond_to? :xpath
-				@mods = Rfm::Utility::CaseInsensitiveHash.new
+				@mods = Rfm::CaseInsensitiveHash.new
         # loop thru each layout field, creating hash keys with nil values
         self.class.field_controls.keys.each do |field| 
           field_name = field.to_s
@@ -682,121 +429,8 @@ module Rfm
 			yield(self) if block_given?
 		end
     
-		#     def initialize(row_element={}, resultset=[], fields=self.class.field_controls, layout=self.class.fm_layout, portal=nil)
-		#       @record_id = row_element['record-id']
-		#       @mod_id = row_element['mod-id']
-		#       @mods = Rfm::Utility::CaseInsensitiveHash.new
-		#       @resultset = resultset
-		#       @layout = layout
-		# 
-		#       @loaded = false
-		#       related_sets = row_element.search('relatedset') rescue []
-		#       
-		#       # if new record from user, with or without data
-		#       if resultset == [] and !row_element.respond_to? :search
-		#         # loop thru each layout field, creating hash keys with nil values
-		#         self.class.field_controls.keys.each do |field| 
-		#           field_name = field.to_s
-		#           self[field_name] = nil
-		#         end
-		#         self.update_attributes(row_element) unless row_element == {}
-		#         self.merge!(@mods) unless @mods == {}
-		#       end       
-		#         
-		#       if row_element.respond_to? :search
-		#         row_element.search('field').each do |field| 
-		#           field_name = field['name']
-		#           field_name.sub!(Regexp.new(portal + '::'), '') if portal
-		#           datum = []
-		#           field.search('data').each do |x| 
-		#             datum.push(fields[field_name].coerce(x.inner_text))
-		#           end
-		#           if datum.length == 1
-		#             self[field_name] = datum[0]
-		#           elsif datum.length == 0
-		#             self[field_name] = nil
-		#           else
-		#             self[field_name] = datum
-		#           end
-		#         end
-		#       end
-		# 
-		#       unless related_sets.empty?
-		#         @portals = Rfm::Utility::CaseInsensitiveHash.new
-		#         related_sets.each do |relatedset|
-		#           table = relatedset['table']
-		#           records = []
-		#           relatedset.search('record').each do |record|
-		#             records << Record.new(record, @resultset, @resultset.portals[table], @layout, table)
-		#           end
-		#           @portals[table] = records
-		#         end
-		#       end
-		#       @loaded = true
-		#       yield(self) if block_given?
-		#     end # def initialize
-
-		#     def []=(pname, value)
-		#       return super unless @loaded # keeps us from getting mods during initialization
-		#       name = pname
-		#       if self[name] != nil
-		#         @mods[name] = value
-		#         self.merge! @mods unless @mods == {}
-		#       else
-		#         raise Rfm::Error::ParameterError.new("You attempted to modify a field called '#{name}' on the Rfm::Record object, but that field does not exist.")
-		#       end
-		#     end
-    
-		#     def method_missing (symbol, *attrs)
-		#       # check for simple getter
-		#       return self[symbol.to_s] if self.include?(symbol.to_s) 
-		# 
-		#       # check for setter
-		#       symbol_name = symbol.to_s
-		#       if symbol_name[-1..-1] == '=' && self.has_key?(symbol_name[0..-2])
-		#         rslt = @mods[symbol_name[0..-2]] = attrs[0]
-		#         @mods[symbol_name[0..-2]] = attrs[0]
-		#         self.merge! @mods
-		#         return rslt
-		#       end
-		#       super
-		#     end
-    
-		#     def save
-		#       save!
-		#     rescue
-		#       self.errors[:base] << $1
-		#       return nil
-		#     end
-		# 
-		#     # Like Record::save, except it fails (and raises an error) if the underlying record in FileMaker was
-		#     # modified after the record was fetched but before it was saved. In other words, prevents you from
-		#     # accidentally overwriting changes someone else made to the record.
-		#     def save_if_not_modified
-		#       # was @layout.edit. Changed to handle before/after callbacks.
-		#       # r = self.merge(edit(@record_id, @mods, {:modification_id => @mod_id})[0]) if @mods.size > 0
-		#       # @mods.clear
-		#       # r || {}
-		#       update(@mod_id) if @mods.size > 0
-		#     end
-    
   end # class Record
-  
-  
-	#   module Utility
-	#     class CaseInsensitiveHash < Hash
-	#       def []=(key, value)
-	#         super(key.to_s.downcase, value)
-	#       end
-	#       def [](key)
-	#         super(key.to_s.downcase)
-	#       end
-	#     end
-	#   end # module Utility
-    
-  	
 
-  
   
   module ImportFmp
     # TODO: fix mysql_import to be module & include it here
@@ -831,35 +465,6 @@ module Rfm
   		return (rslt << records)
   	end
   	alias_method :import_bb_core, :import_fmp_core
-  
-  	def import_bb_core(*args, &block)
-  		log "import_fmp_core begin", table_name
-  		options = args.extract_options! # See extract_options.rb when the Rails method becomes deprecated (2.3.8?)
-  		var = {} # Store all local variables in an array, to be passed to block
-  		var[:modified_since] =  args[0] || options[:modified_since] || (Time.now - 2.hours)
-  		var[:modified_since_s] = Time.parse(var[:modified_since].to_s).strftime('%m/%d/%Y %T')
-  		modified_since_s = var[:modified_since_s]
-  		# Convert dates & times
-  		var[:mod_date_since], var[:mod_time_since] = Time.parse(var[:modified_since].to_s).to_fm_components(true)
-  		# Import field map
-  		var[:mapping] = (mappings[args[1]] || options[:mapping] || mappings[:bb_import])
-  		# Filemaker data
-  		var[:layout] = options[:layout] || var[:mapping][:layout]
-  		var[:fields] = options[:fields] || var[:mapping][:fields]
-  		log("import_bb_core var", var.to_yaml) if (Rails.logger.level == 0 and RAILS_ENV == :development)
-  		if var[:modified_since] == 'all'
-  			records = fm(var[:layout]).all
-  		else
-  			records = yield(var)
-  			#records = &meth.instance_eval(&block)
-  		end
-  		log "import_bb_core found records", records.size
-  		# Perform import, get [count, message] in return
-  		rslt = self.import(var[:fields], records, {:update=>true})
-  		log "import_bb_core end", table_name
-  		# Return result
-  		return (rslt << records)
-  	end
   	
   end # module ImportFmp
   
@@ -886,26 +491,5 @@ module Rfm
   
 end # module Rfm
 
-
-### Example model definitions ###
-# class Person < RfmHelper::Base
-#   config :account_name=>'someaccount', :host=>'http://cerne05.cernesystems.com', :database=>'SevenGables'
-# end
-# 
-# class Memo < RfmHelper::Base
-#   config :layout, 'memo_xml'
-#   field_controls # pre-loads field controls from database
-#   def test
-#     "Memosubject: #{memosubject}; Memotext: #{memotext}"
-#   end
-# end
-# 
-# class ActionItem < RfmHelper::Base
-#   config :layout, 'action_items_xml'
-#   field_controls
-#   def rec
-#     "#{record_id} #{recordid}"
-#   end
-# end
 
 
