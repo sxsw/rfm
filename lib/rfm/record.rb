@@ -195,6 +195,7 @@ module Rfm
       raise Rfm::ParameterError, 
         "You attempted to modify a field that does not exist in the current Filemaker layout." unless self.key?(name)
       @mods[name] = value
+      self.merge! @mods
     end
 
     alias :_old_hash_reader :[]
@@ -221,7 +222,8 @@ module Rfm
         return read_attribute(method) if self.key?(method)
       
         if method =~ /(=)$/ && self.key?($`)
-          return @mods[$`] = attrs.first
+          #return @mods[$`] = attrs.first
+          return self[$`] = attrs.first
         end
         super
       end

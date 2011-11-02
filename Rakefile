@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'rake'
+require 'rake/dsl_definition' # Had to start requiring this after installation of gemcutter gem.
 require './lib/rfm/version'
 
 begin
