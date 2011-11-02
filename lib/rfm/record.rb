@@ -190,6 +190,7 @@ module Rfm
     # When you do, the change is noted, but *the data is not updated in FileMaker*. You must call
     # Record::save or Record::save_if_not_modified to actually save the data.
     def []=(name, value)
+    	name = name.to_s
       return super unless @loaded
       raise Rfm::ParameterError, 
         "You attempted to modify a field that does not exist in the current Filemaker layout." unless self.key?(name)
@@ -209,6 +210,7 @@ module Rfm
     private
 
       def read_attribute(key)
+      	key = key.to_s
         raise NoMethodError, 
                 "#{key.to_s} does not exists as a field in the current Filemaker layout." unless (!@layout or self.key?(key))
         self._old_hash_reader(key).to_s.empty? ? nil : self._old_hash_reader(key) if self._old_hash_reader(key)
