@@ -206,7 +206,8 @@ module Rfm
         :log_actions => false,
         :log_responses => false,
         :warn_on_redirect => true,
-        :raise_on_401 => false
+        :raise_on_401 => false,
+        :timeout => 60
       }.merge(options)
     
       @state.freeze
@@ -270,7 +271,13 @@ module Rfm
     
     def load_layout(layout)
       post = {'-db' => layout.db.name, '-lay' => layout.name, '-view' => ''}
-      http_fetch(@host_name, @port, "/fmi/xml/FMPXMLLAYOUT.xml", layout.db.account_name, layout.db.password, post)
+      resp = http_fetch(@host_name, @port, "/fmi/xml/FMPXMLLAYOUT.xml", layout.db.account_name, layout.db.password, post)
+      remove_namespace(resp.body)
+    end
+    
+    # Removes namespace from fmpxmllayout, so xpath will work
+  	def remove_namespace(xml)
+      xml.gsub('xmlns="http://www.filemaker.com/fmpxmllayout"', '')
     end
     
     private
@@ -288,7 +295,8 @@ module Rfm
         request.set_form_data(post_data)
     
         response = Net::HTTP.new(host_name, port)
-    
+        #ADDED LONG TIMEOUT TIMOTHY TING 05/12/2011
+        response.open_timeout = response.read_timeout = @state[:timeout]
         if @state[:ssl]
           response.use_ssl = true
           if @state[:root_cert]

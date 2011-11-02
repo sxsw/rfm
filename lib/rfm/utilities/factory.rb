@@ -5,6 +5,7 @@
 # Copyright:: Copyright (c) 2007 Six Fried Rice, LLC and Mufaddal Khumri
 # License::   See MIT-LICENSE for details
 
+
 module Rfm
   module Factory # :nodoc: all
     class DbFactory < Rfm::CaseInsensitiveHash
@@ -20,7 +21,7 @@ module Rfm
       
       def all
         if !@loaded
-          Rfm::Result::ResultSet.new(@server, @server.connect(@server.state[:account_name], @server.state[:password], '-dbnames', {}).body).each {|record|
+          Rfm::Resultset.new(@server, @server.connect(@server.state[:account_name], @server.state[:password], '-dbnames', {}).body, nil).each {|record|
             name = record['DATABASE_NAME']
             self[name] = Rfm::Database.new(name, @server) if self[name] == nil
           }
@@ -45,10 +46,10 @@ module Rfm
       
       def all
         if !@loaded
-          Rfm::Result::ResultSet.new(@server, @server.connect(@server.state[:account_name], @server.state[:password], '-layoutnames', {"-db" => @database.name}).body).each {|record|
-            name = record['LAYOUT_NAME']
-            self[name] = Rfm::Layout.new(name, @database) if self[name] == nil
-          }
+	        Rfm::Resultset.new(@server, @server.connect(@server.state[:account_name], @server.state[:password], '-layoutnames', {"-db" => @database.name}).body, nil).each {|record|
+	          name = record['LAYOUT_NAME']
+	          self[name] = Rfm::Layout.new(name, @database) if self[name] == nil
+	        }
           @loaded = true
         end
         self.values
@@ -65,14 +66,14 @@ module Rfm
       end
       
       def [](script_name)
-        super or (self[script_name] = Rfm::Script.new(script_name, @database))
+        super or (self[script_name] = Rfm::Metadata::Script.new(script_name, @database))
       end
       
       def all
         if !@loaded
-          Rfm::Result::ResultSet.new(@server, @server.connect(@server.state[:account_name], @server.state[:password], '-scriptnames', {"-db" => @database.name}).body).each {|record|
+          Rfm::Resultset.new(@server, @server.connect(@server.state[:account_name], @server.state[:password], '-scriptnames', {"-db" => @database.name}).body, nil).each {|record|
             name = record['SCRIPT_NAME']
-            self[name] = Rfm::Script.new(name, @database) if self[name] == nil
+            self[name] = Rfm::Metadata::Script.new(name, @database) if self[name] == nil
           }
           @loaded = true
         end
