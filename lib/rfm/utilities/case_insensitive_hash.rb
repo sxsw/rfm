@@ -1,10 +1,10 @@
 module Rfm
   class CaseInsensitiveHash < Hash
     def []=(key, value)
-      super(key.downcase, value)
+      super(key.to_s.downcase, value)
     end
     def [](key)
-      super(key.downcase)
+      super(key.to_s.downcase)
     end
   end
 end
