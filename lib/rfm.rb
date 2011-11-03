@@ -23,12 +23,12 @@ module Rfm
   autoload :Layout,    'rfm/layout'
   autoload :Resultset, 'rfm/resultset'
   autoload :Record,    'rfm/record'
-  
+
 	module Metadata
 		autoload :Script, 'rfm/metadata/script'
 		autoload :Field, 'rfm/metadata/field'
 		autoload :FieldControl, 'rfm/metadata/field_control'
 		autoload :ValueListItem, 'rfm/metadata/value_list_item'
 	end
-  
+	  
 end

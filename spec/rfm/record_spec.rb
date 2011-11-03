@@ -24,6 +24,14 @@ describe Rfm::Record do
       @record.instance_variable_get(:@mods)['tester'].should eql('green')
     end
     
+    it "modifies the hash key => value in self whether key is string or symbol" do
+      @record.instance_variable_set(:@loaded, true)
+      @record[:tester] = 'green'
+      
+      @record.has_key?(:tester).should be_false
+      @record['tester'].should eql('green')
+    end
+    
     it "returns nil if hash key is '' " do
       @record['tester'] = ''
       @record['tester'].should eql(nil)
@@ -85,6 +93,7 @@ describe Rfm::Record do
     
     describe "setter" do
       it "acts as a setter if the key exists in the hash" do
+      	@record.instance_variable_set(:@loaded, true)
         @record.name = 'blue'
 
         @record.instance_variable_get(:@mods).has_key?('name').should be_true
