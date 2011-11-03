@@ -10,6 +10,8 @@
 
 	ValueListItem handles both display & data items now.
 	
+	Timeout feature from timting (github/timting/rfm)
+	
 *	Fixed:
 
 	[Bug] Getting & setting fields with symbol-based keys was producing error.
