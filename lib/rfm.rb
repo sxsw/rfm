@@ -15,5 +15,14 @@ module Rfm
   autoload :Database,  'rfm/database'
   autoload :Layout,    'rfm/layout'
   autoload :Resultset, 'rfm/resultset'
+  autoload :Record,    'rfm/record'
+  autoload :Base,      'rfm/utilities/rfm_model'
+  
+	module Metadata
+		autoload :Script, 'rfm/metadata/script'
+		autoload :Field, 'rfm/metadata/field'
+		autoload :FieldControl, 'rfm/metadata/field_control'
+		autoload :ValueListItem, 'rfm/metadata/value_list_item'
+	end
   
 end
