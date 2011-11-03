@@ -1,3 +1,27 @@
+*Ginjo-Rfm 1.4.2.pre5*
+
+*	Re-implemented:
+	
+	Layout#field_controls
+	
+	Layout#value_lists
+	
+* Enhanced:
+
+	ValueListItem handles both display & data items now.
+	
+*	Fixed:
+
+	[Bug] Getting & setting fields with symbol-based keys was producing error.
+	
+	[Bug] Setting fields would not update main record hash.
+
+*	Partial Fix:
+
+	server.db.all
+	db.layout.all
+	layout.script
+
 *Lardawge-Rfm 1.4.2 (unreleased)*
   
 * Made nil default on fields with no value.
