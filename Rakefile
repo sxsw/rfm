@@ -1,20 +1,24 @@
 require 'rubygems'
 require 'rake'
+require 'rake/dsl_definition' # Had to start requiring this after installation of gemcutter gem.
+require './lib/rfm/version'
 
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "lardawge-rfm"
+    gem.name = "ginjo-rfm"
     gem.summary = "Ruby to Filemaker adapter"
     gem.description = "Rfm brings your FileMaker data to Ruby. Now your Ruby scripts and Rails applications can talk directly to your FileMaker server."
     gem.email = "http://groups.google.com/group/rfmcommunity"
     gem.homepage = "http://sixfriedrice.com/wp/products/rfm/"
-    gem.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock"]
+    gem.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
     gem.files = FileList['lib/**/*']
     gem.add_dependency('nokogiri')
     gem.rdoc_options = [ "--line-numbers", "--main", "README.rdoc" ]
+    gem.version = Rfm::Version::STRING
   end
-  Jeweler::GemcutterTasks.new
+  #Jeweler::GemcutterTasks.new
+  Jeweler::RubygemsDotOrgTasks.new
 rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"
 end
@@ -33,13 +37,17 @@ end
 
 task :default => :spec
 
-require 'rake/rdoctask'
+require 'rdoc/task'
 Rake::RDocTask.new do |rdoc|
   if File.exist?('VERSION.yml')
     config = YAML.load(File.read('VERSION.yml'))
     version = "#{config[:major]}.#{config[:minor]}.#{config[:patch]}"
+  elsif (Rfm::Version::STRING rescue nil)
+  	version = Rfm::Version::STRING
+  elsif File.exist?('VERSION')
+    version = File.read('VERSION')
   else
-    version = ""
+  	version = ""
   end
 
   rdoc.rdoc_dir = 'rdoc'
@@ -47,4 +55,18 @@ Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
+
+
+# Rspec 2 beginnings
+# require 'rspec/core/rake_task'
+# RSpec::Core::RakeTask.new(:spec) do |spec|
+#   spec.libs << 'lib' << 'spec'
+#   spec.spec_files = FileList['spec/**/*_spec.rb']
+# end
+# 
+# RSpec::Core::RakeTask.new(:rcov) do |spec|
+#   spec.libs << 'lib' << 'spec'
+#   spec.pattern = 'spec/**/*_spec.rb'
+#   spec.rcov = true
+# end
 

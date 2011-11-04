@@ -7,7 +7,7 @@ Rdoc location: http://rdoc.info/projects/lardawge/rfm
 Terminal:
 
 ```bash
-gem install lardawge-rfm
+gem install ginjo-rfm
 ```
 
 Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
@@ -21,7 +21,7 @@ require 'rfm'
 In the Gemfile:
 
 ```ruby
-gem 'lardawge-rfm'
+gem 'ginjo-rfm'
 ```
 
 ## Connecting
@@ -34,7 +34,7 @@ require 'rfm/rfm'
 
 my_server = Rfm::Server.new(
   :host => 'myservername',
-  :username => 'user',
+  :account_name => 'user',
   :password => 'pw',
   :ssl => false
 )
@@ -44,11 +44,12 @@ if your web publishing engine runs on a port other than 80, you can provide the 
 
 ```ruby
 my_server = Rfm::Server.new(
-  :host => 'myservername',
-  :username => 'user',
-  :password => 'pw',
-  :port => 8080, 
-  :ssl => false
+  :host					=> 'myservername',
+  :account_name => 'user',
+  :password			=> 'pw',
+  :port					=> 8080, 
+  :ssl					=> false,
+  :root_cert		=> false
 )
 ```
 
@@ -289,7 +290,7 @@ So, for an annoying, but detailed load of output, make a connection like this:
 ```ruby
 my_server # Rfm::Server.new(
   :host #> 'myservername',
-  :username #> 'user',
+  :account_name #> 'user',
   :password #> 'pw',
   :log_actions #> true,
   :log_responses #> true
