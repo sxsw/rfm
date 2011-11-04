@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{ginjo-rfm}
-  s.version = "1.4.2.pre5"
+  s.name = "ginjo-rfm"
+  s.version = "1.4.2.pre7"
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
-  s.date = %q{2011-11-03}
-  s.description = %q{Rfm brings your FileMaker data to Ruby. Now your Ruby scripts and Rails applications can talk directly to your FileMaker server.}
-  s.email = %q{http://groups.google.com/group/rfmcommunity}
+  s.date = "2011-11-04"
+  s.description = "Rfm brings your FileMaker data to Ruby. Now your Ruby scripts and Rails applications can talk directly to your FileMaker server."
+  s.email = "http://groups.google.com/group/rfmcommunity"
   s.extra_rdoc_files = [
     "LICENSE",
     "README.md"
@@ -32,17 +32,16 @@ Gem::Specification.new do |s|
     "lib/rfm/utilities/factory.rb",
     "lib/rfm/version.rb"
   ]
-  s.homepage = %q{http://sixfriedrice.com/wp/products/rfm/}
+  s.homepage = "http://sixfriedrice.com/wp/products/rfm/"
   s.rdoc_options = ["--line-numbers", "--main", "README.rdoc"]
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.6}
-  s.summary = %q{Ruby to Filemaker adapter}
+  s.rubygems_version = "1.8.10"
+  s.summary = "Ruby to Filemaker adapter"
 
   if s.respond_to? :specification_version then
-    current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
     s.specification_version = 3
 
-    if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
+    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<nokogiri>, [">= 0"])
     else
       s.add_dependency(%q<nokogiri>, [">= 0"])
