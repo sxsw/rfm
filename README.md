@@ -7,7 +7,7 @@ Rdoc location: http://rdoc.info/projects/lardawge/rfm
 Terminal:
 
 ```bash
-gem install ginjo-rfm
+gem install ginjo-rfm --pre
 ```
 
 Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
@@ -30,13 +30,13 @@ IMPORTANT:SSL and Certificate verification are on by default. Please see Server#
 You connect with the Rfm::Server object. This little buddy will be your window into FileMaker data.
 
 ```ruby
-require 'rfm/rfm'
+require 'rfm'
 
 my_server = Rfm::Server.new(
-  :host => 'myservername',
-  :account_name => 'user',
-  :password => 'pw',
-  :ssl => false
+  :host						=> 'myservername',
+  :account_name		=> 'user',
+  :password				=> 'pw',
+  :ssl						=> false
 )
 ```
 
@@ -44,12 +44,12 @@ if your web publishing engine runs on a port other than 80, you can provide the 
 
 ```ruby
 my_server = Rfm::Server.new(
-  :host					=> 'myservername',
-  :account_name => 'user',
-  :password			=> 'pw',
-  :port					=> 8080, 
-  :ssl					=> false,
-  :root_cert		=> false
+  :host						=> 'myservername',
+  :account_name 	=> 'user',
+  :password				=> 'pw',
+  :port						=> 8080, 
+  :ssl						=> false,
+  :root_cert			=> false
 )
 ```
 
@@ -121,9 +121,9 @@ To add a new record with my personal info:
 
 ```ruby
 my_layout.create({
-  :first_name => "Geoff",
-  :last_name => "Coffey",
-  :email => "gwcoffey@gmail.com"}
+  :first_name		=> "Geoff",
+  :last_name		=> "Coffey",
+  :email				=> "gwcoffey@gmail.com"}
 )
 ```
 
@@ -288,12 +288,12 @@ When this is 'true' your script will dump the actual response it got from FileMa
 So, for an annoying, but detailed load of output, make a connection like this:
 
 ```ruby
-my_server # Rfm::Server.new(
-  :host #> 'myservername',
-  :account_name #> 'user',
-  :password #> 'pw',
-  :log_actions #> true,
-  :log_responses #> true
+my_server => Rfm::Server.new(
+  :host							=> 'myservername',
+  :account_name			=> 'user',
+  :password					=> 'pw',
+  :log_actions			=> true,
+  :log_responses		=> true
 )
 ```
 
