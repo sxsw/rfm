@@ -117,7 +117,10 @@ module Rfm
       extend ActiveModel::Callbacks
       define_model_callbacks(:create, :update, :destroy)
     rescue LoadError, StandardError
-      alias_method(:run_callbacks, :callback_deadend)
+    	def run_callbacks(*args)
+    		yield
+    	end
+      #alias_method(:run_callbacks, :callback_deadend)
     end
     
     # --- #

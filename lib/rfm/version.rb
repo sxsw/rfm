@@ -3,7 +3,7 @@ module Rfm
     MAJOR = 1
     MINOR = 4
     PATCH = 2
-    BUILD = 'modeling1'
+    BUILD = 'modeling2'
 
     STRING = [MAJOR, MINOR, PATCH, BUILD].compact.join('.')
   end
