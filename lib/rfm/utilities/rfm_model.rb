@@ -116,7 +116,7 @@ module Rfm
       include ActiveModel::Validations
       extend ActiveModel::Callbacks
       define_model_callbacks(:create, :update, :destroy)
-    rescue
+    rescue LoadError, StandardError
       alias_method(:run_callbacks, :callback_deadend)
     end
     
