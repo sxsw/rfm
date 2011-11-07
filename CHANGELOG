@@ -10,13 +10,17 @@
 
 	ValueListItem handles both display & data items now.
 	
-	Timeout feature from timting (github/timting/rfm)
+	Timeout feature from timting (github/timting/rfm).
+	
+	Added specs for Record#save.
 	
 *	Fixed:
 
 	[Bug] Getting & setting fields with symbol-based keys was producing error.
 	
 	[Bug] Setting fields would not update main record hash.
+	
+	[Bug] Record#save wasn't merging back into self.
 
 *	Partial Fix:
 
