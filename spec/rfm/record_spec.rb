@@ -2,6 +2,7 @@ require 'rfm/record'
 describe Rfm::Record do
   before(:each) do
     @record = Rfm::Record.allocate
+    @layout = mock(Rfm::Layout)
   end
   
   describe "#[]=" do
@@ -108,4 +109,39 @@ describe Rfm::Record do
     end
 
   end
+  
+  describe "#save" do
+	  before(:each) do
+	  	@record['name'] = 'red'
+  		@record.instance_variable_set(:@record_id, 1)
+	  	@record.instance_variable_set(:@loaded, true)
+	  	@record.instance_variable_set(:@layout, @layout)
+	  	
+	  	@mods = @record.instance_variable_set(:@mods, {})	
+	  	@layout.stub!(:edit).with(1, @mods).and_return([@mods])
+    end
+    
+    it "returns empty hash" do
+	  		@record.name = 'green'
+  			@record.save.should eql({})
+    end
+    
+  	context "when modified" do
+  		it "merges new hash from saved data" do
+	  		@mods['name'] = 'green'
+  			@record.save
+  			@record['name'].should eql('green')
+  		end
+  	end
+  	
+  	context "when not modified" do
+  		it "leaves self untouched" do
+  			original = @record.dup
+  			@record.save
+  			@record.should eql(original)
+  		end
+  	end
+  	
+  end
+  
 end
