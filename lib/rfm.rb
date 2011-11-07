@@ -31,5 +31,5 @@ module Rfm
 		autoload :FieldControl, 'rfm/metadata/field_control'
 		autoload :ValueListItem, 'rfm/metadata/value_list_item'
 	end
-  
+
 end
