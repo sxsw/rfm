@@ -7,7 +7,7 @@ require path + '/rfm/version.rb'
 
 module Rfm
 
-	if ENV['_'].to_s.match(/irb|rails|bundle/)
+	if $0.to_s.match(/irb|rails|bundle/) # was ENV['_']
   	puts "Using gem ginjo-rfm version: #{VERSION}"
   end
   
