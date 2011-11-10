@@ -14,7 +14,7 @@ begin
     gem.files = FileList['lib/**/*']
     gem.add_dependency('nokogiri')
     gem.rdoc_options = [ "--line-numbers", "--main", "README.rdoc" ]
-    gem.version = Rfm::Version::STRING
+    gem.version = Rfm::VERSION
   end
   #Jeweler::GemcutterTasks.new
   Jeweler::RubygemsDotOrgTasks.new
@@ -41,8 +41,8 @@ Rake::RDocTask.new do |rdoc|
   if File.exist?('VERSION.yml')
     config = YAML.load(File.read('VERSION.yml'))
     version = "#{config[:major]}.#{config[:minor]}.#{config[:patch]}"
-  elsif (Rfm::Version::STRING rescue nil)
-  	version = Rfm::Version::STRING
+  elsif (Rfm::VERSION rescue nil)
+  	version = Rfm::VERSION
   elsif File.exist?('VERSION')
     version = File.read('VERSION')
   else
