@@ -7,9 +7,7 @@ require path + '/rfm/version.rb'
 
 module Rfm
 
-	#VERSION = File.read(File.join(File.expand_path(File.dirname(File.dirname(__FILE__))), 'VERSION')) rescue "no VERSION file found"
-	VERSION = Version::STRING
-	if ENV['_'].to_s.match(/irb/)
+	if ENV['_'].to_s.match(/irb|rails|bundle/)
   	puts "Using gem ginjo-rfm version: #{VERSION}"
   end
   
@@ -24,7 +22,7 @@ module Rfm
   autoload :Resultset, 'rfm/resultset'
   autoload :Record,    'rfm/record'
   autoload :Base,      'rfm/utilities/rfm_model'
-  
+
 	module Metadata
 		autoload :Script, 'rfm/metadata/script'
 		autoload :Field, 'rfm/metadata/field'
