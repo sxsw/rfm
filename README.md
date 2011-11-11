@@ -1,14 +1,6 @@
 # ginjo-rfm
 
-Rfm is a Ruby/Filemaker adapter - a ruby gem that allows ruby scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. To read more about Rfm, see the info at [Sixfriedrice](http://sixfriedrice.com/wp/products/rfm/), or check out the [RDoc](http://rdoc.info/projects/lardawge/rfm) courtesey of Larry Sprock.
-
-Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. It also adds minor enhancements like server timeout and value-list alternate display.
-
-Summary of recent features added since rfm 1.0.0:
-- ssl support
-- nokogiri xml parser
-- metadata support (databases, layouts, fields)
-- display-vs-data value lists
+Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. It also adds minor enhancements like server timeout and value-list alternate display. To read more about Rfm, see the info at [Sixfriedrice](http://sixfriedrice.com/wp/products/rfm/), or check out the [RDoc](http://rdoc.info/projects/lardawge/rfm) courtesey of Larry Sprock. See the rest of this document to get rolling.
 
 Rfm was primarily designed by Six Fried Rice co-founder Geoff Coffey.
 
@@ -19,15 +11,18 @@ Other lead contributors:
 * Jesse Antunes helped ensure that Rfm is stable and functional.
 * Larry Sprock added ssl support and switched the xml parser to a much faster Nokogiri.
 
-### Documentation
+Documentation
 
-See the rest of this document to get started.
+* Homepage:       <http://sixfriedrice.com/wp/products/rfm/>
+* Rdoc location:  <http://rubydoc.info/gems/lardawge-rfm/1.4.1.2/frames>
+* Discussion:     <http://groups.google.com/group/rfmcommunity>
 
-Homepage:       <http://sixfriedrice.com/wp/products/rfm/>
+An incomplete list of recent features added since rfm 1.0.0.
 
-Rdoc location:  <http://rubydoc.info/gems/lardawge-rfm/1.4.1.2/frames>
-
-Discussion:     <>
+* ssl support
+* nokogiri xml parser
+* metadata support (databases, layouts, fields)
+* display-vs-data value lists
 
 ## Installation
 
