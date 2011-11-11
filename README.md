@@ -31,7 +31,7 @@ Discussion:     <>
 
 ## Installation
 
-Rfm depends on Nokogiri, which installs executables requiring C compilation. Make sure you have a C compiler installed and ruby development headers (or Xcode on OS X).
+Rfm depends on Nokogiri, which installs executables requiring C compilation. Make sure you have a C compiler installed, ruby development headers, and Nokogiri's pre-requisite libxml2 & libxslt (or Xcode on OS X).
 
 Terminal:
 
@@ -51,25 +51,25 @@ In the Gemfile:
     ruby
     gem 'ginjo-rfm'
 
-Edge: ginjo-rfm is on it's way to ActiveModel compliance.
+Edge: ginjo-rfm is on it's way to ActiveModel compliance. You will soon be able to do:
 
-		class Account < Rfm::Base
-			config :layout=>'account_xml'
-			before_create :send_welcome
-			validates :email, :presence => true
-			validates :username, :presence => true
-			attr_accessor :password
-		end
+    class Account < Rfm::Base
+      config :layout=>'account_xml'
+      before_create :encrypt_password
+      validates :email, :presence => true
+      validates :username, :presence => true
+      attr_accessor :password
+    end
 
-		@account = Account.new(:username=>'bill')
-		@account.email = 'my@email.com'
-		@account.save!
-		
+    @account = Account.new(:username=>'bill', :password=>'pass')
+    @account.email = 'my@email.com'
+    @account.save!
+    
 Try it out:
 
-		gemfile
-		gem 'ginjo-rfm', :git=>'git://github.com/ginjo/rfm.git', :branch=>'modeling'
-		
+    gemfile
+    gem 'ginjo-rfm', :git=>'git://github.com/ginjo/rfm.git', :branch=>'modeling'
+    
 ## Connecting
 
 IMPORTANT:SSL and Certificate verification are on by default. Please see Server#new in rdocs for explanation and setup.
