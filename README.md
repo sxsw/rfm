@@ -1,6 +1,6 @@
 # ginjo-rfm
 
-Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. It also adds minor enhancements like server timeout and value-list alternate display. To read more about Rfm, see the info at [Sixfriedrice](http://sixfriedrice.com/wp/products/rfm/), or check out the [RDoc](http://rdoc.info/projects/lardawge/rfm) courtesey of Larry Sprock. See the rest of this document to get rolling.
+Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. It also adds minor enhancements like server timeout and value-list alternate display. To read more about Rfm, see the info at [Sixfriedrice](http://sixfriedrice.com/wp/products/rfm/), or check out the [RDoc](http://rdoc.info/projects/lardawge/rfm) courtesey of Larry Sprock.
 
 Rfm was primarily designed by Six Fried Rice co-founder Geoff Coffey.
 
@@ -19,14 +19,22 @@ Documentation
 
 An incomplete list of recent features added since rfm 1.0.0.
 
-* ssl support
-* nokogiri xml parser
-* metadata support (databases, layouts, fields)
-* display-vs-data value lists
+* SSL support
+* Nokogiri xml parser
+* Display-vs-data value lists
+* Connection timeout
+* Metadata support re-introduced
+
+Partial roadmap to the future
+
+* ActiveModel compatibility
+* Alternative XML parsers
+* More tests
+
 
 ## Installation
 
-Rfm depends on Nokogiri, which installs executables requiring C compilation. Make sure you have a C compiler installed, ruby development headers, and Nokogiri's pre-requisite libxml2 & libxslt (or Xcode on OS X).
+Rfm depends on Nokogiri, which installs executables requiring C compilation. Make sure you have a C compiler installed, ruby development headers, and Nokogiri's pre-requisite libxml2 & libxslt (or Xcode on OS X). Future versions of ginjo-rfm will offer alternative XML parsing options, hopefully making it easier to get up and running.
 
 Terminal:
 
@@ -46,7 +54,7 @@ In the Gemfile:
     ruby
     gem 'ginjo-rfm'
 
-Edge: ginjo-rfm is on it's way to ActiveModel compliance. You will soon be able to do:
+Edge: ginjo-rfm is on it's way to ActiveModel compatibility. You will soon be able to do:
 
     class Account < Rfm::Base
       config :layout=>'account_xml'
