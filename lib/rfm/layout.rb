@@ -232,7 +232,7 @@ module Rfm
       fmpxmllayout = @db.server.load_layout(self)
       #doc = REXML::Document.new(fmpxmllayout)
       #doc = Nokogiri::XML(fmpxmllayout)
-      doc = XmlParser(fmpxmllayout.body, :namespace=>false)
+      doc = ::Rfm::XmlParser(fmpxmllayout.body, :namespace=>false)
       #root = doc.root
       
       # check for errors

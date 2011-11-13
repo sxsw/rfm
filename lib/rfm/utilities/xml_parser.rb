@@ -3,10 +3,10 @@ module Rfm
 		require 'rubygems'
 		
 		begin
-# 		require 'nokogiri'
-# 		puts "Using Nokogiri"
-# 		@parser = proc{|*args| Nokogiri.XML(*args)}
-# 	rescue LoadError
+			require 'nokogiri'
+			puts "Using Nokogiri"
+			@parser = proc{|*args| Nokogiri.XML(*args)}
+		rescue LoadError
 # 		require 'ox'
 # 		@parser = proc{|*args| }
 # 	rescue LoadError
