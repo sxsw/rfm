@@ -34,7 +34,7 @@ Partial roadmap to the future
 
 ## Installation
 
-Rfm depends on Nokogiri, which installs executables requiring C compilation. Make sure you have a C compiler installed, ruby development headers, and Nokogiri's pre-requisite libxml2 & libxslt (or Xcode on OS X). Future versions of ginjo-rfm will offer alternative XML parsing options, hopefully making it easier to get up and running.
+Rfm depends on Nokogiri gem, which installs executables requiring C compilation. Make sure you have a C compiler installed, ruby development headers, and Nokogiri's pre-requisite libxml2 & libxslt (or Xcode on OS X). For help installing [Nokogiri](http://nokogiri.org/), see their helpful [tutorial](http://nokogiri.org/tutorials/installing_nokogiri.html). Future versions of ginjo-rfm will offer alternative XML parsing options, hopefully making it easier to get up and running.
 
 Terminal:
 
