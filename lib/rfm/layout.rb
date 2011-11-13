@@ -225,13 +225,14 @@ module Rfm
     
     def load
     	#require 'rexml/document'
-    	require 'nokogiri'
+    	#require 'nokogiri'
     	
       @loaded = true
       #fmpxmllayout = @db.server.load_layout(self).body
       fmpxmllayout = @db.server.load_layout(self)
       #doc = REXML::Document.new(fmpxmllayout)
-      doc = Nokogiri::XML(fmpxmllayout)
+      #doc = Nokogiri::XML(fmpxmllayout)
+      doc = XmlParser(fmpxmllayout.body, :namespace=>false)
       #root = doc.root
       
       # check for errors

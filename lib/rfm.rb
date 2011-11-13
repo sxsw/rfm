@@ -21,6 +21,7 @@ module Rfm
   autoload :Layout,    'rfm/layout'
   autoload :Resultset, 'rfm/resultset'
   autoload :Record,    'rfm/record'
+  autoload :XmlParser, 'rfm/utilities/xml_parser'
 
 	module Metadata
 		autoload :Script, 'rfm/metadata/script'
