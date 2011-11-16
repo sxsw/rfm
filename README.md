@@ -54,7 +54,9 @@ In the Gemfile:
     ruby
     gem 'ginjo-rfm'
 
-Edge: ginjo-rfm is on it's way to ActiveModel compatibility. You will soon be able to do:
+### Edge
+
+#### ActiveModel support.
 
     class Account < Rfm::Base
       config :layout=>'account_xml'
@@ -68,10 +70,16 @@ Edge: ginjo-rfm is on it's way to ActiveModel compatibility. You will soon be ab
     @account.email = 'my@email.com'
     @account.save!
     
+#### Multiple backend xml parsers. Using ActiveSupport::XmlMini to support Nokogiri, Libxml-ruby, Rexml.
+
+		Rfm::Server.new(:backend => :nokogiri)
+		
+		Rfm::Server.new(:backend => :rexml)
+    
 Try it out:
 
     gemfile
-    gem 'ginjo-rfm', :git=>'git://github.com/ginjo/rfm.git', :branch=>'modeling'
+    gem 'ginjo-rfm', :git=>'git://github.com/ginjo/rfm.git', :branch=>'edge'
     
 ## Connecting
 
