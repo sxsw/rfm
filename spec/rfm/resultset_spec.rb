@@ -28,7 +28,8 @@ describe Rfm::Resultset do
 		end
 		
 		it "sends records xml to Record.build_records" do
-			@args[0].xpath("//record[2]/field[@name='MemoText']/data/text()").to_s.should eql('memotest7')
+			#@args[0].xpath("//record[2]/field[@name='MemoText']/data/text()").to_s.should eql('memotest7')
+			@args[0][1]['field'].find{|f| f['name']=='MemoText'}['data']['__content__'].to_s.should eql('memotest7')
 		end
 		
 	end	

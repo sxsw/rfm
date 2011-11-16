@@ -22,6 +22,7 @@ module Rfm
   autoload :Resultset, 'rfm/resultset'
   autoload :Record,    'rfm/record'
   autoload :Base,      'rfm/utilities/rfm_model'
+  autoload :XmlParser, 'rfm/utilities/xml_parser'
 
 	module Metadata
 		autoload :Script, 'rfm/metadata/script'
@@ -29,5 +30,18 @@ module Rfm
 		autoload :FieldControl, 'rfm/metadata/field_control'
 		autoload :ValueListItem, 'rfm/metadata/value_list_item'
 	end
+
+	class ::Hash
+		def ary
+			[self]
+		end
+	end
+	
+	class ::Array
+		def ary
+			self
+		end
+	end	 
+	 
 	  
 end

@@ -5,7 +5,7 @@
 # Author::    Geoff Coffey  (mailto:gwcoffey@gmail.com)
 # Copyright:: Copyright (c) 2007 Six Fried Rice, LLC and Mufaddal Khumri
 # License::   See MIT-LICENSE for details
-require 'nokogiri'
+#require 'nokogiri'
 require 'bigdecimal'
 require 'rfm/record'
 #require 'rfm/metadata/field'
@@ -72,50 +72,51 @@ module Rfm
       @portal_meta    ||= Rfm::CaseInsensitiveHash.new
       @include_portals  = portals 
       
-      doc = Nokogiri.XML(remove_namespace(xml_response))
+      doc = XmlParser.new(xml_response, :namespace=>false, :backend=>@server.state[:backend])
       
-      error = doc.xpath('/fmresultset/error').attribute('code').value.to_i
+      error = doc['fmresultset']['error']['code'].to_i
       check_for_errors(error, server.state[:raise_on_401])
 
-      datasource        = doc.xpath('/fmresultset/datasource')
-      meta              = doc.xpath('/fmresultset/metadata')
-      resultset         = doc.xpath('/fmresultset/resultset')
+      datasource        = doc['fmresultset']['datasource']
+      meta              = doc['fmresultset']['metadata']
+      resultset         = doc['fmresultset']['resultset']
 
-      @date_format      = convert_date_time_format(datasource.attribute('date-format').value)
-      @time_format      = convert_date_time_format(datasource.attribute('time-format').value)
-      @timestamp_format = convert_date_time_format(datasource.attribute('timestamp-format').value)
+      @date_format      = convert_date_time_format(datasource['date-format'].to_s)
+      @time_format      = convert_date_time_format(datasource['time-format'].to_s)
+      @timestamp_format = convert_date_time_format(datasource['timestamp-format'].to_s)
 
-      @foundset_count   = resultset.attribute('count').value.to_i
-      @total_count      = datasource.attribute('total-count').value.to_i
+      @foundset_count   = resultset['count'].to_s.to_i
+      @total_count      = datasource['total-count'].to_s.to_i
+      
+      return if resultset['record'].nil?
 
       parse_fields(meta)
       parse_portals(meta) if @include_portals
-      
-      Rfm::Record.build_records(resultset.xpath('record'), self, @field_meta, @layout)
+      Rfm::Record.build_records(resultset['record'].ary, self, @field_meta, @layout)
       
     end
     
     private
-      def remove_namespace(xml)
-        xml.gsub('xmlns="http://www.filemaker.com/xml/fmresultset" version="1.0"', '')
-      end
+			#       def remove_namespace(xml)
+			#         xml.gsub('xmlns="http://www.filemaker.com/xml/fmresultset" version="1.0"', '')
+			#       end
     
       def check_for_errors(code, raise_401)
         raise Rfm::Error.getError(code) if code != 0 && (code != 401 || raise_401)
       end
     
       def parse_fields(meta)
-        meta.xpath('field-definition').each do |field|
+        meta['field-definition'].ary.each do |field|
           @field_meta[field['name']] = Rfm::Metadata::Field.new(field)
         end
       end
 
       def parse_portals(meta)
-        meta.xpath('relatedset-definition').each do |relatedset|
-          table, fields = relatedset.attribute('table').value, {}
+        meta['relatedset-definition'].ary.each do |relatedset|
+          table, fields = relatedset['table'], {}
 
-          relatedset.xpath('field-definition').each do |field|
-            name = field.attribute('name').value.gsub(Regexp.new(table + '::'), '')
+          relatedset['field-definition'].ary.each do |field|
+            name = field['name'].to_s.gsub(Regexp.new(table + '::'), '')
             fields[name] = Rfm::Metadata::Field.new(field)
           end
 

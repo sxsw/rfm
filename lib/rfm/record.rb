@@ -109,15 +109,17 @@ module Rfm
       @layout    = layout
       @portals ||= Rfm::CaseInsensitiveHash.new
 
-      relatedsets = !portal && result.instance_variable_get(:@include_portals) ? record.xpath('relatedset') : []
+      relatedsets = !portal && result.instance_variable_get(:@include_portals) ? record['relatedset'].ary : []
       
-      record.xpath('field').each do |field|
+      record['field'].ary.each do |field|
         field_name = field['name']
         field_name.gsub!(Regexp.new(portal + '::'), '') if portal
         datum = []
         
-        field.xpath('data').each do |x| 
-          datum.push(field_meta[field_name].coerce(x.inner_text, result))
+        data = field['data']; data = data.is_a?(Hash) ? [data] : data
+        data.each do |x| 
+          #datum.push(field_meta[field_name].coerce(x['__content__'], result))
+          datum.push(field_meta[field_name].coerce(x['__content__'], result))
         end
       
         if datum.length == 1
@@ -133,7 +135,7 @@ module Rfm
         relatedsets.each do |relatedset|
           tablename, records = relatedset['table'], []
       
-          relatedset.xpath('record').each do |record|
+          relatedset['record'].ary.each do |record|
             records << self.class.new(record, result, result.portal_meta[tablename], layout, tablename)
           end
       

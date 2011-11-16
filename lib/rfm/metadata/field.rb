@@ -75,7 +75,7 @@ module Rfm
       # type of the field. You'll never need to do this: Rfm does it automatically for you when you
       # access field data through the Record object.
       def coerce(value, resultset)
-        return nil if value.empty?
+        return nil if (value.nil? or value.empty?)
         case self.result
         when "text"      then value
         when "number"    then BigDecimal.new(value)
