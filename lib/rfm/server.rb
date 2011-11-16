@@ -277,7 +277,7 @@ module Rfm
     
     # Removes namespace from fmpxmllayout, so xpath will work
   	def remove_namespace(xml)
-      xml.gsub('xmlns="http://www.filemaker.com/fmpxmllayout"', '')
+      xml.gsub(/xmlns=\"[^\"]*\"/, '')
     end
     
     private

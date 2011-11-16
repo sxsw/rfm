@@ -74,24 +74,25 @@ module Rfm
       
       doc = XmlParser.new(xml_response, :namespace=>false)
       
-      error = doc.xpath('//fmresultset/error/@code').to_s.to_i
+      error = doc['fmresultset']['error']['code'].to_i
       check_for_errors(error, server.state[:raise_on_401])
 
-      datasource        = doc.xpath('/fmresultset/datasource')
-      meta              = doc.xpath('/fmresultset/metadata')
-      resultset         = doc.xpath('/fmresultset/resultset')
+      datasource        = doc['fmresultset']['datasource']
+      meta              = doc['fmresultset']['metadata']
+      resultset         = doc['fmresultset']['resultset']
 
-      @date_format      = convert_date_time_format(datasource.xpath('@date-format').to_s)
-      @time_format      = convert_date_time_format(datasource.xpath('@time-format').to_s)
-      @timestamp_format = convert_date_time_format(datasource.xpath('@timestamp-format').to_s)
+      @date_format      = convert_date_time_format(datasource['date-format'].to_s)
+      @time_format      = convert_date_time_format(datasource['time-format'].to_s)
+      @timestamp_format = convert_date_time_format(datasource['timestamp-format'].to_s)
 
-      @foundset_count   = resultset.xpath('@count').to_s.to_i
-      @total_count      = datasource.xpath('@total-count').to_s.to_i
+      @foundset_count   = resultset['count'].to_s.to_i
+      @total_count      = datasource['total-count'].to_s.to_i
+      
+      return if resultset['record'].nil?
 
       parse_fields(meta)
       parse_portals(meta) if @include_portals
-      
-      Rfm::Record.build_records(resultset.xpath('record'), self, @field_meta, @layout)
+      Rfm::Record.build_records(resultset['record'].ary, self, @field_meta, @layout)
       
     end
     
@@ -105,17 +106,17 @@ module Rfm
       end
     
       def parse_fields(meta)
-        meta.xpath('field-definition').each do |field|
+        meta['field-definition'].ary.each do |field|
           @field_meta[field['name']] = Rfm::Metadata::Field.new(field)
         end
       end
 
       def parse_portals(meta)
-        meta.xpath('relatedset-definition').each do |relatedset|
-          table, fields = relatedset.attribute('table').value, {}
+        meta['relatedset-definition'].ary.each do |relatedset|
+          table, fields = relatedset['table'], {}
 
-          relatedset.xpath('field-definition').each do |field|
-            name = field.xpath('@name').to_s.gsub(Regexp.new(table + '::'), '')
+          relatedset['field-definition'].ary.each do |field|
+            name = field['name'].to_s.gsub(Regexp.new(table + '::'), '')
             fields[name] = Rfm::Metadata::Field.new(field)
           end
 
