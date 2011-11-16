@@ -32,6 +32,18 @@ module Rfm
 			end
 		end
 		
+		class ::Hash
+			def ary
+				[self]
+			end
+		end
+		
+		class ::Array
+			def ary
+				self
+			end
+		end	 
+		
 		select_backend
 		
 	end
