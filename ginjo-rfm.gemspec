@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "ginjo-rfm"
-  s.version = "1.5.0.pre7"
+  s.version = "1.5.0.pre8"
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
-  s.date = "2011-11-13"
+  s.date = "2011-11-16"
   s.description = "Rfm brings your FileMaker data to Ruby. Now your Ruby scripts and Rails applications can talk directly to your FileMaker server."
   s.email = "http://groups.google.com/group/rfmcommunity"
   s.extra_rdoc_files = [
@@ -31,6 +31,7 @@ Gem::Specification.new do |s|
     "lib/rfm/utilities/case_insensitive_hash.rb",
     "lib/rfm/utilities/factory.rb",
     "lib/rfm/utilities/rfm_model.rb",
+    "lib/rfm/utilities/xml_parser.rb",
     "lib/rfm/version.rb"
   ]
   s.homepage = "http://sixfriedrice.com/wp/products/rfm/"
