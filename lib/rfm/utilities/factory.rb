@@ -27,7 +27,7 @@ module Rfm
           }
           @loaded = true
         end
-        self.values
+        self.keys
       end
     
     end
@@ -52,7 +52,7 @@ module Rfm
 	        }
           @loaded = true
         end
-        self.values
+        self.keys
       end
     
     end
@@ -77,7 +77,7 @@ module Rfm
           }
           @loaded = true
         end
-        self.values
+        self.keys
       end
     
     end
