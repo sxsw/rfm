@@ -417,7 +417,7 @@ module Rfm
 
 		alias_method :initialize_orig, :initialize
 		def initialize(record, result, field_meta, layout, portal)
-			if result == [] and !record.respond_to? :xpath
+			if result == [] and  !record.has_key? 'field'   #!record.respond_to? :xpath
 				@mods = Rfm::CaseInsensitiveHash.new
         # loop thru each layout field, creating hash keys with nil values
         self.class.field_controls.keys.each do |field| 
