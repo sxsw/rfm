@@ -109,9 +109,9 @@ module Rfm
       @layout    = layout
       @portals ||= Rfm::CaseInsensitiveHash.new
 
-      relatedsets = !portal && result.instance_variable_get(:@include_portals) ? record['relatedset'] : []
+      relatedsets = !portal && result.instance_variable_get(:@include_portals) ? record['relatedset'].ary : []
       
-      record['field'].each do |field|
+      record['field'].ary.each do |field|
         field_name = field['name']
         field_name.gsub!(Regexp.new(portal + '::'), '') if portal
         datum = []
@@ -135,7 +135,7 @@ module Rfm
         relatedsets.each do |relatedset|
           tablename, records = relatedset['table'], []
       
-          relatedset['record'].each do |record|
+          relatedset['record'].ary.each do |record|
             records << self.class.new(record, result, result.portal_meta[tablename], layout, tablename)
           end
       

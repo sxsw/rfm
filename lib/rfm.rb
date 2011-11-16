@@ -29,5 +29,18 @@ module Rfm
 		autoload :FieldControl, 'rfm/metadata/field_control'
 		autoload :ValueListItem, 'rfm/metadata/value_list_item'
 	end
+
+	class ::Hash
+		def ary
+			[self]
+		end
+	end
+	
+	class ::Array
+		def ary
+			self
+		end
+	end	 
+	 
 	  
 end

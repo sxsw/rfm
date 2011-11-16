@@ -27,7 +27,7 @@ module Rfm
           }
           @loaded = true
         end
-        self.values
+        self.keys
       end
     
     end
@@ -48,11 +48,11 @@ module Rfm
         if !@loaded
 	        Rfm::Resultset.new(@server, @server.connect(@server.state[:account_name], @server.state[:password], '-layoutnames', {"-db" => @database.name}).body, nil).each {|record|
 	          name = record['LAYOUT_NAME']
-	          self[name] = Rfm::Layout.new(name, @database) if self[name] == nil
+	          self[name] = Rfm::Layout.new(name, @database) #if self[name] == nil
 	        }
           @loaded = true
         end
-        self.values
+        self.keys
       end
     
     end
@@ -77,7 +77,7 @@ module Rfm
           }
           @loaded = true
         end
-        self.values
+        self.keys
       end
     
     end
