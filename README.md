@@ -39,7 +39,7 @@ Rfm depends on Nokogiri gem, which installs executables requiring C compilation.
 Terminal:
 
     bash
-    gem install ginjo-rfm --pre
+    gem install ginjo-rfm
 
 Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
 
