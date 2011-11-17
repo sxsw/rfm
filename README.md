@@ -74,7 +74,7 @@ ActiveModel support.
 Multiple backend xml parsers. Uses ActiveSupport::XmlMini to support Nokogiri, Libxml-ruby, or Rexml.
 
 		Rfm::Server.new(:backend => :nokogiri)
-    # Backend options => :libxml, :libxmlsax, :nokogiri, :nokogirisax, :rexml
+    # Backend options => :libxml, :libxmlsax, :nokogiri, :nokogirisax, :hpricot, :rexml
     
 Try it out:
 
