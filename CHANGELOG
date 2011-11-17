@@ -1,4 +1,10 @@
-*Ginjo-Rfm 1.4.2.pre*
+*Ginjo-Rfm 1.5.0.pre
+
+  Alternative XML parsers using ActiveSupport::XmlMini interface.
+  
+  ActiveModel compatibility
+
+*Ginjo-Rfm 1.4.2*
 
 *	Re-implemented:
 	
@@ -26,7 +32,14 @@
 
 	server.db.all
 	db.layout.all
-	layout.script
+	db.script.all
+	
+	Note: the "#all" method returns object names (as keys) only. The receiver of the method maintains the full object collection.
+	
+	Example:
+	
+		server.db.all #=> ['dbname1', 'dbname2', ...]
+		server.db     #=> a DbFactory object (descendant of Hash), containing 0 or more Database objects
 
 *Lardawge-Rfm 1.4.2 (unreleased)*
   
