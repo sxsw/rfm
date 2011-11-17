@@ -31,7 +31,7 @@ module Rfm
 			begin
 				require 'jdom'
 				select_backend :jdom
-			rescue
+			rescue LoadError
 				require 'libxml'
 				select_backend :libxml
 			rescue LoadError
@@ -40,7 +40,7 @@ module Rfm
 			rescue LoadError
 				require 'hpricot'
 				select_backend :hpricot
-			rescue
+			rescue LoadError
 				select_backend :rexml
 			end
 			ActiveSupport::XmlMini.backend = @backend
