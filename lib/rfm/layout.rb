@@ -224,32 +224,19 @@ module Rfm
     private
     
     def load
-    	#require 'rexml/document'
-    	#require 'nokogiri'
-    	
       @loaded = true
-      #fmpxmllayout = @db.server.load_layout(self).body
       fmpxmllayout = @db.server.load_layout(self)
-      #doc = REXML::Document.new(fmpxmllayout)
-      #doc = Nokogiri::XML(fmpxmllayout)
-      #doc = ::Rfm::XmlParser(fmpxmllayout.body, :namespace=>false)
-      doc = XmlParser.new(fmpxmllayout.body, :namespace=>false, :backend=>db.server.state[:backend])
-      #root = doc.root
+      doc = XmlParser.new(fmpxmllayout.body, :namespace=>false) ###, :backend=>db.server.state[:backend])
       
       # check for errors
-      #error = root.elements['ERRORCODE'].text.to_i
-      #error = doc.xpath('//ERRORCODE').children[0].to_s.to_i
       error = doc['FMPXMLLAYOUT']['ERRORCODE'].to_s.to_i
       raise Rfm::Error::FileMakerError.getError(error) if error != 0
       
       # process valuelists
       vlists = doc['FMPXMLLAYOUT']['VALUELISTS']['VALUELIST']
       if !vlists.nil?    #root.elements['VALUELISTS'].size > 0
-        #root.elements['VALUELISTS'].each_element('VALUELIST') { |valuelist|
-        #doc.xpath('//VALUELIST').each {|valuelist|
         vlists.each {|valuelist|
           name = valuelist['NAME']
-          #@value_lists[name] = valuelist.elements.collect {|e| e.text}
           @value_lists[name] = valuelist['VALUE'].collect{|value|
           	Rfm::Metadata::ValueListItem.new(value['__content__'], value['DISPLAY'], name)
           }
@@ -258,16 +245,9 @@ module Rfm
       end
 
       # process field controls
-      #root.elements['LAYOUT'].each_element('FIELD') { |field|
-      #doc.xpath('//FIELD').each {|field|
       doc['FMPXMLLAYOUT']['LAYOUT']['FIELD'].each {|field|
-        #name = field.attributes['NAME']
         name = field['NAME']
-        #style_xml = field.children[0]
-        #style = field.elements['STYLE'].attributes['TYPE']
-        #style = style_xml['TYPE']
         style = field['STYLE']
-        #value_list_name = field.elements['STYLE'].attributes['VALUELIST']
         type = style['TYPE']
         value_list_name = style['VALUELIST']
         value_list = @value_lists[value_list_name] if value_list_name != ''

@@ -72,7 +72,7 @@ module Rfm
       @portal_meta    ||= Rfm::CaseInsensitiveHash.new
       @include_portals  = portals 
       
-      doc = XmlParser.new(xml_response, :namespace=>false, :backend=>@server.state[:backend])
+      doc = XmlParser.new(xml_response, :namespace=>false) ###, :backend=>@server.state[:backend])
       
       error = doc['fmresultset']['error']['code'].to_i
       check_for_errors(error, server.state[:raise_on_401])
