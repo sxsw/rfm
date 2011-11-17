@@ -3,32 +3,57 @@ module Rfm
 		require 'rubygems'
 		require 'active_support/xml_mini'
 		
+		extend self
+		
 		attr_reader :backend
 		
-		def self.backend_modules(name)
-			{:jdom=>'JDOM', :libxml=>'LibXML', :libxmlsax=>'LibXMLSAX', :nokogiri=>'Nokogiri', :nokogirisax=>'NokogiriSAX', :rexml=>'REXML'}[name]
+		def select_backend(name)
+			@backend = case name
+			when :jdom
+				'JDOM'
+			when :libxml
+				'LibXML'
+			when :libxmlsax
+				'LibXMLSAX'
+			when :nokogiri
+				'Nokogiri'
+			when :nokogirisax
+				'NokogiriSAX'
+			when :rexml
+				'REXML'
+			when :hpricot
+				require File.join(File.dirname(__FILE__), '../xml_mini/hpricot.rb')
+				ActiveSupport::XmlMini_Hpricot
+			end
 		end
 		
-		def self.select_backend
+		def decide_backend
 			begin
 				require 'jdom'
-				@backend = :jdom
+				select_backend :jdom
 			rescue
 				require 'libxml'
-				@backend = :libxml
+				select_backend :libxml
 			rescue LoadError
 				require 'nokogiri'
-				@backend = :nokogirisax
+				select_backend :nokogirisax
 			rescue LoadError
-				@backend = :rexml
+				require 'hpricot'
+				select_backend :hpricot
+			rescue
+				select_backend :rexml
 			end
-			backend_modules(@backend)
+			ActiveSupport::XmlMini.backend = @backend
 		end
+		
+		decide_backend
 
-		def self.new(string_or_file, opts={})
+		def new(string_or_file, opts={})
 			string_or_file.gsub!(/xmlns=\"[^\"]*\"/,'') if (string_or_file.class == String and opts[:namespace] == false)
-			ActiveSupport::XmlMini.with_backend(backend_modules(opts[:backend] || @backend)) do
+			unless opts[:backend]
 				ActiveSupport::XmlMini.parse(string_or_file)
+			else
+				ActiveSupport::XmlMini.with_backend(select_backend(opts[:backend])) {ActiveSupport::XmlMini.parse(string_or_file)}
 			end
 		end
 		
@@ -43,9 +68,7 @@ module Rfm
 				self
 			end
 		end	 
-		
-		select_backend
-		
+
 	end
 end
 

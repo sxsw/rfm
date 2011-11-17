@@ -12,7 +12,11 @@ begin
     gem.homepage = "http://sixfriedrice.com/wp/products/rfm/"
     gem.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
     gem.files = FileList['lib/**/*']
-    gem.add_dependency('nokogiri')
+    gem.add_dependency('activesupport')
+    gem.add_development_dependency('jeweler')
+    gem.add_development_dependency('rake')
+    gem.add_development_dependency('rdoc')
+    gem.add_development_dependency('rspec', '~>1.3.0')
     gem.rdoc_options = [ "--line-numbers", "--main", "README.rdoc" ]
     gem.version = Rfm::VERSION
   end
