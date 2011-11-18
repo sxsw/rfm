@@ -1,8 +1,7 @@
 module Rfm
 	module XmlParser
 		require 'rubygems'
-		require 'active_support'
-		require 'active_support/xml_mini'
+		require 'active_support' unless defined? ActiveSupport
 		
 		extend self
 		
