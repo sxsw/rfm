@@ -13,7 +13,7 @@ begin
     gem.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
     gem.files = FileList['lib/**/*']
     gem.add_dependency('activesupport')
-    gem.add_dependency('i18n')
+    gem.add_dependency('activemodel')
     gem.add_development_dependency('jeweler')
     gem.add_development_dependency('rake')
     gem.add_development_dependency('rdoc')
