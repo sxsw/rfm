@@ -13,6 +13,7 @@ begin
     gem.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
     gem.files = FileList['lib/**/*']
     gem.add_dependency('nokogiri')
+    gem.add_dependency('active_model')
     gem.rdoc_options = [ "--line-numbers", "--main", "README.rdoc" ]
     gem.version = Rfm::VERSION
   end
