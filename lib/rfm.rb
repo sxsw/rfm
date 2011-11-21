@@ -1,14 +1,24 @@
-path = File.expand_path(File.dirname(__FILE__))
-$:.unshift(path) unless $:.include?(path)
+# path = File.expand_path(File.dirname(__FILE__))
+# $:.unshift(path) unless $:.include?(path)
+# 
+# require path + '/rfm/utilities/case_insensitive_hash'
+# require path + '/rfm/utilities/factory'
+# require path + '/rfm/version.rb'
 
-require path + '/rfm/utilities/case_insensitive_hash'
-require path + '/rfm/utilities/factory'
-require path + '/rfm/version.rb'
+Rfm = Module.new unless defined? Rfm
+Rfm::PATH = File.expand_path(File.dirname(__FILE__))
+$LOAD_PATH.unshift(Rfm::PATH) unless $LOAD_PATH.include?(Rfm::PATH)
+
+require 'rfm/utilities/case_insensitive_hash'
+require 'rfm/utilities/factory'
+require 'rfm/version.rb'
+
+
 
 module Rfm
 
 	if $0.to_s.match(/irb|rails|bundle/) # was ENV['_']
-  	puts "Using gem ginjo-rfm version: #{VERSION}"
+  	puts "Using gem ginjo-rfm version: #{::Rfm::VERSION}"
   end
   
   class CommunicationError  < StandardError; end
@@ -30,3 +40,4 @@ module Rfm
 	end
 	  
 end
+
