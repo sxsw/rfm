@@ -73,7 +73,7 @@ ActiveModel support.
     
 Multiple backend xml parsers.
 
-		Rfm::Server.new(:backend => :nokogiri)
+    Rfm::Server.new(:backend => :nokogiri)
     # Backend options => :libxml, :libxmlsax, :nokogiri, :nokogirisax, :hpricot, :rexml
     
 Try it out:

@@ -4,6 +4,10 @@
   
   ActiveModel compatibility
 
+*Ginjo-Rfm 1.4.3
+
+	Fixed version management issue. Rfm::VERSION now works.
+
 *Ginjo-Rfm 1.4.2*
 
 *	Re-implemented:
