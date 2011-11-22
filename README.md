@@ -71,10 +71,10 @@ ActiveModel support.
     @account.email = 'my@email.com'
     @account.save!
     
-Multiple backend xml parsers. Uses ActiveSupport::XmlMini to support Nokogiri, Libxml-ruby, or Rexml.
+Multiple backend xml parsers.
 
-		Rfm::Server.new(:backend => :nokogiri)
-    # Backend options => :libxml, :libxmlsax, :nokogiri, :nokogirisax, :rexml
+    Rfm::Server.new(:backend => :nokogiri)
+    # Backend options => :libxml, :libxmlsax, :nokogiri, :nokogirisax, :hpricot, :rexml
     
 Try it out:
 
