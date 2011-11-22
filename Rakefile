@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'rake'
 require './lib/rfm'
-#require './lib/rfm/version'
 
 begin
   require 'jeweler'

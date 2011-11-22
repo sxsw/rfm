@@ -14,7 +14,6 @@ require 'rfm/utilities/factory'
 require 'rfm/version.rb'
 
 
-
 module Rfm
 
 	if $0.to_s.match(/irb|rails|bundle/) # was ENV['_']

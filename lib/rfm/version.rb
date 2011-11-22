@@ -1,6 +1,6 @@
 module Rfm
 
-	VERSION_DEFAULT = 'no-version-found'
+	VERSION_DEFAULT = 'none'
 	VERSION = File.read(PATH + '/rfm/VERSION').first.gsub(/\n|\r/,'')  rescue VERSION_DEFAULT #File.read(File.join(File.expand_path(File.dirname(File.dirname(File.dirname(__FILE__)))), 'VERSION')) rescue VERSION_DEFAULT
   
   VERSION.instance_eval do
@@ -10,8 +10,4 @@ module Rfm
   	def patch; components[2]; end
   	def build; components[3]; end
   end
-	#   module Version # :nodoc: all
-	#     MAJOR, MINOR, PATCH, BUILD = VERSION.split('.')
-	#     NUMBERS = [ MAJOR, MINOR, PATCH, BUILD ]
-	#   end
 end
