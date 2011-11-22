@@ -1,6 +1,6 @@
 module Rfm
 	VERSION_DEFAULT = 'none'
-	VERSION = File.read(PATH + '/rfm/VERSION').first.gsub(/\n|\r/,'')  rescue VERSION_DEFAULT #File.read(File.join(File.expand_path(File.dirname(File.dirname(File.dirname(__FILE__)))), 'VERSION')) rescue VERSION_DEFAULT
+	VERSION = File.read(PATH + '/rfm/VERSION').lines.first.chomp  rescue VERSION_DEFAULT
   VERSION.instance_eval do
   	def components; VERSION.split('.'); end
   	def major; components[0]; end
