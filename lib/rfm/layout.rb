@@ -133,16 +133,17 @@ module Rfm
     #
     #   myServer = Rfm::Server.new(...)
     #   myLayout = myServer["Customers"]["Details"]
-    def initialize(name, db)
+    def initialize(name, db_obj)
       @name = name
-      @db = db
+      self.db = db_obj
       
       @loaded = false
       @field_controls = Rfm::CaseInsensitiveHash.new
       @value_lists = Rfm::CaseInsensitiveHash.new      
     end
     
-    attr_reader :name, :db
+    meta_attr_accessor :db
+    attr_reader :name #, :db
     
     # Returns a ResultSet object containing _every record_ in the table associated with this layout.
     def all(options = {})
@@ -229,7 +230,7 @@ module Rfm
     	
       @loaded = true
       #fmpxmllayout = @db.server.load_layout(self).body
-      fmpxmllayout = @db.server.load_layout(self)
+      fmpxmllayout = db.server.load_layout(self)
       #doc = REXML::Document.new(fmpxmllayout)
       doc = Nokogiri::XML(fmpxmllayout)
       #root = doc.root
@@ -280,12 +281,12 @@ module Rfm
     
     def get_records(action, extra_params = {}, options = {})
       include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
-      xml_response = @db.server.connect(@db.account_name, @db.password, action, params.merge(extra_params), options).body
-      Rfm::Resultset.new(@db.server, xml_response, self, include_portals)
+      xml_response = db.server.connect(db.account_name, db.password, action, params.merge(extra_params), options).body
+      Rfm::Resultset.new(db.server, xml_response, self, include_portals)
     end
     
     def params
-      {"-db" => @db.name, "-lay" => self.name}
+      {"-db" => db.name, "-lay" => self.name}
     end
   end
 end

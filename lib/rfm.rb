@@ -10,6 +10,7 @@ Rfm::PATH = File.expand_path(File.dirname(__FILE__))
 $LOAD_PATH.unshift(Rfm::PATH) unless $LOAD_PATH.include?(Rfm::PATH)
 
 require 'rfm/utilities/case_insensitive_hash'
+require 'rfm/utilities/core_ext'
 require 'rfm/utilities/factory'
 require 'rfm/version.rb'
 

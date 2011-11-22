@@ -100,14 +100,16 @@ module Rfm
   #   copy of the same record
   class Record < Rfm::CaseInsensitiveHash
     
+    meta_attr_accessor :layout, :resultset
     attr_reader :record_id, :mod_id, :portals
 
-    def initialize(record, result, field_meta, layout, portal=nil)
-      @record_id = record['record-id']
-      @mod_id    = record['mod-id']
-      @mods      = {}
-      @layout    = layout
-      @portals ||= Rfm::CaseInsensitiveHash.new
+    def initialize(record, result, field_meta, layout_obj, portal=nil)
+    	self.resultset = result
+      @record_id     = record['record-id']
+      @mod_id        = record['mod-id']
+      @mods          = {}
+      self.layout    = layout_obj
+      @portals     ||= Rfm::CaseInsensitiveHash.new
 
       relatedsets = !portal && result.instance_variable_get(:@include_portals) ? record.xpath('relatedset') : []
       
@@ -164,7 +166,7 @@ module Rfm
     # to optimize on your end. Just save, and if you've changed the record it will be saved. If not, no
     # server hit is incurred.
     def save
-      self.merge!(@layout.edit(self.record_id, @mods)[0]) if @mods.size > 0
+      self.merge!(layout.edit(self.record_id, @mods)[0]) if @mods.size > 0
       @mods.clear
     end
 
@@ -172,7 +174,7 @@ module Rfm
     # modified after the record was fetched but before it was saved. In other words, prevents you from
     # accidentally overwriting changes someone else made to the record.
     def save_if_not_modified
-      self.merge!(@layout.edit(@record_id, @mods, {:modification_id => @mod_id})[0]) if @mods.size > 0
+      self.merge!(layout.edit(@record_id, @mods, {:modification_id => @mod_id})[0]) if @mods.size > 0
       @mods.clear
     end
     
@@ -213,7 +215,7 @@ module Rfm
       def read_attribute(key)
       	key = key.to_s
         raise NoMethodError, 
-          "#{key.to_s} does not exists as a field in the current Filemaker layout." unless (!@layout or self.key?(key))
+          "#{key.to_s} does not exists as a field in the current Filemaker layout." unless (!layout or self.key?(key))
         self._old_hash_reader(key).to_s.empty? ? nil : self._old_hash_reader(key) if self._old_hash_reader(key)
       end
 

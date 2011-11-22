@@ -38,7 +38,8 @@ module Rfm
 
   class Resultset < Array
     
-    attr_reader :layout, :server
+    meta_attr_accessor :layout, :server
+    #attr_reader :layout, :server
     attr_reader :field_meta, :portal_meta
     attr_reader :date_format, :time_format, :timestamp_format
     attr_reader :total_count, :foundset_count
@@ -65,9 +66,9 @@ module Rfm
     #   layout contains portals, you can find out what fields they contain here. Again, if it's the data you're
     #   after, you want to look at the Record object.
     
-    def initialize(server, xml_response, layout, portals=nil)
-      @layout           = layout
-      @server           = server
+    def initialize(server_obj, xml_response, layout_obj, portals=nil)
+      self.layout       = layout_obj
+      self.server       = server_obj
       @field_meta     ||= Rfm::CaseInsensitiveHash.new
       @portal_meta    ||= Rfm::CaseInsensitiveHash.new
       @include_portals  = portals 
@@ -91,7 +92,7 @@ module Rfm
       parse_fields(meta)
       parse_portals(meta) if @include_portals
       
-      Rfm::Record.build_records(resultset.xpath('record'), self, @field_meta, @layout)
+      Rfm::Record.build_records(resultset.xpath('record'), self, @field_meta, layout)
       
     end
     

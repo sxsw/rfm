@@ -14,16 +14,21 @@ module Rfm
         @server = server
         @loaded = false
       end
-      
-      def [](dbname)
-        super or (self[dbname] = Rfm::Database.new(dbname, @server))
+      								#account_name= @server.state[:account_name], password= @server.state[:password]
+      def [](dbname, acnt=nil, pass=nil) #
+        db = (super(dbname) or (self[dbname] = Rfm::Database.new(dbname, @server)))
+        account_name = acnt or db.account_name or @server.state[:account_name]
+        password = pass or db.password or @server.state[:password]
+        db.account_name = account_name
+        db.password = password
+        db
       end
       
       def all
         if !@loaded
           Rfm::Resultset.new(@server, @server.connect(@server.state[:account_name], @server.state[:password], '-dbnames', {}).body, nil).each {|record|
             name = record['DATABASE_NAME']
-            self[name] = Rfm::Database.new(name, @server) if self[name] == nil
+            self[name] = Rfm::Database.new(name, @server) if self.values_at(name)[0] == nil
           }
           @loaded = true
         end
