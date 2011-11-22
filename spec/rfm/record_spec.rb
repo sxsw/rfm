@@ -53,7 +53,7 @@ describe Rfm::Record do
     
     it "raises an NoMethodError if a key is used that does not exist" do
       @record.instance_variable_set(:@loaded, true)
-      @record.instance_variable_set(:@layout, 'dummy') # will allow this test to pass
+      @record.layout = 'dummy' # will allow this test to pass
 
       ex = rescue_from { @record['tester2'] }
       ex.class.should eql(NoMethodError)
@@ -115,7 +115,7 @@ describe Rfm::Record do
 	  	@record['name'] = 'red'
   		@record.instance_variable_set(:@record_id, 1)
 	  	@record.instance_variable_set(:@loaded, true)
-	  	@record.instance_variable_set(:@layout, @layout)
+	  	@record.layout = @layout
 	  	
 	  	@mods = @record.instance_variable_set(:@mods, {})	
 	  	@layout.stub!(:edit).with(1, @mods).and_return([@mods])
