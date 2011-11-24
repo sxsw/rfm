@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "ginjo-rfm"
-  s.version = "1.5.0.pre20"
+  s.version = "1.5.0.pre21"
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
@@ -30,6 +30,7 @@ Gem::Specification.new do |s|
     "lib/rfm/resultset.rb",
     "lib/rfm/server.rb",
     "lib/rfm/utilities/case_insensitive_hash.rb",
+    "lib/rfm/utilities/core_ext.rb",
     "lib/rfm/utilities/factory.rb",
     "lib/rfm/utilities/rfm_model.rb",
     "lib/rfm/utilities/xml_parser.rb",
