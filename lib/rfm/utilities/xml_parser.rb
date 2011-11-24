@@ -39,10 +39,11 @@ module Rfm
 		# Shortcut to XmlMini config setter.
 		def backend=(name)
 			if name.is_a? Symbol
-				set_backend_via_hash name
+				set_backend_via_hash(name)
 			else
 				ActiveSupport::XmlMini.backend = name
 			end
+			ActiveSupport::XmlMini.backend
 		end
 		
 	private
@@ -70,21 +71,6 @@ module Rfm
 					rescue LoadError
 					end
 				end
-			end
-		end
-		
-		# Give hash & arry a method to always return an array,
-		# since XmlMini doesn't know which will be returnd for any particular element.
-		# See Rfm Layout & Record where this is used.
-		class ::Hash
-			def ary
-				[self]
-			end
-		end
-		
-		class ::Array
-			def ary
-				self
 			end
 		end
 		

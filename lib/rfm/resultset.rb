@@ -92,7 +92,7 @@ module Rfm
 
       parse_fields(meta)
       parse_portals(meta) if @include_portals
-      Rfm::Record.build_records(resultset['record'].ary, self, @field_meta, @layout)
+      Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, @layout)
       
     end
     
@@ -106,16 +106,16 @@ module Rfm
       end
     
       def parse_fields(meta)
-        meta['field-definition'].ary.each do |field|
+        meta['field-definition'].rfm_force_array.each do |field|
           @field_meta[field['name']] = Rfm::Metadata::Field.new(field)
         end
       end
 
       def parse_portals(meta)
-        meta['relatedset-definition'].ary.each do |relatedset|
+        meta['relatedset-definition'].rfm_force_array.each do |relatedset|
           table, fields = relatedset['table'], {}
 
-          relatedset['field-definition'].ary.each do |field|
+          relatedset['field-definition'].rfm_force_array.each do |field|
             name = field['name'].to_s.gsub(Regexp.new(table + '::'), '')
             fields[name] = Rfm::Metadata::Field.new(field)
           end
