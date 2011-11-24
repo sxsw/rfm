@@ -1,6 +1,5 @@
 module Rfm
 	module XmlParser
-		require 'rubygems'
 		require 'active_support' unless defined? ActiveSupport
 		
 		extend self
@@ -27,31 +26,38 @@ module Rfm
 			unless opts[:backend]
 				ActiveSupport::XmlMini.parse(string_or_file)
 			else
-				ActiveSupport::XmlMini.with_backend(get_backend(opts[:backend])) {ActiveSupport::XmlMini.parse(string_or_file)}
+				ActiveSupport::XmlMini.with_backend(get_backend_from_hash(opts[:backend])) {ActiveSupport::XmlMini.parse(string_or_file)}
 			end
 		end
 				
 		# Shortcut to XmlMini config getter.
-		def backend
+		def backend(name=nil)
+			self.backend= name if name
 			ActiveSupport::XmlMini.backend
 		end
 		
 		# Shortcut to XmlMini config setter.
-		def backend=(string_or_class)
-			ActiveSupport::XmlMini.backend = string_or_class
-		end		
+		def backend=(name)
+			if name.is_a? Symbol
+				set_backend_via_hash name
+			else
+				ActiveSupport::XmlMini.backend = name
+			end
+		end
+		
+	private
 		
 		# Given name, return backend config from BACKENDS, including any preloading.
 		# Will raise LoadError if can't load backend.
-		def get_backend(name)
+		def get_backend_from_hash(name)
 				backend_hash = BACKENDS[name.to_sym]
 				require backend_hash[:require]
 				backend_hash[:class].is_a?(Proc) ? backend_hash[:class].call : backend_hash[:class]
 		end
 		
 		# Set XmlMini backend, given symbol matching one of the BACKENDS.
-		def set_backend(name)
-			self.backend = get_backend(name)
+		def set_backend_via_hash(name)
+			ActiveSupport::XmlMini.backend = get_backend_from_hash(name)
 		end
 		
 		# Select the best backend, returns backend config.
@@ -59,7 +65,7 @@ module Rfm
 			string_or_class = catch(:done) do
 				BACKENDS.keys.each do |name|
 					begin
-						result = get_backend name
+						result = get_backend_from_hash name
 						throw(:done, result)
 					rescue LoadError
 					end
@@ -84,7 +90,7 @@ module Rfm
 		
 		# Set XmlMini backend when this file loads.
 		begin
-			self.backend = get_backend FM_CONFIG[:backend]
+			self.backend = get_backend_from_hash FM_CONFIG[:backend]
 		rescue
 			self.backend = decide_backend
 		end

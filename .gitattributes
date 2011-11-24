@@ -1,2 +1,2 @@
-*.gemspec merge=ours
+ginjo-rfm.gemspec merge=ours
 VERSION merge=ours
