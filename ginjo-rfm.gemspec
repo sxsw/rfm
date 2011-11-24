@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
-  s.date = "2011-11-18"
+  s.date = "2011-11-24"
   s.description = "Rfm brings your FileMaker data to Ruby. Now your Ruby scripts and Rails applications can talk directly to your FileMaker server."
   s.email = "http://groups.google.com/group/rfmcommunity"
   s.extra_rdoc_files = [
@@ -45,12 +45,14 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<activesupport>, [">= 0"])
+      s.add_runtime_dependency(%q<i18n>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<rake>, [">= 0"])
       s.add_development_dependency(%q<rdoc>, [">= 0"])
       s.add_development_dependency(%q<rspec>, ["~> 1.3.0"])
     else
       s.add_dependency(%q<activesupport>, [">= 0"])
+      s.add_dependency(%q<i18n>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<rake>, [">= 0"])
       s.add_dependency(%q<rdoc>, [">= 0"])
@@ -58,6 +60,7 @@ Gem::Specification.new do |s|
     end
   else
     s.add_dependency(%q<activesupport>, [">= 0"])
+    s.add_dependency(%q<i18n>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<rake>, [">= 0"])
     s.add_dependency(%q<rdoc>, [">= 0"])
