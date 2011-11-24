@@ -39,10 +39,11 @@ module Rfm
 		# Shortcut to XmlMini config setter.
 		def backend=(name)
 			if name.is_a? Symbol
-				set_backend_via_hash name
+				set_backend_via_hash(name)
 			else
 				ActiveSupport::XmlMini.backend = name
 			end
+			ActiveSupport::XmlMini.backend
 		end
 		
 	private
