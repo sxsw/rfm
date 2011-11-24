@@ -74,21 +74,6 @@ module Rfm
 			end
 		end
 		
-		# Give hash & arry a method to always return an array,
-		# since XmlMini doesn't know which will be returnd for any particular element.
-		# See Rfm Layout & Record where this is used.
-		class ::Hash
-			def ary
-				[self]
-			end
-		end
-		
-		class ::Array
-			def ary
-				self
-			end
-		end
-		
 		# Set XmlMini backend when this file loads.
 		begin
 			self.backend = get_backend_from_hash FM_CONFIG[:backend]

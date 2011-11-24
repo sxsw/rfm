@@ -1,6 +1,7 @@
 path = File.expand_path(File.dirname(__FILE__))
 $:.unshift(path) unless $:.include?(path)
 
+require path + '/rfm/utilities/core_ext'
 require path + '/rfm/utilities/case_insensitive_hash'
 require path + '/rfm/utilities/factory'
 require path + '/rfm/version.rb'
