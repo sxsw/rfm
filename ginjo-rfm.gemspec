@@ -3,40 +3,25 @@
 # Instead, edit Jeweler::Tasks in Rakefile, and run 'rake gemspec'
 # -*- encoding: utf-8 -*-
 
+require 'lib/rfm'
+require 'date'
+
 Gem::Specification.new do |s|
   s.name = "ginjo-rfm"
-  s.version = "1.5.0.pre21"
+  s.version = Rfm::VERSION
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
-  s.date = "2011-11-24"
+  s.date = Date.today.to_s
   s.description = "Rfm brings your FileMaker data to Ruby. Now your Ruby scripts and Rails applications can talk directly to your FileMaker server."
   s.email = "http://groups.google.com/group/rfmcommunity"
   s.extra_rdoc_files = [
     "LICENSE",
-    "README.md"
+    "README.md",
+    "VERSION"
   ]
-  s.files = [
-    "lib/rfm.rb",
-    "lib/rfm/VERSION",
-    "lib/rfm/database.rb",
-    "lib/rfm/error.rb",
-    "lib/rfm/layout.rb",
-    "lib/rfm/metadata/field.rb",
-    "lib/rfm/metadata/field_control.rb",
-    "lib/rfm/metadata/script.rb",
-    "lib/rfm/metadata/value_list_item.rb",
-    "lib/rfm/record.rb",
-    "lib/rfm/resultset.rb",
-    "lib/rfm/server.rb",
-    "lib/rfm/utilities/case_insensitive_hash.rb",
-    "lib/rfm/utilities/core_ext.rb",
-    "lib/rfm/utilities/factory.rb",
-    "lib/rfm/utilities/rfm_model.rb",
-    "lib/rfm/utilities/xml_parser.rb",
-    "lib/rfm/version.rb",
-    "lib/rfm/xml_mini/hpricot.rb"
-  ]
+  s.files = Dir['lib/**/*.rb', 'lib/**/VERSION']
+  
   s.homepage = "http://sixfriedrice.com/wp/products/rfm/"
   s.rdoc_options = ["--line-numbers", "--main", "README.rdoc"]
   s.require_paths = ["lib"]
