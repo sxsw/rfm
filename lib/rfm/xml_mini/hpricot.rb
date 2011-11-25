@@ -32,7 +32,7 @@ module ActiveSupport
         if doc.root
           merge_element!({}, doc.root)
         else
-          raise REXML::ParseException,
+          raise Hpricot::ParseError,
             "The document #{doc.to_s.inspect} does not have a valid root"
         end
       end
@@ -70,7 +70,7 @@ module ActiveSupport
       # hash::
       #   Hash to add the converted element to.
       # element::
-      #   XML element whose texts are to me merged into the hash
+      #   XML element whose texts are to be merged into the hash
       def merge_texts!(hash, element)
         unless element.respond_to? :children and element.children[0].text?
           hash
