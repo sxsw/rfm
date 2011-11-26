@@ -128,7 +128,7 @@ module ActiveSupport
       #   XML element to be checked.
       def empty_content?(element)
         #element.texts.join.blank?
-        element.children.nil? or element.children[0].to_s.blank?
+        element.children.nil? #or element.children[0].to_s.blank?
       end
   end
 end
