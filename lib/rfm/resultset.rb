@@ -38,11 +38,12 @@ module Rfm
 
   class Resultset < Array
     
-    meta_attr_accessor :layout, :server
-    #attr_reader :layout, :server
+    #meta_attr_reader :layout, :server
+    attr_reader :layout, :server
     attr_reader :field_meta, :portal_meta
     attr_reader :date_format, :time_format, :timestamp_format
     attr_reader :total_count, :foundset_count
+    def_delegator :layout, :db
     
     # Initializes a new ResultSet object. You will probably never do this your self (instead, use the Layout
     # object to get various ResultSet obejects).
@@ -67,8 +68,10 @@ module Rfm
     #   after, you want to look at the Record object.
     
     def initialize(server_obj, xml_response, layout_obj, portals=nil)
-      self.layout       = layout_obj
-      self.server       = server_obj
+      #metaclass.instance_variable_set :@layout, layout_obj
+      #metaclass.instance_variable_set :@server, server_obj
+      @layout           = layout_obj
+      @server           = server_obj
       @field_meta     ||= Rfm::CaseInsensitiveHash.new
       @portal_meta    ||= Rfm::CaseInsensitiveHash.new
       @include_portals  = portals 
@@ -94,6 +97,10 @@ module Rfm
       
       Rfm::Record.build_records(resultset.xpath('record'), self, @field_meta, layout)
       
+    end
+    
+    def field_names
+    	@field_meta.keys
     end
     
     private

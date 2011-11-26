@@ -7,7 +7,32 @@
 
 
 module Rfm
+
+	def self.servers
+		@servers ||= Factory::ServerFactory.new(RFM_CONFIG)
+	end
+
   module Factory # :nodoc: all
+  
+  	### Main config should be a hash of hashes, so that each key (nickname) will be unique.
+  	class ServerFactory < Rfm::CaseInsensitiveHash
+    
+      def initialize(config=nil)
+      	@config = config
+      	if config
+      		(config.is_a?(Hash) ? [config] : config).each do |cnf|
+      			self[cnf[:nickname]] = Rfm::Server.new(cnf) if cnf[:nickname]
+      		end
+      	end
+        @loaded = true
+      end
+      
+      def [](nickname, config = @config)
+        super(nickname) or (self[nickname] = Rfm::Server.new(config))
+      end
+    
+    end
+    
     class DbFactory < Rfm::CaseInsensitiveHash
     
       def initialize(server)

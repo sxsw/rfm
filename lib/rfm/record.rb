@@ -100,18 +100,22 @@ module Rfm
   #   copy of the same record
   class Record < Rfm::CaseInsensitiveHash
     
-    meta_attr_accessor :layout, :resultset
+    #meta_attr_reader :layout, :resultset
+    attr_reader :layout, :resultset
     attr_reader :record_id, :mod_id, :portals
+    def_delegators :resultset, :field_meta, :field_names, :db, :server
 
-    def initialize(record, result, field_meta, layout_obj, portal=nil)
-    	self.resultset = result
+    def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
+    	#metaclass.instance_variable_set :@resultset, resultset_obj
+    	#metaclass.instance_variable_set :@layout, layout_obj
+      @layout        = layout_obj
+      @resultset     = resultset_obj
       @record_id     = record['record-id']
       @mod_id        = record['mod-id']
       @mods          = {}
-      self.layout    = layout_obj
       @portals     ||= Rfm::CaseInsensitiveHash.new
 
-      relatedsets = !portal && result.instance_variable_get(:@include_portals) ? record.xpath('relatedset') : []
+      relatedsets = !portal && resultset_obj.instance_variable_get(:@include_portals) ? record.xpath('relatedset') : []
       
       record.xpath('field').each do |field|
         field_name = field['name']
@@ -119,7 +123,7 @@ module Rfm
         datum = []
         
         field.xpath('data').each do |x| 
-          datum.push(field_meta[field_name].coerce(x.inner_text, result))
+          datum.push(field_meta[field_name].coerce(x.inner_text, resultset_obj))
         end
       
         if datum.length == 1
@@ -136,7 +140,7 @@ module Rfm
           tablename, records = relatedset['table'], []
       
           relatedset.xpath('record').each do |record|
-            records << self.class.new(record, result, result.portal_meta[tablename], layout, tablename)
+            records << self.class.new(record, resultset_obj, resultset_obj.portal_meta[tablename], layout, tablename)
           end
       
           @portals[tablename] = records
@@ -146,9 +150,9 @@ module Rfm
       @loaded = true
     end
 
-    def self.build_records(records, result, field_meta, layout, portal=nil)
+    def self.build_records(records, resultset_obj, field_meta, layout, portal=nil)
       records.each do |record|
-        result << self.new(record, result, field_meta, layout, portal)
+        resultset_obj << self.new(record, resultset_obj, field_meta, layout, portal)
       end
     end
 

@@ -135,15 +135,16 @@ module Rfm
     #   myLayout = myServer["Customers"]["Details"]
     def initialize(name, db_obj)
       @name = name
-      self.db = db_obj
+      metaclass.instance_variable_set :@db, db_obj
       
       @loaded = false
       @field_controls = Rfm::CaseInsensitiveHash.new
       @value_lists = Rfm::CaseInsensitiveHash.new      
     end
     
-    meta_attr_accessor :db
+    meta_attr_reader :db
     attr_reader :name #, :db
+    def_delegator :db, :server
     
     # Returns a ResultSet object containing _every record_ in the table associated with this layout.
     def all(options = {})
