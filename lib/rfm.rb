@@ -1,16 +1,10 @@
-# path = File.expand_path(File.dirname(__FILE__))
-# $:.unshift(path) unless $:.include?(path)
-# 
-# require path + '/rfm/utilities/case_insensitive_hash'
-# require path + '/rfm/utilities/factory'
-# require path + '/rfm/version.rb'
-
 Rfm = Module.new unless defined? Rfm
 Rfm::PATH = File.expand_path(File.dirname(__FILE__))
 $LOAD_PATH.unshift(Rfm::PATH) unless $LOAD_PATH.include?(Rfm::PATH)
 
 require 'rfm/utilities/core_ext'
 require 'rfm/utilities/case_insensitive_hash'
+require 'rfm/utilities/core_ext'
 require 'rfm/utilities/factory'
 require 'rfm/version.rb'
 

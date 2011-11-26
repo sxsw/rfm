@@ -133,16 +133,18 @@ module Rfm
     #
     #   myServer = Rfm::Server.new(...)
     #   myLayout = myServer["Customers"]["Details"]
-    def initialize(name, db)
+    def initialize(name, db_obj)
       @name = name
-      @db = db
+      metaclass.instance_variable_set :@db, db_obj
       
       @loaded = false
       @field_controls = Rfm::CaseInsensitiveHash.new
       @value_lists = Rfm::CaseInsensitiveHash.new      
     end
     
-    attr_reader :name, :db
+    meta_attr_reader :db
+    attr_reader :name #, :db
+    def_delegator :db, :server
     
     # Returns a ResultSet object containing _every record_ in the table associated with this layout.
     def all(options = {})
@@ -225,7 +227,7 @@ module Rfm
     
     def load
       @loaded = true
-      fmpxmllayout = @db.server.load_layout(self)
+      fmpxmllayout = db.server.load_layout(self)
       doc = XmlParser.new(fmpxmllayout.body, :namespace=>false) ###, :backend=>db.server.state[:backend])
       
       # check for errors
@@ -268,12 +270,12 @@ module Rfm
     
     def get_records(action, extra_params = {}, options = {})
       include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
-      xml_response = @db.server.connect(@db.account_name, @db.password, action, params.merge(extra_params), options).body
-      Rfm::Resultset.new(@db.server, xml_response, self, include_portals)
+      xml_response = db.server.connect(db.account_name, db.password, action, params.merge(extra_params), options).body
+      Rfm::Resultset.new(db.server, xml_response, self, include_portals)
     end
     
     def params
-      {"-db" => @db.name, "-lay" => self.name}
+      {"-db" => db.name, "-lay" => self.name}
     end
   end
 end

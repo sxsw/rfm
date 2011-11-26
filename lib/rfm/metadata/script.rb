@@ -9,11 +9,12 @@ module Rfm
     #
     # If you want to _run_ a script, see the Layout object instead.
     class Script
-      def initialize(name, db)
+      def initialize(name, db_obj)
         @name = name
-        @db = db
+        self.db = db_obj
       end
       
+      meta_attr_accessor :db
       attr_reader :name
     end
   end

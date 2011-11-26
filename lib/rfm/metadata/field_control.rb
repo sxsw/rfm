@@ -43,10 +43,11 @@ module Metadata
         nil
       end
       @value_list_name = value_list_name
-      @value_list = value_list
+      metaclass.instance_variable_set :@value_list, value_list
     end
     
-    attr_reader :name, :style, :value_list_name, :value_list
+    attr_reader :name, :style, :value_list_name
+    meta_attr_reader :value_list
   
   end
 end
