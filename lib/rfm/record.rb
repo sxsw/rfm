@@ -101,7 +101,7 @@ module Rfm
   class Record < Rfm::CaseInsensitiveHash
     
     #meta_attr_reader :layout, :resultset
-    attr_reader :layout, :resultset
+    attr_accessor :layout, :resultset
     attr_reader :record_id, :mod_id, :portals
     def_delegators :resultset, :field_meta, :field_names, :db, :server
 
