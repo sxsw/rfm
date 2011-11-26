@@ -3,12 +3,11 @@
 # Instead, edit Jeweler::Tasks in Rakefile, and run 'rake gemspec'
 # -*- encoding: utf-8 -*-
 
-require 'lib/rfm'
 require 'date'
 
 Gem::Specification.new do |s|
   s.name = "ginjo-rfm"
-  s.version = Rfm::VERSION
+  s.version = File.read('./lib/rfm/VERSION') #Rfm::VERSION
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
