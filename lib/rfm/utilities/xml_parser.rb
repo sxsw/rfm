@@ -1,6 +1,8 @@
 module Rfm
 	module XmlParser
 		require 'active_support' unless defined? ActiveSupport
+		extend Config
+		config :parent=>'Rfm::Config'
 		
 		extend self
 		
@@ -76,7 +78,7 @@ module Rfm
 		
 		# Set XmlMini backend when this file loads.
 		begin
-			self.backend = get_backend_from_hash FM_CONFIG[:backend]
+			self.backend = get_backend_from_hash(config[:backend])
 		rescue
 			self.backend = decide_backend
 		end
