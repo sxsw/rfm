@@ -125,7 +125,7 @@ module Rfm
         data = field['data']; data = data.is_a?(Hash) ? [data] : data
         data.each do |x| 
           datum.push(field_meta[field_name].coerce(x['__content__'], resultset_obj))
-        end
+        end if data
       
         if datum.length == 1
           self[field_name] = datum[0]

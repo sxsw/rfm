@@ -57,7 +57,6 @@ module Rfm
     #attr_accessor :record_id unless defined? record_id
     extend Config
     config :parent=>'Rfm::Config'
-    #include Config
     begin
     	require 'active_model'
       include ActiveModel::Validations
@@ -74,37 +73,43 @@ module Rfm
 		
 		class << self
 		
+	  	# Returns new RFM server object
+	  	def fm_server(*args)
+	  		return @server if (@server and args==[])
+	      conf = config_merge_args(config_core.dup, args)
+	  	  @server = Rfm::Server.new(conf)
+		  end
+	  
+		  # Returns new RFM db object
+		  def fm_db(*args)
+		  	return @db if (@db and args==[])
+	      conf = config_merge_args(config_core.dup, args)
+				# 	  	  server  = Rfm::Server.new(conf)
+				# 	  	  db      = conf[:database]
+				# 	  	  @db = server[db]
+				@db = fm_server(conf)[conf[:database]]
+		  end
+		  
 		  # Returns new RFM layout object
 	    # Use: fm_layout('lay_name')
 	    # Use: fm_layout('lay_name', :server=>{:some=>'hash'})
 	    # Use: fm_layout(:layout=>'lay_name', :server=>{...})
 	  	def fm_layout(*args)
+	  		return @layout if (@layout and args==[])
 	  		opt = args.last.is_a?(Hash) ? args.pop : {}
 	  	  layout_name = (args[0].class == String ? args[0] : nil)
 	      conf = config_merge_args(config_core.dup, opt)
 	      layout_name = (layout_name || conf[:layout])
-	      return [args,opt,conf,layout_name] unless layout_name
-	  	  server  = Rfm::Server.new(conf)
-	  	  db      = conf[:database]
-	  	  #server.instance_variable_set('@model', self.to_s)
-	  	  layout = server[db][layout_name]
-	  	  layout.instance_variable_set(:@model, self.to_s)
-	  	  layout
+	      return {:error=>'Failed to get layout name', :args=>args, :opt=>opt, :conf=>conf, :layout_name=>layout_name} unless layout_name
+				# 	  	  server  = fm_server(conf)
+				# 	  	  db      = conf[:database]
+				# 	  	  layout = server[db][layout_name]
+				# 	  	  layout.instance_variable_set(:@model, self.to_s)
+				# 	  	  @layout = layout
+				layout = fm_db(conf)[layout_name]
+				layout.instance_variable_set(:@model, self.to_s)
+				@layout = layout
 	  	end
-		
-	  	# Returns new RFM server object
-	  	def fm_server(*args)
-	      conf = config_merge_args(config_core.dup, args)
-	  	  server  = Rfm::Server.new(conf)
-		  end
-	  
-		  # Returns new RFM db object
-		  def fm_db(*args)
-	      conf = config_merge_args(config_core.dup, args)
-	  	  server  = Rfm::Server.new(conf)
-	  	  db      = conf[:database]
-	  	  server[db]
-		  end
 	  
 		  # Convenience methods
 		  alias_method :fm, :fm_layout

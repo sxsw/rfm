@@ -16,7 +16,7 @@ module Rfm
 	    c
 	  end
 	  
-	#protected
+	protected
 	  
 	  # Unsecure, will return raw password
 	  def config_core(*args)
@@ -29,8 +29,8 @@ module Rfm
 	  def config_get_merged
       remote = (eval(@config[:parent]).config_get_merged rescue {})
       (remote = remote[@config[:use]]) if @config.has_key?(:use)
-      puts "remote_config: #{remote.class}"
-			Hash.new.merge!(remote).merge!(@config)
+      #puts "remote_config: #{remote.class}"
+			Hash.new.merge!(remote).merge!(@config) rescue {}
     end	  
 	  
 	  
