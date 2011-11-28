@@ -100,16 +100,22 @@ module Rfm
   #   copy of the same record
   class Record < Rfm::CaseInsensitiveHash
     
+    #meta_attr_reader :layout, :resultset
+    attr_accessor :layout, :resultset
     attr_reader :record_id, :mod_id, :portals
+    def_delegators :resultset, :field_meta, :field_names, :db, :server
 
-    def initialize(record, result, field_meta, layout, portal=nil)
-      @record_id = record['record-id']
-      @mod_id    = record['mod-id']
-      @mods      = {}
-      @layout    = layout
-      @portals ||= Rfm::CaseInsensitiveHash.new
+    def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
+    	#metaclass.instance_variable_set :@resultset, resultset_obj
+    	#metaclass.instance_variable_set :@layout, layout_obj
+      @layout        = layout_obj
+      @resultset     = resultset_obj
+      @record_id     = record['record-id']
+      @mod_id        = record['mod-id']
+      @mods          = {}
+      @portals     ||= Rfm::CaseInsensitiveHash.new
 
-      relatedsets = !portal && result.instance_variable_get(:@include_portals) ? record['relatedset'].rfm_force_array : []
+      relatedsets = !portal && resultset_obj.instance_variable_get(:@include_portals) ? record['relatedset'].rfm_force_array : []
       
       record['field'].rfm_force_array.each do |field|
         field_name = field['name']
@@ -118,9 +124,8 @@ module Rfm
         
         data = field['data']; data = data.is_a?(Hash) ? [data] : data
         data.each do |x| 
-          #datum.push(field_meta[field_name].coerce(x['__content__'], result))
-          datum.push(field_meta[field_name].coerce(x['__content__'], result))
-        end
+          datum.push(field_meta[field_name].coerce(x['__content__'], resultset_obj))
+        end if data
       
         if datum.length == 1
           self[field_name] = datum[0]
@@ -136,7 +141,7 @@ module Rfm
           tablename, records = relatedset['table'], []
       
           relatedset['record'].rfm_force_array.each do |record|
-            records << self.class.new(record, result, result.portal_meta[tablename], layout, tablename)
+            records << self.class.new(record, resultset_obj, resultset_obj.portal_meta[tablename], layout, tablename)
           end
       
           @portals[tablename] = records
@@ -146,9 +151,9 @@ module Rfm
       @loaded = true
     end
 
-    def self.build_records(records, result, field_meta, layout, portal=nil)
+    def self.build_records(records, resultset_obj, field_meta, layout, portal=nil)
       records.each do |record|
-        result << self.new(record, result, field_meta, layout, portal)
+        resultset_obj << self.new(record, resultset_obj, field_meta, layout, portal)
       end
     end
 
@@ -166,7 +171,7 @@ module Rfm
     # to optimize on your end. Just save, and if you've changed the record it will be saved. If not, no
     # server hit is incurred.
     def save
-      self.merge!(@layout.edit(self.record_id, @mods)[0]) if @mods.size > 0
+      self.merge!(layout.edit(self.record_id, @mods)[0]) if @mods.size > 0
       @mods.clear
     end
     
@@ -179,7 +184,7 @@ module Rfm
     # modified after the record was fetched but before it was saved. In other words, prevents you from
     # accidentally overwriting changes someone else made to the record.
     def save_if_not_modified
-      self.merge!(@layout.edit(@record_id, @mods, {:modification_id => @mod_id})[0]) if @mods.size > 0
+      self.merge!(layout.edit(@record_id, @mods, {:modification_id => @mod_id})[0]) if @mods.size > 0
       @mods.clear
     end
     
@@ -220,7 +225,7 @@ module Rfm
       def read_attribute(key)
       	key = key.to_s
         raise NoMethodError, 
-          "#{key.to_s} does not exists as a field in the current Filemaker layout." unless (!@layout or self.key?(key))
+          "#{key.to_s} does not exists as a field in the current Filemaker layout." unless (!layout or self.key?(key))
         self._old_hash_reader(key).to_s.empty? ? nil : self._old_hash_reader(key) if self._old_hash_reader(key)
       end
 

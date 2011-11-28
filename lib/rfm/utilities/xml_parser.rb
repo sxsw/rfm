@@ -1,6 +1,8 @@
 module Rfm
 	module XmlParser
 		require 'active_support' unless defined? ActiveSupport
+		extend Config
+		config :parent=>'Rfm::Config'
 		
 		extend self
 		
@@ -23,16 +25,16 @@ module Rfm
 		# Main parsing method.
 		def new(string_or_file, opts={})
 			string_or_file.gsub!(/xmlns=\"[^\"]*\"/,'') if (string_or_file.class == String and opts[:namespace] == false)
-			unless opts[:backend]
+			unless opts[:parser] and get_backend_from_hash(opts[:parser]).to_s != self.backend.to_s
 				ActiveSupport::XmlMini.parse(string_or_file)
 			else
-				ActiveSupport::XmlMini.with_backend(get_backend_from_hash(opts[:backend])) {ActiveSupport::XmlMini.parse(string_or_file)}
+				ActiveSupport::XmlMini.with_backend(get_backend_from_hash(opts[:parser])) {ActiveSupport::XmlMini.parse(string_or_file)}
 			end
 		end
 				
 		# Shortcut to XmlMini config getter.
 		def backend(name=nil)
-			self.backend= name if name
+			self.backend = name if name
 			ActiveSupport::XmlMini.backend
 		end
 		
@@ -76,7 +78,7 @@ module Rfm
 		
 		# Set XmlMini backend when this file loads.
 		begin
-			self.backend = get_backend_from_hash FM_CONFIG[:backend]
+			self.backend = get_backend_from_hash(config[:parser])
 		rescue
 			self.backend = decide_backend
 		end

@@ -231,8 +231,8 @@ module Rfm
     # get no error at this point if the database you access doesn't exist. Instead, you'll
     # receive an error when you actually try to perform some action on a layout from this
     # database.
-    def [](dbname)
-      self.db[dbname]
+    def [](dbname, acnt=nil, pass=nil)
+      self.db[dbname, acnt, pass]
     end
     
     attr_reader :db, :host_name, :port, :scheme, :state

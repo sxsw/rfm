@@ -38,10 +38,12 @@ module Rfm
 
   class Resultset < Array
     
+    #meta_attr_reader :layout, :server
     attr_reader :layout, :server
     attr_reader :field_meta, :portal_meta
     attr_reader :date_format, :time_format, :timestamp_format
     attr_reader :total_count, :foundset_count
+    def_delegator :layout, :db
     
     # Initializes a new ResultSet object. You will probably never do this your self (instead, use the Layout
     # object to get various ResultSet obejects).
@@ -65,14 +67,16 @@ module Rfm
     #   layout contains portals, you can find out what fields they contain here. Again, if it's the data you're
     #   after, you want to look at the Record object.
     
-    def initialize(server, xml_response, layout, portals=nil)
-      @layout           = layout
-      @server           = server
+    def initialize(server_obj, xml_response, layout_obj, portals=nil)
+      #metaclass.instance_variable_set :@layout, layout_obj
+      #metaclass.instance_variable_set :@server, server_obj
+      @layout           = layout_obj
+      @server           = server_obj
       @field_meta     ||= Rfm::CaseInsensitiveHash.new
       @portal_meta    ||= Rfm::CaseInsensitiveHash.new
       @include_portals  = portals 
       
-      doc = XmlParser.new(xml_response, :namespace=>false) ###, :backend=>@server.state[:backend])
+      doc = XmlParser.new(xml_response, :namespace=>false, :parser=>server.state[:parser])
       
       error = doc['fmresultset']['error']['code'].to_i
       check_for_errors(error, server.state[:raise_on_401])
@@ -92,8 +96,12 @@ module Rfm
 
       parse_fields(meta)
       parse_portals(meta) if @include_portals
-      Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, @layout)
+      Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, layout)
       
+    end
+    
+    def field_names
+    	@field_meta.keys
     end
     
     private

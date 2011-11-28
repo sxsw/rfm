@@ -65,16 +65,18 @@ module Rfm
     #   myDatabase = myServer["Customers"]
     #
     # This sample code gets a database object representing the Customers database on the FileMaker server.
-    def initialize(name, server)
+    def initialize(name, server_obj, acnt=nil, pass=nil)
       @name = name
-      @server = server
-      @account_name = server.state[:account_name] or ""
-      @password = server.state[:password] or ""
+      metaclass.instance_variable_set :@server, server_obj
+      @account_name = acnt #server.state[:account_name] or ""
+      @password = pass #server.state[:password] or ""
       @layout = Rfm::Factory::LayoutFactory.new(server, self)
       @script = Rfm::Factory::ScriptFactory.new(server, self)
     end
     
-    attr_reader :server, :name, :account_name, :password, :layout, :script
+    meta_attr_reader :server
+    #attr_reader :server
+    attr_reader :name, :account_name, :password, :layout, :script
     attr_writer :account_name, :password
 
     # Access the Layout object representing a layout in this database. For example:

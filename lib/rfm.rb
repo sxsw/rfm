@@ -1,16 +1,10 @@
-# path = File.expand_path(File.dirname(__FILE__))
-# $:.unshift(path) unless $:.include?(path)
-# 
-# require path + '/rfm/utilities/case_insensitive_hash'
-# require path + '/rfm/utilities/factory'
-# require path + '/rfm/version.rb'
-
 Rfm = Module.new unless defined? Rfm
 Rfm::PATH = File.expand_path(File.dirname(__FILE__))
 $LOAD_PATH.unshift(Rfm::PATH) unless $LOAD_PATH.include?(Rfm::PATH)
 
 require 'rfm/utilities/core_ext'
 require 'rfm/utilities/case_insensitive_hash'
+require 'rfm/utilities/config'
 require 'rfm/utilities/factory'
 require 'rfm/version.rb'
 
@@ -30,7 +24,7 @@ module Rfm
   autoload :Layout,    'rfm/layout'
   autoload :Resultset, 'rfm/resultset'
   autoload :Record,    'rfm/record'
-  autoload :Base,      'rfm/utilities/rfm_model'
+  autoload :Base,      'rfm/utilities/base'
   autoload :XmlParser, 'rfm/utilities/xml_parser'
 
 	module Metadata
