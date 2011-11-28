@@ -228,7 +228,7 @@ module Rfm
     def load
       @loaded = true
       fmpxmllayout = db.server.load_layout(self)
-      doc = XmlParser.new(fmpxmllayout.body, :namespace=>false) ###, :backend=>db.server.state[:backend])
+      doc = XmlParser.new(fmpxmllayout.body, :namespace=>false, :parser=>server.state[:parser])
       
       # check for errors
       error = doc['FMPXMLLAYOUT']['ERRORCODE'].to_s.to_i

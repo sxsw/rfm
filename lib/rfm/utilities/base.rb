@@ -121,6 +121,8 @@ module Rfm
 				layout.instance_variable_set(:@model, self.to_s)
 				@layout = layout
 	  	end
+	  	
+	  	def_delegators :layout, :db, :server
 	  
 		  # Convenience methods
 		  alias_method :fm, :layout
