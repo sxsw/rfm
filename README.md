@@ -17,7 +17,7 @@ Documentation
 * Rdoc location:  <http://rubydoc.info/gems/lardawge-rfm/1.4.1.2/frames>
 * Discussion:     <http://groups.google.com/group/rfmcommunity>
 
-An incomplete list of recent features added since rfm 1.0.0.
+An partial list of features added since rfm 1.0.0.
 
 * SSL support
 * Nokogiri xml parser
@@ -29,6 +29,8 @@ Partial roadmap to the future
 
 * ActiveModel compatibility
 * Alternative XML parsers
+* Complex Filemaker queries
+* Configuration API
 * More tests
 
 
@@ -73,7 +75,7 @@ ActiveModel support.
     
 Multiple backend xml parsers.
 
-    Rfm::Server.new(:backend => :nokogiri)
+    Rfm::Server.new(:parser => :nokogiri)
     # Backend options => :libxml, :libxmlsax, :nokogiri, :nokogirisax, :hpricot, :rexml
     
 Try it out:
