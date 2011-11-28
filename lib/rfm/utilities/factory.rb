@@ -8,30 +8,27 @@
 
 module Rfm
 
-	# 	def self.servers
-	# 		@servers ||= Factory::ServerFactory.new(config_core)
-	# 	end
-
   module Factory # :nodoc: all
+  	extend Config
+  	config :parent=>'Rfm::Config'
   
-		#   	### Main config should be a hash of hashes, so that each key (nickname) will be unique.
-		#   	class ServerFactory < Rfm::CaseInsensitiveHash
-		#     
-		#       def initialize(conf=nil)
-		#       	@conf = conf
-		#       	if conf
-		#       		(config.is_a?(Hash) ? [config] : config).each do |cnf|
-		#       			self[cnf[:nickname]] = Rfm::Server.new(cnf) if cnf[:nickname]
-		#       		end
-		#       	end
-		#         @loaded = true
-		#       end
-		#       
-		#       def [](nickname, config = @config)
-		#         super(nickname) or (self[nickname] = Rfm::Server.new(config))
-		#       end
-		#     
-		#     end # ServerFactory
+  	class ServerFactory < Rfm::CaseInsensitiveHash
+    
+			#       def initialize(conf=)
+			#       	@conf = conf
+			#       	if conf
+			#       		(config.is_a?(Hash) ? [config] : config).each do |cnf|
+			#       			self[cnf[:nickname]] = Rfm::Server.new(cnf) if cnf[:nickname]
+			#       		end
+			#       	end
+			#         @loaded = true
+			#       end
+      
+      def [](host, conf = config_core)
+        super(host) or (self[host] = Rfm::Server.new(conf))
+      end
+    
+    end # ServerFactory
     
     class DbFactory < Rfm::CaseInsensitiveHash
     
@@ -110,6 +107,35 @@ module Rfm
         self.keys
       end
     
-    end
-  end
-end
+    end # ScriptFactory
+    
+    class << self
+    
+			def servers
+				@servers ||= Factory::ServerFactory.new  #(config_core)
+			end    
+    
+	  	# Returns RFM server object, given config hash
+	  	def server(conf = config_core)
+	      server_name = conf[:host]
+	  	  server = servers[server_name, conf]
+		  end
+	  
+		  # Returns RFM db object, given config hash
+		  def db(conf = config_core)
+				db_name = conf[:database]
+				db = server(conf)[db_name]
+		  end
+		  
+		  # Returns RFM layout object, given config hash
+	  	def layout(conf = config_core)
+	  		#return @layout if (@layout and args==[])
+	  		#opt = args.last.is_a?(Hash) ? args.pop : {}
+	  	  layout_name = conf[:layout]
+	      return {:error=>'Failed to get layout name', :conf=>conf} unless layout_name
+				layout = db(conf)[layout_name]
+	  	end
+    
+    end # class << self
+  end # Factory
+end # Rfm

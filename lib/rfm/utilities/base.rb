@@ -73,52 +73,60 @@ module Rfm
 		
 		class << self
 		
-	  	# Returns new RFM server object
-	  	def fm_server(*args)
-	  		return @server if (@server and args==[])
-	      conf = config_merge_args(config_core.dup, args)
-	  	  @server = Rfm::Server.new(conf)
-		  end
-	  
-		  # Returns new RFM db object
-		  def fm_db(*args)
-		  	return @db if (@db and args==[])
-	      conf = config_merge_args(config_core.dup, args)
-				# 	  	  server  = Rfm::Server.new(conf)
-				# 	  	  db      = conf[:database]
-				# 	  	  @db = server[db]
-				@db = fm_server(conf)[conf[:database]]
-		  end
-		  
-		  # Returns new RFM layout object
-	    # Use: fm_layout('lay_name')
-	    # Use: fm_layout('lay_name', :server=>{:some=>'hash'})
-	    # Use: fm_layout(:layout=>'lay_name', :server=>{...})
-	  	def fm_layout(*args)
+			# 	  	# Returns new RFM server object
+			# 	  	def server(*args)
+			# 	  		return @server if (@server and args==[])
+			# 	      conf = config_merge_args(config_core.dup, args)
+			# 	  	  @server = Rfm::Server.new(conf)
+			# 		  end
+			# 	  
+			# 		  # Returns new RFM db object
+			# 		  def db(*args)
+			# 		  	return @db if (@db and args==[])
+			# 	      conf = config_merge_args(config_core.dup, args)
+			# 				# 	  	  server  = Rfm::Server.new(conf)
+			# 				# 	  	  db      = conf[:database]
+			# 				# 	  	  @db = server[db]
+			# 				@db = server(conf)[conf[:database]]
+			# 		  end
+			# 		  
+			# 		  # Returns new RFM layout object
+			# 	    # Use: layout('lay_name')
+			# 	    # Use: layout('lay_name', :server=>{:some=>'hash'})
+			# 	    # Use: layout(:layout=>'lay_name', :server=>{...})
+			# 	  	def layout(*args)
+			# 	  		return @layout if (@layout and args==[])
+			# 	  		opt = args.last.is_a?(Hash) ? args.pop : {}
+			# 	  	  layout_name = (args[0].class == String ? args[0] : nil)
+			# 	      conf = config_merge_args(config_core.dup, opt)
+			# 	      layout_name = (layout_name || conf[:layout])
+			# 	      return {:error=>'Failed to get layout name', :args=>args, :opt=>opt, :conf=>conf, :layout_name=>layout_name} unless layout_name
+			# 				# 	  	  server  = server(conf)
+			# 				# 	  	  db      = conf[:database]
+			# 				# 	  	  layout = server[db][layout_name]
+			# 				# 	  	  layout.instance_variable_set(:@model, self.to_s)
+			# 				# 	  	  @layout = layout
+			# 				layout = db(conf)[layout_name]
+			# 				layout.instance_variable_set(:@model, self.to_s)
+			# 				@layout = layout
+			# 	  	end
+			
+	  	def layout(*args)
 	  		return @layout if (@layout and args==[])
 	  		opt = args.last.is_a?(Hash) ? args.pop : {}
 	  	  layout_name = (args[0].class == String ? args[0] : nil)
 	      conf = config_merge_args(config_core.dup, opt)
-	      layout_name = (layout_name || conf[:layout])
-	      return {:error=>'Failed to get layout name', :args=>args, :opt=>opt, :conf=>conf, :layout_name=>layout_name} unless layout_name
-				# 	  	  server  = fm_server(conf)
-				# 	  	  db      = conf[:database]
-				# 	  	  layout = server[db][layout_name]
-				# 	  	  layout.instance_variable_set(:@model, self.to_s)
-				# 	  	  @layout = layout
-				layout = fm_db(conf)[layout_name]
+				conf.merge!(:layout=>layout_name) if layout_name
+				layout = Rfm::Factory.layout(conf)
 				layout.instance_variable_set(:@model, self.to_s)
 				@layout = layout
 	  	end
 	  
 		  # Convenience methods
-		  alias_method :fm, :fm_layout
-	    # alias_method :layout, :fm_layout
-	    # alias_method :server, :fm_server
-	    # alias_method :db,     :fm_db
+		  alias_method :fm, :layout
 		
 	  	def find(*args)
-	  	  r = fm_layout.find(*args)
+	  	  r = layout.find(*args)
 	  	  if args[0].class != Hash and r.size == 1
 	  	    r[0]
 		    else
@@ -129,7 +137,7 @@ module Rfm
 	  	end
 		
 	  	def any(*args)
-	  	  fm_layout.any(*args)[0]
+	  	  layout.any(*args)[0]
 	  	end
 		
 	  	def create(*args)
@@ -137,25 +145,25 @@ module Rfm
 	  	end
 	  	
 	  	def create_from_instance(*args)
-	  	  fm_layout.create(*args)[0]
+	  	  layout.create(*args)[0]
 	  	end
 	  
 	    # Using this method will skip callbacks. Use instance 'update' instead
 		  def edit(*args)
-		    fm_layout.edit(*args)[0]
+		    layout.edit(*args)[0]
 	    end
 	  
 	    # Using this method will skip callbacks. Use instance 'destroy' instead
 	    def delete(*args)
-	      fm_layout.delete(*args)
+	      layout.delete(*args)
 	    end
 	    
 	    def query(*args)
-	      fm_layout.query(*args)
+	      layout.query(*args)
 	    end
 	    
 	    def field_controls
-	      @field_controls ||= self.fm_layout.field_controls
+	      @field_controls ||= self.layout.field_controls
 	    end
 	    
 	    def field_names
@@ -286,7 +294,7 @@ module Rfm
 
 		# Perform RFM find using complex boolean logic (multiple value options for a single field)
 		# Mimics creation of multiple find requests for "or" logic
-		# Use: rfm_layout_object.query({'fieldOne'=>['val1','val2','val3'], 'fieldTwo'=>'someValue', ...})
+		# Use: rlayout_object.query({'fieldOne'=>['val1','val2','val3'], 'fieldTwo'=>'someValue', ...})
 		def query(hash_or_recid, options = {})
 		  if hash_or_recid.kind_of? Hash
 		    get_records('-findquery', assemble_query(hash_or_recid), options)
@@ -354,7 +362,7 @@ module Rfm
   	class << self
 	  	alias_method :new_orig, :new
 	  	def new(record={}, result=[], field_meta='', layout=nil, portal=nil) # record, result, field_meta, layout, portal
-	  		layout = fm_layout rescue layout
+	  		layout = layout rescue layout
 	      model = eval(layout.instance_variable_get(:@model)) rescue Rfm::Record
 	      #puts model.to_s
 	      #puts model.class

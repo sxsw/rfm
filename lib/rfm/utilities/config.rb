@@ -1,5 +1,9 @@
 module Rfm
 
+	### Main config should be a hash of hashes, so that each key (nickname) will be unique.
+	### Top level config hash contains config parameters or nickname keys pointing to config subsets.
+	### The subsets can be any grouping of config parameters, as a hash.
+	
   
   # Methods to be included and/or extended into RfmHelper::Base
   # All included methods are also extended
@@ -66,10 +70,6 @@ module Rfm
       ###	    
       return conf
     end
-    
-		#     def self.included(base)
-		#     	base.extend self
-		#     end
     
     def inherited(base)
     	base.config :parent=>self.to_s
