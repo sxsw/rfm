@@ -381,6 +381,7 @@ module Rfm
 	    end
 	  end
 
+		# TODO: I think this should move to Rfm::Base. It should replace the upstream Record#initialize method, shouldn't it?
 		alias_method :initialize_orig, :initialize
 		def initialize(record, result, field_meta, layout, portal)
 			if result == [] and  !record.has_key? 'field'   #!record.respond_to? :xpath
