@@ -1,4 +1,7 @@
-Rfm = Module.new unless defined? Rfm
+#Rfm = Module.new unless defined? Rfm
+module Rfm
+end
+
 Rfm::PATH = File.expand_path(File.dirname(__FILE__))
 $LOAD_PATH.unshift(Rfm::PATH) unless $LOAD_PATH.include?(Rfm::PATH)
 

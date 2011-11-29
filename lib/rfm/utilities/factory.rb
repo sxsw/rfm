@@ -8,11 +8,11 @@
 
 module Rfm
 
-  module Factory # :nodoc: all
+  module Factory 
   	extend Config
   	config :parent=>'Rfm::Config'
   
-  	class ServerFactory < Rfm::CaseInsensitiveHash
+  	class ServerFactory < Rfm::CaseInsensitiveHash # :nodoc: all
     
 			#       def initialize(conf=)
 			#       	@conf = conf
@@ -30,7 +30,7 @@ module Rfm
     
     end # ServerFactory
     
-    class DbFactory < Rfm::CaseInsensitiveHash
+    class DbFactory < Rfm::CaseInsensitiveHash # :nodoc: all
     
       def initialize(server)
         @server = server
@@ -59,7 +59,7 @@ module Rfm
     
     end
     
-    class LayoutFactory < Rfm::CaseInsensitiveHash
+    class LayoutFactory < Rfm::CaseInsensitiveHash # :nodoc: all
     
       def initialize(server, database)
         @server = server
@@ -84,7 +84,7 @@ module Rfm
     
     end
     
-    class ScriptFactory < Rfm::CaseInsensitiveHash
+    class ScriptFactory < Rfm::CaseInsensitiveHash # :nodoc: all
     
       def initialize(server, database)
         @server = server

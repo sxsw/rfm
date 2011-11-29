@@ -1,5 +1,5 @@
 module Rfm
-	module XmlParser
+	module XmlParser # :nodoc: all
 		require 'active_support' unless defined? ActiveSupport
 		extend Config
 		config :parent=>'Rfm::Config'

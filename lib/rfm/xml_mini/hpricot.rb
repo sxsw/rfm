@@ -3,7 +3,7 @@ require 'active_support/core_ext/object/blank'
 require 'stringio'
 
 # = XmlMini ReXML implementation
-module ActiveSupport
+module ActiveSupport # :nodoc: all
   module XmlMini_Hpricot #:nodoc:
     extend self
 
