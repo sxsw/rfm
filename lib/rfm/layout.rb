@@ -241,7 +241,7 @@ module Rfm
           name = valuelist['NAME']
           @value_lists[name] = valuelist['VALUE'].collect{|value|
           	Rfm::Metadata::ValueListItem.new(value['__content__'], value['DISPLAY'], name)
-          }
+          } rescue []
         }
         @value_lists.freeze
       end

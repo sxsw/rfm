@@ -73,6 +73,11 @@ module Rfm
 		
 		class << self
 		
+			# 	    def inherited(child)
+			# 	    	# Loads layout/db/server objects in Factory@servers
+			# 	    	puts child.layout.inspect
+			# 	    end	    
+		
 			# 	  	# Returns new RFM server object
 			# 	  	def server(*args)
 			# 	  		return @server if (@server and args==[])
@@ -287,7 +292,6 @@ module Rfm
       self || {}
     end
     
-  	#config RFM_CONFIG if defined? RFM_CONFIG
   end # class Base
   
 
