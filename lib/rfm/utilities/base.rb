@@ -51,8 +51,11 @@
 
 module Rfm
 	
+	require 'rfm/record'
+
 
   ### RfmHelper::Base (base model for new records) ###
+  ###
   class Base <  Rfm::Record  #Hash
     #attr_accessor :record_id unless defined? record_id
     extend Config
@@ -68,6 +71,25 @@ module Rfm
     	end
       #alias_method(:run_callbacks, :callback_deadend)
     end
+    
+		def initialize(record, result, field_meta, layout, portal)
+			if result == [] and  !record.has_key? 'field'   #!record.respond_to? :xpath
+				@mods = Rfm::CaseInsensitiveHash.new
+        # loop thru each layout field, creating hash keys with nil values
+        self.class.field_controls.keys.each do |field| 
+          field_name = field.to_s
+          self[field_name] = nil
+        end
+        self.update_attributes(record) unless record == {}
+        self.merge!(@mods) unless @mods == {}
+      else
+      	#initialize_orig(record, result, field_meta, layout, portal)
+      	super
+      end
+			yield(self) if block_given?
+		end
+    
+    
     
     # --- #
 		
@@ -179,6 +201,9 @@ module Rfm
 
 		end # class << self
 		
+		
+		
+				
 		# --- #
 		
   	def new_record?
@@ -251,7 +276,9 @@ module Rfm
     end    
     
     
-  protected
+    
+	
+  #protected # class Base
   
     # shunt for callbacks pre rails 3
     def callback_deadend (*args)
@@ -270,7 +297,7 @@ module Rfm
   	
     def update(mod_id=nil)
       #return unless @mods.size > 0 and record_id
-      return unless record_id
+      return false unless record_id
   	  run_callbacks :update do
   	    return unless @mods.size > 0
   	    unless mod_id
@@ -292,8 +319,14 @@ module Rfm
       self || {}
     end
     
-  end # class Base
+  end ### class Base
   
+  
+  
+  
+  
+  
+  # --- #  
 
   # Methods for Rfm::Layout to build complex queries
   module ComplexQuery
@@ -354,6 +387,8 @@ module Rfm
 
 
 
+
+
   ### Rfm direct class mods ###
   
   class Layout
@@ -367,37 +402,38 @@ module Rfm
   	
   	class << self
 	  	alias_method :new_orig, :new
-	  	def new(record={}, result=[], field_meta='', layout=nil, portal=nil) # record, result, field_meta, layout, portal
-	  		layout = layout rescue layout
+	  	def new(record={}, result=[], field_meta='', layout_obj=nil, portal=nil) # record, result, field_meta, layout, portal
+	  		layout_obj = layout rescue layout_obj
 	      model = eval(layout.instance_variable_get(:@model)) rescue Rfm::Record
 	      #puts model.to_s
 	      #puts model.class
 	      #puts layout.instance_variable_get(:@model).to_s
 	      if model.class == Rfm::Record
-	      	new_orig(record, result, field_meta, layout, portal)
+	      	#new_orig(record, result, field_meta, layout, portal)
+	      	super
 	      else
-	      	model.new_orig(record, result, field_meta, layout, portal)
+	      	model.new_orig(record, result, field_meta, layout_obj, portal)
 	      end
 	    end
 	  end
 
-		# TODO: I think this should move to Rfm::Base. It should replace the upstream Record#initialize method, shouldn't it?
-		alias_method :initialize_orig, :initialize
-		def initialize(record, result, field_meta, layout, portal)
-			if result == [] and  !record.has_key? 'field'   #!record.respond_to? :xpath
-				@mods = Rfm::CaseInsensitiveHash.new
-        # loop thru each layout field, creating hash keys with nil values
-        self.class.field_controls.keys.each do |field| 
-          field_name = field.to_s
-          self[field_name] = nil
-        end
-        self.update_attributes(record) unless record == {}
-        self.merge!(@mods) unless @mods == {}
-      else
-      	initialize_orig(record, result, field_meta, layout, portal)
-      end
-			yield(self) if block_given?
-		end
+		# 		# TODO: I think this should move to Rfm::Base. It should replace the upstream Record#initialize method, shouldn't it?
+		# 		alias_method :initialize_orig, :initialize
+		# 		def initialize(record, result, field_meta, layout, portal)
+		# 			if result == [] and  !record.has_key? 'field'   #!record.respond_to? :xpath
+		# 				@mods = Rfm::CaseInsensitiveHash.new
+		#         # loop thru each layout field, creating hash keys with nil values
+		#         self.class.field_controls.keys.each do |field| 
+		#           field_name = field.to_s
+		#           self[field_name] = nil
+		#         end
+		#         self.update_attributes(record) unless record == {}
+		#         self.merge!(@mods) unless @mods == {}
+		#       else
+		#       	initialize_orig(record, result, field_meta, layout, portal)
+		#       end
+		# 			yield(self) if block_given?
+		# 		end
     
   end # class Record
 
