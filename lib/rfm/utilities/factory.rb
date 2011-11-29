@@ -24,7 +24,7 @@ module Rfm
 			#         @loaded = true
 			#       end
       
-      def [](host, conf = config_core)
+      def [](host, conf = Factory.config_core)
         super(host) or (self[host] = Rfm::Server.new(conf))
       end
     
