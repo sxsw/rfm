@@ -1,40 +1,3 @@
-# =Rfm::Base class
-#
-# Adds ability to create Rfm::Base model classes that behave similar to ActiveRecord::Base models.
-# If you set your Rfm.config (or RFM_CONFIG) with your host, database, account, password, and
-# any other server/database options, you can provide your models with nothing more than a layout.
-#
-# 	class Person < Rfm::Base
-# 	  config :layout => 'mylayout'
-# 	end
-#
-# And similar to ActiveRecord, you can define callbacks, validations, attributes, and methods on your model.
-#
-#   class Account < Rfm::Base
-#     config :layout=>'account_xml'
-#     before_create :encrypt_password
-#     validates :email, :presence => true
-#     validates :username, :presence => true
-#     attr_accessor :password
-#   end
-#   
-# Then in your project, you can use these models just like ActiveRecord models.
-# The query syntax and options are still Rfm under the hood. Treat your model
-# classes like Rfm::Layout objects.
-#
-#   @account = Account.new :username => 'bill', :password => 'pass'
-#   @account.email = 'my@email.com'
-#   @account.save!
-#   
-#   @person = Person.find({:name => 'mike'}, :max_records => 50)
-#   @person.update_attributes(:name => 'Michael', :title => "Senior Partner")
-#   @person.save
-# 
-# 
-#
-#
-# :nodoc: TODO: make sure all methods return something (a record?) if successful, otherwise nil or error
-# :nodoc: TODO: move rfm methods & patches from fetch_mail_with_ruby to this file
 module Rfm
 	
 	# TODO: Are these really needed here?
@@ -57,6 +20,42 @@ module Rfm
   end # class Record
 
 
+
+	# Adds ability to create Rfm::Base model classes that behave similar to ActiveRecord::Base models.
+	# If you set your Rfm.config (or RFM_CONFIG) with your host, database, account, password, and
+	# any other server/database options, you can provide your models with nothing more than a layout.
+	#
+	# 	class Person < Rfm::Base
+	# 	  config :layout => 'mylayout'
+	# 	end
+	#
+	# And similar to ActiveRecord, you can define callbacks, validations, attributes, and methods on your model.
+	#
+	#   class Account < Rfm::Base
+	#     config :layout=>'account_xml'
+	#     before_create :encrypt_password
+	#     validates :email, :presence => true
+	#     validates :username, :presence => true
+	#     attr_accessor :password
+	#   end
+	#   
+	# Then in your project, you can use these models just like ActiveRecord models.
+	# The query syntax and options are still Rfm under the hood. Treat your model
+	# classes like Rfm::Layout objects, with a few enhancements.
+	#
+	#   @account = Account.new :username => 'bill', :password => 'pass'
+	#   @account.email = 'my@email.com'
+	#   @account.save!
+	#   
+	#   @person = Person.find({:name => 'mike'}, :max_records => 50)[0]
+	#   @person.update_attributes(:name => 'Michael', :title => "Senior Partner")
+	#   @person.save
+	# 
+	# 
+	#
+	#
+	# :nodoc: TODO: make sure all methods return something (a record?) if successful, otherwise nil or error
+	# :nodoc: TODO: move rfm methods & patches from fetch_mail_with_ruby to this file
   class Base <  Rfm::Record  #Hash
     extend Config
     config :parent=>'Rfm::Config'
