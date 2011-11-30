@@ -115,6 +115,8 @@ module Rfm
 		end
     
     
+		
+		### Class Methods ###
 
 		class << self
 			
@@ -177,6 +179,7 @@ module Rfm
 		
 		
 		
+		### Instance Methods ###
 						
   	def new_record?
   		return true if self.record_id.blank?
@@ -250,7 +253,7 @@ module Rfm
     
     
 	
-  #protected # class Base
+  protected # class Base
   
     # shunt for callbacks pre rails 3
     def callback_deadend (*args)
