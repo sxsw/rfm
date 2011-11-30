@@ -42,21 +42,11 @@ task :default => :spec
 
 require 'rdoc/task'
 Rake::RDocTask.new do |rdoc|
-  if File.exist?('VERSION.yml')
-    config = YAML.load(File.read('VERSION.yml'))
-    version = "#{config[:major]}.#{config[:minor]}.#{config[:patch]}"
-  elsif (Rfm::VERSION rescue nil)
-  	version = Rfm::VERSION
-  elsif File.exist?('VERSION')
-    version = File.read('VERSION')
-  else
-  	version = ""
-  end
-
+	version = Rfm::VERSION
+	rdoc.main = 'README'
   rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "rfm #{version}"
-  rdoc.rdoc_files.include('README*')
-  rdoc.rdoc_files.include('lib/**/*.rb')
+  rdoc.title = "Rfm #{version}"
+  rdoc.rdoc_files.include('lib/**/*.rb', 'README*', 'CHANGELOG', 'VERSION', 'LICENSE')
 end
 
 require 'yard'
