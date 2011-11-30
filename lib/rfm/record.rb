@@ -103,7 +103,8 @@ module Rfm
     #meta_attr_reader :layout, :resultset
     attr_accessor :layout, :resultset
     attr_reader :record_id, :mod_id, :portals
-    def_delegators :resultset, :field_meta, :field_names, :db, :server
+    def_delegators :resultset, :field_meta
+    def_delegators :layout, :db, :server
 
     def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
     	#metaclass.instance_variable_set :@resultset, resultset_obj
@@ -141,7 +142,7 @@ module Rfm
           tablename, records = relatedset['table'], []
       
           relatedset['record'].rfm_force_array.each do |record|
-            records << self.class.new(record, resultset_obj, resultset_obj.portal_meta[tablename], layout, tablename)
+            records << self.class.new(record, resultset_obj, resultset_obj.portal_meta[tablename], layout_obj, tablename)
           end
       
           @portals[tablename] = records
@@ -151,9 +152,9 @@ module Rfm
       @loaded = true
     end
 
-    def self.build_records(records, resultset_obj, field_meta, layout, portal=nil)
+    def self.build_records(records, resultset_obj, field_meta, layout_obj, portal=nil)
       records.each do |record|
-        resultset_obj << self.new(record, resultset_obj, field_meta, layout, portal)
+        resultset_obj << self.new(record, resultset_obj, field_meta, layout_obj, portal)
       end
     end
 
@@ -174,11 +175,6 @@ module Rfm
       self.merge!(layout.edit(self.record_id, @mods)[0]) if @mods.size > 0
       @mods.clear
     end
-    
-    def field_meta
-    	{:future=>'feature'}
-  	end
-    	
 
     # Like Record::save, except it fails (and raises an error) if the underlying record in FileMaker was
     # modified after the record was fetched but before it was saved. In other words, prevents you from
@@ -218,6 +214,10 @@ module Rfm
     def respond_to?(symbol, include_private = false)
       return true if self.include?(symbol.to_s)
       super
+    end
+    
+    def field_names
+    	resultset.field_names rescue layout.field_names
     end
 
     private

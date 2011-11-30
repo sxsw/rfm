@@ -119,6 +119,8 @@ module Rfm
   #   list that is attached to any field on the layout
   
   class Layout
+  
+  	include ComplexQuery
     
     # Initialize a layout object. You never really need to do this. Instead, just do this:
     # 
@@ -217,6 +219,10 @@ module Rfm
       load unless @loaded
       @field_controls
     end
+    
+  	def field_names
+  		@field_names ||= field_controls.collect{|k,v| v.name}
+  	end
     
     def value_lists
       load unless @loaded
