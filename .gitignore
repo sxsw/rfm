@@ -4,6 +4,7 @@
 .yardoc
 local_testing
 coverage
+doc
 rdoc
 pkg
 *.gem
