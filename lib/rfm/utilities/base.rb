@@ -152,6 +152,10 @@ module Rfm
 	  	def any(*args)
 	  	  layout.any(*args)[0]
 	  	end
+	  	
+	  	def all(*args)
+	  	  layout.all(*args)
+	  	end
 		
 	  	def create(*args)
 	  	  new(*args).send :create
