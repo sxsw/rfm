@@ -1,6 +1,6 @@
 require 'forwardable'
 
-class Object
+class Object # @private :nodoc: all
 
 	# Adds ability to forward methods to other objects
 	extend Forwardable
@@ -39,4 +39,18 @@ private
 		end
 	end
   
+end
+
+# This may only be needed for ImportFmp module
+class Time
+	# Returns array of [date,time] in format suitable for FMP.
+	def to_fm_components(reset_time_if_before_today=false)
+		d = self.strftime('%m/%d/%Y')
+		t = if (Date.parse(self.to_s) < Date.today) and reset_time_if_before_today==true
+			"00:00:00"
+		else
+			self.strftime('%T')
+		end
+		[d,t]
+	end
 end

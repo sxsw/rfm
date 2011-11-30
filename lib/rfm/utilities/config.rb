@@ -37,19 +37,6 @@ module Rfm
 			Hash.new.merge!(remote).merge!(@config) rescue {}
     end	  
 	  
-	  
-		# 	  # Get composite config from all levels
-		# 	  def config_get_merged
-		# 	    #puts "config_get_merged: #{self.to_s rescue ''} #{superclass.to_s rescue ''}"
-		# 	    rfm_config   = (Rfm.config_get_merged rescue {})
-		#       class_config = (self.class.config_get_merged rescue {})
-		#       super_config = (self.superclass.config_get_merged rescue {})
-		#       local_config = (@config rescue {})
-		#       remote = Hash.new.merge!(rfm_config).merge!(class_config).merge!(super_config)
-		#       (remote = remote[@config[:use]]) if @config.has_key?(:use)
-		#       remote.merge!(local_config)
-		#     end
-	  
 	  # Returns dup of conf with merged args
 	  def config_merge_args(conf, args)
 	    conf = conf.dup

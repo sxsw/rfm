@@ -5,10 +5,9 @@
 # Author::    Geoff Coffey  (mailto:gwcoffey@gmail.com)
 # Copyright:: Copyright (c) 2007 Six Fried Rice, LLC and Mufaddal Khumri
 # License::   See MIT-LICENSE for details
-#require 'nokogiri'
+
 require 'bigdecimal'
 require 'rfm/record'
-#require 'rfm/metadata/field'
 
 module Rfm
 
@@ -68,8 +67,6 @@ module Rfm
     #   after, you want to look at the Record object.
     
     def initialize(server_obj, xml_response, layout_obj, portals=nil)
-      #metaclass.instance_variable_set :@layout, layout_obj
-      #metaclass.instance_variable_set :@server, server_obj
       @layout           = layout_obj
       @server           = server_obj
       @field_meta     ||= Rfm::CaseInsensitiveHash.new
@@ -99,15 +96,14 @@ module Rfm
       Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, layout)
       
     end
-    
+        
     def field_names
-    	@field_meta.keys
-    end
+    	layout.instance_variable_get(:@field_names) ||
+    	layout.instance_variable_set(:@field_names, field_meta.collect{|k,v| v.name})
+  	end
+    
     
     private
-			#       def remove_namespace(xml)
-			#         xml.gsub('xmlns="http://www.filemaker.com/xml/fmresultset" version="1.0"', '')
-			#       end
     
       def check_for_errors(code, raise_401)
         raise Rfm::Error.getError(code) if code != 0 && (code != 401 || raise_401)

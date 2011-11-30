@@ -1,5 +1,5 @@
 module Rfm
-  class CaseInsensitiveHash < Hash
+  class CaseInsensitiveHash < Hash # :nodoc: all
     def []=(key, value)
       super(key.to_s.downcase, value)
     end

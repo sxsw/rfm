@@ -1,5 +1,6 @@
 module Rfm
   module Metadata
+  
     # The Field object represents a single FileMaker field. It *does not hold the data* in the field. Instead,
     # it serves as a source of metadata about the field. For example, if you're script is trying to be highly
     # dynamic about its field access, it may need to determine the data type of a field at run time. Here's
@@ -56,7 +57,6 @@ module Rfm
     #
     # The code above makes sure the control is always an array. Typically, though, you'll know up front
     # if the control is an array or not, and you can code accordingly.
-    
     class Field
       
       attr_reader :name, :result, :type, :max_repeats, :global
@@ -88,6 +88,6 @@ module Rfm
         
       end
       
-    end
-  end
-end
+    end # Field
+  end # Metadata
+end # Rfm

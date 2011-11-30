@@ -16,6 +16,7 @@ module Rfm
       
       meta_attr_accessor :db
       attr_reader :name
-    end
-  end
-end
+    end # Script
+    
+  end # Metadata
+end # Rfm

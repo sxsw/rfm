@@ -59,6 +59,15 @@ Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
 
+require 'yard'
+require 'rdoc'
+YARD::Rake::YardocTask.new do |t|
+	# See http://rubydoc.info/docs/yard/file/docs/GettingStarted.md
+	# See 'yardoc --help'
+  t.files   = ['lib/**/*.rb', 'README', 'LICENSE', 'VERSION', 'CHANGELOG']   # optional
+  t.options = ['-oydoc', '--no-cache', '-mrdoc'] # optional
+end
+
 
 # Rspec 2 beginnings
 # require 'rspec/core/rake_task'

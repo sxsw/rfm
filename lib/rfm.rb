@@ -1,4 +1,7 @@
-Rfm = Module.new unless defined? Rfm
+#Rfm = Module.new unless defined? Rfm
+module Rfm
+end
+
 Rfm::PATH = File.expand_path(File.dirname(__FILE__))
 $LOAD_PATH.unshift(Rfm::PATH) unless $LOAD_PATH.include?(Rfm::PATH)
 
@@ -18,20 +21,21 @@ module Rfm
   class ParameterError      < StandardError; end
   class AuthenticationError < StandardError; end
 
-  autoload :Error,     'rfm/error'
-  autoload :Server,    'rfm/server'
-  autoload :Database,  'rfm/database'
-  autoload :Layout,    'rfm/layout'
-  autoload :Resultset, 'rfm/resultset'
-  autoload :Record,    'rfm/record'
-  autoload :Base,      'rfm/utilities/base'
-  autoload :XmlParser, 'rfm/utilities/xml_parser'
+  autoload :Error,        'rfm/error'
+  autoload :Server,       'rfm/server'
+  autoload :Database,     'rfm/database'
+  autoload :Layout,       'rfm/layout'
+  autoload :Resultset,    'rfm/resultset'
+  autoload :Record,       'rfm/record'
+  autoload :Base,         'rfm/utilities/base'
+  autoload :XmlParser,    'rfm/utilities/xml_parser'
+  autoload :ComplexQuery, 'rfm/utilities/complex_query'
 
 	module Metadata
-		autoload :Script, 'rfm/metadata/script'
-		autoload :Field, 'rfm/metadata/field'
-		autoload :FieldControl, 'rfm/metadata/field_control'
-		autoload :ValueListItem, 'rfm/metadata/value_list_item'
+		autoload :Script,         'rfm/metadata/script'
+		autoload :Field,          'rfm/metadata/field'
+		autoload :FieldControl,   'rfm/metadata/field_control'
+		autoload :ValueListItem,  'rfm/metadata/value_list_item'
 	end
 	 
 end
