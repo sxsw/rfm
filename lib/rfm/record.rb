@@ -1,5 +1,4 @@
 module Rfm
-  
   # The Record object represents a single FileMaker record. You typically get them from ResultSet objects.
   # For example, you might use a Layout object to find some records:
   #

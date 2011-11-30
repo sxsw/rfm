@@ -1,6 +1,6 @@
 require 'forwardable'
 
-class Object # :nodoc: all
+class Object # @private :nodoc: all
 
 	# Adds ability to forward methods to other objects
 	extend Forwardable

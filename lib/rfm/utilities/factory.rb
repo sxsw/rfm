@@ -12,7 +12,7 @@ module Rfm
   	extend Config
   	config :parent=>'Rfm::Config'
   
-  	class ServerFactory < Rfm::CaseInsensitiveHash # :nodoc: all
+  	class ServerFactory < Rfm::CaseInsensitiveHash # @private :nodoc: all
     
 			#       def initialize(conf=)
 			#       	@conf = conf

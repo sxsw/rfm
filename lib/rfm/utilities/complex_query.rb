@@ -1,7 +1,7 @@
 module Rfm
 
   # Methods for Rfm::Layout to build complex queries
-  module ComplexQuery
+  module ComplexQuery # @private :nodoc: all
 
 		# Perform RFM find using complex boolean logic (multiple value options for a single field)
 		# Mimics creation of multiple find requests for "or" logic

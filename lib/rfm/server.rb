@@ -107,13 +107,13 @@ module Rfm
   # * *name* is the name of this database
   # * *state* is a hash of all server options used to initialize this server
   class Server
-    #
+  
     # To create a Server object, you typically need at least a host name:
     # 
     #   myServer = Rfm::Server.new({:host => 'my.host.com'})
     #
-    # Several other options are supported:
-    #
+    # ===Several other options are supported
+    # 
     # * *host* the hostname of the Web Publishing Engine (WPE) server (defaults to 'localhost')
     #
     # * *port* the port number the WPE is listening no (defaults to 80 unless *ssl* +true+ which sets it to 443)
@@ -138,13 +138,13 @@ module Rfm
     #   ignores FileMaker's 401 error (no records found) and returns an empty record set instead; if you
     #   prefer a raised error when a find produces no errors, set this option to +true+
     #
-    #SSL Options (SSL AND CERTIFICATE VERIFICATION ARE ON BY DEFAULT):
-    #
+    # ===SSL Options (SSL AND CERTIFICATE VERIFICATION ARE ON BY DEFAULT)
+    # 
     # * *ssl* +false+ if you want to turn SSL (HTTPS) off when connecting to connect to FileMaker (default is +true+)
     #
-    # If you are using SSL and want to verify the certificate use the following options:
+    # If you are using SSL and want to verify the certificate, use the following options:
     #
-    # * *root_cert* +false+ if you do not want to verify your SSL session (default is +true+). 
+    # * *root_cert* +true+ is the default. If you do not want to verify your SSL session, set this to +false+. 
     #   You will want to turn this off if you are using a self signed certificate and do not have a certificate authority cert file.
     #   If you choose this option you will need to provide a cert *root_cert_name* and *root_cert_path* (if not in root directory).
     #
@@ -154,8 +154,8 @@ module Rfm
     #
     # * *root_cert_path* path to cert file. (defaults to '/' if no path given)
     #
-    #Configuration Examples:    
-    #
+    # ===Configuration Examples    
+    # 
     # Example to turn off SSL:
     # 
     #   myServer = Rfm::Server.new({
@@ -192,7 +192,6 @@ module Rfm
     #            :root_cert_name => 'example.pem'
     #            :root_cert_path => '/usr/cert_file/'
     #            })
-    
     def initialize(options)
       @state = {
         :host => 'localhost',

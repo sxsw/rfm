@@ -1,70 +1,51 @@
-###    RfmHelper module   ###
-# Adds ability to create RFM model classes that behave similar to ActiveRecord #
-# Example:
-# class Person < RfmHelper::Base
-#   config :host, 'my.server.com'
-#   config :account_name=>'special', :password=>'somepass'
-#   def full_name
-#     "#{firstname} #{lastname}"
+# =Rfm::Base class
+#
+# Adds ability to create Rfm::Base model classes that behave similar to ActiveRecord::Base models.
+# If you set your Rfm.config (or RFM_CONFIG) with your host, database, account, password, and
+# any other server/database options, you can provide your models with nothing more than a layout.
+#
+# 	class Person < Rfm::Base
+# 	  config :layout => 'mylayout'
+# 	end
+#
+# And similar to ActiveRecord, you can define callbacks, validations, attributes, and methods on your model.
+#
+#   class Account < Rfm::Base
+#     config :layout=>'account_xml'
+#     before_create :encrypt_password
+#     validates :email, :presence => true
+#     validates :username, :presence => true
+#     attr_accessor :password
 #   end
-# end
+#   
+# Then in your project, you can use these models just like ActiveRecord models.
+# The query syntax and options are still Rfm under the hood. Treat your model
+# classes like Rfm::Layout objects.
 #
-# p = Person.find(:firstname=>'bill')[0]
-# p.first_name = 'bob'
-# p.save
-# r = Person.new(:firstname=>'ted')
-# r.lastname = 'johnson'
-# r.save
-#
-# Remember that RFM & Nokogiri requires a modern libxml2, libxslt, and libiconv
-# See Nokogiri web site for fixing install problems with Nokogiri
-# If all of these libs are up to date, and noko still won't work,
-# delete noko gem, and reinstall.
-# This should work with latest noko.
-#
-#
-# Example model definitions:
-# class Person < Rfm::Base
-#   config :account_name=>'someaccount', :host=>'http://some.domain.com', :database=>'MyFmDatabase', :password=>'mypass'
-# end
+#   @account = Account.new :username => 'bill', :password => 'pass'
+#   @account.email = 'my@email.com'
+#   @account.save!
+#   
+#   @person = Person.find({:name => 'mike'}, :max_records => 50)
+#   @person.update_attributes(:name => 'Michael', :title => "Senior Partner")
+#   @person.save
 # 
-# class Memo < Rfm::Base
-#   config :layout, 'memo_xml'
-#   field_controls # pre-loads field controls from database
-#   def test
-#     "Memosubject: #{memosubject}; Memotext: #{memotext}"
-#   end
-# end
 # 
-# class ActionItem < RfmHelper::Base
-#   config :layout, 'action_items_xml'
-#   field_controls
-#   def rec
-#     "#{record_id} #{recordid}"
-#   end
-# end
 #
 #
-# TODO: make sure all methods return something (a record?) if successful, otherwise nil or error
-# TODO: move rfm methods & patches from fetch_mail_with_ruby to this file
-
-
+# :nodoc: TODO: make sure all methods return something (a record?) if successful, otherwise nil or error
+# :nodoc: TODO: move rfm methods & patches from fetch_mail_with_ruby to this file
 module Rfm
 	
 	# TODO: Are these really needed here?
 	require 'rfm/record'
 	require 'rfm/layout'
-
-
-
-  ### Rfm direct class mods ###
   
   class Layout
   	attr_accessor :model
   end
         
   class Record
-  	
   	class << self
 	  	alias_method :new_orig, :new
 	  	def new(record={}, resultset_obj=[], field_meta='', layout_obj=nil, portal=nil) # record, result, field_meta, layout, portal
@@ -72,13 +53,9 @@ module Rfm
 	      model = layout_obj.model || Record rescue Record
 	      model.new_orig(record, resultset_obj, field_meta, layout_obj, portal)
 	    end
-    end
-    
+    end # class << self
   end # class Record
 
-
-
-  ### Rfm::Base ###
 
   class Base <  Rfm::Record  #Hash
     extend Config
@@ -116,8 +93,6 @@ module Rfm
     
     
 		
-		### Class Methods ###
-
 		class << self
 			
 	  	def layout(*args)
@@ -165,12 +140,12 @@ module Rfm
 	  	  layout.create(*args)[0]
 	  	end
 	  
-	    # Using this method will skip callbacks. Use instance 'update' instead
+	    # Using this method will skip callbacks. Use instance method +#update+ instead
 		  def edit(*args)
 		    layout.edit(*args)[0]
 	    end
 	  
-	    # Using this method will skip callbacks. Use instance 'destroy' instead
+	    # Using this method will skip callbacks. Use instance method +#destroy+ instead
 	    def delete(*args)
 	      layout.delete(*args)
 	    end
@@ -182,9 +157,7 @@ module Rfm
 		end # class << self
 		
 		
-		
-		### Instance Methods ###
-						
+								
   	def new_record?
   		return true if self.record_id.blank?
   	end

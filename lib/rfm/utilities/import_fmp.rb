@@ -1,6 +1,6 @@
 module Rfm
 
-  module ImportFmp
+  module ImportFmp # @private :nodoc: all
     # TODO: fix mysql_import to be module & include it here
   	# See config/mysql_import.rb
   	# args: time-since-modified-as-anything, mapping-name, options-hash
