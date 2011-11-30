@@ -41,7 +41,7 @@ private
   
 end
 
-# This may only be needed for ImportFmp module
+# May only be needed for ImportFmp module
 class Time
 	# Returns array of [date,time] in format suitable for FMP.
 	def to_fm_components(reset_time_if_before_today=false)

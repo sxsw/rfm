@@ -65,7 +65,7 @@ YARD::Rake::YardocTask.new do |t|
 	# See http://rubydoc.info/docs/yard/file/docs/GettingStarted.md
 	# See 'yardoc --help'
   t.files   = ['lib/**/*.rb', 'README', 'LICENSE', 'VERSION', 'CHANGELOG']   # optional
-  t.options = ['-oydoc', '--no-cache', '-mrdoc'] # optional
+  t.options = ['-oydoc', '--no-cache', '-mrdoc', '--no-private'] # optional
 end
 
 
