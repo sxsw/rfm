@@ -128,11 +128,11 @@ module Rfm
         end if data
       
         if datum.length == 1
-          store field_name, datum[0]
+          store field_name.downcase, datum[0]
         elsif datum.length == 0
-          store field_name, nil
+          store field_name.downcase, nil
         else
-          store field_name, datum
+          store field_name.downcase, datum
         end
       end
       
@@ -199,7 +199,7 @@ module Rfm
   	def [](key)
   		return fetch(key.to_s.downcase)
   	rescue IndexError
-    	raise NoMethodError, "#{key} does not exists as a field in the current Filemaker layout."
+    	raise Rfm::ParameterError, "#{key} does not exists as a field in the current Filemaker layout." #unless (!layout or self.key?(key_string))
   	end
 
     def respond_to?(symbol, include_private = false)
@@ -212,10 +212,10 @@ module Rfm
       key_string = key.to_s.downcase
       puts "KEY: #{key_string}"
       puts "SELF: #{self.to_s}"
-      #return super unless @loaded
-      raise Rfm::ParameterError, "You attempted to modify a field that does not exist in the current Filemaker layout." unless (!@loaded or self.key?(key_string))
+      return super unless @loaded
+      raise Rfm::ParameterError, "You attempted to modify a field that does not exist in the current Filemaker layout." unless (self.key?(key_string))
       @mods[key_string] = value
-      super(key_string, value)
+      super(key, value)
     end
     
 	  def field_names

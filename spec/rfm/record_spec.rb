@@ -55,12 +55,12 @@ describe Rfm::Record do
       ex.message.should eql('You attempted to modify a field that does not exist in the current Filemaker layout.')
     end
     
-    it "raises an NoMethodError if a key is used that does not exist" do
+    it "raises an Rfm::ParameterError if a key is used that does not exist" do
       record.instance_variable_set(:@loaded, true)
       record.instance_variable_set(:@layout, layout) # will allow this test to pass
 
       ex = rescue_from { record['tester2'] }
-      ex.class.should eql(NoMethodError)
+      ex.class.should eql(Rfm::ParameterError)
       ex.message.should eql('tester2 does not exists as a field in the current Filemaker layout.')
     end
     
