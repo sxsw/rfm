@@ -99,15 +99,13 @@ module Rfm
   #   copy of the same record
   class Record < Rfm::CaseInsensitiveHash
     
-    #meta_attr_reader :layout, :resultset
     attr_accessor :layout, :resultset
     attr_reader :record_id, :mod_id, :portals
     def_delegators :resultset, :field_meta
     def_delegators :layout, :db, :server
 
     def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
-    	#metaclass.instance_variable_set :@resultset, resultset_obj
-    	#metaclass.instance_variable_set :@layout, layout_obj
+
       @layout        = layout_obj
       @resultset     = resultset_obj
       @record_id     = record['record-id']
@@ -128,11 +126,11 @@ module Rfm
         end if data
       
         if datum.length == 1
-          store field_name.downcase, datum[0]
+          rfm_super[field_name] = datum[0]
         elsif datum.length == 0
-          store field_name.downcase, nil
+          rfm_super[field_name] = nil
         else
-          store field_name.downcase, datum
+          rfm_super[field_name] = datum
         end
       end
       
@@ -199,7 +197,7 @@ module Rfm
   	def [](key)
   		return fetch(key.to_s.downcase)
   	rescue IndexError
-    	raise Rfm::ParameterError, "#{key} does not exists as a field in the current Filemaker layout." #unless (!layout or self.key?(key_string))
+    	raise Rfm::ParameterError, "#{key} does not exists as a field in the current Filemaker layout." unless key.to_s == '' #unless (!layout or self.key?(key_string))
   	end
 
     def respond_to?(symbol, include_private = false)
@@ -210,10 +208,8 @@ module Rfm
 
     def []=(key, value)
       key_string = key.to_s.downcase
-      puts "KEY: #{key_string}"
-      puts "SELF: #{self.to_s}"
-      return super unless @loaded
-      raise Rfm::ParameterError, "You attempted to modify a field that does not exist in the current Filemaker layout." unless (self.key?(key_string))
+      return super unless @loaded # is this needed?
+      raise Rfm::ParameterError, "You attempted to modify a field that does not exist in the current Filemaker layout." unless self.key?(key_string)
       @mods[key_string] = value
       super(key, value)
     end
@@ -227,10 +223,10 @@ module Rfm
 
   	def method_missing (symbol, *attrs, &block)
   	  method = symbol.to_s
-  	  return self[method]
+  	  return self[method] if self.key?(method)
 
   	  if method =~ /(=)$/
-  	    return self[$`] = attrs.first
+  	    return self[$`] = attrs.first if self.key?($`)
   	  end
   	  super
 		end

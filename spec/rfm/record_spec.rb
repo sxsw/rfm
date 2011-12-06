@@ -8,7 +8,52 @@ describe Rfm::Record do
 	#     @record = Rfm::Record.allocate
 	#     @layout = mock(Rfm::Layout)
 	#   end
-  
+
+  describe "#[]" do
+    before(:each) do
+      record.instance_variable_set(:@mods, {})
+      record.instance_variable_set(:@loaded, false)
+      record['tester'] = 'red'
+    end
+    
+    it "returns '' if hash value is '' " do
+      record['tester'] = ''
+      record.instance_variable_set(:@loaded, true)
+      
+      record['tester'].should eql('')
+    end
+    
+    it "returns nil if hash value is nil " do
+      record['tester'] = nil
+      record.instance_variable_set(:@loaded, true)
+      
+      record['tester'].should eql(nil)
+    end
+    
+    it "raises an Rfm::ParameterError if a key is used that does not exist" do
+      record.instance_variable_set(:@loaded, true)
+      record.instance_variable_set(:@layout, layout) # will allow this test to pass
+
+      ex = rescue_from { record['tester2'] }
+      ex.class.should eql(Rfm::ParameterError)
+      ex.message.should eql('tester2 does not exists as a field in the current Filemaker layout.')
+    end
+    
+    it "returns value whether key is string or symbol" do
+      record.instance_variable_set(:@loaded, true)
+      
+      record.has_key?(:tester).should be_false
+      record[:tester].should eql('red')
+    end
+    
+    it "returns value regardless of key case" do
+    	record.instance_variable_set(:@loaded, true)
+    	
+    	record['TESTER'].should == 'red'
+    end
+  end #[]
+
+
   describe "#[]=" do
     before(:each) do
       record.instance_variable_set(:@mods, {})
@@ -19,6 +64,11 @@ describe Rfm::Record do
     it "creates a new hash key => value upon instantiation of record" do
       record.has_key?('tester').should be_true
       record['tester'].should eql('red')
+    end
+    
+    it "creates a new hash key as downcase" do
+    	record['UPCASE'] = 'downcase'
+    	record.key?('upcase').should be_true
     end
     
     it "creates a new hash key => value in @mods when modifying an existing record key" do
@@ -37,12 +87,16 @@ describe Rfm::Record do
       record['tester'].should eql('green')
     end
     
-    it "returns nil if hash key is '' " do
+    it "returns '' if hash value is '' " do
+      record['tester'] = 'something'
+      record.instance_variable_set(:@loaded, true)
       record['tester'] = ''
-      record['tester'].should eql(nil)
+      record['tester'].should eql('')
     end
     
-    it "returns nil if hash key is nil " do
+    it "returns nil if hash value is nil " do
+      record['tester'] = 'something'
+      record.instance_variable_set(:@loaded, true)
       record['tester'] = nil
       record['tester'].should eql(nil)
     end
@@ -54,17 +108,8 @@ describe Rfm::Record do
       ex.class.should eql(Rfm::ParameterError)
       ex.message.should eql('You attempted to modify a field that does not exist in the current Filemaker layout.')
     end
-    
-    it "raises an Rfm::ParameterError if a key is used that does not exist" do
-      record.instance_variable_set(:@loaded, true)
-      record.instance_variable_set(:@layout, layout) # will allow this test to pass
-
-      ex = rescue_from { record['tester2'] }
-      ex.class.should eql(Rfm::ParameterError)
-      ex.message.should eql('tester2 does not exists as a field in the current Filemaker layout.')
-    end
-    
-  end
+  end #[]=
+  
   
   describe "#respond_to?" do
     it "returns true if key is in hash" do

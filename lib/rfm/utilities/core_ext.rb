@@ -2,7 +2,7 @@ require 'forwardable'
 
 class Object # @private :nodoc: all
 
-	# Adds ability to forward methods to other objects
+	# Adds ability to forward methods to other objects using 'def_delegator'
 	extend Forwardable
 
 	# Adds methods to put instance variables in metaclass, plus getter/setters
@@ -39,6 +39,21 @@ private
 		end
 	end
   
+  def rfm_super
+    SuperProxy.new(self)
+  end
+  
+end
+
+# Allows access to superclass object
+class SuperProxy
+  def initialize(obj)
+    @obj = obj
+  end
+
+  def method_missing(meth, *args, &blk)
+    @obj.class.superclass.instance_method(meth).bind(@obj).call(*args, &blk)
+  end
 end
 
 # May only be needed for ImportFmp module
