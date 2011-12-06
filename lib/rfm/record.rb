@@ -128,11 +128,11 @@ module Rfm
         end if data
       
         if datum.length == 1
-          self[field_name] = datum[0]
+          store field_name, datum[0]
         elsif datum.length == 0
-          self[field_name] = nil
+          store field_name, nil
         else
-          self[field_name] = datum
+          store field_name, datum
         end
       end
       
@@ -196,48 +196,44 @@ module Rfm
     #
     # When you do, the change is noted, but *the data is not updated in FileMaker*. You must call
     # Record::save or Record::save_if_not_modified to actually save the data.
-    def []=(name, value)
-    	name = name.to_s
-      return super unless @loaded
-      raise Rfm::ParameterError, 
-        "You attempted to modify a field that does not exist in the current Filemaker layout." unless self.key?(name)
-      @mods[name] = value
-      self.merge! @mods
-    end
-
-    alias :_old_hash_reader :[]
-    def [](value)
-      read_attribute(value)
-    end
+  	def [](key)
+  		return fetch(key.to_s.downcase)
+  	rescue IndexError
+    	raise NoMethodError, "#{key} does not exists as a field in the current Filemaker layout."
+  	end
 
     def respond_to?(symbol, include_private = false)
       return true if self.include?(symbol.to_s)
       super
     end
     
-    def field_names
+
+    def []=(key, value)
+      key_string = key.to_s.downcase
+      puts "KEY: #{key_string}"
+      puts "SELF: #{self.to_s}"
+      #return super unless @loaded
+      raise Rfm::ParameterError, "You attempted to modify a field that does not exist in the current Filemaker layout." unless (!@loaded or self.key?(key_string))
+      @mods[key_string] = value
+      super(key_string, value)
+    end
+    
+	  def field_names
     	resultset.field_names rescue layout.field_names
     end
 
-    private
 
-      def read_attribute(key)
-      	key = key.to_s
-        raise NoMethodError, 
-          "#{key.to_s} does not exists as a field in the current Filemaker layout." unless (!layout or self.key?(key))
-        self._old_hash_reader(key).to_s.empty? ? nil : self._old_hash_reader(key) if self._old_hash_reader(key)
-      end
+  private
 
-      def method_missing (symbol, *attrs, &block)
-        method = symbol.to_s
-        return read_attribute(method) if self.key?(method)
-      
-        if method =~ /(=)$/ && self.key?($`)
-          #return @mods[$`] = attrs.first
-          return self[$`] = attrs.first
-        end
-        super
-      end
-    
-  end
-end
+  	def method_missing (symbol, *attrs, &block)
+  	  method = symbol.to_s
+  	  return self[method]
+
+  	  if method =~ /(=)$/
+  	    return self[$`] = attrs.first
+  	  end
+  	  super
+		end
+  	
+  end # Record
+end # Rfm
