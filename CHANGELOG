@@ -1,4 +1,4 @@
-*Ginjo-Rfm 2.0.0.pre
+*Ginjo-Rfm 2.0.pre
 
   Alternative XML parsers using ActiveSupport::XmlMini interface.
   
@@ -10,11 +10,25 @@
   
   Full Filemaker metadata support
 
+*Ginjo-Rfm 1.4.4
+
+  Fixed bug when creating empty value list.
+  
+  Additional fixes for Rfm::VERSION.
+  
+  Fixed Record getter/setter issue.
+  
+  Other minor fixes and cleanup.
+  
+  Added tests to rspec.
+  
+  Documentation cleanup.
+
 *Ginjo-Rfm 1.4.3
 
 	Fixed version management issue. Rfm::VERSION now works.
 
-*Ginjo-Rfm 1.4.2*
+*Ginjo-Rfm 1.4.2
 
 *	Re-implemented:
 	

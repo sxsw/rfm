@@ -1,6 +1,6 @@
 # ginjo-rfm
 
-Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. It also adds minor enhancements like server timeout and value-list alternate display. To read more about Rfm, see the info at [Sixfriedrice](http://sixfriedrice.com/wp/products/rfm/), or check out the [RDoc](http://rdoc.info/projects/lardawge/rfm) courtesey of Larry Sprock.
+Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. It also adds minor enhancements like server timeout and value-list alternate display. To read more about Rfm, see the info at [Sixfriedrice](http://sixfriedrice.com/wp/products/rfm/), or check out the [RDoc](http://rubydoc.info/github/ginjo/rfm/master/frames).
 
 Rfm was primarily designed by Six Fried Rice co-founder Geoff Coffey.
 
@@ -9,15 +9,18 @@ Other lead contributors:
 * Mufaddal Khumri helped architect Rfm in the most ruby-like way possible. He also contributed the outstanding error handling code and a comprehensive hierarchy of error classes.
 * Atsushi Matsuo was an early Rfm tester, and provided outstanding feedback, critical code fixes, and a lot of web exposure.
 * Jesse Antunes helped ensure that Rfm is stable and functional.
-* Larry Sprock added ssl support and switched the xml parser to a much faster Nokogiri.
+* Larry Sprock added ssl support, switched the xml parser to a much faster Nokogiri, added the rspec testing framework, and refactored the code to pave way for future development.
 
-Documentation
+Documentation & Links
 
-* Homepage:       <http://sixfriedrice.com/wp/products/rfm/>
-* Rdoc location:  <http://rubydoc.info/gems/lardawge-rfm/1.4.1.2/frames>
-* Discussion:     <http://groups.google.com/group/rfmcommunity>
+* Ginjo-rfm homepage: <https://rubygems.org/gems/ginjo-rfm>
+* Original homepage:  <http://sixfriedrice.com/wp/products/rfm/>
+* Rdoc location:      <http://rubydoc.info/github/ginjo/rfm/frames>
+* Discussion:         <http://groups.google.com/group/rfmcommunity>
+* Ginjo-rfm           <https://github.com/ginjo/rfm>
+* Lardawge-rfm        <https://github.com/lardawge/rfm>
 
-An partial list of features added since rfm 1.0.0.
+Partial list of features added since rfm 1.0.0.
 
 * SSL support
 * Nokogiri xml parser
@@ -48,7 +51,7 @@ Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
     require 'rubygems'
     require 'rfm'
 
-### In Rails >= 3.0
+### In Rails >= 3.0, or any project using Bundler
 
 In the Gemfile:
 
@@ -75,7 +78,7 @@ Multiple backend xml parsers.
     Rfm::Server.new(:parser => :nokogiri)
     # Backend options => :libxml, :libxmlsax, :nokogiri, :nokogirisax, :hpricot, :rexml
     
-Try it out:
+Try out these unreleased features in the edge branch.
 
     #gemfile
     gem 'ginjo-rfm', :git=>'git://github.com/ginjo/rfm.git', :branch=>'edge'
@@ -285,7 +288,6 @@ When this is 'true' your script will dump the actual response it got from FileMa
 
 So, for an annoying, but detailed load of output, make a connection like this:
 
-    #ruby
     my_server => Rfm::Server.new(
       :host             => 'myservername',
       :account_name     => 'user',

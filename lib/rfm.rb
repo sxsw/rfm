@@ -1,9 +1,7 @@
-#Rfm = Module.new unless defined? Rfm
 module Rfm
+	PATH = File.expand_path(File.dirname(__FILE__))
+	$LOAD_PATH.unshift(PATH) unless $LOAD_PATH.include?(PATH)
 end
-
-Rfm::PATH = File.expand_path(File.dirname(__FILE__))
-$LOAD_PATH.unshift(Rfm::PATH) unless $LOAD_PATH.include?(Rfm::PATH)
 
 require 'rfm/utilities/core_ext'
 require 'rfm/utilities/case_insensitive_hash'
@@ -39,4 +37,3 @@ module Rfm
 	end
 	 
 end
-

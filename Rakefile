@@ -12,15 +12,15 @@ begin
     gem.homepage = "http://sixfriedrice.com/wp/products/rfm/"
     gem.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
     gem.files = FileList['lib/**/*']
-    gem.add_dependency('activemodel')
+    gem.add_dependency('activesupport')
     gem.add_development_dependency('jeweler')
     gem.add_development_dependency('rake')
     gem.add_development_dependency('rdoc')
     gem.add_development_dependency('rspec', '~>1.3.0')
-    gem.rdoc_options = [ "--line-numbers", "--main", "README.rdoc" ]
+    gem.add_development_dependency('yard')
+    gem.rdoc_options = [ "--line-numbers", "--main", "README.md" ]
     gem.version = Rfm::VERSION
   end
-  #Jeweler::GemcutterTasks.new
   Jeweler::RubygemsDotOrgTasks.new
 rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"
@@ -43,7 +43,7 @@ task :default => :spec
 require 'rdoc/task'
 Rake::RDocTask.new do |rdoc|
 	version = Rfm::VERSION
-	rdoc.main = 'README'
+	rdoc.main = 'README.md'
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title = "Rfm #{version}"
   rdoc.rdoc_files.include('lib/**/*.rb', 'README*', 'CHANGELOG', 'VERSION', 'LICENSE')
