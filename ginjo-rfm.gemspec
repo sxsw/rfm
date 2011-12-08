@@ -15,12 +15,12 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = [
     "LICENSE",
     "README.md",
-    "VERSION"
+    "lib/rfm/VERSION"
   ]
   s.files = Dir['lib/**/*.rb', 'lib/**/VERSION']
   
-  s.homepage = "http://sixfriedrice.com/wp/products/rfm/"
-  s.rdoc_options = ["--line-numbers", "--main", "README.rdoc"]
+  s.homepage = "https://rubygems.org/gems/ginjo-rfm"
+  s.rdoc_options = ["--line-numbers", "--main", "README.md"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.10"
   s.summary = "Ruby to Filemaker adapter"
@@ -29,15 +29,15 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      #s.add_runtime_dependency(%q<activesupport>, [">= 0"])
-      s.add_runtime_dependency(%q<activemodel>, [">= 0"])
+      s.add_runtime_dependency(%q<activesupport>, [">= 0"])
+      #s.add_runtime_dependency(%q<activemodel>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<rake>, [">= 0"])
       s.add_development_dependency(%q<rdoc>, [">= 0"])
       s.add_development_dependency(%q<rspec>, ["~> 1.3.0"])
     else
-      #s.add_dependency(%q<activesupport>, [">= 0"])
-      s.add_dependency(%q<activemodel>, [">= 0"])
+      s.add_dependency(%q<activesupport>, [">= 0"])
+      #s.add_dependency(%q<activemodel>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<rake>, [">= 0"])
       s.add_dependency(%q<rdoc>, [">= 0"])
