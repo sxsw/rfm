@@ -122,6 +122,10 @@ module Rfm
 	    rescue Rfm::Error::RecordMissingError
 	      nil
 	  	end
+	  	
+	    def query(*args)
+	      layout.query(*args)
+	    end
 		
 	  	def any(*args)
 	  	  layout.any(*args)[0]
@@ -134,10 +138,6 @@ module Rfm
 	  	def create(*args)
 	  	  new(*args).send :create
 	  	end
-	  	
-	  	def create_from_instance(*args)
-	  	  layout.create(*args)[0]
-	  	end
 	  
 	    # Using this method will skip callbacks. Use instance method +#update+ instead
 		  def edit(*args)
@@ -147,10 +147,6 @@ module Rfm
 	    # Using this method will skip callbacks. Use instance method +#destroy+ instead
 	    def delete(*args)
 	      layout.delete(*args)
-	    end
-	    
-	    def query(*args)
-	      layout.query(*args)
 	    end
 
 		end # class << self
@@ -231,11 +227,14 @@ module Rfm
 	
   protected # class Base
   
+  	def self.create_from_instance(*args)
+  	  layout.create(*args)[0]
+  	end
+  
     # shunt for callbacks pre rails 3
     def callback_deadend (*args)
       yield
     end
-    
     
     def create
       #return unless @mods.size > 0
