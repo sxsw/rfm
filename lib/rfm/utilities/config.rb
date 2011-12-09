@@ -45,7 +45,7 @@ module Rfm
 	    conf = conf.dup
   	  if args && args.class == Array
   	  
-  	  	opt = args.extract_options!
+  	  	opt = args.rfm_extract_options!
   	  	if args.size >0
   	  		rslt = {}
   	  		args.each do |sym|
