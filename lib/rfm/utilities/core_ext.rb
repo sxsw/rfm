@@ -43,6 +43,13 @@ private
     SuperProxy.new(self)
   end
   
+end # Object
+
+
+class Array
+	def extract_options!
+	  last.is_a?(::Hash) ? pop : {}
+	end
 end
 
 # Allows access to superclass object
@@ -54,7 +61,10 @@ class SuperProxy
   def method_missing(meth, *args, &blk)
     @obj.class.superclass.instance_method(meth).bind(@obj).call(*args, &blk)
   end
-end
+end # SuperProxy
+
+
+
 
 # May only be needed for ImportFmp module
 class Time
@@ -68,4 +78,4 @@ class Time
 		end
 		[d,t]
 	end
-end
+end # Time

@@ -44,22 +44,47 @@ module Rfm
 	  def config_merge_args(conf, args)
 	    conf = conf.dup
   	  if args && args.class == Array
-	  	  if args.size == 1
-	  	  	if args[0].is_a? Symbol
-	  	  		conf.merge!({:use=>args[0]})
-	  	  	else
-	  	    	conf.merge! args[0]
-	  	    end
-	  	  elsif args && args.size == 2
-	  	    name = args.shift
-	  	    conf.merge!({name=>args[0]})
-	      end
+  	  
+  	  	opt = args.extract_options!
+  	  	if args.size >0
+  	  		rslt = {}
+  	  		args.each do |sym|
+  	  			# Take any symbols in array and get their value from config hash,
+  	  			# then return all merged together with options.
+  	  			rslt.merge!(conf[sym].is_a?(Hash) ? conf[sym] : {sym=>conf[sym]})
+  	  		end
+  	  		conf = rslt.merge(opt)
+  	  	else
+  	  		conf.merge!(opt)
+  	  	end
+ 				
   	  elsif args && args.class == Hash
   	    conf.merge!(args)
       end
       ###	    
       return conf
     end
+
+		# 	  # Returns dup of conf with merged args
+		# 	  def config_merge_args(conf, args)
+		# 	    conf = conf.dup
+		#   	  if args && args.class == Array
+		# 	  	  if args.size == 1
+		# 	  	  	if args[0].is_a? Symbol
+		# 	  	  		conf.merge!({:use=>args[0]})
+		# 	  	  	else
+		# 	  	    	conf.merge! args[0]
+		# 	  	    end
+		# 	  	  elsif args && args.size == 2
+		# 	  	    name = args.shift
+		# 	  	    conf.merge!({name=>args[0]})
+		# 	      end
+		#   	  elsif args && args.class == Hash
+		#   	    conf.merge!(args)
+		#       end
+		#       ###	    
+		#       return conf
+		#     end
     
     def inherited(base)
     	base.config :parent=>self.to_s
