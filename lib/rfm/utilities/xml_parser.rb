@@ -26,10 +26,10 @@ module Rfm
 		def new(string_or_file, opts={})
 			string_or_file.gsub!(/xmlns=\"[^\"]*\"/,'') if (string_or_file.class == String and opts[:namespace] == false)
 			unless opts[:parser] and get_backend_from_hash(opts[:parser]).to_s != self.backend.to_s
-				puts "Default Parser: #{ActiveSupport::XmlMini.backend.to_s}" if config[:log_parser]
+				warn "Default Parser: #{ActiveSupport::XmlMini.backend.to_s}" if config[:log_parser] == true
 				ActiveSupport::XmlMini.parse(string_or_file)
 			else
-				puts "With Backend: #{get_backend_from_hash(opts[:parser]).to_s}" if config[:log_parser]
+				warn "With Backend: #{get_backend_from_hash(opts[:parser]).to_s}" if config[:log_parser] == true
 				ActiveSupport::XmlMini.with_backend(get_backend_from_hash(opts[:parser])) {ActiveSupport::XmlMini.parse(string_or_file)}
 			end
 		end
