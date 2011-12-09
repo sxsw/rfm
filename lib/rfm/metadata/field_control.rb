@@ -43,7 +43,7 @@ module Rfm
 	        nil
 	      end
 	      @value_list_name = value_list_name
-	      metaclass.instance_variable_set :@value_list, value_list
+	      rfm_metaclass.instance_variable_set :@value_list, value_list
 	    end
 	    
 	    attr_reader :name, :style, :value_list_name

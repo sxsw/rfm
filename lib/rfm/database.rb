@@ -67,7 +67,7 @@ module Rfm
     # This sample code gets a database object representing the Customers database on the FileMaker server.
     def initialize(name, server_obj, acnt=nil, pass=nil)
       @name = name
-      metaclass.instance_variable_set :@server, server_obj
+      rfm_metaclass.instance_variable_set :@server, server_obj
       @account_name = acnt #server.state[:account_name] or ""
       @password = pass #server.state[:password] or ""
       @layout = Rfm::Factory::LayoutFactory.new(server, self)

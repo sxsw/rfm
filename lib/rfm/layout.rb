@@ -137,7 +137,7 @@ module Rfm
     #   myLayout = myServer["Customers"]["Details"]
     def initialize(name, db_obj)
       @name = name
-      metaclass.instance_variable_set :@db, db_obj
+      rfm_metaclass.instance_variable_set :@db, db_obj
       
       @loaded = false
       @field_controls = Rfm::CaseInsensitiveHash.new
