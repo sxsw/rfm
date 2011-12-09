@@ -1,5 +1,6 @@
 module Rfm
 	module XmlParser # @private :nodoc: all
+		require 'thread'
 		require 'active_support' unless defined? ActiveSupport
 		extend Config
 		config :parent=>'Rfm::Config'
@@ -9,12 +10,12 @@ module Rfm
 		# Backend configurations
 		BACKENDS = ActiveSupport::OrderedHash.new
 		
-		BACKENDS[:jdom]					= {:require=>'jdom',			:class=>'JDOM'}
-		BACKENDS[:libxml]				= {:require=>'libxml',		:class=>'LibXML'}
-		BACKENDS[:libxmlsax]		= {:require=>'libxml',		:class=>'LibXMLSAX'}
-		BACKENDS[:nokogirisax]	= {:require=>'nokogiri',	:class=>'NokogiriSAX'}
-		BACKENDS[:nokogiri]			= {:require=>'nokogiri',	:class=>'Nokogiri'}
-		BACKENDS[:hpricot]			= {:require=>'hpricot',	:class=>proc{
+		BACKENDS[:jdom]					= {:require=>'jdom',			:class =>	'JDOM'}
+		BACKENDS[:libxml]				= {:require=>'libxml',		:class =>	'LibXML'}
+		BACKENDS[:libxmlsax]		= {:require=>'libxml',		:class =>	'LibXMLSAX'}
+		BACKENDS[:nokogirisax]	= {:require=>'nokogiri',	:class =>	proc{ActiveSupport::VERSION; 'NokogiriSAX'}}
+		BACKENDS[:nokogiri]			= {:require=>'nokogiri',	:class =>	'Nokogiri'}
+		BACKENDS[:hpricot]			= {:require=>'hpricot',	  :class =>	proc{
 																# Hpricot module is part of Rfm, not XmlMini,
 																# and needs to be handed manually to XmlMini.
 																require File.join(File.dirname(__FILE__), '../xml_mini/hpricot.rb')
@@ -72,7 +73,7 @@ module Rfm
 					begin
 						result = get_backend_from_hash name
 						throw(:done, result)
-					rescue LoadError
+					rescue LoadError, StandardError
 					end
 				end
 			end
