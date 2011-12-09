@@ -221,7 +221,7 @@ module Rfm
     end
     
   	def field_names
-  		@field_names ||= field_controls.collect{|k,v| v.name}
+  		@field_names ||= field_controls.collect{|k,v| v.name rescue v[0].name}
   	end
     
     def value_lists
@@ -259,7 +259,7 @@ module Rfm
         type = style['TYPE']
         value_list_name = style['VALUELIST']
         value_list = @value_lists[value_list_name] if value_list_name != ''
-        field_control = Rfm::Metadata::FieldControl.new(name, style, value_list_name, value_list)
+        field_control = Rfm::Metadata::FieldControl.new(name, type, value_list_name, value_list)
         existing = @field_controls[name]
         if existing
           if existing.kind_of?(Array)
