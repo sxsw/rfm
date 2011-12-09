@@ -1,8 +1,11 @@
 module Rfm
 
 	### Main config should be a hash of hashes, so that each key (nickname) will be unique.
-	### Top level config hash contains config parameters or nickname keys pointing to config subsets.
+	### Top level global config hash accepts any defined config parameters
+	### or group-name keys pointing to config subsets.
 	### The subsets can be any grouping of config parameters, as a hash.
+	### Some config parameters are global only, and most are only relevant within specific contexts.
+	### See <...>
 	
   
   # Methods to be included and/or extended into RfmHelper::Base
