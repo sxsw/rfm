@@ -25,7 +25,7 @@ module Rfm
 			#       end
       
       def [](host, conf = (Factory.instance_variable_get(:@config) || {}))
-        super(host) or (self[host] = Rfm::Server.new(conf))
+        super(host) or (self[host] = Rfm::Server.new(conf.reject{|k,v| [:account_name, :password].include? k}))
       end
     
     end # ServerFactory
@@ -115,26 +115,43 @@ module Rfm
 				@servers ||= Factory::ServerFactory.new  #(config_core)
 			end    
     
-	  	# Returns RFM server object, given config hash
-	  	def server(conf = config_core)
-	      server_name = conf[:host]
-	  	  server = servers[server_name, conf]
+	  	# Returns RFM server object, given config hash or array
+	  	def server(*conf)
+	  		server_name, options = parse_config(conf)
+	  		server_name ||= options[:host]
+	      return {:error=>'Failed to get host name', :conf=>conf} unless server_name
+				server = servers[server_name, options]
+				#   server_name = conf[:host]
+				#   server = servers[server_name, conf]
 		  end
 	  
-		  # Returns RFM db object, given config hash
-		  def db(conf = config_core)
-				db_name = conf[:database]
-				db = server(conf)[db_name]
+		  # Returns RFM db object, given config hash or array
+		  def db(*conf)
+	  		db_name, options = parse_config(conf)
+	  		db_name ||= options[:database]
+	  		account_name = options[:account_name]
+	  		password = options[:password]
+	      return {:error=>'Failed to get database name', :conf=>conf} unless db_name
+				db = server(options)[db_name, account_name, password]
 		  end
 		  
-		  # Returns RFM layout object, given config hash
-	  	def layout(conf = config_core)
-	  		#return @layout if (@layout and args==[])
-	  		#opt = args.last.is_a?(Hash) ? args.pop : {}
-	  	  layout_name = conf[:layout]
+		  # Returns RFM layout object, given config hash or array
+	  	def layout(*conf)
+	  		layout_name, options = parse_config(conf)
+	  		layout_name ||= options[:layout]
 	      return {:error=>'Failed to get layout name', :conf=>conf} unless layout_name
-				layout = db(conf)[layout_name]
+				layout = db(options)[layout_name]
 	  	end
+	  	
+  	private
+    
+    	def parse_config(arguments)
+    		args = arguments.dup
+    		opt = args.rfm_extract_options!
+    		name = args[0].is_a?(String) ? args.shift : nil
+    		opt = args.size > 0 ? config_core(args | [opt]) : opt
+    		[name, opt]
+    	end
     
     end # class << self
   end # Factory

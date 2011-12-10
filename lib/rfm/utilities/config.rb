@@ -1,22 +1,20 @@
 module Rfm
 
-	### Main config should be a hash of hashes, so that each key (nickname) will be unique.
-	### Top level global config hash accepts any defined config parameters
-	### or group-name keys pointing to config subsets.
-	### The subsets can be any grouping of config parameters, as a hash.
-	### Some config parameters are global only, and most are only relevant within specific contexts.
-	### See <...>
-	
-  
-  # Methods to be included and/or extended into RfmHelper::Base
-  # All included methods are also extended
+	# Main config should be a hash of hashes, so that each key (nickname) will be unique.
+	# Top level global config hash accepts any defined config parameters,
+	# or group-name keys pointing to config subsets.
+	# The subsets can be any grouping of config parameters, as a hash.
+	# Some config parameters are global only, and most are only relevant within specific contexts.
   module Config
     extend self
     
     # Sets @config with args. Two use forms:
-    # config :key_name, :hash_item=>'', :hash_item2=>
-    # config :key_name=>{:some=>'hash',...}, :key_name2=>{:someother=>'hash',...}
-    # password will always be 'protected'
+    # 1. Pass only a hash to SET config.
+    # 2. Pass an array, with optional hash as last element, to GET config.
+    # Array items should be symbols representing config groups to merge.
+    # config :group_name, :hash_item=>'', :hash_item2=>...
+    # config :key_name=>value, :key_name2=>value2
+    # password will always return 'protected'
     def config(*args)
 	    c = config_core(*args)
 	    c[:password] = 'PROTECTED' if c[:password]
@@ -25,41 +23,36 @@ module Rfm
 	  
 	protected
 	  
-	  # Unsecure, will return raw password
+	  # Core config method. Unsecure, will return raw password.
 	  def config_core(*args)
+	  	opt = args.rfm_extract_options!
 	    @config ||= {}
-	    @config.merge!(config_merge_args(@config, args))
-	    config_get_merged
-	  end
+	    if args.size == 0
+	    	@config.merge!(opt)
+	    	config_get_all(@config[:use])
+	    else
+	    	config_get_all(args).merge(opt)
+	    end.dup
+	  end	  	  	  
 	  
-	  # Get composite config from all levels
-	  def config_get_merged
-      remote = (eval(@config[:parent]).config_get_merged rescue {})
-      (remote = remote[@config[:use]]) if @config.has_key?(:use)
+	  # Get composite config from all levels.
+	  # Pass in group names as symbols to filter result.
+	  def config_get_all(filters=nil)
+      remote = (eval(@config[:parent]).config_get_all rescue {})
+      #(remote = remote[@config[:use]]) if @config.has_key?(:use)
       #puts "remote_config: #{remote.class}"
-			Hash.new.merge!(remote).merge!(@config) rescue {}
+			config_filter((Hash.new.merge!(remote)), filters).merge!(@config)
     end	  
-	  
-	  # Returns dup of conf with merged args
-	  def config_merge_args(conf, args)
-	    conf = conf.dup
-  	  if args && args.class == Array
-	  	  if args.size == 1
-	  	  	if args[0].is_a? Symbol
-	  	  		conf.merge!({:use=>args[0]})
-	  	  	else
-	  	    	conf.merge! args[0]
-	  	    end
-	  	  elsif args && args.size == 2
-	  	    name = args.shift
-	  	    conf.merge!({name=>args[0]})
-	      end
-  	  elsif args && args.class == Hash
-  	    conf.merge!(args)
-      end
-      ###	    
-      return conf
-    end
+
+		# Given config hash, return filtered.
+		def config_filter(conf, filters)
+			return conf unless filters
+			return conf[filters] if filters.is_a? Symbol
+			rslt = {}
+			#conf.each {|k,v| rslt.merge!(v) if filters.include? k}
+			filters.each{|f| rslt.merge!(conf[f] || {})}
+			rslt
+		end
     
     def inherited(base)
     	base.config :parent=>self.to_s
