@@ -204,16 +204,19 @@ module Rfm
         :password => '',
         :log_actions => false,
         :log_responses => false,
+        :log_parser => false,
         :warn_on_redirect => true,
         :raise_on_401 => false,
         :timeout => 60
       }.merge(options)
     
       @state.freeze
-    
+          
       @host_name = @state[:host]
       @scheme = @state[:ssl] ? "https" : "http"
       @port = @state[:ssl] && options[:port].nil? ? 443 : @state[:port]
+      
+      raise Rfm::Error.getError(190, "New instance of Rfm::Server has no host name.") if @host_name.to_s == ''
     
       @db = Rfm::Factory::DbFactory.new(self)
     end
