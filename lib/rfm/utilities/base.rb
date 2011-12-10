@@ -94,20 +94,13 @@ module Rfm
 		
 		class << self
 			
+			# Create/Access the layout object associated with this model
 	  	def layout
 	  		return @layout if @layout
 	  		@layout = Rfm::Factory.layout(config_core)
 				@layout.model = self
 				@layout
 	  	end
-			#   	def layout(*args)
-			#   		return @layout if (@layout and args==[])
-			#   		args = config_core if args == []
-			# 			@layout = Rfm::Factory.layout(args)
-			# 			@layout.model = self
-			# 			@layout
-			#   	end	  	
-			
 			
 	    # Access layout functions from base model
 	  	def_delegators :layout, :db, :server, :field_controls, :field_names, :value_lists
