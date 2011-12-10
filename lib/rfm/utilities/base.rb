@@ -96,15 +96,23 @@ module Rfm
 			
 	  	def layout(*args)
 	  		return @layout if (@layout and args==[])
-	  		opt = args.last.is_a?(Hash) ? args.pop : {}
-	  	  layout_name = (args[0].class == String ? args[0] : nil)
-	      conf = config_merge_args(config_core.dup, opt)
-				conf.merge!(:layout=>layout_name) if layout_name
-				layout = Rfm::Factory.layout(conf)
-				#layout.instance_variable_set(:@model, self.to_s)
-				layout.model = self
-				@layout = layout
+	  		args = config_core if args == []
+				@layout = Rfm::Factory.layout(args)
+				@layout.model = self
+				@layout
 	  	end
+	  	
+			# 	  	def layout(*args)
+			# 	  		return @layout if (@layout and args==[])
+			# 	  		opt = args.rfm_extract_options!
+			# 	  	  layout_name = (args[0].class == String ? args[0] : nil)
+			# 	      conf = config_merge_args(config_core.dup, opt)
+			# 				conf.merge!(:layout=>layout_name) if layout_name
+			# 				layout = Rfm::Factory.layout(conf)
+			# 				#layout.instance_variable_set(:@model, self.to_s)
+			# 				layout.model = self
+			# 				@layout = layout
+			# 	  	end
 	  	
 	    # Access layout functions from base model
 	  	def_delegators :layout, :db, :server, :field_controls, :field_names, :value_lists

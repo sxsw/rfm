@@ -26,44 +26,70 @@ module Rfm
 	protected
 	  
 	  # Unsecure, will return raw password
+	  
 	  def config_core(*args)
+	  	opt = args.rfm_extract_options!
 	    @config ||= {}
-	    @config.merge!(config_merge_args(@config, args))
-	    config_get_merged
-	  end
+	    if args.size == 0
+	    	@config.merge!(opt)
+	    	config_get_all(@config[:use])
+	    else
+	    	config_get_all(args).merge(opt)
+	    end.dup
+	  end	  	  	  
+		# 	  def config_core(*args)
+		# 	    @config ||= {}
+		# 	    @config.merge!(config_merge_args(@config, args))
+		# 	    config_get_merged
+		# 	  end
 	  
 	  # Get composite config from all levels
-	  def config_get_merged
-      remote = (eval(@config[:parent]).config_get_merged rescue {})
-      (remote = remote[@config[:use]]) if @config.has_key?(:use)
+	  def config_get_all(filters=nil)
+      remote = (eval(@config[:parent]).config_get_all rescue {})
+      #(remote = remote[@config[:use]]) if @config.has_key?(:use)
       #puts "remote_config: #{remote.class}"
-			Hash.new.merge!(remote).merge!(@config) rescue {}
+			config_filter((Hash.new.merge!(remote)), filters).merge!(@config)
     end	  
-	  
-	  # Returns dup of conf with merged args
-	  def config_merge_args(conf, args)
-	    conf = conf.dup
-  	  if args && args.class == Array
-  	  
-  	  	opt = args.rfm_extract_options!
-  	  	if args.size >0
-  	  		rslt = {}
-  	  		args.each do |sym|
-  	  			# Take any symbols in array and get their value from config hash,
-  	  			# then return all merged together with options.
-  	  			rslt.merge!(conf[sym].is_a?(Hash) ? conf[sym] : {sym=>conf[sym]})
-  	  		end
-  	  		conf = rslt.merge(opt)
-  	  	else
-  	  		conf.merge!(opt)
-  	  	end
- 				
-  	  elsif args && args.class == Hash
-  	    conf.merge!(args)
-      end
-      ###	    
-      return conf
-    end
+		# 	  def config_get_merged
+		#       remote = (eval(@config[:parent]).config_get_merged rescue {})
+		#       (remote = remote[@config[:use]]) if @config.has_key?(:use)
+		#       #puts "remote_config: #{remote.class}"
+		# 			Hash.new.merge!(remote).merge!(@config) rescue {}
+		#     end
+		
+		def config_filter(conf, filters)
+			return conf unless filters
+			return conf[filters] if filters.is_a? Symbol
+			rslt = {}
+			conf.each {|k,v| rslt.merge!(v) if filters.include? k}
+			rslt
+		end
+
+
+		# 	  # Returns dup of conf with merged args
+		# 	  def config_merge_args(conf, args)
+		# 	    conf = conf.dup
+		#   	  if args && args.class == Array
+		#   	  
+		#   	  	opt = args.rfm_extract_options!
+		#   	  	if args.size >0
+		#   	  		rslt = {}
+		#   	  		args.each do |sym|
+		#   	  			# Take any symbols in array and get their value from config hash,
+		#   	  			# then return all merged together with options.
+		#   	  			rslt.merge!(conf[sym].is_a?(Hash) ? conf[sym] : {sym=>conf[sym]})
+		#   	  		end
+		#   	  		conf = rslt.merge(opt)
+		#   	  	else
+		#   	  		conf.merge!(opt)
+		#   	  	end
+		#  				
+		#   	  elsif args && args.class == Hash
+		#   	    conf.merge!(args)
+		#       end
+		#       ###	    
+		#       return conf
+		#     end
 
 		# 	  # Returns dup of conf with merged args
 		# 	  def config_merge_args(conf, args)
