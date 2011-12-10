@@ -25,7 +25,7 @@ module Rfm
 			#       end
       
       def [](host, conf = (Factory.instance_variable_get(:@config) || {}))
-        super(host) or (self[host] = Rfm::Server.new(conf))
+        super(host) or (self[host] = Rfm::Server.new(conf.reject{|k,v| [:account_name, :password].include? k}))
       end
     
     end # ServerFactory
@@ -129,8 +129,10 @@ module Rfm
 		  def db(*conf)
 	  		db_name, options = parse_config(conf)
 	  		db_name ||= options[:database]
+	  		account_name = options[:account_name]
+	  		password = options[:password]
 	      return {:error=>'Failed to get database name', :conf=>conf} unless db_name
-				db = server(options)[db_name]
+				db = server(options)[db_name, account_name, password]
 		  end
 		  
 		  # Returns RFM layout object, given config hash or array

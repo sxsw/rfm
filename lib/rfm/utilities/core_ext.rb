@@ -24,7 +24,7 @@ class Object # @private :nodoc: all
     end
   end
   
-  # Give hash & arry a method to always return an array,
+  # Wrap an object in Array, if not already an Array,
 	# since XmlMini doesn't know which will be returnd for any particular element.
 	# See Rfm Layout & Record where this is used.
 	def rfm_force_array
@@ -33,12 +33,14 @@ class Object # @private :nodoc: all
   
 private
 
+	# Like singleton_method or 'metaclass' from ActiveSupport.
 	def rfm_metaclass
 		class << self
 			self
 		end
 	end
   
+  # Get the superclass object of self.
   def rfm_super
     SuperProxy.new(self)
   end
@@ -47,10 +49,11 @@ end # Object
 
 
 class Array
+	# Taken from ActiveSupport extract_options!.
 	def rfm_extract_options!
 	  last.is_a?(::Hash) ? pop : {}
 	end
-end
+end # Array
 
 # Allows access to superclass object
 class SuperProxy
@@ -64,9 +67,6 @@ class SuperProxy
 end # SuperProxy
 
 
-
-
-# May only be needed for ImportFmp module
 class Time
 	# Returns array of [date,time] in format suitable for FMP.
 	def to_fm_components(reset_time_if_before_today=false)
