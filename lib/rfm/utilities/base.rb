@@ -93,6 +93,10 @@ module Rfm
     
 		
 		class << self
+		
+			def inherited(model)
+				(Rfm::Factory.models << model).uniq
+			end
 			
 			# Create/Access the layout object associated with this model
 	  	def layout

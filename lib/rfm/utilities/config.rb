@@ -38,12 +38,14 @@ module Rfm
   	def config_read(*args)
   		@config ||= {}
   		opt = args.rfm_extract_options!
-  		string = args[0].is_a?(String) ? args.shift : nil
+  		strings = []
+  		while args[0].is_a?(String) do; strings << args.shift; end
+  		#string = args[0].is_a?(String) ? args.shift : nil
 	    if args.size == 0
 	    	config_get_all(@config[:use])
 	    else
 	    	config_get_all(args)
-	    end.merge(opt).merge(:string=>string)
+	    end.merge(opt).merge(:strings=>strings)
   	end	  	
 	  
 	protected

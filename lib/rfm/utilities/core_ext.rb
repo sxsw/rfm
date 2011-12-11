@@ -1,9 +1,13 @@
 require 'forwardable'
 
+Module.module_eval do
+	# Adds ability to forward methods to other objects using 'def_delegator'
+	include Forwardable
+end
+
 class Object # @private :nodoc: all
 
-	# Adds ability to forward methods to other objects using 'def_delegator'
-	extend Forwardable
+	#extend Forwardable
 
 	# Adds methods to put instance variables in rfm_metaclass, plus getter/setters
 	# This is useful to hide instance variables in objects that would otherwise show "too much" information.

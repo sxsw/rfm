@@ -20,6 +20,7 @@ module Rfm
     
     end # ServerFactory
     
+    
     class DbFactory < Rfm::CaseInsensitiveHash # :nodoc: all
     
       def initialize(server)
@@ -48,7 +49,7 @@ module Rfm
       end
       
       def names
-      	all.keys
+      	keys
       end
     
     end # DbFactory
@@ -69,7 +70,7 @@ module Rfm
         if !@loaded
 	        Rfm::Resultset.new(@server, @server.connect(@database.account_name, @database.password, '-layoutnames', {"-db" => @database.name}).body, nil).each {|record|
 	          name = record['LAYOUT_NAME']
-	          self[name] = Rfm::Layout.new(name, @database) #if self[name] == nil
+	          self[name] = Rfm::Layout.new(name, @database) if self[name] == nil
 	        }
           @loaded = true
         end
@@ -77,11 +78,16 @@ module Rfm
       end
     
     	def names
-    		all.keys
+    		keys
     	end
     	
     	def modelize(filter = /.*/)
-    		all.values.each{|l| l.modelize if l.name.match(filter)}
+    		all.values.each{|lay| lay.modelize if lay.name.match(filter)}
+    		models
+    	end
+    	
+    	def models
+    		values.collect{|lay| lay.model}.compact
     	end
     
     end # LayoutFactory
@@ -110,12 +116,13 @@ module Rfm
       end
  
  			def names
- 				all.keys
+ 				keys
  			end
     
     end # ScriptFactory
     
     class << self
+    	attr_accessor :models
     
 			def servers
 				@servers ||= Factory::ServerFactory.new  #(config_read)
@@ -124,27 +131,30 @@ module Rfm
 	  	# Returns Rfm::Server instance, given config hash or array
 	  	def server(*conf)
 	  		options = config_read(*conf)
-	  		server_name = options[:string] || options[:host]
+	  		server_name = options[:strings][0] || options[:host]
 				server = servers[server_name, options]
 		  end
 	  
 		  # Returns Rfm::Db instance, given config hash or array
 		  def db(*conf)
 	  		options = config_read(*conf)
-	  		db_name = options[:string] || options[:database]
-	  		account_name = options[:account_name]
-	  		password = options[:password]
+	  		db_name = options[:strings][0] || options[:database]
+	  		account_name = options[:strings][1] || options[:account_name]
+	  		password = options[:strings][2] || options[:password]
 				db = server(options)[db_name, account_name, password]
 		  end
+		  
+		  alias_method :database, :db
 		  
 		  # Returns Rfm::Layout instance, given config hash or array
 	  	def layout(*conf)
 	  		options = config_read(*conf)
-	  		layout_name = options[:string] || options[:layout]
+	  		layout_name = options[:strings][0] || options[:layout]
 				layout = db(options)[layout_name]
 	  	end
     
     end # class << self
+    @models ||= []
     
   end # Factory
 end # Rfm
