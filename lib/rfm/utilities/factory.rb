@@ -13,16 +13,6 @@ module Rfm
   	config :parent=>'Rfm::Config'
   
   	class ServerFactory < Rfm::CaseInsensitiveHash # @private :nodoc: all
-    
-			#       def initialize(conf=)
-			#       	@conf = conf
-			#       	if conf
-			#       		(config.is_a?(Hash) ? [config] : config).each do |cnf|
-			#       			self[cnf[:nickname]] = Rfm::Server.new(cnf) if cnf[:nickname]
-			#       		end
-			#       	end
-			#         @loaded = true
-			#       end
       
       def [](host, conf = (Factory.instance_variable_get(:@config) || {}))
         super(host) or (self[host] = Rfm::Server.new(conf.reject{|k,v| [:account_name, :password].include? k}))
@@ -36,7 +26,7 @@ module Rfm
         @server = server
         @loaded = false
       end
-      								#account_name= @server.state[:account_name], password= @server.state[:password]
+      
       def [](dbname, acnt=nil, pass=nil) #
         db = (super(dbname) or (self[dbname] = Rfm::Database.new(dbname, @server)))
         account_name = acnt || db.account_name || @server.state[:account_name]
@@ -54,10 +44,14 @@ module Rfm
           }
           @loaded = true
         end
-        self.keys
+        self
+      end
+      
+      def names
+      	all.keys
       end
     
-    end
+    end # DbFactory
     
     class LayoutFactory < Rfm::CaseInsensitiveHash # :nodoc: all
     
@@ -79,10 +73,18 @@ module Rfm
 	        }
           @loaded = true
         end
-        self.keys
+        self
       end
     
-    end
+    	def names
+    		all.keys
+    	end
+    	
+    	def modelize(filter = /.*/)
+    		all.values.each{|l| l.modelize if l.name.match(filter)}
+    	end
+    
+    end # LayoutFactory
     
     class ScriptFactory < Rfm::CaseInsensitiveHash # :nodoc: all
     
@@ -104,55 +106,45 @@ module Rfm
           }
           @loaded = true
         end
-        self.keys
+        self
       end
+ 
+ 			def names
+ 				all.keys
+ 			end
     
     end # ScriptFactory
     
     class << self
     
 			def servers
-				@servers ||= Factory::ServerFactory.new  #(config_core)
+				@servers ||= Factory::ServerFactory.new  #(config_read)
 			end    
     
-	  	# Returns RFM server object, given config hash or array
+	  	# Returns Rfm::Server instance, given config hash or array
 	  	def server(*conf)
-	  		server_name, options = parse_config(conf)
-	  		server_name ||= options[:host]
-	      return {:error=>'Failed to get host name', :conf=>conf} unless server_name
+	  		options = config_read(*conf)
+	  		server_name = options[:string] || options[:host]
 				server = servers[server_name, options]
-				#   server_name = conf[:host]
-				#   server = servers[server_name, conf]
 		  end
 	  
-		  # Returns RFM db object, given config hash or array
+		  # Returns Rfm::Db instance, given config hash or array
 		  def db(*conf)
-	  		db_name, options = parse_config(conf)
-	  		db_name ||= options[:database]
+	  		options = config_read(*conf)
+	  		db_name = options[:string] || options[:database]
 	  		account_name = options[:account_name]
 	  		password = options[:password]
-	      return {:error=>'Failed to get database name', :conf=>conf} unless db_name
 				db = server(options)[db_name, account_name, password]
 		  end
 		  
-		  # Returns RFM layout object, given config hash or array
+		  # Returns Rfm::Layout instance, given config hash or array
 	  	def layout(*conf)
-	  		layout_name, options = parse_config(conf)
-	  		layout_name ||= options[:layout]
-	      return {:error=>'Failed to get layout name', :conf=>conf} unless layout_name
+	  		options = config_read(*conf)
+	  		layout_name = options[:string] || options[:layout]
 				layout = db(options)[layout_name]
 	  	end
-	  	
-  	private
-    
-    	def parse_config(arguments)
-    		args = arguments.dup
-    		opt = args.rfm_extract_options!
-    		name = args[0].is_a?(String) ? args.shift : nil
-    		opt = args.size > 0 ? config_core(args | [opt]) : opt
-    		[name, opt]
-    	end
     
     end # class << self
+    
   end # Factory
 end # Rfm

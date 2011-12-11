@@ -15,26 +15,57 @@ module Rfm
     # config :group_name, :hash_item=>'', :hash_item2=>...
     # config :key_name=>value, :key_name2=>value2
     # password will always return 'protected'
-    def config(*args)
-	    c = config_core(*args)
-	    c[:password] = 'PROTECTED' if c[:password]
-	    c
+		#     def config(*args)
+		# 	    c = config_core(*args)
+		# 	    c[:password] = 'PROTECTED' if c[:password]
+		# 	    c
+		# 	  end
+	  	  
+	  def config(*args)
+	  	opt = args.rfm_extract_options!
+	  	@config ||= {}
+			config_write(opt, args)
+			config_get_all
 	  end
+	  
+	  def config_clear(*args)
+	  	opt = args.rfm_extract_options!
+	  	@config = {}
+			config_write(opt, args)
+			config_get_all
+	  end
+	  	  
+  	def config_read(*args)
+  		@config ||= {}
+  		opt = args.rfm_extract_options!
+  		string = args[0].is_a?(String) ? args.shift : nil
+	    if args.size == 0
+	    	config_get_all(@config[:use])
+	    else
+	    	config_get_all(args)
+	    end.merge(opt).merge(:string=>string)
+  	end	  	
 	  
 	protected
 	  
 	  # Core config method. Unsecure, will return raw password.
-	  def config_core(*args)
-	  	opt = args.rfm_extract_options!
-	    @config ||= {}
-	    if args.size == 0
-	    	@config.merge!(opt)
-	    	config_get_all(@config[:use])
-	    else
-	    	config_get_all(args).merge(opt)
-	    end.dup
-	  end	  	  	  
-	  
+		# 	  def config_core(*args)
+		# 	  	opt = args.rfm_extract_options!
+		# 	    @config ||= {}
+		# 	    if args.size == 0
+		# 	    	@config.merge!(opt)
+		# 	    	config_get_all(@config[:use])
+		# 	    else
+		# 	    	config_get_all(args).merge(opt)
+		# 	    end.dup
+		# 	  end	  	  	  
+	 	
+	  def config_write(opt, args)
+	  	args.each{|a| @config.merge!(:use=>a.to_sym)}
+	  	@config.merge!(opt)
+	  end
+	  	
+	  		  
 	  # Get composite config from all levels.
 	  # Pass in group names as symbols to filter result.
 	  def config_get_all(filters=nil)

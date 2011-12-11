@@ -97,7 +97,7 @@ module Rfm
 			# Create/Access the layout object associated with this model
 	  	def layout
 	  		return @layout if @layout
-	  		@layout = Rfm::Factory.layout(config_core)
+	  		@layout = Rfm::Factory.layout(config_read)
 				@layout.model = self
 				@layout
 	  	end
@@ -144,7 +144,7 @@ module Rfm
 	    def delete(*args)
 	      layout.delete(*args)
 	    end
-
+	    
 		end # class << self
 		
 		

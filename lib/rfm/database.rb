@@ -79,6 +79,7 @@ module Rfm
     #attr_reader :server
     attr_reader :name, :account_name, :password, :layout, :script
     attr_writer :account_name, :password
+    alias_method :layouts, :layout
 
     # Access the Layout object representing a layout in this database. For example:
     #
@@ -91,9 +92,10 @@ module Rfm
     # returned is created on the fly and assumed to refer to a valid layout, but you will
     # get no error at this point if the layout you specify doesn't exist. Instead, you'll
     # receive an error when you actually try to perform some action it.
-    def [](layout_name)
-      self.layout[layout_name]
-    end
+		#     def [](layout_name)
+		#       self.layout[layout_name]
+		#     end
+    def_delegator :layout, :[]
 
   end
 end

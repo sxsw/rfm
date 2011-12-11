@@ -233,11 +233,13 @@ module Rfm
     # get no error at this point if the database you access doesn't exist. Instead, you'll
     # receive an error when you actually try to perform some action on a layout from this
     # database.
-    def [](dbname, acnt=nil, pass=nil)
-      self.db[dbname, acnt, pass]
-    end
+		#     def [](dbname, acnt=nil, pass=nil)
+		#       self.db[dbname, acnt, pass]
+		#     end
+    def_delegator :db, :[]
     
     attr_reader :db, :host_name, :port, :scheme, :state
+    alias_method :databases, :db
     
     # Performs a raw FileMaker action. You will generally not call this method directly, but it
     # is exposed in case you need to do something "under the hood."
