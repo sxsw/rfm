@@ -152,6 +152,14 @@ module Rfm
 	  		layout_name = options[:strings][0] || options[:layout]
 				layout = db(options)[layout_name]
 	  	end
+	  	
+	  	# Shortcut to Factory.db().layouts.modelize()
+	  	# If first parameter is regex, it is used for modelize filter.
+	  	# Otherwise, parameters are passed to Factory.database
+	  	def modelize(*args)
+	  		regx = args[0].is_a?(Regexp) ? args.shift : /.*/
+	  		db(*args).layouts.modelize(regx)
+	  	end
     
     end # class << self
     @models ||= []

@@ -36,9 +36,11 @@ module Rfm
 		end
 				
 		# Shortcut to XmlMini config getter.
+		# If a parameter is passed, it will be used to get the local backend description
+		# from the BACKENDS hash, instead of the XmlMini backend.
 		def backend(name=nil)
-			self.backend = name if name
-			ActiveSupport::XmlMini.backend
+			return ActiveSupport::XmlMini.backend unless name
+			get_backend_from_hash(name)
 		end
 		
 		# Shortcut to XmlMini config setter.
@@ -48,7 +50,6 @@ module Rfm
 			else
 				ActiveSupport::XmlMini.backend = name
 			end
-			ActiveSupport::XmlMini.backend
 		end
 		
 	private
@@ -66,7 +67,7 @@ module Rfm
 			ActiveSupport::XmlMini.backend = get_backend_from_hash(name)
 		end
 		
-		# Select the best backend, returns backend config.
+		# Select the best backend from BACKENDS, returns backend config.
 		def decide_backend
 			string_or_class = catch(:done) do
 				BACKENDS.keys.each do |name|
@@ -78,7 +79,7 @@ module Rfm
 				end
 			end
 		end
-		
+				
 		# Set XmlMini backend when this file loads.
 		begin
 			self.backend = get_backend_from_hash(config_read[:parser])

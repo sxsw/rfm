@@ -95,10 +95,11 @@ module Rfm
 		class << self
 		
 			def inherited(model)
-				(Rfm::Factory.models << model).uniq
+				(Rfm::Factory.models << model).uniq unless Rfm::Factory.models.include? model
+				model.config :parent=>'Rfm::Base'
 			end
 			
-			# Create/Access the layout object associated with this model
+			# Access/create the layout object associated with this model
 	  	def layout
 	  		return @layout if @layout
 	  		@layout = Rfm::Factory.layout(config_read)
@@ -111,7 +112,8 @@ module Rfm
 	  
 		  # Convenience methods
 		  alias_method :fm, :layout
-		
+			
+			# Just like Layout#find, but searching by record_id will return a record, not a resultset.
 	  	def find(*args)
 	  	  r = layout.find(*args)
 	  	  if args[0].class != Hash and r.size == 1
@@ -123,21 +125,27 @@ module Rfm
 	      nil
 	  	end
 	  	
+	  	# Just like Layout#find, but handles complex query logic.
 	    def query(*args)
 	      layout.query(*args)
 	    end
-		
+			
+			# Layout#any, returns single record, not resultset
 	  	def any(*args)
 	  	  layout.any(*args)[0]
 	  	end
 	  	
+	  	# Layout#all
 	  	def all(*args)
 	  	  layout.all(*args)
 	  	end
 		
+			# New record, save, with callbacks & validations (if ActiveModel is loaded)
 	  	def create(*args)
 	  	  new(*args).send :create
 	  	end
+	  	
+	  protected
 	  
 	    # Using this method will skip callbacks. Use instance method +#update+ instead
 		  def edit(*args)
@@ -152,11 +160,12 @@ module Rfm
 		end # class << self
 		
 		
-								
+		# Is this a newly created record, not saved yet?					
   	def new_record?
   		return true if self.record_id.blank?
   	end
 
+		# Reload record from database
 		# TODO: handle error when record has been deleted
 		def reload(force=false)
 	    if (@mods.empty? or force) and record_id
@@ -164,6 +173,7 @@ module Rfm
       end
     end
     
+    # Mass update of record attributes, without saving.
     # TODO: return error or nil if input hash contains no recognizable keys.
     def update_attributes(new_attr)
       # creates new special hash
@@ -187,11 +197,13 @@ module Rfm
       self.merge!(@mods) unless @mods == {}
     end
     
+    # Mass update of record attributes, with saving.
     def update_attributes!(new_attr)
       self.update_attributes(new_attr)
       self.save!
     end
     
+    # Save record modifications to database (with callbacks & validations). If record cannot be saved will raise error.
     def save!
       #return unless @mods.size > 0
       raise "Record Invalid" unless valid?
@@ -202,6 +214,7 @@ module Rfm
       end
     end
     
+    # Delete record from database, with callbacks & validations.
   	def destroy
   	  return unless record_id
   	  run_callbacks :destroy do
@@ -211,6 +224,7 @@ module Rfm
   	  self
 	  end
 	  
+	  # Same as save!, but will not raise error.
     def save
       save!
     rescue
@@ -218,6 +232,7 @@ module Rfm
       return nil
     end
 
+		# Just like Layout#save_if_not_modified, but with callbacks & validations.
     def save_if_not_modified
       update(@mod_id) if @mods.size > 0
     end    
@@ -231,7 +246,7 @@ module Rfm
   	  layout.create(*args)[0]
   	end
   
-    # shunt for callbacks pre rails 3
+    # shunt for callbacks when not using ActiveModel
     def callback_deadend (*args)
       yield
     end

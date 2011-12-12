@@ -10,10 +10,6 @@ require 'rfm/utilities/factory'
 require 'rfm/version.rb'
 
 module Rfm
-
-	if $0.to_s.match(/irb|rails|bundle/) # was ENV['_']
-  	puts "Using gem ginjo-rfm version: #{::Rfm::VERSION}"
-  end
   
   class CommunicationError  < StandardError; end
   class ParameterError      < StandardError; end
@@ -36,9 +32,14 @@ module Rfm
 		autoload :ValueListItem,  'rfm/metadata/value_list_item'
 	end
 	
+	if $0.to_s.match(/irb|rails|bundle/) # was ENV['_']
+  	puts "Using ginjo-rfm version #{::Rfm::VERSION} with #{XmlParser.backend}"
+  end
+	
 	class << self
-		def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout, :models
+		def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout, :models, :modelize
 		def_delegators 'Rfm::XmlParser', :backend, :backend=
+		def_delegators 'Rfm::Config', :config, :config_read, :config_clear
 	end
 	 
 end
