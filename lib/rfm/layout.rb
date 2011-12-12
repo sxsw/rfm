@@ -238,7 +238,7 @@ module Rfm
     	model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
     	model_class.class_exec(self) do |layout_obj|
     		@layout = layout_obj
-    		#config :layout=>layout_obj.name
+    		#config :layout=>layout_obj.name # not necessary
     	end
     	@model = model_class
   	end

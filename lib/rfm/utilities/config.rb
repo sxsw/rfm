@@ -12,7 +12,7 @@ module Rfm
 	# 		are encountered in any :use parameter. These default parameters will be included
 	# 		if a :use=>:default is encountered in compilation.
 	#
-	# All filters are honored, unless filters are included in method parameter calls to config_read,
+	# All filters are honored, unless filters are included in method parameter calls to config_all,
 	# in which case, only the passed-in filters will be used.
 	#
 	# Do not put a :use parameter in a subset (maybe future feature?).
@@ -48,15 +48,15 @@ module Rfm
 	  # If next n parameters are symbols, they will be used to filter the result. These
 	  # filters will override all stored config[:use] settings.
 	  # The final optional hash should be ad-hoc config settings.
-  	def config_read(*args)
+  	def config_all(*args)
   		@config ||= {}
   		opt = args.rfm_extract_options!
   		strings = []
   		while args[0].is_a?(String) do; strings << args.shift; end
 	    if args.size == 0
-	    	config_filter(config_compile)
+	    	config_filter(config_merge_with_parent)
 	    else
-	    	config_filter(config_compile, args)
+	    	config_filter(config_merge_with_parent, args)
 	    end.merge(opt).merge(:strings=>strings)
   	end	  	
 	  
@@ -72,8 +72,8 @@ module Rfm
 	  	
 	  # Get composite config from all levels, adding :use parameters to a
 	  # temporary top-level value.
-	  def config_compile
-      remote = (eval(@config[:parent]).config_compile rescue {})
+	  def config_merge_with_parent
+      remote = (eval(@config[:parent]).config_merge_with_parent rescue {})
       use = (remote[:use].rfm_force_array | @config[:use].rfm_force_array).compact
 			remote.merge(@config).merge(:use=>use)
     end	  
@@ -82,7 +82,7 @@ module Rfm
 		def config_filter(conf, filters=nil)
 			filters ||= conf[:use].rfm_force_array
 			filters.each{|f| conf.merge!(conf[f] || {})}
-			conf.reject!{|k,v| !KEYS.include?(k.to_s) or v.blank? }
+			conf.reject!{|k,v| !KEYS.include?(k.to_s) or v.to_s == '' }
 		end
 		
 		# 	  # Get composite config from all levels.

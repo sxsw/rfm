@@ -34,6 +34,11 @@ class Object # @private :nodoc: all
 	def rfm_force_array
 		self.is_a?(Array) ? self : [self]
 	end
+	
+	# Just testing this functionality
+	def local_methods
+		self.methods - self.class.superclass.methods
+	end
   
 private
 

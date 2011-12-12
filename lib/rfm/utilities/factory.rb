@@ -125,19 +125,19 @@ module Rfm
     	attr_accessor :models
     
 			def servers
-				@servers ||= Factory::ServerFactory.new  #(config_read)
+				@servers ||= Factory::ServerFactory.new  #(config_all)
 			end    
     
 	  	# Returns Rfm::Server instance, given config hash or array
 	  	def server(*conf)
-	  		options = config_read(*conf)
+	  		options = config_all(*conf)
 	  		server_name = options[:strings][0] || options[:host]
 				server = servers[server_name, options]
 		  end
 	  
 		  # Returns Rfm::Db instance, given config hash or array
 		  def db(*conf)
-	  		options = config_read(*conf)
+	  		options = config_all(*conf)
 	  		db_name = options[:strings][0] || options[:database]
 	  		account_name = options[:strings][1] || options[:account_name]
 	  		password = options[:strings][2] || options[:password]
@@ -148,7 +148,7 @@ module Rfm
 		  
 		  # Returns Rfm::Layout instance, given config hash or array
 	  	def layout(*conf)
-	  		options = config_read(*conf)
+	  		options = config_all(*conf)
 	  		layout_name = options[:strings][0] || options[:layout]
 				layout = db(options)[layout_name]
 	  	end

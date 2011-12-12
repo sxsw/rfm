@@ -27,10 +27,10 @@ module Rfm
 		def new(string_or_file, opts={})
 			string_or_file.gsub!(/xmlns=\"[^\"]*\"/,'') if (string_or_file.class == String and opts[:namespace] == false)
 			unless opts[:parser] and get_backend_from_hash(opts[:parser]).to_s != self.backend.to_s
-				warn "Default Parser: #{ActiveSupport::XmlMini.backend.to_s}" if config_read[:log_parser] == true
+				warn "Default Parser: #{ActiveSupport::XmlMini.backend.to_s}" if config_all[:log_parser] == true
 				ActiveSupport::XmlMini.parse(string_or_file)
 			else
-				warn "With Backend: #{get_backend_from_hash(opts[:parser]).to_s}" if config_read[:log_parser] == true
+				warn "With Backend: #{get_backend_from_hash(opts[:parser]).to_s}" if config_all[:log_parser] == true
 				ActiveSupport::XmlMini.with_backend(get_backend_from_hash(opts[:parser])) {ActiveSupport::XmlMini.parse(string_or_file)}
 			end
 		end
@@ -82,7 +82,7 @@ module Rfm
 				
 		# Set XmlMini backend when this file loads.
 		begin
-			self.backend = get_backend_from_hash(config_read[:parser])
+			self.backend = get_backend_from_hash(config_all[:parser])
 		rescue
 			self.backend = decide_backend
 		end
