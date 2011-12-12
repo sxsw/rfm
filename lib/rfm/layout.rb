@@ -230,7 +230,6 @@ module Rfm
       @value_lists
     end
     
-    
     # Creates new class with layout name, subclassed from Rfm::Base, and links the new model to this layout instance
     def modelize
     	model_name = name.to_s.gsub(/\ \t\-/, '_').classify
@@ -241,6 +240,10 @@ module Rfm
     		#config :layout=>layout_obj.name # not necessary
     	end
     	@model = model_class
+  	end
+  	
+  	def total_count
+  		any.total_count
   	end
     
   private

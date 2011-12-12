@@ -59,6 +59,7 @@ module Rfm
   class Base <  Rfm::Record  #Hash
     extend Config
     config :parent=>'Rfm::Config'
+    
     begin
     	require 'active_model'
       include ActiveModel::Validations
@@ -94,6 +95,9 @@ module Rfm
 		
 		class << self
 		
+	    # Access layout functions from base model
+	  	def_delegators :layout, :db, :server, :field_controls, :field_names, :value_lists, :total_count
+		
 			def inherited(model)
 				(Rfm::Factory.models << model).uniq unless Rfm::Factory.models.include? model
 				model.config :parent=>'Rfm::Base'
@@ -106,9 +110,6 @@ module Rfm
 				@layout.model = self
 				@layout
 	  	end
-			
-	    # Access layout functions from base model
-	  	def_delegators :layout, :db, :server, :field_controls, :field_names, :value_lists
 	  
 		  # Convenience methods
 		  alias_method :fm, :layout
