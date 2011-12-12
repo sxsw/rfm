@@ -161,6 +161,8 @@ module Rfm
 		end # class << self
 		
 		
+		
+		
 		# Is this a newly created record, not saved yet?					
   	def new_record?
   		return true if self.record_id.blank?
@@ -268,10 +270,10 @@ module Rfm
   	    return unless @mods.size > 0
   	    unless mod_id
   	      # regular save
-  	      merge_rfm_result self.class.edit(record_id, @mods)
+  	      merge_rfm_result self.class.send :edit, record_id, @mods
 	      else
 	        # save_if_not_modified
-	        merge_rfm_result self.class.edit(record_id, @mods, :modification_id=>mod_id)
+	        merge_rfm_result self.class.send :edit, record_id, @mods, :modification_id=>mod_id
         end
   	  end
   	  self
