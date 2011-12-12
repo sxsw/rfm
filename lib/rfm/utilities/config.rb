@@ -103,9 +103,9 @@ module Rfm
 		# 			rslt
 		# 		end
     
-    def inherited(base)
-    	base.config :parent=>self.to_s
-    end
+		#     def extended(base)
+		#     	base.config :parent=>self.to_s
+		#     end
     
     config RFM_CONFIG if defined? RFM_CONFIG
 

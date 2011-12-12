@@ -1,3 +1,13 @@
+RFM_CONFIG = {
+	:host=>'host1',
+	:group1=>{
+		:database=>'db1'
+	},
+	:group2=>{
+		:database=>'db2'
+	}
+}
+
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'rfm'
