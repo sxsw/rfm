@@ -5,6 +5,10 @@ RFM_CONFIG = {
 	},
 	:group2=>{
 		:database=>'db2'
+	},
+	:base_test=>{
+		:database=>'testdb1',
+		:layout=>'testlay1'
 	}
 }
 
