@@ -20,6 +20,7 @@ describe Rfm::Base do
 		it("retrieves or creates layout object"){subject.layout.name.should == 'testlay1'}
 	end
 	
+	
 	# describe '.find'
 	# 
 	# describe '.create_from_instance'
@@ -50,7 +51,18 @@ describe Rfm::Base do
 	# 
 	# describe '#merge_rfm_result'
 	
-	
+
+	describe 'Functional Tests -' do
+		describe 'Basic CRUD manoevers' do
+			before(:all){subject {MemoXml}}
+			it 'creates a new record with data'
+			it 'adds more data to the record'
+			it 'saves the record'
+			it 'searches for the record by id'
+			it 'uses #update_attributes! to modify data'
+			it 'searches for several records and loops thru to find this one'
+		end
+	end
   
   
 end # Rfm::Base

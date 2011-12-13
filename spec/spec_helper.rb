@@ -1,3 +1,4 @@
+# This data must load before Rfm.
 RFM_CONFIG = {
 	:host=>'host1',
 	:group1=>{
@@ -12,6 +13,7 @@ RFM_CONFIG = {
 	}
 }
 
+# Begin loading Rfm
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'rfm'

@@ -58,7 +58,9 @@ module Rfm
 	    else
 	    	config_filter(config_merge_with_parent, args)
 	    end.merge(opt).merge(:strings=>strings)
-  	end	  	
+  	end
+  	
+  	alias_method :get_config, :config_all
 	  
 	protected
 	  
@@ -84,24 +86,6 @@ module Rfm
 			filters.each{|f| conf.merge!(conf[f] || {})}
 			conf.reject!{|k,v| !KEYS.include?(k.to_s) or v.to_s == '' }
 		end
-		
-		# 	  # Get composite config from all levels.
-		# 	  # Pass in group names as symbols to filter result.
-		# 	  def config_get_all(filters=@config[:use])
-		#       remote = (eval(@config[:parent]).config_get_all rescue {})
-		#       
-		# 			config_filter((Hash.new.merge!(remote)), filters).merge!(@config.reject{|k,v| k==:use})
-		#     end	  
-		# 
-		# 		# Given config hash, return filtered. Filters should be symbols.
-		# 		def config_filter(conf, filters=[])
-		# 			#filters << :global
-		# 			return conf unless filters
-		# 			return conf[filters] if filters.is_a? Symbol
-		# 			rslt = {}
-		# 			filters.each{|f| rslt.merge!(conf[f] || {})}
-		# 			rslt
-		# 		end
     
 		#     def extended(base)
 		#     	base.config :parent=>self.to_s

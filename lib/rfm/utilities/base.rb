@@ -1,26 +1,5 @@
 module Rfm
-	
-	# TODO: Are these really needed here?
-	require 'rfm/record'
-	require 'rfm/layout'
-  
-  class Layout
-  	attr_accessor :model
-  end
-        
-  class Record
-  	class << self
-	  	alias_method :new_orig, :new
-	  	def new(record={}, resultset_obj=[], field_meta='', layout_obj=nil, portal=nil) # record, result, field_meta, layout, portal
-	  		layout_obj = layout rescue layout_obj
-	      model = layout_obj.model || Record rescue Record
-	      model.new_orig(record, resultset_obj, field_meta, layout_obj, portal)
-	    end
-    end # class << self
-  end # class Record
-
-
-
+	#
 	# Adds ability to create Rfm::Base model classes that behave similar to ActiveRecord::Base models.
 	# If you set your Rfm.config (or RFM_CONFIG) with your host, database, account, password, and
 	# any other server/database options, you can provide your models with nothing more than a layout.
@@ -56,6 +35,27 @@ module Rfm
 	#
 	# :nodoc: TODO: make sure all methods return something (a record?) if successful, otherwise nil or error
 	# :nodoc: TODO: move rfm methods & patches from fetch_mail_with_ruby to this file
+	#
+	# TODO: Are these really needed here?
+	require 'rfm/record'
+	require 'rfm/layout'
+  
+  class Layout
+  	attr_accessor :model
+  end
+        
+  class Record
+  	class << self
+	  	alias_method :new_orig, :new
+	  	def new(record={}, resultset_obj=[], field_meta='', layout_obj=nil, portal=nil) # record, result, field_meta, layout, portal
+	  		layout_obj = layout rescue layout_obj
+	      model = layout_obj.model || Record rescue Record
+	      model.new_orig(record, resultset_obj, field_meta, layout_obj, portal)
+	    end
+    end # class << self
+  end # class Record
+	
+	
   class Base <  Rfm::Record  #Hash
     extend Config
     config :parent=>'Rfm::Config'
@@ -96,7 +96,8 @@ module Rfm
 		class << self
 		
 	    # Access layout functions from base model
-	  	def_delegators :layout, :db, :server, :field_controls, :field_names, :value_lists, :total_count
+	  	def_delegators :layout, :db, :server, :field_controls, :field_names, :value_lists, :total_count,
+	  									:query, :all, :delete
 		
 			def inherited(model)
 				(Rfm::Factory.models << model).uniq unless Rfm::Factory.models.include? model
@@ -125,37 +126,20 @@ module Rfm
 	    rescue Rfm::Error::RecordMissingError
 	      nil
 	  	end
-	  	
-	  	# Just like Layout#find, but handles complex query logic.
-	    def query(*args)
-	      layout.query(*args)
-	    end
-			
+
 			# Layout#any, returns single record, not resultset
 	  	def any(*args)
 	  	  layout.any(*args)[0]
 	  	end
-	  	
-	  	# Layout#all
-	  	def all(*args)
-	  	  layout.all(*args)
-	  	end
-		
-			# New record, save, with callbacks & validations (if ActiveModel is loaded)
+
+			# New record, save, (with callbacks & validations if ActiveModel is loaded)
 	  	def create(*args)
 	  	  new(*args).send :create
 	  	end
-	  	
-	  protected
-	  
+	  		  
 	    # Using this method will skip callbacks. Use instance method +#update+ instead
 		  def edit(*args)
 		    layout.edit(*args)[0]
-	    end
-	  
-	    # Using this method will skip callbacks. Use instance method +#destroy+ instead
-	    def delete(*args)
-	      layout.delete(*args)
 	    end
 	    
 		end # class << self
@@ -217,16 +201,6 @@ module Rfm
       end
     end
     
-    # Delete record from database, with callbacks & validations.
-  	def destroy
-  	  return unless record_id
-  	  run_callbacks :destroy do
-  	    self.class.delete(record_id)
-  	    @mods.clear
-	    end
-  	  self
-	  end
-	  
 	  # Same as save!, but will not raise error.
     def save
       save!
@@ -234,31 +208,40 @@ module Rfm
       self.errors[:base] << $!
       return nil
     end
-
+	  
 		# Just like Layout#save_if_not_modified, but with callbacks & validations.
     def save_if_not_modified
       update(@mod_id) if @mods.size > 0
     end    
     
-    
+    # Delete record from database, with callbacks & validations.
+  	def destroy
+  	  return unless record_id
+  	  run_callbacks :destroy do
+  	    self.class.delete(record_id)
+  	    @mods.clear
+	    end
+	    self.freeze
+  	  #self
+	  end
     
 	
   protected # class Base
   
-  	def self.create_from_instance(*args)
+  	def self.create_from_new(*args)
   	  layout.create(*args)[0]
   	end
   
     # shunt for callbacks when not using ActiveModel
     def callback_deadend (*args)
-      yield
+      yield  #(*args)
     end
     
     def create
       #return unless @mods.size > 0
       run_callbacks :create do
         return unless @mods.size > 0
-  	    merge_rfm_result self.class.create_from_instance(@mods)
+  	    merge_rfm_result self.class.create_from_new(@mods)
   	  end
   	  self
   	end
