@@ -172,6 +172,11 @@ module Rfm
 	  		regx = args[0].is_a?(Regexp) ? args.shift : /.*/
 	  		db(*args).layouts.modelize(regx)
 	  	end
+	  	
+	  	def self.find_portals # Just a temporary test
+	  		rr = Rfm.models.collect{|m| m if !m.any.portals.blank? rescue nil}
+	  	end
+	  	
     
     end # class << self
     @models ||= []
