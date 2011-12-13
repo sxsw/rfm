@@ -48,7 +48,7 @@ module Rfm
   	class << self
 	  	alias_method :new_orig, :new
 	  	def new(record={}, resultset_obj=[], field_meta='', layout_obj=nil, portal=nil) # record, result, field_meta, layout, portal
-	  		layout_obj = layout rescue layout_obj
+	  		#layout_obj = layout rescue layout_obj
 	      model = layout_obj.model || Record rescue Record
 	      model.new_orig(record, resultset_obj, field_meta, layout_obj, portal)
 	    end
