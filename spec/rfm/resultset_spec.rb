@@ -2,8 +2,11 @@ require 'rfm/resultset'
 #require 'yaml'
 
 describe Rfm::Resultset do
-  let(:server) {mock(Rfm::Server)}
-  let(:layout) {mock(Rfm::Layout)}
+	# These mocks were breaking the #initialize spec, but only when I added the Layout#modelize spec !?!?
+	#   let(:server) {mock(Rfm::Server)}
+	#   let(:layout) {mock(Rfm::Layout)}
+  let(:server) {Rfm::Server.allocate}
+  let(:layout) {Rfm::Layout.allocate}
   let(:data)   {File.read("spec/data/resultset.xml")}
   subject      {Rfm::Resultset.new(server, data, layout)}
   before(:each) do

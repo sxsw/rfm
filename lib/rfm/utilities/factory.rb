@@ -14,9 +14,19 @@ module Rfm
   
   	class ServerFactory < Rfm::CaseInsensitiveHash # @private :nodoc: all
       
-      def [](host, conf = (Factory.instance_variable_get(:@config) || {}))
+      def [](host, conf = Factory.config_all) #(Factory.instance_variable_get(:@config) || {}))
+      	conf[:host] = host
         super(host) or (self[host] = Rfm::Server.new(conf.reject{|k,v| [:account_name, :password].include? k}))
       end
+			
+			# Potential refactor
+			# 		def [](*conf)
+			# 			options = Factory.config_all(*conf)
+			#   		server_name = options[:strings][0] || options[:host]
+			#   		options[:host] = server_name
+			# 			#server = servers[server_name, options]
+			# 			super(server_name) or (self[server_name] = Rfm::Server.new(options.reject{|k,v| [:account_name, :password].include? k}))
+			# 		end
     
     end # ServerFactory
     
@@ -125,7 +135,7 @@ module Rfm
     	attr_accessor :models
     
 			def servers
-				@servers ||= Factory::ServerFactory.new  #(config_all)
+				@servers ||= ServerFactory.new
 			end    
     
 	  	# Returns Rfm::Server instance, given config hash or array
@@ -134,6 +144,8 @@ module Rfm
 	  		server_name = options[:strings][0] || options[:host]
 				server = servers[server_name, options]
 		  end
+			# Potential refactor
+			#def_delegator 'Rfm::Factory::ServerFactory', :[], :server  #, :[]
 	  
 		  # Returns Rfm::Db instance, given config hash or array
 		  def db(*conf)

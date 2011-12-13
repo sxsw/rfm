@@ -59,12 +59,20 @@ describe Rfm::Layout do
 			subject.instance_variable_get(:@value_lists).has_key?('employee unique id').should be_true
 		end
 	
-		it "#get_records returns an instance of Rfm::Resultset" do
-			subject.send(:get_records, '-all', {}, {}).class.should == Rfm::Resultset
-		end
+		# Not sure why this was needed here.
+		# 	it "#get_records returns an instance of Rfm::Resultset" do
+		# 		subject.send(:get_records, '-all', {}, {}).class.should == Rfm::Resultset
+		# 	end
 		
 		it "#any returns resultset containing instance of Rfm::Record" do
 			subject.send(:any)[0].class.should == Rfm::Record
+		end
+		
+		it "#modelize returns model subclassed from Rfm::Base" do
+			subject.modelize
+			subject.model.should == Test
+			subject.model.superclass.should == Rfm::Base
+			subject.model.layout.should == subject
 		end
 	end
 
