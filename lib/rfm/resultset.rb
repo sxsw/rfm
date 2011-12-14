@@ -41,7 +41,7 @@ module Rfm
     attr_reader :field_meta, :portal_meta
     attr_reader :date_format, :time_format, :timestamp_format
     attr_reader :total_count, :foundset_count
-    def_delegator :layout, :db
+    def_delegators :layout, :db, :database
     
     # Initializes a new ResultSet object. You will probably never do this your self (instead, use the Layout
     # object to get various ResultSet obejects).
@@ -101,6 +101,10 @@ module Rfm
     	layout.instance_variable_get(:@field_names) ||
     	layout.instance_variable_set(:@field_names, field_meta.collect{|k,v| v.name})
   	end
+  	
+  	def portal_names
+  		portal_meta.keys
+  	end
     
     
     private
@@ -115,8 +119,11 @@ module Rfm
         end
       end
 
-      def parse_portals(meta)
+      def parse_portals(meta, force=false)
+      	pm = layout.instance_variable_get(:@portal_meta)
+      	return pm if pm and !force
       	return if meta['relatedset-definition'].blank?
+      	
         meta['relatedset-definition'].rfm_force_array.each do |relatedset|
         	next if relatedset.blank?
           table, fields = relatedset['table'], {}
@@ -128,6 +135,7 @@ module Rfm
 
           @portal_meta[table] = fields
         end
+        layout.instance_variable_set(:@portal_meta, @portal_meta)
       end
     
       def convert_date_time_format(fm_format)

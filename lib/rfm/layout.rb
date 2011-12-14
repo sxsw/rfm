@@ -149,6 +149,7 @@ module Rfm
     meta_attr_reader :db
     attr_reader :name #, :db
     def_delegator :db, :server
+    alias_method :database, :db
     
     # Returns a ResultSet object containing _every record_ in the table associated with this layout.
     def all(options = {})

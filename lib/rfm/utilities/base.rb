@@ -97,7 +97,7 @@ module Rfm
 		
 	    # Access layout functions from base model
 	  	def_delegators :layout, :db, :server, :field_controls, :field_names, :value_lists, :total_count,
-	  									:query, :all, :delete, :portal_names
+	  									:query, :all, :delete, :portal_meta, :portal_names, :database
 		
 			def inherited(model)
 				(Rfm::Factory.models << model).uniq unless Rfm::Factory.models.include? model
@@ -111,9 +111,6 @@ module Rfm
 				@layout.model = self
 				@layout
 	  	end
-	  
-		  # Convenience methods
-		  alias_method :fm, :layout
 			
 			# Just like Layout#find, but searching by record_id will return a record, not a resultset.
 	  	def find(*args)
