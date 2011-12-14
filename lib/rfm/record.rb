@@ -68,7 +68,14 @@ module Rfm
   #   }
   #
   # This code iterates through the rows of the _Orders_ portal.
-  # 
+  #
+  #	As a convenience, you can call a specific portal as a method on your record, if the table occurrence name does
+  # not have any characters that are prohibited in ruby method names, just as you can call a field with a method:
+	# 	
+	#   myRecord.orders.each {|portal_row|
+	#   	puts portal_row["Order Number"]
+	#   }
+	#   
   # =Field Types and Ruby Types
   #
   # RFM automatically converts data from FileMaker into a Ruby object with the most reasonable type possible. The 
@@ -121,7 +128,8 @@ module Rfm
         datum = []
         
         data = field['data']; data = data.is_a?(Hash) ? [data] : data
-        data.each do |x| 
+        data.each do |x|
+        	next unless field_meta[field_name]
           datum.push(field_meta[field_name].coerce(x['__content__'], resultset_obj))
         end if data
       
@@ -226,6 +234,7 @@ module Rfm
   	def method_missing (symbol, *attrs, &block)
   	  method = symbol.to_s
   	  return self[method] if self.key?(method)
+  	  return self.portals[method] if self.portals.key?(method)
 
   	  if method =~ /(=)$/
   	    return self[$`] = attrs.first if self.key?($`)

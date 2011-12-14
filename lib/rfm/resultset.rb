@@ -92,7 +92,9 @@ module Rfm
       return if resultset['record'].nil?
 
       parse_fields(meta)
-      parse_portals(meta) if @include_portals and !meta['relatedset-definition'].nil?
+      # This will always load portal meta, even if :include_portals was not specified.
+      # See Record for control of portal data loading.
+      parse_portals(meta) if !meta['relatedset-definition'].nil? # and @include_portals
       Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, layout)
       
     end

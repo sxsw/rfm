@@ -142,7 +142,8 @@ module Rfm
       
       @loaded = false
       @field_controls = Rfm::CaseInsensitiveHash.new
-      @value_lists = Rfm::CaseInsensitiveHash.new      
+      @value_lists = Rfm::CaseInsensitiveHash.new
+      @portal_meta = nil
     end
     
     meta_attr_reader :db
@@ -230,6 +231,18 @@ module Rfm
       @value_lists
     end
     
+  	def total_count
+  		any.total_count
+  	end
+  	
+  	def portal_meta
+  		@portal_meta ||= any.portal_meta
+  	end
+  	
+  	def portal_names
+  		portal_meta.keys
+  	end
+    
     # Creates new class with layout name, subclassed from Rfm::Base, and links the new model to this layout instance
     def modelize
     	model_name = name.to_s.gsub(/\W/, '_').classify.gsub(/_/,'')
@@ -242,10 +255,6 @@ module Rfm
     	@model = model_class
     rescue StandardError, SyntaxError
     	nil
-  	end
-  	
-  	def total_count
-  		any.total_count
   	end
     
   private
