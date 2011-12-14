@@ -51,27 +51,32 @@ describe Rfm::Layout do
 		end
 	end #get_records
 	
-	describe "Functional Tests" do
-	
-		it "#load sets @field_controls and @value_lists from xml" do
+	describe "#load" do
+		it "sets @field_controls and @value_lists from xml" do
 			subject.send(:load)
 			subject.instance_variable_get(:@field_controls).has_key?('stayid').should be_true
 			subject.instance_variable_get(:@value_lists).has_key?('employee unique id').should be_true
 		end
+	end
 	
-		# Not sure why this was needed here.
-		# 	it "#get_records returns an instance of Rfm::Resultset" do
-		# 		subject.send(:get_records, '-all', {}, {}).class.should == Rfm::Resultset
-		# 	end
-		
-		it "#any returns resultset containing instance of Rfm::Record" do
+	describe "#any" do
+		it "returns resultset containing instance of Rfm::Record" do
 			subject.send(:any)[0].class.should == Rfm::Record
 		end
+	end
+	
+	describe "#modelize" do
+		before(:all){subject.modelize}
 		
-		it "#modelize returns model subclassed from Rfm::Base" do
-			subject.modelize
-			subject.model.should == Test
+		it "creates model subclassed from Rfm::Base" do
 			subject.model.superclass.should == Rfm::Base
+		end
+		
+		it "stores model in layout@model as constant based on layout name" do
+			subject.model.should == Test
+		end
+		
+		it "sets model@layout with layout object" do
 			subject.model.layout.should == subject
 		end
 	end
