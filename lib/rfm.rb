@@ -39,7 +39,7 @@ module Rfm
 	class << self
 		def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout, :models, :modelize
 		def_delegators 'Rfm::XmlParser', :backend, :backend=
-		def_delegators 'Rfm::Config', :config, :config_all, :config_clear
+		def_delegators 'Rfm::Config', :config, :get_config, :config_clear
 	end
 	 
 end

@@ -14,14 +14,14 @@ module Rfm
   
   	class ServerFactory < Rfm::CaseInsensitiveHash # @private :nodoc: all
       
-      def [](host, conf = Factory.config_all) #(Factory.instance_variable_get(:@config) || {}))
+      def [](host, conf = Factory.get_config) #(Factory.instance_variable_get(:@config) || {}))
       	conf[:host] = host
         super(host) or (self[host] = Rfm::Server.new(conf.reject{|k,v| [:account_name, :password].include? k}))
       end
 			
 			# Potential refactor
 			# 		def [](*conf)
-			# 			options = Factory.config_all(*conf)
+			# 			options = Factory.get_config(*conf)
 			#   		server_name = options[:strings][0] || options[:host]
 			#   		options[:host] = server_name
 			# 			#server = servers[server_name, options]
@@ -140,7 +140,7 @@ module Rfm
     
 	  	# Returns Rfm::Server instance, given config hash or array
 	  	def server(*conf)
-	  		options = config_all(*conf)
+	  		options = get_config(*conf)
 	  		server_name = options[:strings][0] || options[:host]
 				server = servers[server_name, options]
 		  end
@@ -149,7 +149,7 @@ module Rfm
 	  
 		  # Returns Rfm::Db instance, given config hash or array
 		  def db(*conf)
-	  		options = config_all(*conf)
+	  		options = get_config(*conf)
 	  		db_name = options[:strings][0] || options[:database]
 	  		account_name = options[:strings][1] || options[:account_name]
 	  		password = options[:strings][2] || options[:password]
@@ -160,7 +160,7 @@ module Rfm
 		  
 		  # Returns Rfm::Layout instance, given config hash or array
 	  	def layout(*conf)
-	  		options = config_all(*conf)
+	  		options = get_config(*conf)
 	  		layout_name = options[:strings][0] || options[:layout]
 				layout = db(options)[layout_name]
 	  	end

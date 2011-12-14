@@ -107,7 +107,7 @@ module Rfm
 			# Access/create the layout object associated with this model
 	  	def layout
 	  		return @layout if @layout
-	  		@layout = Rfm::Factory.layout(config_all)
+	  		@layout = Rfm::Factory.layout(get_config)
 				@layout.model = self
 				@layout
 	  	end

@@ -5,8 +5,8 @@ describe Rfm::Base do
 	describe '.inherited' do
 		it("adds class to Rfm::Factory@models"){Rfm::Factory.models.include?(subject).should be_true}
 		it("sets class @config with :parent and other config options") do
-			subject.config_all[:parent].should == 'Rfm::Base'
-			subject.config_all[:layout].should == 'testlay1'
+			subject.get_config[:parent].should == 'Rfm::Base'
+			subject.get_config[:layout].should == 'testlay1'
 		end
 	end
 	

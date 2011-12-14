@@ -25,29 +25,29 @@ describe Rfm::Config do
 		end
 	end
 	
-	describe "#config_all" do
+	describe "#get_config" do
 		context "with no arguments" do
 			it "returns upstream config" do
-				klass.config_all.should == {:host=>'host1', :parent=>'Rfm::Config', :strings=>[]}
+				klass.get_config.should == {:host=>'host1', :parent=>'Rfm::Config', :strings=>[]}
 			end
 		end
 		
 		context "with preset filters but no arguments" do
 			it "returns upstream config, merged with filtered groups" do
 				klass.config :group1
-				klass.config_all.should == {:host=>'host1', :parent=>'Rfm::Config', :strings=>[], :database=>'db1', :use=>[:group1]}
+				klass.get_config.should == {:host=>'host1', :parent=>'Rfm::Config', :strings=>[], :database=>'db1', :use=>[:group1]}
 			end
 		end
 		
 		context "with array of symbols and hash of options" do
 			it "returns upstream config, merged with filtered groups, merged with options, ignoring preset filters" do
 				klass.config :group1
-				klass.config_all(:group2, :ssl=>true).should == {:host=>'host1', :parent=>'Rfm::Config', :strings=>[], :database=>'db2', :ssl=>true, :use=>[:group1]}
+				klass.get_config(:group2, :ssl=>true).should == {:host=>'host1', :parent=>'Rfm::Config', :strings=>[], :database=>'db2', :ssl=>true, :use=>[:group1]}
 			end
 			
 			it "returns config including :strings parameter, if passed array of strings as first n arguments" do
 				klass.config :group1
-				klass.config_all('test-string-one', 'test-string-two', :group2, :ssl=>true)[:strings][1].should == 'test-string-two'
+				klass.get_config('test-string-one', 'test-string-two', :group2, :ssl=>true)[:strings][1].should == 'test-string-two'
 			end
 			
 		end

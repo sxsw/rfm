@@ -12,7 +12,7 @@ module Rfm
 	# 		are encountered in any :use parameter. These default parameters will be included
 	# 		if a :use=>:default is encountered in compilation.
 	#
-	# All filters are honored, unless filters are included in method parameter calls to config_all,
+	# All filters are honored, unless filters are included in method parameter calls to get_config,
 	# in which case, only the passed-in filters will be used.
 	#
 	# Do not put a :use parameter in a subset (maybe future feature?).
@@ -48,7 +48,7 @@ module Rfm
 	  # If next n parameters are symbols, they will be used to filter the result. These
 	  # filters will override all stored config[:use] settings.
 	  # The final optional hash should be ad-hoc config settings.
-  	def config_all(*args)
+  	def get_config(*args)
   		@config ||= {}
   		opt = args.rfm_extract_options!
   		strings = []
@@ -60,7 +60,7 @@ module Rfm
 	    end.merge(opt).merge(:strings=>strings)
   	end
   	
-  	alias_method :get_config, :config_all
+  	alias_method :get_config, :get_config
 	  
 	protected
 	  
