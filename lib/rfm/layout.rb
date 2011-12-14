@@ -232,7 +232,7 @@ module Rfm
     
     # Creates new class with layout name, subclassed from Rfm::Base, and links the new model to this layout instance
     def modelize
-    	model_name = name.to_s.gsub(/[\ \t\-].+/, '_').classify
+    	model_name = name.to_s.gsub(/\W/, '_').classify.gsub(/_/,'')
     	return if (model_name.constantize rescue nil)
     	model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
     	model_class.class_exec(self) do |layout_obj|
@@ -240,6 +240,8 @@ module Rfm
     		#config :layout=>layout_obj.name # not necessary
     	end
     	@model = model_class
+    rescue StandardError, SyntaxError
+    	nil
   	end
   	
   	def total_count
