@@ -1,6 +1,113 @@
 # ginjo-rfm
 
-Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. It also adds minor enhancements like server timeout and value-list alternate display. To read more about Rfm, see the info at [Sixfriedrice](http://sixfriedrice.com/wp/products/rfm/), or check out the [RDoc](http://rubydoc.info/github/ginjo/rfm/master/frames).
+Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Ginjo-rfm 2.0 adds some major enhancements, while remaining compatible with Ginjo-rfm 1.4.x.
+
+Some Highlights:
+
+* Data source modeling with ActiveModel compatibility and graceful degradation
+	If you can load ActiveModel in your project, you can have model callbacks & validations.
+	If you can't load ActiveModel (because you're using something incompatible, like Rails 2),
+	you can still use Rfm models... minus callbacks & validations.
+	
+		class User < Rfm::Base
+			config      :layout=>'user_layout'
+			before_save :encrypt_password
+			validate    :valid_email_address
+		end
+		
+		@user = User.new :username => 'bill', :password => 'pass'
+    @user.email = 'my@email.com'
+    @user.save!
+		
+	Create models on-the-fly from any layout.
+	
+		my_layout.modelize
+		 => MyLayoutName   (a class constant, represented by your layout's name)
+		 
+	Create models for an entire database, all at once.
+	
+		Rfm.modelize :my_db_name_or_config
+		 => [MyLayout, AnotherLayout, ThirdLayout, AndSoOn, ...]
+		 
+	
+* Choice of XML parsers
+	Ginjo-rfm 2.0 uses ActiveSupport's XmlMini parsing interface, which has built-in support for
+	LibXML, Nokogiri, and REXML. Additionally, Ginjo-rfm includes a module for Hpricot parsing.
+	You can specifiy which parser to use, or load them all and let Rfm decide.
+	
+		Rfm.config :parser => :libxml
+	
+	If you're not able to install one of the faster parsers, Ginjo-rfm 2 will fall back to
+	ruby's built-in REXML. Want to roll your own XML adapter? Just pass it to Rfm as a module.
+	
+		Rfm.config :parser => MyHomeGrownParser
+			
+	Choose your preferred parser globaly, or just for a specific model.
+			
+		class Order < Rfm::Base
+			config :parser => :hpricot
+		end
+			
+* Configuration API
+	Allows storage of all configuration settings in a hash, retrievable from anwhere.
+	For simple applications, put all of your configuration in a top-level hash,
+	and let Rfm do the rest. For more complicated setups, use configuration subgroups,
+	and/or set configuration on-the-fly when you create Server, Database, Layout, or Base objects.
+	
+		Rfm.config :host => 'main_host',
+			:database      => 'main_database',
+			:account_name  => 'myname',
+			:password      => 'somepass',
+			:second_server => {
+				:host        => 'second_host',
+				:database    => 'second_database'
+			}
+			
+		class MyClass < Rfm::Base
+			config :second_server, :layout => 'mylayout'
+		end
+		
+	If you put all of your configuration in a top-level constant RFM_CONFIG, Ginjo-rfm will pick it up when it loads.
+		
+* Complex Queries
+	Create queries with mixed boolean logic, mimicing Filemaker's multiple-request find.
+	
+	This is like 3 find requests, one for each value in the fieldOne array, AND'd with the fieldTwo value.
+
+		layout.query :fieldOne => ['val1','val2','val3'], :fieldTwo =>'someValue'
+		
+* Full Metadata Support
+	
+	* Server databases
+	* Database layouts
+	* Database scripts
+	* Layout fields
+	* Layout portals
+	* Resultset meta
+	* Field meta
+	* Portal meta
+		
+From Ginjo-rfm 1.4.x, the following enhancements are also included.
+
+* Connection timeout settings
+
+* Value-list alternate display
+
+There are also many enhancements to make it easier than ever to get the objects or data you want. Some examples:
+
+* Rfm.db 'my_db'
+	 => returns a database object using default config
+	 
+* Rfm.layout :my_group
+	 => returns layout object using config grouping :my_group
+	 
+* MyModel.total_count
+
+* MyModel.portal_names
+
+* my_record.field_names
+
+## Credits
 
 Rfm was primarily designed by Six Fried Rice co-founder Geoff Coffey.
 
@@ -20,26 +127,11 @@ Documentation & Links
 * Ginjo-rfm           <https://github.com/ginjo/rfm>
 * Lardawge-rfm        <https://github.com/lardawge/rfm>
 
-Partial list of features added since rfm 1.0.0.
+## Installation & Compatibility
 
-* SSL support
-* Nokogiri xml parser
-* Display-vs-data value lists
-* Connection timeout
-* Metadata support re-introduced
+Ginjo-rfm requires ActiveSupport. It has been tested with ActiveSupport 2.3.5 thru 3.1.3. It may work with other versions of ActiveSupport as well. ActiveModel (and Rails 3) is not compatible with ActiveSupport 2.3.x. So you can use ginjo-rfm with Rails 2.3, but you will not have ActiveModel features like callbacks and validations.
 
-Partial roadmap to the future
-
-* ActiveModel compatibility
-* Alternative XML parsers
-* Complex Filemaker queries
-* Configuration API
-* More tests
-
-
-## Installation
-
-Rfm depends on Nokogiri gem, which installs executables requiring C compilation. Make sure you have a C compiler installed, ruby development headers, and Nokogiri's pre-requisite libxml2 & libxslt (or Xcode on OS X). For help installing [Nokogiri](http://nokogiri.org/), see their helpful [tutorial](http://nokogiri.org/tutorials/installing_nokogiri.html). Future versions of ginjo-rfm will offer alternative XML parsing options, hopefully making it easier to get up and running.
+To get the best performance, it is recommended that you use the LibXML or Nokogiri XML parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are specified in your Gemfile. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is specified in your project. If you're not using Bundler, Rfm will pick up the XML parsers and ActiveModel as long as they are available in your current ruby installation.
 
 Terminal:
 
@@ -56,32 +148,48 @@ Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
 In the Gemfile:
 
     gem 'ginjo-rfm'
+    
+    gem 'libxml-ruby' # optional
+    gem 'nokogiri'    # optional
+    gem 'hpricot'     # optional
+    gem 'activemodel' # optional
 
 ### Edge - in an upcoming version of ginjo-rfm
 
-ActiveModel support.
-    
-    class Account < Rfm::Base
-      config :layout=>'account_xml'
-      before_create :encrypt_password
-      validates :email, :presence => true
-      validates :username, :presence => true
-      attr_accessor :password
-    end
-    
-    @account = Account.new(:username=>'bill', :password=>'pass')
-    @account.email = 'my@email.com'
-    @account.save!
-    
-Multiple backend xml parsers.
-
-    Rfm::Server.new(:parser => :nokogiri)
-    # Backend options => :libxml, :libxmlsax, :nokogiri, :nokogirisax, :hpricot, :rexml
-    
-Try out these unreleased features in the edge branch.
+Try out unreleased features in the edge branch.
 
     #gemfile
     gem 'ginjo-rfm', :git=>'git://github.com/ginjo/rfm.git', :branch=>'edge'
+    
+    
+## Quickstart
+
+### With models
+
+* Set RFM_CONFIG with your configuration data
+
+* Load Rfm
+
+* Specify some models
+
+* Rfm models have the same methods available to them as Rfm layout objects
+
+### Manually
+
+* Create a layout object
+
+Classic Rfm
+
+* Rfm::Server.new(RFM_CONFIG)['my_db_name']['my_layout_name']
+
+### Finding and manipulating Filemaker data
+
+
+
+
+
+
+
     
 ## Connecting
 
