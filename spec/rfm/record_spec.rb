@@ -4,10 +4,9 @@ describe Rfm::Record do
 	let(:layout) {mock(Rfm::Layout)}
 	subject {record}
 
-	#   before(:each) do
-	#     @record = Rfm::Record.allocate
-	#     @layout = mock(Rfm::Layout)
-	#   end
+  before(:each) do
+    record.instance_variable_set(:@portals, Rfm::CaseInsensitiveHash.new)
+  end
 
   describe "#[]" do
     before(:each) do
