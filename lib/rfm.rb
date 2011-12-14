@@ -21,7 +21,7 @@ module Rfm
   autoload :Layout,       'rfm/layout'
   autoload :Resultset,    'rfm/resultset'
   autoload :Record,       'rfm/record'
-  autoload :Base,         'rfm/utilities/base'
+  autoload :Base,         'rfm/base'
   autoload :XmlParser,    'rfm/utilities/xml_parser'
   autoload :ComplexQuery, 'rfm/utilities/complex_query'
 

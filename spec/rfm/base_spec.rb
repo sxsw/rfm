@@ -1,4 +1,4 @@
-require 'rfm/utilities/base'
+require 'rfm/base'
 describe Rfm::Base do
 	subject {Class.new(Rfm::Base){config :base_test}}
 

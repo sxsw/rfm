@@ -17,7 +17,7 @@ RFM_CONFIG = {
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'rfm'
-#require 'rfm/utilities/base'  # Use this to test if base.rb breaks anything, or if it's absence breaks anything.
+#require 'rfm/base'  # Use this to test if base.rb breaks anything, or if it's absence breaks anything.
 require 'spec'
 require 'spec/autorun'
 
