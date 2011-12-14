@@ -137,7 +137,7 @@ module Rfm
     #   myLayout = myServer["Customers"]["Details"]
     def initialize(name, db_obj)
     	raise Rfm::Error.getError(190, "New instance of Rfm::Layout has no name.") if name.to_s == ''
-      @name = name
+      @name = name.to_s
       rfm_metaclass.instance_variable_set :@db, db_obj
       
       @loaded = false

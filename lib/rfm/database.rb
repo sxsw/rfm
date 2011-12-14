@@ -67,7 +67,7 @@ module Rfm
     # This sample code gets a database object representing the Customers database on the FileMaker server.
     def initialize(name, server_obj, acnt=nil, pass=nil)
     	raise Rfm::Error.getError(190, "New instance of Rfm::Database has no name.") if name.to_s == ''
-      @name = name
+      @name = name.to_s
       rfm_metaclass.instance_variable_set :@server, server_obj
       @account_name = acnt #server.state[:account_name] or ""
       @password = pass #server.state[:password] or ""
@@ -80,6 +80,7 @@ module Rfm
     attr_reader :name, :account_name, :password, :layout, :script
     attr_writer :account_name, :password
     alias_method :layouts, :layout
+    def_delegator :layouts, :modelize
 
     # Access the Layout object representing a layout in this database. For example:
     #
