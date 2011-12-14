@@ -37,7 +37,6 @@ module Rfm
 
   class Resultset < Array
     
-    #meta_attr_reader :layout, :server
     attr_reader :layout, :server
     attr_reader :field_meta, :portal_meta
     attr_reader :date_format, :time_format, :timestamp_format
@@ -89,14 +88,13 @@ module Rfm
       @foundset_count   = resultset['count'].to_s.to_i
       @total_count      = datasource['total-count'].to_s.to_i
       
-      return if resultset['record'].nil?
-
       parse_fields(meta)
       # This will always load portal meta, even if :include_portals was not specified.
       # See Record for control of portal data loading.
       parse_portals(meta) if !meta['relatedset-definition'].nil? # and @include_portals
-      Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, layout)
       
+      return if resultset['record'].nil?
+      Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, layout)
     end
         
     def field_names
