@@ -73,7 +73,7 @@ module Rfm
     
 		alias_method :initialize_orig, :initialize
 		def initialize(record, resultset_obj, field_meta, layout_obj, portal)
-			if resultset_obj == [] and  !record.has_key? 'field'   #!record.respond_to? :xpath
+			if record and resultset_obj == [] and !record.has_key? 'field'   #!record.respond_to? :xpath
 				@mods = Rfm::CaseInsensitiveHash.new
 				@layout = layout_obj
 				@resultset = Resultset.allocate

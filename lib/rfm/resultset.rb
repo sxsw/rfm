@@ -92,7 +92,7 @@ module Rfm
       return if resultset['record'].nil?
 
       parse_fields(meta)
-      parse_portals(meta) if @include_portals
+      parse_portals(meta) if @include_portals and !meta['relatedset-definition'].nil?
       Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, layout)
       
     end
@@ -116,7 +116,9 @@ module Rfm
       end
 
       def parse_portals(meta)
+      	return if meta['relatedset-definition'].blank?
         meta['relatedset-definition'].rfm_force_array.each do |relatedset|
+        	next if relatedset.blank?
           table, fields = relatedset['table'], {}
 
           relatedset['field-definition'].rfm_force_array.each do |field|

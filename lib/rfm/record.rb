@@ -136,9 +136,11 @@ module Rfm
       
       unless relatedsets.empty?
         relatedsets.each do |relatedset|
+        	next if relatedset.blank?
           tablename, records = relatedset['table'], []
       
           relatedset['record'].rfm_force_array.each do |record|
+          	next unless record
             records << self.class.new(record, resultset_obj, resultset_obj.portal_meta[tablename], layout_obj, tablename)
           end
       
