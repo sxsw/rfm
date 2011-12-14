@@ -2,12 +2,6 @@ require 'rfm/utilities/base'
 describe Rfm::Base do
 	subject {Class.new(Rfm::Base){config :base_test}}
 
-	#   before(:each) do
-	#     @record = Rfm::Record.allocate
-	#     @layout = mock(Rfm::Layout)
-	#   end
-
-
 	describe '.inherited' do
 		it("adds class to Rfm::Factory@models"){Rfm::Factory.models.include?(subject).should be_true}
 		it("sets class @config with :parent and other config options") do
@@ -19,7 +13,6 @@ describe Rfm::Base do
 	describe '.layout' do
 		it("retrieves or creates layout object"){subject.layout.name.should == 'testlay1'}
 	end
-	
 	
 	# describe '.find'
 	# 
@@ -61,6 +54,7 @@ describe Rfm::Base do
 			it 'searches for the record by id'
 			it 'uses #update_attributes! to modify data'
 			it 'searches for several records and loops thru to find this one'
+			it 'destroys a record'
 		end
 	end
   

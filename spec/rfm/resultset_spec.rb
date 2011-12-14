@@ -28,7 +28,9 @@ describe Rfm::Resultset do
 			atrs = [:layout, :server, :field_meta, :portal_meta, :date_format, :time_format, :timestamp_format, :total_count, :foundset_count]
 			atrs.each {|atr| subject.send(atr).should_not eql(nil)}
 		end
-	
+		
+		it "loads @portal_meta with portal descriptions"
+		
 	end # initialize
 
 end # Rfm::Resultset
