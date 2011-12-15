@@ -234,7 +234,7 @@ module Rfm
   	def method_missing (symbol, *attrs, &block)
   	  method = symbol.to_s
   	  return self[method] if self.key?(method)
-  	  return @portals[method] if @portals.key?(method)
+  	  return @portals[method] if @portals and @portals.key?(method)
 
   	  if method =~ /(=)$/
   	    return self[$`] = attrs.first if self.key?($`)

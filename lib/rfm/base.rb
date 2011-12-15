@@ -194,7 +194,7 @@ module Rfm
     # Save record modifications to database (with callbacks & validations). If record cannot be saved will raise error.
     def save!
       #return unless @mods.size > 0
-      raise "Record Invalid" unless valid?
+      raise "Record Invalid" unless valid? rescue nil
       if @record_id
         self.update
       else
@@ -206,7 +206,7 @@ module Rfm
     def save
       save!
     rescue
-      self.errors[:base] << $!
+      (self.errors[:base] rescue []) << $!
       return nil
     end
 	  
