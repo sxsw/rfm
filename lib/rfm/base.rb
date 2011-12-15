@@ -40,18 +40,17 @@ module Rfm
 	require 'rfm/record'
 	require 'rfm/layout'
   
+  
   class Layout
   	attr_accessor :model
   end
+  
         
   class Record
   	class << self
-	  	alias_method :new_orig, :new
-	  	def new(record={}, resultset_obj=[], field_meta='', layout_obj=nil, portal=nil) # record, result, field_meta, layout, portal
-	  		#layout_obj = layout rescue layout_obj
-	      model = layout_obj.model || Record rescue Record
-	      model.new_orig(record, resultset_obj, field_meta, layout_obj, portal)
-	    end
+			def new(*args)
+				args[3].model.new(*args) rescue super
+			end
     end # class << self
   end # class Record
 	
@@ -71,9 +70,8 @@ module Rfm
     	end
     end
     
-		alias_method :initialize_orig, :initialize
-		def initialize(record, resultset_obj, field_meta, layout_obj, portal)
-			if record and resultset_obj == [] and !record.has_key? 'field'   #!record.respond_to? :xpath
+		def initialize(record={}, resultset_obj=[], field_meta='', layout_obj=self.class.layout, portal=nil)
+			if resultset_obj == [] and !record.has_key? 'field'
 				@mods = Rfm::CaseInsensitiveHash.new
 				@layout = layout_obj
 				@resultset = Resultset.allocate
@@ -86,19 +84,17 @@ module Rfm
         self.merge!(@mods) unless @mods == {}
         @loaded = true
       else
-      	initialize_orig(record, resultset_obj, field_meta, layout_obj, portal)
+      	super
       end
-			yield(self) if block_given?
 		end
-    
-    
+		
 		
 		class << self
 		
 	    # Access layout functions from base model
 	  	def_delegators :layout, :db, :server, :field_controls, :field_names, :value_lists, :total_count,
 	  									:query, :all, :delete, :portal_meta, :portal_names, :database
-		
+
 			def inherited(model)
 				(Rfm::Factory.models << model).uniq unless Rfm::Factory.models.include? model
 				model.config :parent=>'Rfm::Base'
@@ -111,7 +107,15 @@ module Rfm
 				@layout.model = self
 				@layout
 	  	end
-			
+		
+			# Build a new record without saving
+		  def new(*args)
+		  	# Without this method, infinite recursion will happen from Record.new
+		    rec = self.allocate
+		    rec.send :initialize, *args
+		    rec
+		  end
+		  			
 			# Just like Layout#find, but searching by record_id will return a record, not a resultset.
 	  	def find(*args)
 	  	  r = layout.find(*args)

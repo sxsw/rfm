@@ -121,7 +121,7 @@ module Rfm
       @portals     ||= Rfm::CaseInsensitiveHash.new
 
       relatedsets = !portal && resultset_obj.instance_variable_get(:@include_portals) ? record['relatedset'].rfm_force_array : []
-      
+            
       record['field'].rfm_force_array.each do |field|
         field_name = field['name']
         field_name.gsub!(Regexp.new(portal + '::'), '') if portal
