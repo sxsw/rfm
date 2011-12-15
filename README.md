@@ -2,11 +2,23 @@
 
 Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Ginjo-rfm 2.0 adds some major enhancements, while remaining compatible with ginjo-rfm 1.4.x and lardawge-rfm 1.4.x (see ...).
 
-New in version 2.0:
+
+## Documentation & Links
+
+* Ginjo-rfm rubygem		<https://rubygems.org/gems/ginjo-rfm>
+* Original homepage		<http://sixfriedrice.com/wp/products/rfm/>
+* Rdoc location				<http://rubydoc.info/github/ginjo/rfm/frames>
+* Discussion					<http://groups.google.com/group/rfmcommunity>
+* Ginjo at github			<https://github.com/ginjo/rfm>
+* Lardawge at github	<https://github.com/lardawge/rfm>
 
 
 
-### Data source modeling with ActiveModel, and graceful degradation without ActiveModel.
+
+
+## New in version 2.0:
+
+### Data source modeling with ActiveModel and graceful degradation without ActiveModel.
 	
 If you can load ActiveModel in your project, you can have model callbacks & validations.
 If you can't load ActiveModel (because you're using something incompatible, like Rails 2),
@@ -135,7 +147,7 @@ There are also many enhancements to make it easier than ever to get the objects 
 * my_record.field_names
 
 
-## Installation & Compatibility
+## Installation
 
 Ginjo-rfm requires ActiveSupport for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3. ActiveModel (and Rails 3) is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Model creation and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
 
@@ -151,7 +163,7 @@ Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
 		require 'rubygems'
 		require 'rfm'
 
-### In Rails >= 3.0, or any project using Bundler
+### In Rails >= 3.0 or any project using Bundler
 
 In the Gemfile:
 
@@ -433,16 +445,6 @@ Other lead contributors:
 * Atsushi Matsuo was an early Rfm tester, and provided outstanding feedback, critical code fixes, and a lot of web exposure.
 * Jesse Antunes helped ensure that Rfm is stable and functional.
 * Larry Sprock added ssl support, switched the xml parser to a much faster Nokogiri, added the rspec testing framework, and refined code architecture.
-
-Documentation & Links
-
-* Ginjo-rfm rubygem		<https://rubygems.org/gems/ginjo-rfm>
-* Original homepage		<http://sixfriedrice.com/wp/products/rfm/>
-* Rdoc location				<http://rubydoc.info/github/ginjo/rfm/frames>
-* Discussion					<http://groups.google.com/group/rfmcommunity>
-* Ginjo at github			<https://github.com/ginjo/rfm>
-* Lardawge at github	<https://github.com/lardawge/rfm>
-
 
 ## Copyright
 
