@@ -3,6 +3,7 @@ module Rfm
 	$LOAD_PATH.unshift(PATH) unless $LOAD_PATH.include?(PATH)
 end
 
+require 'active_support/core_ext/object/blank'
 require 'rfm/utilities/core_ext'
 require 'rfm/utilities/case_insensitive_hash'
 require 'rfm/utilities/config'
