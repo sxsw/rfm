@@ -121,7 +121,7 @@ module Rfm
 
       def parse_portals(meta, force=false)
       	pm = layout.instance_variable_get(:@portal_meta)
-      	return pm if pm and !force
+      	return pm if !pm.blank? and !force
       	return if meta['relatedset-definition'].blank?
       	
         meta['relatedset-definition'].rfm_force_array.each do |relatedset|
