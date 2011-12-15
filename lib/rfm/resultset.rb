@@ -89,6 +89,7 @@ module Rfm
       @total_count      = datasource['total-count'].to_s.to_i
       
       parse_fields(meta)
+      
       # This will always load portal meta, even if :include_portals was not specified.
       # See Record for control of portal data loading.
       parse_portals(meta) if !meta['relatedset-definition'].nil? # and @include_portals
@@ -98,8 +99,7 @@ module Rfm
     end
         
     def field_names
-    	layout.instance_variable_get(:@field_names) ||
-    	layout.instance_variable_set(:@field_names, field_meta.collect{|k,v| v.name})
+    	field_meta.collect{|k,v| v.name}
   	end
   	
   	def portal_names
@@ -114,14 +114,15 @@ module Rfm
       end
     
       def parse_fields(meta)
+      	return if meta['field-definition'].blank?
+
         meta['field-definition'].rfm_force_array.each do |field|
           @field_meta[field['name']] = Rfm::Metadata::Field.new(field)
         end
+        layout.instance_variable_set(:@field_names, field_names) if layout.instance_variable_get(:@field_names).blank?
       end
 
       def parse_portals(meta, force=false)
-      	pm = layout.instance_variable_get(:@portal_meta)
-      	return pm if !pm.blank? and !force
       	return if meta['relatedset-definition'].blank?
       	
         meta['relatedset-definition'].rfm_force_array.each do |relatedset|
@@ -135,7 +136,7 @@ module Rfm
 
           @portal_meta[table] = fields
         end
-        layout.instance_variable_set(:@portal_meta, @portal_meta)
+        layout.instance_variable_set(:@portal_meta, @portal_meta) if layout.instance_variable_get(:@portal_meta).blank?
       end
     
       def convert_date_time_format(fm_format)

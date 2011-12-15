@@ -224,7 +224,8 @@ module Rfm
     end
     
   	def field_names
-  		@field_names ||= field_controls.collect{|k,v| v.name rescue v[0].name}
+  		load unless @field_names
+  		@field_names
   	end
     
     def value_lists
@@ -300,7 +301,8 @@ module Rfm
           @field_controls[name] = field_control
         end
       }
-      @field_controls.freeze      
+      @field_names ||= @field_controls.collect{|k,v| v.name rescue v[0].name}
+      @field_controls.freeze
     end
     
     def get_records(action, extra_params = {}, options = {})
