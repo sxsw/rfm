@@ -1,59 +1,64 @@
 # ginjo-rfm
 
-Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Ginjo-rfm 2.0 adds some major enhancements, while remaining compatible with Ginjo-rfm 1.4.x.
+Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Ginjo-rfm 2.0 adds some major enhancements, while remaining compatible with Ginjo-rfm 1.4.x and Lardawge-rfm 1.4.x (see ...).
 
 Some Highlights:
 
-* Data source modeling with ActiveModel compatibility and graceful degradation
-	If you can load ActiveModel in your project, you can have model callbacks & validations.
-	If you can't load ActiveModel (because you're using something incompatible, like Rails 2),
-	you can still use Rfm models... minus callbacks & validations.
+#### Data source modeling with ActiveModel, and graceful degradation without ActiveModel.
 	
+If you can load ActiveModel in your project, you can have model callbacks & validations.
+If you can't load ActiveModel (because you're using something incompatible, like Rails 2),
+you can still use Rfm models... minus callbacks & validations.
+
 		class User < Rfm::Base
 			config      :layout=>'user_layout'
 			before_save :encrypt_password
 			validate    :valid_email_address
 		end
-		
-		@user = User.new :username => 'bill', :password => 'pass'
-    @user.email = 'my@email.com'
-    @user.save!
-		
-	Create models on-the-fly from any layout.
 	
+		@user = User.new :username => 'bill', :password => 'pass'
+		@user.email = 'my@email.com'
+		@user.save!
+	
+Create models on-the-fly from any layout.
+
 		my_layout.modelize
 		 => MyLayoutName   (a class constant, represented by your layout's name)
-		 
-	Create models for an entire database, all at once.
-	
+	 
+Create models for an entire database, all at once.
+
 		Rfm.modelize :my_db_name_or_config
 		 => [MyLayout, AnotherLayout, ThirdLayout, AndSoOn, ...]
 		 
 	
-* Choice of XML parsers
-	Ginjo-rfm 2.0 uses ActiveSupport's XmlMini parsing interface, which has built-in support for
-	LibXML, Nokogiri, and REXML. Additionally, Ginjo-rfm includes a module for Hpricot parsing.
-	You can specifiy which parser to use, or load them all and let Rfm decide.
-	
+#### Choice of XML parsers
+
+Ginjo-rfm 2.0 uses ActiveSupport's XmlMini parsing interface, which has built-in support for
+LibXML, Nokogiri, and REXML. Additionally, Ginjo-rfm includes a module for Hpricot parsing.
+You can specifiy which parser to use or load them all and let Rfm decide.
+
 		Rfm.config :parser => :libxml
-	
-	If you're not able to install one of the faster parsers, Ginjo-rfm 2 will fall back to
-	ruby's built-in REXML. Want to roll your own XML adapter? Just pass it to Rfm as a module.
-	
+
+If you're not able to install one of the faster parsers, Ginjo-rfm will fall back to
+ruby's built-in REXML. Want to roll your own XML adapter? Just pass it to Rfm as a module.
+(see ...)
+
 		Rfm.config :parser => MyHomeGrownParser
-			
-	Choose your preferred parser globaly, or just for a specific model.
-			
+		
+Choose your preferred parser globaly, as in the above example, or just for a specific model.
+		
 		class Order < Rfm::Base
 			config :parser => :hpricot
 		end
-			
-* Configuration API
-	Allows storage of all configuration settings in a hash, retrievable from anwhere.
-	For simple applications, put all of your configuration in a top-level hash,
-	and let Rfm do the rest. For more complicated setups, use configuration subgroups,
-	and/or set configuration on-the-fly when you create Server, Database, Layout, or Base objects.
-	
+		
+#### Configuration API
+
+Allows storage of all configuration settings in a hash, retrievable from anwhere.
+For simple applications, put all of your configuration in a top-level hash,
+and let Rfm do the rest. For more complicated setups, use configuration subgroups,
+and/or set configuration on-the-fly when you create Server, Database, Layout, or Base objects.
+
+
 		Rfm.config :host => 'main_host',
 			:database      => 'main_database',
 			:account_name  => 'myname',
@@ -62,30 +67,39 @@ Some Highlights:
 				:host        => 'second_host',
 				:database    => 'second_database'
 			}
-			
+		
 		class MyClass < Rfm::Base
 			config :second_server, :layout => 'mylayout'
 		end
 		
-	If you put all of your configuration in a top-level constant RFM_CONFIG, Ginjo-rfm will pick it up when it loads.
+		MyClass.config
 		
-* Complex Queries
-	Create queries with mixed boolean logic, mimicing Filemaker's multiple-request find.
+		=>	{:host => 'second_host', :database => 'second_database'}
+				
+		MyClass.get_config
+		
+		=> {:host => 'second_host', :database => 'second_database', :account_name => 'myname', :password => 'somepass}
+
+
+If you put all of your configuration in a top-level constant RFM_CONFIG, Ginjo-rfm will pick it up when it loads.
 	
-	This is like 3 find requests, one for each value in the fieldOne array, AND'd with the fieldTwo value.
+#### Complex Queries
+Create queries with mixed boolean logic, mimicing Filemaker's multiple-request find.
+
+This is like 3 find requests, one for each value in the fieldOne array, AND'd with the fieldTwo value.
 
 		layout.query :fieldOne => ['val1','val2','val3'], :fieldTwo =>'someValue'
-		
-* Full Metadata Support
+
+#### Full Metadata Support
 	
-	* Server databases
-	* Database layouts
-	* Database scripts
-	* Layout fields
-	* Layout portals
-	* Resultset meta
-	* Field meta
-	* Portal meta
+* Server databases
+* Database layouts
+* Database scripts
+* Layout fields
+* Layout portals
+* Resultset meta
+* Field meta
+* Portal meta
 		
 From Ginjo-rfm 1.4.x, the following enhancements are also included.
 
