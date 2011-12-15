@@ -1,3 +1,4 @@
+require 'delegate'
 module Rfm
   # The Layout object represents a single FileMaker Pro layout. You use it to interact with 
   # records in FileMaker. *All* access to FileMaker data is done through a layout, and this
@@ -120,6 +121,13 @@ module Rfm
   
   class Layout
   
+  	class SubLayout < DelegateClass(Layout)
+  		attr_accessor :model
+  		def initialize(parent)
+  			super(parent)
+  		end
+  	end
+  
   	include ComplexQuery
     
     # Initialize a layout object. You never really need to do this. Instead, just do this:
@@ -144,12 +152,22 @@ module Rfm
       @field_controls = Rfm::CaseInsensitiveHash.new
       @value_lists = Rfm::CaseInsensitiveHash.new
       @portal_meta = nil
+      @subs ||= []
     end
     
     meta_attr_reader :db
     attr_reader :name #, :db
+    attr_accessor :subs
     def_delegator :db, :server
     alias_method :database, :db
+    
+    def sublayout
+    	if self.is_a?(Rfm::Layout)
+    		sub = SubLayout.new(self); subs << sub; sub
+    	else
+    		self
+    	end
+    end
     
     # Returns a ResultSet object containing _every record_ in the table associated with this layout.
     def all(options = {})
@@ -245,18 +263,28 @@ module Rfm
   		portal_meta.keys
   	end
     
-    # Creates new class with layout name, subclassed from Rfm::Base, and links the new model to this layout instance
+    # Creates new class with layout name, subclassed from Rfm::Base, and links the new model to a SubLayout instance.
     def modelize
-    	model_name = name.to_s.gsub(/\W/, '_').classify.gsub(/_/,'')
-    	return if (model_name.constantize rescue nil)
-    	model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
-    	model_class.class_exec(self) do |layout_obj|
-    		@layout = layout_obj
-    		#config :layout=>layout_obj.name # not necessary
-    	end
-    	@model = model_class
+    	sub = sublayout
+    	sub.instance_eval do
+	    	model_name = name.to_s.gsub(/\W/, '_').classify.gsub(/_/,'')
+	    	return if (model_name.constantize rescue nil)
+	    	model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
+	    	model_class.class_exec(self) do |layout_obj|
+	    		# TODO: create a sublclass of layout_obj with Delegator and store that in @layout,
+	    		# Then tell the layout to store new model in it's @model
+	    		@layout = layout_obj
+	    		#config :layout=>layout_obj.name # not necessary
+	    	end
+	    	@model = model_class
+	    end
+	    model_class
     rescue StandardError, SyntaxError
     	nil
+  	end
+  	
+  	def models
+  		subs.collect{|s| s.model}
   	end
     
   private

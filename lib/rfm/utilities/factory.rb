@@ -73,7 +73,7 @@ module Rfm
       end
       
       def [](layout_name)
-        super or (self[layout_name] = Rfm::Layout.new(layout_name, @database))
+        (super or (self[layout_name] = Rfm::Layout.new(layout_name, @database))).sublayout
       end
       
       def all
@@ -97,7 +97,7 @@ module Rfm
     	end
     	
     	def models
-    		values.collect{|lay| lay.model}.compact
+    		values.collect{|lay| subs=lay.subs.collect{|s| s.model}.compact; [lay.name, subs] if !subs.blank?}
     	end
     
     end # LayoutFactory

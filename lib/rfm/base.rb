@@ -42,7 +42,7 @@ module Rfm
   
   
   class Layout
-  	attr_accessor :model
+  	#attr_accessor :model
   end
   
         
