@@ -73,7 +73,7 @@ module Rfm
       end
       
       def [](layout_name)
-        (super or (self[layout_name] = Rfm::Layout.new(layout_name, @database))).sublayout
+        super or (self[layout_name] = Rfm::Layout.new(layout_name, @database))
       end
       
       def all
@@ -91,14 +91,7 @@ module Rfm
     		keys
     	end
     	
-    	def modelize(filter = /.*/)
-    		all.values.each{|lay| lay.modelize if lay.name.match(filter)}
-    		models
-    	end
-    	
-    	def models
-    		values.collect{|lay| subs=lay.subs.collect{|s| s.model}.compact; [lay.name, subs] if !subs.blank?}
-    	end
+
     
     end # LayoutFactory
     
@@ -131,9 +124,10 @@ module Rfm
     
     end # ScriptFactory
     
-    class << self
-    	attr_accessor :models
     
+    
+    class << self
+    	
 			def servers
 				@servers ||= ServerFactory.new
 			end    
@@ -164,17 +158,8 @@ module Rfm
 	  		layout_name = options[:strings][0] || options[:layout]
 				layout = db(options)[layout_name]
 	  	end
-	  	
-	  	# Shortcut to Factory.db().layouts.modelize()
-	  	# If first parameter is regex, it is used for modelize filter.
-	  	# Otherwise, parameters are passed to Factory.database
-	  	def modelize(*args)
-	  		regx = args[0].is_a?(Regexp) ? args.shift : /.*/
-	  		db(*args).layouts.modelize(regx)
-	  	end
-    
+
     end # class << self
-    @models ||= []
     
   end # Factory
 end # Rfm

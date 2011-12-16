@@ -37,13 +37,64 @@ module Rfm
 	# :nodoc: TODO: move rfm methods & patches from fetch_mail_with_ruby to this file
 	#
 	# TODO: Are these really needed here?
-	require 'rfm/record'
+	require 'rfm/database'
 	require 'rfm/layout'
+	require 'rfm/record'
+	require 'rfm/utilities/factory'
+	require 'delegate'
+
   
   
   class Layout
-  	#attr_accessor :model
-  end
+
+  	class SubLayout < DelegateClass(Layout)
+  		attr_accessor :model
+  		def initialize(parent)
+  			super(parent)
+  		end
+  	end
+  	
+  	alias_method :main_init, :initialize
+		def initialize(*args)
+	    @subs ||= []
+	    main_init(*args)
+	  end
+	  
+    attr_accessor :subs
+    
+    def sublayout
+    	if self.is_a?(Rfm::Layout)
+    		sub = SubLayout.new(self); subs << sub; sub
+    	else
+    		self
+    	end
+    end
+  	
+    # Creates new class with layout name, subclassed from Rfm::Base, and links the new model to a SubLayout instance.
+    def modelize
+    	sub = sublayout
+    	sub.instance_eval do
+	    	model_name = name.to_s.gsub(/\W/, '_').classify.gsub(/_/,'')
+	    	return if (model_name.constantize rescue nil)
+	    	model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
+	    	model_class.class_exec(self) do |layout_obj|
+	    		# TODO: create a sublclass of layout_obj with Delegator and store that in @layout,
+	    		# Then tell the layout to store new model in it's @model
+	    		@layout = layout_obj
+	    		#config :layout=>layout_obj.name # not necessary
+	    	end
+	    	@model = model_class
+	    end
+	    model_class
+    rescue StandardError, SyntaxError
+    	nil
+  	end
+  	
+  	def models
+  		subs.collect{|s| s.model}
+  	end
+
+  end # Layout
   
         
   class Record
@@ -53,6 +104,43 @@ module Rfm
 			end
     end # class << self
   end # class Record
+  
+  class Database
+  	def_delegators :layouts, :modelize, :models
+  end
+  
+  module Factory
+    @models ||= []
+
+  	class << self
+  		attr_accessor :models
+  		
+	  	# Shortcut to Factory.db().layouts.modelize()
+	  	# If first parameter is regex, it is used for modelize filter.
+	  	# Otherwise, parameters are passed to Factory.database
+	  	def modelize(*args)
+	  		regx = args[0].is_a?(Regexp) ? args.shift : /.*/
+	  		db(*args).layouts.modelize(regx)
+	  	end
+  	end # class << self
+  	
+  	class LayoutFactory
+    	def modelize(filter = /.*/)
+    		all.values.each{|lay| lay.modelize if lay.name.match(filter)}
+    		models
+    	end
+    	
+    	def models
+	    	rslt = {}
+    		each do |k,lay|
+    			layout_models = lay.models
+    			rslt[k] = layout_models if !layout_models.blank?
+	    	end
+	    	rslt
+    	end
+    	
+    end # LayoutFactory
+  end # Factory
 	
 	
   class Base <  Rfm::Record  #Hash
@@ -103,7 +191,7 @@ module Rfm
 			# Access/create the layout object associated with this model
 	  	def layout
 	  		return @layout if @layout
-	  		@layout = Rfm::Factory.layout(get_config)
+	  		@layout = Rfm::Factory.layout(get_config).sublayout
 				@layout.model = self
 				@layout
 	  	end
@@ -227,7 +315,7 @@ module Rfm
 	  end
     
 	
-  protected # class Base
+  protected # Base
   
   	def self.create_from_new(*args)
   	  layout.create(*args)[0]
@@ -271,9 +359,9 @@ module Rfm
       self || {}
     end
     
-  end ### class Base
+  end # Base
 
-end # module Rfm
+end # Rfm
 
 
 

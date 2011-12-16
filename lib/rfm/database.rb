@@ -80,7 +80,6 @@ module Rfm
     attr_reader :name, :account_name, :password, :layout, :script
     attr_writer :account_name, :password
     alias_method :layouts, :layout
-    def_delegator :layouts, :modelize
 
     # Access the Layout object representing a layout in this database. For example:
     #
