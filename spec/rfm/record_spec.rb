@@ -1,4 +1,3 @@
-require 'rfm/record'
 describe Rfm::Record do
 	let(:record) {Rfm::Record.allocate}
 	let(:layout) {mock(Rfm::Layout)}

@@ -16,12 +16,17 @@ RFM_CONFIG = {
 # Begin loading Rfm
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+
+require 'yaml'
 require 'rfm'
 #require 'rfm/base'  # Use this to test if base.rb breaks anything, or if it's absence breaks anything.
 require 'spec'
 require 'spec/autorun'
 
 Spec::Runner.configure do |config|
+	# 	config.before(:all) do
+	# 		Rfm::Server.class_eval{stub!(:connect)}
+	# 	end
 end
 
 def rescue_from(&block)

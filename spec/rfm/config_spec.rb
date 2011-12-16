@@ -1,6 +1,3 @@
-require 'rfm/utilities/config'
-require 'yaml'
-
 describe Rfm::Config do
 
   subject        {Rfm::Config}

@@ -1,6 +1,3 @@
-require 'rfm/layout'
-require 'yaml'
-
 describe Rfm::Layout do
   let(:server)   {(Rfm::Server).allocate}
   let(:database) {(Rfm::Database).allocate}
@@ -69,15 +66,15 @@ describe Rfm::Layout do
 		before(:all){subject.modelize}
 		
 		it "creates model subclassed from Rfm::Base" do
-			subject.model.superclass.should == Rfm::Base
+			subject.models[0].superclass.should == Rfm::Base
 		end
 		
 		it "stores model in layout@model as constant based on layout name" do
-			subject.model.should == Test
+			subject.models[0].should == Test
 		end
 		
 		it "sets model@layout with layout object" do
-			subject.model.layout.should == subject
+			subject.models[0].layout.should == subject
 		end
 	end
 

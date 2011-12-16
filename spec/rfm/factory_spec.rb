@@ -1,7 +1,3 @@
-require 'rfm/utilities/factory'
-require 'yaml'
-
-
 describe Rfm::Factory::ServerFactory do	
 	subject {Rfm::Factory::ServerFactory.new}
 	describe '#[]' do
