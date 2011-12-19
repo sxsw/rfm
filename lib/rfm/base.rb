@@ -49,18 +49,11 @@ module Rfm
 
   	class SubLayout < DelegateClass(Layout)
   		include Layout::LayoutModule
-  		
-  		attr_accessor :model, :parent_layout #, :me #:self
-  		
-			# 		  def self.new(parent)
-			# 		    rec = allocate
-			# 		    rec.send(:initialize, parent)
-			# 		    rec.me = rec
-			# 		  end
-  		
-  		def initialize(parent)
-  			super(parent)
-  			self.parent_layout = parent
+   		attr_accessor :model, :parent
+
+  		def initialize(parent_layout)
+  			super(parent_layout)
+  			self.parent = parent_layout
   		end
   	end # SubLayout
   	
@@ -196,20 +189,12 @@ module Rfm
 		
 	    # Access layout functions from base model
 	  	def_delegators :layout, :db, :server, :field_controls, :field_names, :value_lists, :total_count,
-	  									:query, :all, :delete, :portal_meta, :portal_names, :database
+	  									:query, :all, :delete, :portal_meta, :portal_names, :database, :table
 
 			def inherited(model)
 				(Rfm::Factory.models << model).uniq unless Rfm::Factory.models.include? model
 				model.config :parent=>'Rfm::Base'
 			end
-			
-			# Access/create the layout object associated with this model
-	  	def layout
-	  		return @layout if @layout
-	  		@layout = Rfm::Factory.layout(get_config).sublayout
-				@layout.model = self
-				@layout
-	  	end
 		
 			# Build a new record without saving
 		  def new(*args)
@@ -219,6 +204,18 @@ module Rfm
 		    rec.send(:initialize, *args)
 		    rec
 		  end
+		  
+	    def config(*args)
+	    	super(*args){|strings| @config.merge!(:layout=>strings[0]) if strings[0]}
+	    end
+		  		  			
+			# Access/create the layout object associated with this model
+	  	def layout
+	  		return @layout if @layout
+	  		@layout = Rfm::Factory.layout(get_config).sublayout
+				@layout.model = self
+				@layout
+	  	end
 		  			
 			# Just like Layout#find, but searching by record_id will return a record, not a resultset.
 	  	def find(*args)

@@ -149,7 +149,7 @@ module Rfm
     
     meta_attr_reader :db
     attr_reader :name #, :db
-    attr_writer :field_names, :portal_meta
+    attr_writer :field_names, :portal_meta, :table
     def_delegator :db, :server
     alias_method :database, :db
     
@@ -273,6 +273,14 @@ module Rfm
   	
   	def portal_names
   		portal_meta.keys
+  	end
+  	
+  	def table
+  		@table ||= any.table
+  	end
+  	
+  	def table_no_load
+  		@table
   	end
     
     def load

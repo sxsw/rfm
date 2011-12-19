@@ -28,10 +28,10 @@ module Rfm
 	  # Args should be symbols representing configuration groups,
 	  # with optional config hash as last arg, to be merged on top.
 	  # Returns @config.
-	  def config(*args)
+	  def config(*args, &block)
 	  	opt = args.rfm_extract_options!
 	  	@config ||= {}
-			config_write(opt, args)
+			config_write(opt, args, &block)
 			@config
 	  end
 	  
@@ -68,8 +68,10 @@ module Rfm
 		# Merge args into @config, as :use=><each_arg>.
 		# Then merge optional config hash into @config. 	
 	  def config_write(opt, args)
+	  	strings = []; while args[0].is_a?(String) do; strings << args.shift; end
 	  	args.each{|a| @config.merge!(:use=>a.to_sym)}
 	  	@config.merge!(opt)
+	  	yield(strings) if block_given?
 	  end
 	  	
 	  # Get composite config from all levels, adding :use parameters to a

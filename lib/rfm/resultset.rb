@@ -40,7 +40,7 @@ module Rfm
     attr_reader :layout, :server
     attr_reader :field_meta, :portal_meta
     attr_reader :date_format, :time_format, :timestamp_format
-    attr_reader :total_count, :foundset_count
+    attr_reader :total_count, :foundset_count, :table
     def_delegators :layout, :db, :database
     
     # Initializes a new ResultSet object. You will probably never do this your self (instead, use the Layout
@@ -87,12 +87,15 @@ module Rfm
 
       @foundset_count   = resultset['count'].to_s.to_i
       @total_count      = datasource['total-count'].to_s.to_i
+      @table            = datasource['table']
+      
+      (layout.table = @table) if layout and layout.table_no_load.blank?
       
       parse_fields(meta)
       
       # This will always load portal meta, even if :include_portals was not specified.
       # See Record for control of portal data loading.
-      parse_portals(meta) if !meta['relatedset-definition'].nil? # and @include_portals
+      parse_portals(meta)
       
       return if resultset['record'].nil?
       Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, @layout)
@@ -114,17 +117,16 @@ module Rfm
       end
     
       def parse_fields(meta)
-      	return if meta['field-definition'].blank? or !layout
+      	return if meta['field-definition'].blank?
 
         meta['field-definition'].rfm_force_array.each do |field|
           @field_meta[field['name']] = Rfm::Metadata::Field.new(field)
         end
-        (layout.field_names = field_names) if layout.field_names_no_load.blank?
+        (layout.field_names = field_names) if layout and layout.field_names_no_load.blank?
       end
 
-      def parse_portals(meta, force=false)
+      def parse_portals(meta)
       	return if meta['relatedset-definition'].blank?
-      	
         meta['relatedset-definition'].rfm_force_array.each do |relatedset|
         	next if relatedset.blank?
           table, fields = relatedset['table'], {}
@@ -136,7 +138,7 @@ module Rfm
 
           @portal_meta[table] = fields
         end
-        (layout.portal_meta = @portal_meta) if layout.portal_meta_no_load.blank?
+        (layout.portal_meta = @portal_meta) if layout and layout.portal_meta_no_load.blank?
       end
     
       def convert_date_time_format(fm_format)
