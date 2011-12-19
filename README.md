@@ -1,6 +1,6 @@
 # ginjo-rfm
 
-Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Ginjo-rfm 2.0 adds some major enhancements, while remaining compatible with ginjo-rfm 1.4.x and lardawge-rfm 1.4.x (see ...).
+Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 2.0 adds some major enhancements, while remaining compatible with ginjo-rfm 1.4.x and lardawge-rfm 1.4.x (see ...).
 
 
 ## Documentation & Links
@@ -24,47 +24,47 @@ If you can load ActiveModel in your project, you can have model callbacks & vali
 If you can't load ActiveModel (because you're using something incompatible, like Rails 2),
 you can still use Rfm models... minus callbacks & validations.
 
-		class User < Rfm::Base
-			config			:layout=>'user_layout'
-			before_save :encrypt_password
-			validate		:valid_email_address
-		end
+	  class User < Rfm::Base
+	    config      :layout=>'user_layout'
+	    before_save :encrypt_password
+	    validate    :valid_email_address
+	  end
 	
-		@user = User.new :username => 'bill', :password => 'pass'
-		@user.email = 'my@email.com'
-		@user.save!
+	  @user = User.new :username => 'bill', :password => 'pass'
+	  @user.email = 'my@email.com'
+	  @user.save!
 	
 Create models on-the-fly from any layout.
 
-		my_layout.modelize
-		 => MyLayoutName	 (a class constant, represented by your layout's name)
+	  my_layout.modelize
+	   => MyLayoutName   (a class constant, represented by your layout's name)
 	 
 Create models for an entire database, all at once.
 
-		Rfm.modelize :my_db_name_or_config
-		 => [MyLayout, AnotherLayout, ThirdLayout, AndSoOn, ...]
-		 
-	
+	  Rfm.modelize :my_db_name_or_config
+	   => [MyLayout, AnotherLayout, ThirdLayout, AndSoOn, ...]
+     
+  
 ### Choice of XML parsers
 
 Ginjo-rfm 2.0 uses ActiveSupport's XmlMini parsing interface, which has built-in support for
 LibXML, Nokogiri, and REXML. Additionally, ginjo-rfm includes a module for Hpricot parsing.
 You can specifiy which parser to use or load them all and let Rfm decide.
 
-		Rfm.config :parser => :libxml
+	  Rfm.config :parser => :libxml
 
 If you're not able to install one of the faster parsers, ginjo-rfm will fall back to
 ruby's built-in REXML. Want to roll your own XML adapter? Just pass it to Rfm as a module.
 (see ...)
 
-		Rfm.config :parser => MyHomeGrownParser
-		
+	  Rfm.config :parser => MyHomeGrownParser
+
 Choose your preferred parser globaly, as in the above example, or just for a specific model.
 		
-		class Order < Rfm::Base
-			config :parser => :hpricot
-		end
-		
+	  class Order < Rfm::Base
+	    config :parser => :hpricot
+	  end
+
 ### Configuration API
 
 Allows storage of all configuration settings in a hash, retrievable from anwhere.
@@ -74,15 +74,15 @@ and/or set configuration on-the-fly when you create Server, Database, Layout, or
 
 Set global configuration
 
-		Rfm.config :host => 'main_host',
-			:database			 => 'main_database',
-			:account_name	 => 'myname',
-			:password			 => 'somepass',
-			:second_server => {
-				:host				 => 'second_host',
-				:database		 => 'second_database'
-			}
-			
+	  Rfm.config :host => 'main_host',
+	    :database      => 'main_database',
+	    :account_name  => 'myname',
+	    :password      => 'somepass',
+	    :second_server => {
+	      :host        => 'second_host',
+	      :database    => 'second_database'
+	    }
+
 Set a model's configuration
 		
 		class MyClass < Rfm::Base
@@ -217,7 +217,7 @@ Create a layout object
 
 # Working with "classic" Rfm
 
-All of Rfm's usual features and functions are available on their own and within models subclassed from Base.
+All of Rfm's original features and functions are available as they were before. Some functions have been enhanced, and just a very few have been modified from their original spec.
 
 
 		

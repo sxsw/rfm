@@ -48,19 +48,29 @@ module Rfm
   class Layout
 
   	class SubLayout < DelegateClass(Layout)
-  		attr_accessor :model
+  		include Layout::LayoutModule
+  		
+  		attr_accessor :model, :parent_layout #, :me #:self
+  		
+			# 		  def self.new(parent)
+			# 		    rec = allocate
+			# 		    rec.send(:initialize, parent)
+			# 		    rec.me = rec
+			# 		  end
+  		
   		def initialize(parent)
   			super(parent)
+  			self.parent_layout = parent
   		end
-  	end
+  	end # SubLayout
+  	
+    attr_accessor :subs
   	
   	alias_method :main_init, :initialize
 		def initialize(*args)
 	    @subs ||= []
 	    main_init(*args)
 	  end
-	  
-    attr_accessor :subs
     
     def sublayout
     	if self.is_a?(Rfm::Layout)
@@ -75,7 +85,7 @@ module Rfm
     	sub = sublayout
     	sub.instance_eval do
 	    	model_name = name.to_s.gsub(/\W/, '_').classify.gsub(/_/,'')
-	    	return if (model_name.constantize rescue nil)
+	    	return model_name.constantize rescue nil
 	    	model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
 	    	model_class.class_exec(self) do |layout_obj|
 	    		# TODO: create a sublclass of layout_obj with Delegator and store that in @layout,
@@ -85,7 +95,7 @@ module Rfm
 	    	end
 	    	@model = model_class
 	    end
-	    model_class
+	    sub.model.to_s.constantize
     rescue StandardError, SyntaxError
     	nil
   	end
@@ -100,7 +110,12 @@ module Rfm
   class Record
   	class << self
 			def new(*args)
-				args[3].model.new(*args) rescue super
+				#puts "Creating new record from RECORD. Layout: #{args[3].class} #{args[3].object_id}"
+				args[3].model.new(*args)
+			rescue
+				#puts "RECORD failed to send 'new' to MODEL"
+				super
+				#allocate.send(:initialize, *args)
 			end
     end # class << self
   end # class Record
@@ -199,8 +214,9 @@ module Rfm
 			# Build a new record without saving
 		  def new(*args)
 		  	# Without this method, infinite recursion will happen from Record.new
+		  	#puts "Creating new record from BASE"
 		    rec = self.allocate
-		    rec.send :initialize, *args
+		    rec.send(:initialize, *args)
 		    rec
 		  end
 		  			

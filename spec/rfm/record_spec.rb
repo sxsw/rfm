@@ -6,6 +6,12 @@ describe Rfm::Record do
   before(:each) do
     record.instance_variable_set(:@portals, Rfm::CaseInsensitiveHash.new)
   end
+  
+  describe ".new" do
+  	it "creates a model of layout.model, if model exists" #do
+  		
+  	#end
+  end
 
   describe "#[]" do
     before(:each) do

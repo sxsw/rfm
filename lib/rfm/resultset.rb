@@ -95,7 +95,7 @@ module Rfm
       parse_portals(meta) if !meta['relatedset-definition'].nil? # and @include_portals
       
       return if resultset['record'].nil?
-      Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, layout)
+      Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, @layout)
     end
         
     def field_names
@@ -114,12 +114,12 @@ module Rfm
       end
     
       def parse_fields(meta)
-      	return if meta['field-definition'].blank?
+      	return if meta['field-definition'].blank? or !layout
 
         meta['field-definition'].rfm_force_array.each do |field|
           @field_meta[field['name']] = Rfm::Metadata::Field.new(field)
         end
-        layout.instance_variable_set(:@field_names, field_names) if layout.instance_variable_get(:@field_names).blank?
+        (layout.field_names = field_names) if layout.field_names_no_load.blank?
       end
 
       def parse_portals(meta, force=false)
@@ -136,7 +136,7 @@ module Rfm
 
           @portal_meta[table] = fields
         end
-        layout.instance_variable_set(:@portal_meta, @portal_meta) if layout.instance_variable_get(:@portal_meta).blank?
+        (layout.portal_meta = @portal_meta) if layout.portal_meta_no_load.blank?
       end
     
       def convert_date_time_format(fm_format)

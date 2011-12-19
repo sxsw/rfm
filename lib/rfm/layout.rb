@@ -119,9 +119,7 @@ module Rfm
   #   list that is attached to any field on the layout
   
   class Layout
-  
-
-  
+		
   	include ComplexQuery
     
     # Initialize a layout object. You never really need to do this. Instead, just do this:
@@ -145,80 +143,102 @@ module Rfm
       @loaded = false
       @field_controls = Rfm::CaseInsensitiveHash.new
       @value_lists = Rfm::CaseInsensitiveHash.new
-      @portal_meta = nil
+			#       @portal_meta = nil
+			#       @field_names = nil
     end
     
     meta_attr_reader :db
     attr_reader :name #, :db
+    attr_writer :field_names, :portal_meta
     def_delegator :db, :server
     alias_method :database, :db
     
-    # Returns a ResultSet object containing _every record_ in the table associated with this layout.
-    def all(options = {})
-      get_records('-findall', {}, options)
-    end
     
-    # Returns a ResultSet containing a single random record from the table associated with this layout.
-    def any(options = {})
-      get_records('-findany', {}, options)
-    end
-  
-    # Finds a record. Typically you will pass in a hash of field names and values. For example:
-    #
-    #   myLayout.find({"First Name" => "Bill"})
-    #
-    # Values in the hash work just like value in FileMaker's Find mode. You can use any special
-    # symbols (+==+, +...+, +>+, etc...).
-    #
-    # If you pass anything other than a hash as the first parameter, it is converted to a string and
-    # assumed to be FileMaker's internal id for a record (the recid).
-    def find(hash_or_recid, options = {})
-      if hash_or_recid.kind_of? Hash
-        get_records('-find', hash_or_recid, options)
-      else
-        get_records('-find', {'-recid' => hash_or_recid.to_s}, options)
-      end
-    end
-  
-    # Updates the contents of the record whose internal +recid+ is specified. Send in a hash of new
-    # data in the +values+ parameter. Returns a RecordSet containing the modified record. For example:
-    #
-    #   recid = myLayout.find({"First Name" => "Bill"})[0].record_id
-    #   myLayout.edit(recid, {"First Name" => "Steve"})
-    #
-    # The above code would find the first record with _Bill_ in the First Name field and change the 
-    # first name to _Steve_.
-    def edit(recid, values, options = {})
-      get_records('-edit', {'-recid' => recid}.merge(values), options)
-    end
+    # These methods are to be inclulded in Layout and SubLayout, so that
+    # they have their own descrete 'self' in the master class and the subclass.
+    module LayoutModule
     
-    # Creates a new record in the table associated with this layout. Pass field data as a hash in the 
-    # +values+ parameter. Returns the newly created record in a RecordSet. You can use the returned
-    # record to, ie, discover the values in auto-enter fields (like serial numbers). 
-    #
-    # For example:
-    #
-    #   result = myLayout.create({"First Name" => "Jerry", "Last Name" => "Robin"})
-    #   id = result[0]["ID"]
-    #
-    # The above code adds a new record with first name _Jerry_ and last name _Robin_. It then
-    # puts the value from the ID field (a serial number) into a ruby variable called +id+.
-    def create(values, options = {})
-      get_records('-new', values, options)
-    end
+	    # Returns a ResultSet object containing _every record_ in the table associated with this layout.
+	    def all(options = {})
+	      get_records('-findall', {}, options)
+	    end
+	    
+	    # Returns a ResultSet containing a single random record from the table associated with this layout.
+	    def any(options = {})
+	      get_records('-findany', {}, options)
+	    end
+	  
+	    # Finds a record. Typically you will pass in a hash of field names and values. For example:
+	    #
+	    #   myLayout.find({"First Name" => "Bill"})
+	    #
+	    # Values in the hash work just like value in FileMaker's Find mode. You can use any special
+	    # symbols (+==+, +...+, +>+, etc...).
+	    #
+	    # If you pass anything other than a hash as the first parameter, it is converted to a string and
+	    # assumed to be FileMaker's internal id for a record (the recid).
+	    def find(hash_or_recid, options = {})
+	      if hash_or_recid.kind_of? Hash
+	        get_records('-find', hash_or_recid, options)
+	      else
+	        get_records('-find', {'-recid' => hash_or_recid.to_s}, options)
+	      end
+	    end
+	  
+	    # Updates the contents of the record whose internal +recid+ is specified. Send in a hash of new
+	    # data in the +values+ parameter. Returns a RecordSet containing the modified record. For example:
+	    #
+	    #   recid = myLayout.find({"First Name" => "Bill"})[0].record_id
+	    #   myLayout.edit(recid, {"First Name" => "Steve"})
+	    #
+	    # The above code would find the first record with _Bill_ in the First Name field and change the 
+	    # first name to _Steve_.
+	    def edit(recid, values, options = {})
+	      get_records('-edit', {'-recid' => recid}.merge(values), options)
+	    end
+	    
+	    # Creates a new record in the table associated with this layout. Pass field data as a hash in the 
+	    # +values+ parameter. Returns the newly created record in a RecordSet. You can use the returned
+	    # record to, ie, discover the values in auto-enter fields (like serial numbers). 
+	    #
+	    # For example:
+	    #
+	    #   result = myLayout.create({"First Name" => "Jerry", "Last Name" => "Robin"})
+	    #   id = result[0]["ID"]
+	    #
+	    # The above code adds a new record with first name _Jerry_ and last name _Robin_. It then
+	    # puts the value from the ID field (a serial number) into a ruby variable called +id+.
+	    def create(values, options = {})
+	      get_records('-new', values, options)
+	    end
+	    
+	    # Deletes the record with the specified internal recid. Returns a ResultSet with the deleted record.
+	    #
+	    # For example:
+	    #
+	    #   recid = myLayout.find({"First Name" => "Bill"})[0].record_id
+	    #   myLayout.delete(recid)
+	    # 
+	    # The above code finds every record with _Bill_ in the First Name field, then deletes the first one.
+	    def delete(recid, options = {})
+	      get_records('-delete', {'-recid' => recid}, options)
+	      return nil
+	    end
+	    
+	    def get_records(action, extra_params = {}, options = {})
+	      include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
+	      xml_response = db.server.connect(db.account_name, db.password, action, params.merge(extra_params), options).body
+	      #puts "Layout#get_records - self: #{self.class}"
+	      Rfm::Resultset.new(db.server, xml_response, self, include_portals)
+	    end
+	    
+	    def params
+	      {"-db" => db.name, "-lay" => self.name}
+	    end
+	    
+	  end # LayoutModule
+	  include LayoutModule
     
-    # Deletes the record with the specified internal recid. Returns a ResultSet with the deleted record.
-    #
-    # For example:
-    #
-    #   recid = myLayout.find({"First Name" => "Bill"})[0].record_id
-    #   myLayout.delete(recid)
-    # 
-    # The above code finds every record with _Bill_ in the First Name field, then deletes the first one.
-    def delete(recid, options = {})
-      get_records('-delete', {'-recid' => recid}, options)
-      return nil
-    end
     
     def field_controls
       load unless @loaded
@@ -227,6 +247,10 @@ module Rfm
     
   	def field_names
   		load unless @field_names
+  		@field_names
+  	end
+  	
+  	def field_names_no_load
   		@field_names
   	end
     
@@ -243,11 +267,13 @@ module Rfm
   		@portal_meta ||= any.portal_meta
   	end
   	
+  	def portal_meta_no_load
+  		@portal_meta
+  	end
+  	
   	def portal_names
   		portal_meta.keys
   	end
-    
-  private
     
     def load
       @loaded = true
@@ -293,15 +319,8 @@ module Rfm
       @field_controls.freeze
     end
     
-    def get_records(action, extra_params = {}, options = {})
-      include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
-      xml_response = db.server.connect(db.account_name, db.password, action, params.merge(extra_params), options).body
-      Rfm::Resultset.new(db.server, xml_response, self, include_portals)
-    end
-    
-    def params
-      {"-db" => db.name, "-lay" => self.name}
-    end
-    
+  	private :load, :get_records, :params
+      
+      
   end # Layout
 end # Rfm
