@@ -1,18 +1,25 @@
 describe Rfm::Base do
 
-	before(:all) do
-		@layout_xml = File.read('spec/data/layout.xml')
-		@layout_xml.stub!(:body).and_return(@layout_xml)
-		@resultset_xml = File.read('spec/data/resultset.xml')
-		@resultset_xml.stub!(:body).and_return(@resultset_xml)
-		class Memo < Rfm::Base
-			config :base_test
-		end
-		@server = Memo.server
-		@server.stub!(:load_layout).and_return(@layout_xml)
-		@server.stub!(:connect).and_return(@resultset_xml)
+	Memo = Class.new(Rfm::Base){config :base_test}
+	SERVER = Memo.server
+	LAYOUT_XML = File.read('spec/data/layout.xml')
+	RESULTSET_XML = File.read('spec/data/resultset.xml')
+	
+	before(:each) do
+		LAYOUT_XML.stub(:body).and_return(LAYOUT_XML)
+		RESULTSET_XML.stub(:body).and_return(RESULTSET_XML)
+
+		SERVER.stub(:load_layout).and_return(LAYOUT_XML)
+		SERVER.stub(:connect).and_return(RESULTSET_XML)
 	end
-	#subject {Memo}
+	
+	#Memo.field_controls
+		
+	describe 'Test stubbing' do
+		it "server has stubbed methods for db connections" do
+			m = Memo.new(:memotext=>'test1').save!
+		end
+	end
 
 	describe '.inherited' do
 		it("adds new model class to Rfm::Factory@models"){Rfm::Factory.models.include?(Memo).should be_true}
@@ -59,45 +66,41 @@ describe Rfm::Base do
 	
 
 	describe 'Functional Tests -' do
-		describe 'Basic CRUD manoevers -' do
-			# 	before(:each) do
-			# 		subject.server.stub!(:load_layout).and_return(@layout_xml)
-			# 		subject.server.stub!(:connect).and_return(@resultset_xml)
-			# 	end
-			
-			it "sucks" do
-				puts "Memo.layout: #{Memo.layout.class} #{Memo.layout.object_id}"
-			end
-			
-			it 'creates a new record with data' do
-				subject_test = Memo.new(:memotext=>'test1')
-				subject_test.memotext.should == 'test1'
-				subject_test.class.should == Memo			
-			end
-			
-			it 'adds more data to the record' do
-				subject_test = Memo.new
-				subject_test.memosubject = 'test2'
-				subject_test.instance_variable_get(:@mods).size.should > 0
-			end
-			
-			it 'saves the record' do
-				subject_test = Memo.new
-			  subject_test.memosubject = 'test3'
-				# subject.server.should_receive(:connect).with(*args).and_return(@resultset_xml) do
-				# 	args[2].should == '-save'
-				# end
-				subject_test.save![:memosubject].should == 'memotest4'	
-			end
-			
-			it 'finds a record by id' do
-				subject_test = Memo.find(12345)
-				subject_test.class.should == Memo
-			end
-			it 'uses #update_attributes! to modify data'
-			it 'searches for several records and loops thru to find this one'
-			it 'destroys a record'
+		
+		it 'creates a new record with data' do
+			subject_test = Memo.new(:memotext=>'test1')
+			subject_test.memotext.should == 'test1'
+			subject_test.class.should == Memo			
 		end
+		
+		it 'adds more data to the record' do
+			subject_test = Memo.new
+			subject_test.memosubject = 'test2'
+			subject_test.instance_variable_get(:@mods).size.should > 0
+		end
+		
+		it 'saves the record' do
+		  subject_test = Memo.new(:memosubject => 'test3')
+			subject_test.server.should_receive(:connect) do |*args|
+				args[2].should == '-new'
+				args[3]['memosubject'].should == 'test3'
+			end
+			subject_test.save!
+			subject_test[:memosubject].should == 'memotest4'	
+		end
+		
+		it 'finds a record by id' do
+			SERVER.should_receive(:connect) do |*args|
+				args[2].should == '-find'
+				args[3]['-recid'].should == '12345'
+			end
+			resultset = Memo.find(12345)
+			resultset[0][:memosubject].should == 'memotest4'
+		end
+		
+		it 'uses #update_attributes! to modify data'
+		it 'searches for several records and loops thru to find this one'
+		it 'destroys a record'
 	end
   
   

@@ -23,9 +23,13 @@ require 'rfm'
 require 'spec'
 require 'spec/autorun'
 
-Spec::Runner.configure do |config|
+#Memo = Class.new(Rfm::Base){config :base_test}
+
+Spec::Runner.configure do |config|	
 	# 	config.before(:all) do
-	# 		Rfm::Server.class_eval{stub!(:connect)}
+	# 		# 		SERVER = Rfm::Server.allocate
+	# 		# 		SERVER.stub(:connect).and_return('something')
+	# 		# 		Rfm::Server.stub(:new).and_return(SERVER)
 	# 	end
 end
 
