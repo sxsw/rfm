@@ -98,9 +98,39 @@ describe Rfm::Base do
 			resultset[0][:memosubject].should == 'memotest4'
 		end
 		
-		it 'uses #update_attributes! to modify data'
-		it 'searches for several records and loops thru to find this one'
-		it 'destroys a record'
+		it 'uses #update_attributes! to modify data' do
+		  subject_test = Memo.new
+			subject_test.server.should_receive(:connect) do |*args|
+				args[2].should == '-new'
+				args[3]['memotext'].should == 'test3'
+			end
+			subject_test.update_attributes!(:memotext=>'test3')
+			subject_test[:memosubject].should == 'memotest4'		
+		end
+		
+		it 'searches for several records and loops thru to find one' do
+			SERVER.should_receive(:connect) do |*args|
+				args[2].should == '-find'
+				args[3][:memotext].should == 'test5'
+			end
+			resultset = Memo.find(:memotext=>'test5')
+			resultset.find{|r| r.recordnumber == '399341'}.memotext.should == 'memotest7'
+		end
+		
+		it 'destroys a record' do
+			SERVER.should_receive(:connect) do |*args|
+				args[2].should == '-find'
+				args[3]['-recid'].should == '12345'
+			end
+			resultset = Memo.find(12345)
+			SERVER.should_receive(:connect) do |*args|
+				args[2].should == '-delete'
+				args[3]['-recid'].should == '149535'
+			end
+			rec = resultset[0].destroy
+			rec.frozen?().should be_true
+			rec.memotext.should == 'memotest3'
+		end
 	end
   
   

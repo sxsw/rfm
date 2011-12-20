@@ -212,6 +212,8 @@ module Rfm
 			# Access/create the layout object associated with this model
 	  	def layout
 	  		return @layout if @layout
+	  		cnf = get_config
+	  		return unless cnf[:layout]
 	  		@layout = Rfm::Factory.layout(get_config).sublayout
 				@layout.model = self
 				@layout
