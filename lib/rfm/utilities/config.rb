@@ -77,7 +77,7 @@ module Rfm
 	  # Get composite config from all levels, adding :use parameters to a
 	  # temporary top-level value.
 	  def config_merge_with_parent
-      remote = (eval(@config[:parent]).config_merge_with_parent rescue {})
+      remote = (self != Rfm::Config) ? (eval(@config[:parent] || 'Rfm::Config').config_merge_with_parent rescue {}) : {}
       use = (remote[:use].rfm_force_array | @config[:use].rfm_force_array).compact
 			remote.merge(@config).merge(:use=>use)
     end	  

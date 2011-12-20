@@ -37,10 +37,10 @@ module Rfm
   	puts "Using ginjo-rfm version #{::Rfm::VERSION} with #{XmlParser.backend}"
   end
 	
-	class << self
-		def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout, :models, :modelize
-		def_delegators 'Rfm::XmlParser', :backend, :backend=
-		def_delegators 'Rfm::Config', :config, :get_config, :config_clear
-	end
-	 
-end
+	def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout, :models, :modelize
+	def_delegators 'Rfm::XmlParser', :backend, :backend=
+	def_delegators 'Rfm::Config', :config, :get_config, :config_clear
+
+	extend self
+
+end # Rfm
