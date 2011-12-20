@@ -66,7 +66,7 @@ module Rfm
     #
     # This sample code gets a database object representing the Customers database on the FileMaker server.
     def initialize(name, server_obj, acnt=nil, pass=nil)
-    	raise Rfm::Error.getError(190, "New instance of Rfm::Database has no name.") if name.to_s == ''
+    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Database has no name.") if name.to_s == ''
       @name = name.to_s
       rfm_metaclass.instance_variable_set :@server, server_obj
       @account_name = acnt #server.state[:account_name] or ""

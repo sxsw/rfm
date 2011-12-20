@@ -25,7 +25,7 @@ require 'spec/autorun'
 
 Memo = Class.new(Rfm::Base){config :base_test}
 SERVER = Memo.server
-LAYOUT = Memo.layout.parent
+LAYOUT = Memo.layout.parent_layout
 LAYOUT_XML = File.read('spec/data/layout.xml')
 RESULTSET_XML = File.read('spec/data/resultset.xml')
 RESULTSET_PORTALS_XML = File.read('spec/data/resultset_with_portals.xml')

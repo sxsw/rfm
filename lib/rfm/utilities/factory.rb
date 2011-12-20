@@ -136,6 +136,7 @@ module Rfm
 	  	def server(*conf)
 	  		options = get_config(*conf)
 	  		server_name = options[:strings][0] || options[:host]
+	  		raise Rfm::Error::RfmError.new(0, 'A host name is needed to create a server object.') if server_name.blank?
 				server = servers[server_name, options]
 		  end
 			# Potential refactor
@@ -145,6 +146,7 @@ module Rfm
 		  def db(*conf)
 	  		options = get_config(*conf)
 	  		db_name = options[:strings][0] || options[:database]
+	  		raise Rfm::Error::RfmError.new(0, 'A database name is needed to create a database object.') if db_name.blank?
 	  		account_name = options[:strings][1] || options[:account_name]
 	  		password = options[:strings][2] || options[:password]
 				db = server(options)[db_name, account_name, password]
@@ -156,6 +158,7 @@ module Rfm
 	  	def layout(*conf)
 	  		options = get_config(*conf)
 	  		layout_name = options[:strings][0] || options[:layout]
+	  		raise Rfm::Error::RfmError.new(0, 'A layout name is needed to create a layout object.') if layout_name.blank?
 				layout = db(options)[layout_name]
 	  	end
 

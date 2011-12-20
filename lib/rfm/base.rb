@@ -49,11 +49,11 @@ module Rfm
 
   	class SubLayout < DelegateClass(Layout)
   		include Layout::LayoutModule
-   		attr_accessor :model, :parent
+   		attr_accessor :model, :parent_layout
 
-  		def initialize(parent_layout)
-  			super(parent_layout)
-  			self.parent = parent_layout
+  		def initialize(master)
+  			super(master)
+  			self.parent_layout = master
   		end
   	end # SubLayout
   	

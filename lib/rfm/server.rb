@@ -193,7 +193,7 @@ module Rfm
     #            :root_cert_path => '/usr/cert_file/'
     #            })
     def initialize(options)
-    	raise Rfm::Error.getError(190, "New instance of Rfm::Server has no host name.") if options[:host].to_s == ''
+    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name.") if options[:host].to_s == ''
       
       @state = {
         :host => 'localhost',
