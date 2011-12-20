@@ -1,6 +1,6 @@
 describe Rfm::Record do
 	let(:record) {Rfm::Record.allocate}
-	let(:layout) {mock(Rfm::Layout)}
+	let(:layout) {mock('Rfm::Layout')}
 	subject {record}
 
   before(:each) do
@@ -8,9 +8,17 @@ describe Rfm::Record do
   end
   
   describe ".new" do
-  	it "creates a model of layout.model, if model exists" #do
-  		
-  	#end
+  	context "when model exists" do
+	  	it "creates an instance of model" do
+	  		Rfm::Record.new({},[],'',Memo.layout).class.should == Memo
+	  	end
+	  end
+	  
+  	context "when no model exists" do
+	  	it "creates an instance of Rfm::Record" do
+	  		Rfm::Record.new({},[],'',LAYOUT).class.should == Rfm::Record
+	  	end
+	  end
   end
 
   describe "#[]" do

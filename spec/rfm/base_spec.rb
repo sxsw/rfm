@@ -1,9 +1,4 @@
 describe Rfm::Base do
-
-	Memo = Class.new(Rfm::Base){config :base_test}
-	SERVER = Memo.server
-	LAYOUT_XML = File.read('spec/data/layout.xml')
-	RESULTSET_XML = File.read('spec/data/resultset.xml')
 	
 	before(:each) do
 		LAYOUT_XML.stub(:body).and_return(LAYOUT_XML)
@@ -12,9 +7,7 @@ describe Rfm::Base do
 		SERVER.stub(:load_layout).and_return(LAYOUT_XML)
 		SERVER.stub(:connect).and_return(RESULTSET_XML)
 	end
-	
-	#Memo.field_controls
-		
+			
 	describe 'Test stubbing' do
 		it "server has stubbed methods for db connections" do
 			m = Memo.new(:memotext=>'test1').save!

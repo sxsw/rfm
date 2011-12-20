@@ -23,7 +23,12 @@ require 'rfm'
 require 'spec'
 require 'spec/autorun'
 
-#Memo = Class.new(Rfm::Base){config :base_test}
+Memo = Class.new(Rfm::Base){config :base_test}
+SERVER = Memo.server
+LAYOUT = Memo.layout.parent
+LAYOUT_XML = File.read('spec/data/layout.xml')
+RESULTSET_XML = File.read('spec/data/resultset.xml')
+RESULTSET_PORTALS_XML = File.read('spec/data/resultset_with_portals.xml')
 
 Spec::Runner.configure do |config|	
 	# 	config.before(:all) do

@@ -24,6 +24,10 @@ module Rfm
 		
 		
 		# Main parsing method.
+		# Options
+		#		:namespace => false   # strip out namespace (default)
+		#		:parser    => :libxml, :libxmlsax, :nokogirisax, :nokogiri, :hpricot, :rexml
+		#		:parser    => CustomParsingModule  # see ActiveSupport::XmlMini
 		def new(string_or_file, opts={})
 			string_or_file.gsub!(/xmlns=\"[^\"]*\"/,'') if (string_or_file.class == String and opts[:namespace] == false)
 			unless opts[:parser] and get_backend_from_hash(opts[:parser]).to_s != self.backend.to_s

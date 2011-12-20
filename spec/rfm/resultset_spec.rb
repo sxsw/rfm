@@ -26,7 +26,9 @@ describe Rfm::Resultset do
 			atrs.each {|atr| subject.send(atr).should_not eql(nil)}
 		end
 		
-		it "loads @portal_meta with portal descriptions"
+		it "loads @portal_meta with portal descriptions" do
+			Rfm::Resultset.new(SERVER, RESULTSET_PORTALS_XML, LAYOUT).portal_meta['buyouts']['PurchaseOrderNumber'].global.should == 'no'
+		end
 		
 	end # initialize
 
