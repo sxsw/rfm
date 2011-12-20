@@ -37,6 +37,9 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rdoc>, [">= 0"])
       s.add_development_dependency(%q<rspec>, ["~> 1.3.0"])
       s.add_development_dependency(%q<yard>, [">= 0"])
+      s.add_development_dependency(%q<libxml-ruby>, [">= 0"])
+      s.add_development_dependency(%q<nokogiri>, [">= 0"])
+      s.add_development_dependency(%q<hpricot>, [">= 0"])
     else
       s.add_dependency(%q<activesupport>, [">= 0"])
       s.add_dependency(%q<i18n>, [">= 0"])
