@@ -99,6 +99,9 @@ module Rfm
 
   end # Layout
   
+
+
+
         
   class Record
   	class << self
@@ -112,10 +115,17 @@ module Rfm
 			end
     end # class << self
   end # class Record
+
+
+
+
   
   class Database
   	def_delegators :layouts, :modelize, :models
   end
+
+
+
   
   module Factory
     @models ||= []
@@ -150,6 +160,8 @@ module Rfm
     end # LayoutFactory
   end # Factory
 	
+
+
 	
   class Base <  Rfm::Record  #Hash
     extend Config
