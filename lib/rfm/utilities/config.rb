@@ -3,7 +3,7 @@ module Rfm
 	# Top level config hash accepts any defined config parameters,
 	# or group-name keys pointing to config subsets.
 	# The subsets can be any grouping of defined config parameters, as a hash.
-	# See KEYS for defined config parameters.
+	# See CONFIG_KEYS for defined config parameters.
 	#
 	# All filters are honored, unless filters are included in calls to get_config,
 	# in which case only the immediately specified filters will be used.
@@ -13,7 +13,7 @@ module Rfm
 	# Do not put subsets in non-top-level configs. (maybe future feature?)
 	#
   module Config
-  	KEYS = %w(parser host port account_name password database layout ssl root_cert root_cert_name root_cert_path warn_on_redirect raise_on_401 timeout log_actions log_responses log_parser use parent)
+  	CONFIG_KEYS = %w(parser host port account_name password database layout ssl root_cert root_cert_name root_cert_path warn_on_redirect raise_on_401 timeout log_actions log_responses log_parser use parent)
 
     extend self
     @config = {}
@@ -102,7 +102,7 @@ module Rfm
 		def config_filter(conf, filters=nil)
 			filters ||= conf[:use].rfm_force_array if !conf[:use].blank?
 			filters.each{|f| next unless conf[f]; conf.merge!(conf[f] || {})} if !filters.blank?
-			conf.reject!{|k,v| !KEYS.include?(k.to_s) or v.to_s == '' }
+			conf.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or v.to_s == '' }
 			conf
 		end
     
