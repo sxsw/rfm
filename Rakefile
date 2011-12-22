@@ -70,7 +70,7 @@ task :release do
 	gem_name = 'ginjo-rfm'
 	shell = <<-EEOOFF
 		echo "--- Pre-committing ---"
-			git add .; git commit -m'TEST: Committing any lingering changes in prep for release of version #{Rfm::VERSION}'
+			git add .; git commit -m'Committing any lingering changes in prep for release of version #{Rfm::VERSION}'
 		echo "--- Building Gem ---" &&
 			mkdir -p pkg &&
 			output=`gem build #{gem_name}.gemspec` &&
