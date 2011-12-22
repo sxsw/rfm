@@ -75,10 +75,10 @@ module Rfm
   	
     # Creates new class with layout name, subclassed from Rfm::Base, and links the new model to a SubLayout instance.
     def modelize
+    	model_name = name.to_s.gsub(/\W/, '_').classify.gsub(/_/,'')
+    	(return model_name.constantize) rescue nil
     	sub = sublayout
     	sub.instance_eval do
-	    	model_name = name.to_s.gsub(/\W/, '_').classify.gsub(/_/,'')
-	    	return model_name.constantize rescue nil
 	    	model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
 	    	model_class.class_exec(self) do |layout_obj|
 	    		# TODO: create a sublclass of layout_obj with Delegator and store that in @layout,
