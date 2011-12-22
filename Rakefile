@@ -65,14 +65,15 @@ task :default => :spec
 desc "Print the version of Rfm"
 task :version
 
-desc "build gem, tag with version, commit, push to git, push to rubygems.org"
+desc "pre-commit, build gem, tag with version, push to git, push to rubygems.org"
 task :release do
+	gem_name = 'ginjo-rfm'
 	shell = <<-EEOOFF
 		echo "--- Pre-committing ---"
-			# git add .; git commit -m'Committing any lingering changes in prep for release of version #{Rfm::VERSION}'
+			git add .; git commit -m'TEST: Committing any lingering changes in prep for release of version #{Rfm::VERSION}'
 		echo "--- Building Gem ---" &&
 			mkdir -p pkg &&
-			output=`gem build ginjo-rfm.gemspec` &&
+			output=`gem build #{gem_name}.gemspec` &&
 			gemfile=`echo "$output" | awk '{ field = $NF }; END{ print field }'` &&
 			echo $gemfile &&
 			mv -f $gemfile pkg/ &&
