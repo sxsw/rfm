@@ -69,7 +69,7 @@ desc "build gem, tag with version, commit, push to git, push to rubygems.org"
 task :release do
 	shell = <<-EEOOFF
 		echo "--- Pre-committing ---"
-			# git add .; git commit -m'Committing in prep for release of version #{Rfm::VERSION}'
+			# git add .; git commit -m'Committing any lingering changes in prep for release of version #{Rfm::VERSION}'
 		echo "--- Building Gem ---" &&
 			mkdir -p pkg &&
 			output=`gem build ginjo-rfm.gemspec` &&
