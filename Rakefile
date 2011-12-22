@@ -12,7 +12,7 @@ require './lib/rfm'
 #     gem.homepage = "http://sixfriedrice.com/wp/products/rfm/"
 #     gem.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
 #     gem.files = FileList['lib/**/*']
-#     gem.add_dependency('activesupport')
+#     gem.add_dependency('activesupport', '>= 2.3.5')
 #     gem.add_development_dependency('jeweler')
 #     gem.add_development_dependency('rake')
 #     gem.add_development_dependency('rdoc')
