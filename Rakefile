@@ -68,11 +68,21 @@ task :version
 desc "build gem, tag with version, commit, push to git, push to rubygems.org"
 task :release do
 	shell = <<-EEOOFF
-		echo "--- Building Gem ---"
-		echo "--- Tagging With Git ---"
-		echo "--- Committing ---"
+		echo "--- Pre-committing ---"
+			# git add .; git commit -m'Committing in prep for release of version #{Rfm::VERSION}'
+		echo "--- Building Gem ---" &&
+			mkdir -p pkg &&
+			output=`gem build ginjo-rfm.gemspec` &&
+			gemfile=`echo "$output" | awk '{ field = $NF }; END{ print field }'` &&
+			echo $gemfile &&
+			mv -f $gemfile pkg/ &&
+		echo "--- Tagging With Git ---" &&
+			# git tag -m'Releasing version #{Rfm::VERSION}' v#{Rfm::VERSION} &&
 		echo "--- Pushing to Git ---"
+			# git push origin &&
 		echo "--- Pushing to Rubygems.org ---"
+			# gem push pkg/$gemfile
 	EEOOFF
+	puts shell
 	print exec(shell)
 end
