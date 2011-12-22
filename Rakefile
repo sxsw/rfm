@@ -78,7 +78,7 @@ task :release do
 			mv -f $gemfile pkg/ &&
 		echo "--- Tagging With Git ---" &&
 			# git tag -m'Releasing version #{Rfm::VERSION}' v#{Rfm::VERSION} &&
-		echo "--- Pushing to Git ---"
+		echo "--- Pushing to Git ---" &&
 			# git push origin &&
 		echo "--- Pushing to Rubygems.org ---"
 			# gem push pkg/$gemfile
