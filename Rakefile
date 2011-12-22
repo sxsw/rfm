@@ -41,12 +41,6 @@ Spec::Rake::SpecTask.new(:rcov) do |spec|
   spec.rcov = true
 end
 
-task :default => :spec
-
-desc "Print the version of Rfm"
-task :version do
-end
-
 require 'rdoc/task'
 Rake::RDocTask.new do |rdoc|
 	version = Rfm::VERSION
@@ -66,16 +60,19 @@ YARD::Rake::YardocTask.new do |t|
 end
 
 
-# Rspec 2 beginnings
-# require 'rspec/core/rake_task'
-# RSpec::Core::RakeTask.new(:spec) do |spec|
-#   spec.libs << 'lib' << 'spec'
-#   spec.spec_files = FileList['spec/**/*_spec.rb']
-# end
-# 
-# RSpec::Core::RakeTask.new(:rcov) do |spec|
-#   spec.libs << 'lib' << 'spec'
-#   spec.pattern = 'spec/**/*_spec.rb'
-#   spec.rcov = true
-# end
+task :default => :spec
 
+desc "Print the version of Rfm"
+task :version
+
+desc "build gem, tag with version, commit, push to git, push to rubygems.org"
+task :release do
+	shell = <<-EEOOFF
+		echo "--- Building Gem ---"
+		echo "--- Tagging With Git ---"
+		echo "--- Committing ---"
+		echo "--- Pushing to Git ---"
+		echo "--- Pushing to Rubygems.org ---"
+	EEOOFF
+	print exec(shell)
+end
