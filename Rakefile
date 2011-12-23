@@ -63,7 +63,14 @@ end
 task :default => :spec
 
 desc "Print the version of Rfm"
-task :version
+task :version do
+	puts Rfm::VERSION
+end
+
+desc "Print info about Rfm"
+task :info do
+	puts Rfm.info
+end
 
 desc "pre-commit, build gem, tag with version, push to git, push to rubygems.org"
 task :release do
@@ -78,11 +85,11 @@ task :release do
 			echo $gemfile &&
 			mv -f $gemfile pkg/ &&
 		echo "--- Tagging With Git ---" &&
-			# git tag -m'Releasing version #{Rfm::VERSION}' v#{Rfm::VERSION} &&
+			git tag -m'Releasing version #{Rfm::VERSION}' v#{Rfm::VERSION} &&
 		echo "--- Pushing to Git ---" &&
-			# git push origin &&
+			git push origin &&
 		echo "--- Pushing to Rubygems.org ---"
-			# gem push pkg/$gemfile
+			gem push pkg/$gemfile
 	EEOOFF
 	puts shell
 	print exec(shell)

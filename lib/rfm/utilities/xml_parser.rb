@@ -1,7 +1,6 @@
 module Rfm
 	module XmlParser # @private :nodoc: all
-		require 'thread'
-		require 'active_support' unless defined? ActiveSupport
+
 		extend Config
 		config :parent=>'Rfm::Config'
 		

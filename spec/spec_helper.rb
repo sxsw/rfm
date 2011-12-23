@@ -1,4 +1,14 @@
-# This data must load before Rfm.
+$LOAD_PATH.unshift(File.dirname(__FILE__))
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+
+require 'yaml'
+require 'rfm'
+#require 'rfm/base'  # Use this to test if base.rb breaks anything, or if it's absence breaks anything.
+require 'spec'
+require 'spec/autorun'
+
+puts Rfm.info_short
+
 RFM_CONFIG = {
 	:host=>'host1',
 	:group1=>{
@@ -12,16 +22,6 @@ RFM_CONFIG = {
 		:layout=>'testlay1'
 	}
 }
-
-# Begin loading Rfm
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-
-require 'yaml'
-require 'rfm'
-#require 'rfm/base'  # Use this to test if base.rb breaks anything, or if it's absence breaks anything.
-require 'spec'
-require 'spec/autorun'
 
 Memo = Class.new(Rfm::Base){config :base_test}
 SERVER = Memo.server
