@@ -162,7 +162,7 @@ module Rfm
 	
   class Base <  Rfm::Record  #Hash
     extend Config
-    config :parent=>'Rfm::Config'
+    config :parent => 'Rfm::Config'
     
     begin
     	require 'active_model'
