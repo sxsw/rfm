@@ -200,19 +200,9 @@ Get the names of fields on the current layout
 
 Ginjo-rfm requires ActiveSupport for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3. ActiveModel requires ActiveSupport and is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Model creation and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
 
-To get the best performance, it is recommended that you use the LibXML or Nokogiri parser. Ginjo-rfm does not require these gems by dependency - you will have to make sure they are specified in your Gemfile, if you wish to use them. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is specified in your Gemfile. If you're not using Bundler, Rfm will pick up the XML parsers and ActiveModel as long as they are available in your current rubygems installation.
+To get the best performance, it is recommended that you use the LibXML or Nokogiri parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile, if you wish to have ActiveModel features.
 
-In your shell:
-
-	   #bash
-	   gem install ginjo-rfm
-
-Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
-
-	   require 'rubygems'
-	   require 'rfm'
-
-### In Rails >= 3.0 or any project using Bundler
+#### Using Bundler and/or Rails >= 3.0
 
 In the Gemfile:
 
@@ -226,10 +216,30 @@ In the Gemfile:
 In your shell:
 
 	   bundle install
-		
+
 In your project, you may or may not have to require 'rfm', depending on Bundler's configuration:
 
 	   require 'rfm'
+
+#### Without Bundler
+
+If you're not using Bundler, Rfm will pick up the XML parsers and ActiveModel as long as they are available in your current rubygems installation.
+
+In your shell:
+
+	   #bash
+	   gem install ginjo-rfm
+	   gem install nokogiri     # optional
+	   gem install libxml-ruby  # optional
+	   gem install hpricot      # optional
+	   gem install activemodel  # optional
+
+Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
+
+	   require 'rubygems'
+	   require 'rfm'
+
+
 
 #### Edge - in an upcoming version of ginjo-rfm
 
