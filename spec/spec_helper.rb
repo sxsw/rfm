@@ -24,18 +24,25 @@ RFM_CONFIG = {
 }
 
 Memo = Class.new(Rfm::Base){config :base_test}
-SERVER = Memo.server
-LAYOUT = Memo.layout.parent_layout
+# SERVER = Memo.server
+# LAYOUT = Memo.layout.parent_layout
 LAYOUT_XML = File.read('spec/data/layout.xml')
 RESULTSET_XML = File.read('spec/data/resultset.xml')
 RESULTSET_PORTALS_XML = File.read('spec/data/resultset_with_portals.xml')
 
-Spec::Runner.configure do |config|	
-	# 	config.before(:all) do
-	# 		# 		SERVER = Rfm::Server.allocate
-	# 		# 		SERVER.stub(:connect).and_return('something')
-	# 		# 		Rfm::Server.stub(:new).and_return(SERVER)
-	# 	end
+Spec::Runner.configure do |config|
+	config.before(:each) do
+		Kernel.silence_warnings do
+			Memo = Class.new(Rfm::Base){self.config :base_test}
+			@Server = Memo.server
+			@Layout = Memo.layout.parent_layout
+	
+			LAYOUT_XML.stub(:body).and_return(LAYOUT_XML)
+			RESULTSET_XML.stub(:body).and_return(RESULTSET_XML)
+			@Server.stub(:load_layout).and_return(LAYOUT_XML)
+			@Server.stub(:connect).and_return(RESULTSET_XML)
+		end
+	end
 end
 
 def rescue_from(&block)

@@ -167,6 +167,7 @@ module Rfm
     begin
     	require 'active_model'
       include ActiveModel::Validations
+      include ActiveModel::Serialization
       extend ActiveModel::Callbacks
       define_model_callbacks(:create, :update, :destroy)
     rescue LoadError, StandardError
@@ -258,7 +259,10 @@ module Rfm
 		end # class << self
 		
 		
-		
+		# For ActiveModel compatibility
+		def to_model
+			self
+		end
 		
 		# Is this a newly created record, not saved yet?					
   	def new_record?
@@ -332,10 +336,15 @@ module Rfm
   	  return unless record_id
   	  run_callbacks :destroy do
   	    self.class.delete(record_id)
+  	    @destroyed = true
   	    @mods.clear
 	    end
 	    self.freeze
   	  #self
+	  end
+	  
+	  def destroyed?
+	  	@destroyed
 	  end
     
 	

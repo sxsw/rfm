@@ -10,13 +10,13 @@ describe Rfm::Record do
   describe ".new" do
   	context "when model exists" do
 	  	it "creates an instance of model" do
-	  		Rfm::Record.new({},[],'',Memo.layout).class.should == Memo
+	  		Rfm::Record.new({},[],'', Memo.layout).class.should == Memo
 	  	end
 	  end
 	  
   	context "when no model exists" do
 	  	it "creates an instance of Rfm::Record" do
-	  		Rfm::Record.new({},[],'',LAYOUT).class.should == Rfm::Record
+	  		Rfm::Record.new({},[],'', @Layout).class.should == Rfm::Record
 	  	end
 	  end
   end

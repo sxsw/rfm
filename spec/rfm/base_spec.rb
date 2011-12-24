@@ -1,11 +1,9 @@
-describe Rfm::Base do
-	
-	before(:each) do
-		LAYOUT_XML.stub(:body).and_return(LAYOUT_XML)
-		RESULTSET_XML.stub(:body).and_return(RESULTSET_XML)
+require 'active_model_lint'
 
-		SERVER.stub(:load_layout).and_return(LAYOUT_XML)
-		SERVER.stub(:connect).and_return(RESULTSET_XML)
+describe Rfm::Base do
+
+	describe Memo do
+		it_should_behave_like "ActiveModel"
 	end
 			
 	describe 'Test stubbing' do
@@ -83,7 +81,7 @@ describe Rfm::Base do
 		end
 		
 		it 'finds a record by id' do
-			SERVER.should_receive(:connect) do |*args|
+			@Server.should_receive(:connect) do |*args|
 				args[2].should == '-find'
 				args[3]['-recid'].should == '12345'
 			end
@@ -102,7 +100,7 @@ describe Rfm::Base do
 		end
 		
 		it 'searches for several records and loops thru to find one' do
-			SERVER.should_receive(:connect) do |*args|
+			@Server.should_receive(:connect) do |*args|
 				args[2].should == '-find'
 				args[3][:memotext].should == 'test5'
 			end
@@ -111,12 +109,12 @@ describe Rfm::Base do
 		end
 		
 		it 'destroys a record' do
-			SERVER.should_receive(:connect) do |*args|
+			@Server.should_receive(:connect) do |*args|
 				args[2].should == '-find'
 				args[3]['-recid'].should == '12345'
 			end
 			resultset = Memo.find(12345)
-			SERVER.should_receive(:connect) do |*args|
+			@Server.should_receive(:connect) do |*args|
 				args[2].should == '-delete'
 				args[3]['-recid'].should == '149535'
 			end

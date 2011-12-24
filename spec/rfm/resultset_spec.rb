@@ -27,7 +27,7 @@ describe Rfm::Resultset do
 		end
 		
 		it "loads @portal_meta with portal descriptions" do
-			Rfm::Resultset.new(SERVER, RESULTSET_PORTALS_XML, LAYOUT).portal_meta['buyouts']['PurchaseOrderNumber'].global.should == 'no'
+			Rfm::Resultset.new(@Server, RESULTSET_PORTALS_XML, @Layout).portal_meta['buyouts']['PurchaseOrderNumber'].global.should == 'no'
 		end
 		
 	end # initialize

@@ -1,26 +1,26 @@
 describe Rfm::Layout do
   let(:server)   {(Rfm::Server).allocate}
   let(:database) {(Rfm::Database).allocate}
-  let(:data)     {File.read("spec/data/resultset.xml")}
-  let(:meta)     {File.read("spec/data/layout.xml")}
-  let(:name)     {'test'}
-  subject        {Rfm::Layout.new(name, database)}
+  #let(:data)     {File.read("spec/data/resultset.xml")}
+  #let(:meta)     {File.read("spec/data/layout.xml")}
+  let(:name)     {'test_layout'}
+  let(:layout)   {Rfm::Layout.new(name, database)}
 	before(:each) do
-		server.stub!(:connect).and_return(data)
-		server.stub!(:load_layout).and_return(meta)
+		server.stub!(:connect).and_return(RESULTSET_XML)
+		server.stub!(:load_layout).and_return(LAYOUT_XML)
 		server.stub!(:state).and_return({})
 		database.stub!(:server).and_return(server)
-		data.stub!(:body).and_return(data)
-		meta.stub!(:body).and_return(meta)
+		#data.stub!(:body).and_return(RESULTSET_XML)
+		#meta.stub!(:body).and_return(LAYOUT_XML)
 	end
 		
 	describe "#initialze" do
 		it "should load instance variables" do
-			subject.name.should == name
-			subject.db.should == database
-			subject.instance_variable_get(:@loaded).should == false
-			subject.instance_variable_get(:@field_controls).class.should == Rfm::CaseInsensitiveHash
-			subject.instance_variable_get(:@value_lists).class.should == Rfm::CaseInsensitiveHash		
+			layout.name.should == name
+			layout.db.should == database
+			layout.instance_variable_get(:@loaded).should == false
+			layout.instance_variable_get(:@field_controls).class.should == Rfm::CaseInsensitiveHash
+			layout.instance_variable_get(:@value_lists).class.should == Rfm::CaseInsensitiveHash		
 		end
 	end # initialize
 	
@@ -31,50 +31,51 @@ describe Rfm::Layout do
 				prms[:prms].should == 'tst'
 				opts[:opts].should == 'tst'
 			end
-			subject.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'})
+			layout.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'})
 		end
 		
 		it "calls Rfm::Resultset.new(db.server, xml_response, self, include_portals)" do
 			Rfm::Resultset.should_receive(:new) do |srv, rsp, slf, incprt|
 				srv.class.should == Rfm::Server
-				slf.should == subject
+				slf.should == layout
 				incprt.should == nil
 			end
-			subject.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'})
+			layout.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'})
 		end
 		
 		it "returns instance of Resultset" do
-			subject.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'}).class.should == Rfm::Resultset
+			layout.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'}).class.should == Rfm::Resultset
 		end
 	end #get_records
 	
 	describe "#load" do
 		it "sets @field_controls and @value_lists from xml" do
-			subject.send(:load)
-			subject.instance_variable_get(:@field_controls).has_key?('stayid').should be_true
-			subject.instance_variable_get(:@value_lists).has_key?('employee unique id').should be_true
+			layout.send(:load)
+			layout.instance_variable_get(:@field_controls).has_key?('stayid').should be_true
+			layout.instance_variable_get(:@value_lists).has_key?('employee unique id').should be_true
 		end
 	end
 	
 	describe "#any" do
 		it "returns resultset containing instance of Rfm::Record" do
-			subject.send(:any)[0].class.should == Rfm::Record
+			layout.send(:any)[0].class.should == Rfm::Record
 		end
 	end
 	
 	describe "#modelize" do
-		before(:all){subject.modelize}
+		before(:all){layout.modelize}
 		
 		it "creates model subclassed from Rfm::Base" do
-			subject.models[0].superclass.should == Rfm::Base
+			y layout
+			layout.models[0].superclass.should == Rfm::Base
 		end
 		
 		it "stores model in layout@model as constant based on layout name" do
-			subject.models[0].should == Test
+			layout.models[0].should == TestLayout
 		end
 		
 		it "sets model@layout with layout object" do
-			subject.models[0].layout.should == subject
+			layout.models[0].layout.should == layout
 		end
 	end
 
