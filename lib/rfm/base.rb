@@ -257,12 +257,11 @@ module Rfm
 	    end
 	    
 		end # class << self
+
+
 		
 		
-		# For ActiveModel compatibility
-		def to_model
-			self
-		end
+
 		
 		# Is this a newly created record, not saved yet?					
   	def new_record?
@@ -346,6 +345,23 @@ module Rfm
 	  def destroyed?
 	  	@destroyed
 	  end
+	  
+		# For ActiveModel compatibility
+		def to_model
+			self
+		end
+		
+		def persisted?
+			record_id ? true : false
+		end
+		
+		def to_key
+			[record_id]
+		end
+		
+		def to_param
+			record_id
+		end
     
 	
   protected # Base
