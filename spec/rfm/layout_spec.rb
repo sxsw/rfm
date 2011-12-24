@@ -66,7 +66,6 @@ describe Rfm::Layout do
 		before(:all){layout.modelize}
 		
 		it "creates model subclassed from Rfm::Base" do
-			y layout
 			layout.models[0].superclass.should == Rfm::Base
 		end
 		

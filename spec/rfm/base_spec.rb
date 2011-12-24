@@ -2,7 +2,7 @@ require 'active_model_lint'
 
 describe Rfm::Base do
 
-	describe Memo do
+	describe TestModel do
 		it_should_behave_like "ActiveModel"
 	end
 			

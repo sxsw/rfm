@@ -356,7 +356,7 @@ module Rfm
 		end
 		
 		def to_key
-			[record_id]
+			record_id ? [record_id] : nil
 		end
 		
 		def to_param
