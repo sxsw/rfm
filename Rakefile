@@ -21,6 +21,7 @@ require './lib/rfm'
 #     gem.add_development_dependency('hpricot')
 #     gem.add_development_dependency('libxml-ruby')
 #     gem.add_development_dependency('nokogiri')
+#     gem.add_development_dependency('activemodel')
 #     gem.rdoc_options = [ "--line-numbers", "--main", "README.md" ]
 #     gem.version = Rfm::VERSION
 #   end
@@ -88,7 +89,8 @@ task :release do
 			git tag -m'Releasing version #{Rfm::VERSION}' v#{Rfm::VERSION} &&
 		echo "--- Pushing to Git ---" &&
 			git push origin &&
-		echo "--- Pushing to Rubygems.org ---"
+			git push origin --tags &&
+		echo "--- Pushing to Rubygems.org ---" &&
 			gem push pkg/$gemfile
 	EEOOFF
 	puts shell
