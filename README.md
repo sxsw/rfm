@@ -1,6 +1,6 @@
 # ginjo-rfm
 
-Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 2.0 adds some major enhancements, while remaining compatible with ginjo-rfm 1.4.x and lardawge-rfm 1.4.x.
+Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 2.0 adds some major enhancements, while remaining compatible with ginjo-rfm 1.4.x and lardawge-rfm 1.4.x. 
 
 
 ## Documentation & Links
@@ -15,7 +15,7 @@ Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and application
 
 ## New in version 2.0
 
-### Data source modeling with ActiveModel and graceful degradation without ActiveModel.
+### Data modeling with ActiveModel and graceful degradation without ActiveModel.
 	
 If you can load ActiveModel in your project, you can have model callbacks, validations, and other ActiveModel features.
 If you can't load ActiveModel (because you're using something incompatible, like Rails 2),
@@ -45,12 +45,14 @@ With ActiveModel loaded, you get callbacks, validations, and many other ActiveMo
 If you prefer, you can create models on-the-fly from any layout.
 
 	  my_layout.modelize
-	  => MyLayoutName   (a class constant, represented by your layout's name)
+	  
+	  # => MyLayoutName   (subclassed from Rfm::Base, represented by your layout's name)
 	 
 Or create models for an entire database, all at once.
 
 	  Rfm.modelize :my_db_name_or_config
-	  => [MyLayout, AnotherLayout, ThirdLayout, AndSoOn, ...]
+	  
+	  # => [MyLayout, AnotherLayout, ThirdLayout, AndSoOn, ...]
 	
   
 ### Choice of XML parsers
@@ -72,7 +74,7 @@ Choose your preferred parser globaly, as in the above example, or set a differen
 	    config :parser => :hpricot
 	  end
 	
-Not only do you have 4 XML backend parsers to choose from, but you also have the option of choosing from different parsing shemes - the DOM parsing scheme, or the streaming (SAX or SAX-like) scheme. This gives you six different available parsing schemes.
+Not only do you have 4 XML backend parsers to choose from, but you also have the option of choosing from different parsing shemes - the DOM parsing scheme, or the streaming (SAX or SAX-like) scheme. This gives you six different available parsing possilities.
 
 * LibXML DOM
 * LibXML SAX
@@ -127,16 +129,17 @@ Set a model's configuration
 View	model-specific configuration
    
 	   MyClass.config
-   
-	   =>  {:host => 'second_host', :database => 'second_database'}
+	
+	   # =>  {:host => 'second_host', :database => 'second_database'}
 
-View the merged configurations of all relevent objects.
+View the merged configurations of all relevent levels in the configuration chain.
 
 	   MyClass.get_config
-	   => {:host => 'second_host', :database => 'second_database', :account_name => 'myname', :password => 'somepass', :ssl => true}
+	   
+	   # => {:host => 'second_host', :database => 'second_database', :account_name => 'myname', :password => 'somepass', :ssl => true}
 
 
-Calling this method will show you what compilation of config settings are seen at any given point in Rfm and/or in your application. The current heirarchy of configurable objects in Rfm, starting at the top:
+Calling the get_config method will show you what compilation of config settings are seen at any given point in Rfm and/or in your application. The current heirarchy of configurable objects in Rfm, starting at the top:
 
 * RFM_CONFIG   # a user-defined hash
 * Rfm::Config  # top-level config module
@@ -151,7 +154,7 @@ Calling this method will show you what compilation of config settings are seen a
 
 Create queries with mixed boolean logic, mimicing Filemaker's multiple-request find.
 
-	   layout.query :fieldOne => ['val1','val2','val3'], :fieldTwo =>'someValue'
+	   layout.query :fieldOne => ['=val1','>=val2','<val3'], :fieldTwo =>'someValue'
    
 This will create 3 "find requests" (in a single call to FM Server), one for each value in the fieldOne array, AND'd with the fieldTwo value.
 
@@ -195,19 +198,22 @@ Get the names of fields on the current layout
 
 	  my_record.field_names
 
+### Compatibility
+
+Ginjo-rfm 2.0 is compatible with previous versions of Rfm - Ginjo, Lardawge, and SFR. However, much has been changed in the low-level workings of the code, in orer to pave the way for data modeling and flexible XML adapters. If you have scripts that reach deep into the guts of Rfm 1.0 thru 1.4.x, you may find that some things are slightly different in 2.0. Additionally, some long-standing bugs have been fixed that may have been so de rigeur, that the "correct behavior" in Rfm 2.0 may break scripts that relied on the previously buggy functions. These low level changes, and the addition of major new functionality, led the decision to release this version of Rfm as 2.0, instead of 1.5.
+
 
 ## Installation
 
-Ginjo-rfm requires ActiveSupport for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3. ActiveModel requires ActiveSupport and is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Model creation and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
+Ginjo-rfm requires ActiveSupport for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3. ActiveModel requires ActiveSupport 3+ and is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Basic model functionality and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
 
-To get the best performance, it is recommended that you use the LibXML or Nokogiri parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile, if you wish to have ActiveModel features.
+To get the best performance, it is recommended that you use the LibXML or Nokogiri parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile, if you wish to use ActiveModel features.
 
-#### Using Bundler and/or Rails >= 3.0
+### Using Bundler and/or Rails >= 3.0
 
 In the Gemfile:
 
 	   gem 'ginjo-rfm'
-   
 	   gem 'libxml-ruby' # optional
 	   gem 'nokogiri'    # optional
 	   gem 'hpricot'     # optional
@@ -221,13 +227,12 @@ In your project, you may or may not have to require 'rfm', depending on Bundler'
 
 	   require 'rfm'
 
-#### Without Bundler
+### Without Bundler
 
-If you're not using Bundler, Rfm will pick up the XML parsers and ActiveModel as long as they are available in your current rubygems installation.
+If you are not using Bundler, Rfm will pick up the XML parsers and ActiveModel as long as they are available in your current rubygems installation.
 
 In your shell:
 
-	   #bash
 	   gem install ginjo-rfm
 	   gem install nokogiri     # optional
 	   gem install libxml-ruby  # optional
@@ -241,7 +246,7 @@ Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
 
 
 
-#### Edge - in an upcoming version of ginjo-rfm
+### Edge - in an upcoming version of ginjo-rfm
 
 Try out unreleased features of ginjo-rfm in the edge branch.
 
@@ -252,34 +257,65 @@ Try out unreleased features of ginjo-rfm in the edge branch.
 
 ## Basic usage
 
+Put your configuration settings in a hash represented by RFM_CONFIG. This will make it easier to get and use objects in Rfm.
+
+	   RFM_CONFIG = {
+	     :host          => 'main_host',
+	     :database      => 'main_database',
+	     :account_name  => 'myname',
+	     :password      => 'somepass',
+	     :ssl           => false,
+	     :second_server => {
+	       :host        => 'second_host',
+	       :database    => 'second_database'
+	     }
+
+Then you have two easy ways to access your layouts - and your data.
+
+
 ### With models
 
-* Set RFM_CONFIG with your configuration data
+Rfm models provide easy access to the record-finder functions of Rfm layouts, and they give us a way to easily persist objects to the database.
 
-* Load Rfm
+	   class User < Rfm::Base
+	     config :layout => 'my_layout_name'
+	   end
+	
+	   @user = User.new(:login => 'bill', :password => 'xxxxxxxx', :email => 'my@email.com')
+	   @user.save!
+	
+	   @user.login
+	   # => 'bill'
 
-* Specify some models
-
-* Rfm models have the same methods available to them as Rfm layout objects
+	   @user.field_names
+	   # => ['login', 'encryptedPassword', 'email', 'groups', 'lastLogin' ]
+	
+	   User.field_names
+	   # => ['login', 'encryptedPassword', 'email', 'groups', 'lastLogin' ]
 
 ### Manually
 
-Create a layout object
+Create a layout object using default configuration settings.
 
-	   Rfm::Server.new(RFM_CONFIG)['my_db_name']['my_layout_name']
+	   my_layout = Rfm.layout 'layout_name'
+	
+Create a layout object using a subgroup of configuration settings.
 
-### Finding and manipulating Filemaker data
+	   my_layout = Rfm.layout :subgroup_name
+	
+Create a layout object passing in a layout name, multiple config subgroups to merge, and specific settings.
 
-...
-
-
-
-# Working with "classic" Rfm
-
-All of Rfm's original features and functions are available as they were before. Some functions have been enhanced, and just a very few have been modified from their original spec.
+	   my_layout = Rfm.layout 'layout_name', :second_server, :log_actions => true
 
 
-		
+Once you have an Rfm model or layout, you can use any of the standard Rfm commands to create, search, edit, and delete records. To learn more about these commands, see below for Databases, Layouts, Resultsets, and Records. Or checkout the documentation for Rfm::Layout, Rfm::Record, and Rfm::Base.
+
+
+# Working with "classic" Rfm features
+
+All of Rfm's original features and functions are available as they were before, though some low-level functionality has changed slightly.
+
+
 ## Connecting
 
 IMPORTANT:SSL and Certificate verification are on by default. Please see Server#new in rdocs for explanation and setup.

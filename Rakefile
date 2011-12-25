@@ -47,7 +47,7 @@ Rake::RDocTask.new do |rdoc|
 	rdoc.main = 'README.md'
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title = "Rfm #{version}"
-  rdoc.rdoc_files.include('lib/**/*.rb', 'README*', 'CHANGELOG', 'VERSION', 'LICENSE')
+  rdoc.rdoc_files.include('lib/**/*.rb', 'README*', 'CHANGELOG*', 'VERSION', 'LICENSE')
 end
 
 require 'yard'
@@ -55,7 +55,7 @@ require 'rdoc'
 YARD::Rake::YardocTask.new do |t|
 	# See http://rubydoc.info/docs/yard/file/docs/GettingStarted.md
 	# See 'yardoc --help'
-  t.files   = ['lib/**/*.rb', 'README', 'LICENSE', 'VERSION', 'CHANGELOG']   # optional
+  t.files   = ['lib/**/*.rb', 'README.md', 'LICENSE', 'VERSION', 'CHANGELOG.md']   # optional
   t.options = ['-oydoc', '--no-cache', '-mrdoc', '--no-private'] # optional
 end
 
