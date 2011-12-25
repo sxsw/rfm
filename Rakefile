@@ -47,7 +47,7 @@ Rake::RDocTask.new do |rdoc|
 	rdoc.main = 'README.md'
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title = "Rfm #{version}"
-  rdoc.rdoc_files.include('lib/**/*.rb', 'README*', 'CHANGELOG*', 'VERSION', 'LICENSE')
+  rdoc.rdoc_files.include('lib/**/*.rb', 'README.md', 'CHANGELOG.md', 'VERSION', 'LICENSE')
 end
 
 require 'yard'

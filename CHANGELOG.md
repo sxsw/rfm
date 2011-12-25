@@ -32,46 +32,46 @@
 
 ## Ginjo-Rfm 1.4.2
 
-* Re-implemented:
+* Re-implemented:  
   
-  Layout#field_controls
-  
-  Layout#value_lists
-  
-* Enhanced:
+	Layout#field_controls
 
-  ValueListItem handles both display & data items now.
+	Layout#value_lists  
   
-  Timeout feature from timting (github/timting/rfm).
-  
-  Added specs for Record#save.
-  
-* Fixed:
+* Enhanced:  
 
-  [Bug] Getting & setting fields with symbol-based keys was producing error.
-  
-  [Bug] Setting fields would not update main record hash.
-  
-  [Bug] Record#save wasn't merging back into self.
+	ValueListItem handles both display & data items now.
 
-* Partial Fix:
+	Timeout feature from timting (github/timting/rfm).
 
-  server.db.all
-  db.layout.all
-  db.script.all
+	Added specs for Record#save.  
   
-  Note: the "#all" method returns object names (as keys) only. The receiver of the method maintains the full object collection.
+* Fixed:  
+
+	[Bug] Getting & setting fields with symbol-based keys was producing error.
+
+	[Bug] Setting fields would not update main record hash.
+
+	[Bug] Record#save wasn't merging back into self.  
+
+* Partial Fix:  
+
+	server.db.all
+	db.layout.all
+	db.script.all  
   
-  Example:
+	Note: the "#all" method returns object names (as keys) only. The receiver of the method maintains the full object collection.  
+
+	Example:  
   
 	    server.db.all #=> ['dbname1', 'dbname2', ...]
 	    server.db     #=> a DbFactory object (descendant of Hash), containing 0 or more Database objects
 
 ## Lardawge-Rfm 1.4.2 (unreleased)
   
-* Made nil default on fields with no value.
+* Made nil default on fields with no value.  
   
-  Example:
+	Example:
  
 	    Old: record.john #=> "" 
 	    New: record.john #=> nil
@@ -94,7 +94,7 @@
 
 * Added an option to load portal records which defaults to false. This significantly speeds up load time when portals are present on the layout.
 
-  Example:
+	Example:  
   
 	    result = fm_server('layout').find({:username => "==#{username}"}, {:include_portals => true})
 	    # => This will fetch all records with portal records attached.

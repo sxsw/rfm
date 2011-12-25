@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = [
     "LICENSE",
     "README.md",
+    "CHANGELOG.md",
     "lib/rfm/VERSION"
   ]
   s.files = Dir['lib/**/*.rb', 'lib/**/VERSION']
