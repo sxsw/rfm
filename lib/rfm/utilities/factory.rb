@@ -80,7 +80,11 @@ module Rfm
         if !@loaded
 	        get_layout_names.each {|record|
 	          name = record['LAYOUT_NAME']
-	          self[name] = Rfm::Layout.new(name, @database) if self[name].nil? and !name.nil?
+	        	begin
+	          	(self[name] = Rfm::Layout.new(name, @database)) unless !self[name].nil? or name.to_s.strip == ''
+	          rescue
+	          	$stderr.puts $!
+	          end
 	        }
           @loaded = true
         end
