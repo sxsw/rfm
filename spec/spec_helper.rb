@@ -7,6 +7,8 @@ require 'rfm'
 require 'spec'
 require 'spec/autorun'
 
+if ENV['parser']; Rfm.backend = ENV['parser'].to_sym; end
+
 puts Rfm.info_short
 
 RFM_CONFIG = {
