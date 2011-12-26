@@ -10,6 +10,11 @@ module Rfm
 		BACKENDS = ActiveSupport::OrderedHash.new
 		
 		BACKENDS[:jdom]					= {:require=>'jdom',			:class =>	'JDOM'}
+		BACKENDS[:oxsax]				= {:require=>'ox',	  :class =>	proc{
+																# rexmlsax module is part of Rfm, not XmlMini,
+																# and needs to be handed manually to XmlMini.
+																require File.join(File.dirname(__FILE__), '../xml_mini/ox_sax.rb')
+																ActiveSupport::XmlMini_OxSAX}}
 		BACKENDS[:libxml]				= {:require=>'libxml',		:class =>	'LibXML'}
 		BACKENDS[:libxmlsax]		= {:require=>'libxml',		:class =>	'LibXMLSAX'}
 		BACKENDS[:nokogirisax]	= {:require=>'nokogiri',	:class =>	proc{ActiveSupport::VERSION; 'NokogiriSAX'}}
@@ -20,6 +25,11 @@ module Rfm
 																require File.join(File.dirname(__FILE__), '../xml_mini/hpricot.rb')
 																ActiveSupport::XmlMini_Hpricot}}
 		BACKENDS[:rexml]				= {:require=>'rexml/document',	:class=>'REXML'}
+		BACKENDS[:rexmlsax]			= {:require=>'rexml/parsers/sax2parser',	  :class =>	proc{
+																# rexmlsax module is part of Rfm, not XmlMini,
+																# and needs to be handed manually to XmlMini.
+																require File.join(File.dirname(__FILE__), '../xml_mini/rexml_sax.rb')
+																ActiveSupport::XmlMini_REXMLSAX}}
 		
 		
 		# Main parsing method.

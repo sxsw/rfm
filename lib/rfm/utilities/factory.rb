@@ -78,13 +78,21 @@ module Rfm
       
       def all
         if !@loaded
-	        Rfm::Resultset.new(@server, @server.connect(@database.account_name, @database.password, '-layoutnames', {"-db" => @database.name}).body, nil).each {|record|
+	        get_layout_names.each {|record|
 	          name = record['LAYOUT_NAME']
-	          self[name] = Rfm::Layout.new(name, @database) if self[name] == nil
+	          self[name] = Rfm::Layout.new(name, @database) if self[name].nil? and !name.nil?
 	        }
           @loaded = true
         end
         self
+      end
+      
+      def get_layout_names_xml
+      	@server.connect(@database.account_name, @database.password, '-layoutnames', {"-db" => @database.name})
+      end
+      
+      def get_layout_names
+      	Rfm::Resultset.new(@server, get_layout_names_xml.body, nil)
       end
     
     	def names

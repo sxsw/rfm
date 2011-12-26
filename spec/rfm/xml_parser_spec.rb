@@ -19,7 +19,7 @@ subject {Rfm::XmlParser}
 
 	describe '.decide_backend' do
 		it 'returns best backend that is currently loadable' do
-			subject.send(:decide_backend).should == 'LibXML'
+			(ActiveSupport::XmlMini.backend = subject.send(:decide_backend)).should_not be_nil
 		end
 	end
 
