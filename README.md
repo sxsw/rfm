@@ -58,7 +58,7 @@ Or create models for an entire database, all at once.
 ### Choice of XML parsers
 
 Ginjo-rfm 2.0 uses ActiveSupport's XmlMini parsing interface, which has built-in support for
-LibXML, Nokogiri, and REXML. Additionally, ginjo-rfm includes a module for Hpricot parsing.
+LibXML, Nokogiri, and REXML. Additionally, ginjo-rfm includes a module for Ox and Hpricot parsing.
 You can specifiy which parser to use or load them all and let Rfm decide.
 
 	  Rfm.config :parser => :libxml
@@ -74,14 +74,17 @@ Choose your preferred parser globaly, as in the above example, or set a differen
 	    config :parser => :hpricot
 	  end
 	
-Not only do you have 4 XML backend parsers to choose from, but you also have the option of choosing from different parsing shemes - the DOM parsing scheme, or the streaming (SAX or SAX-like) scheme. This gives you six different available parsing possilities.
+The current parsing options are
 
-* LibXML DOM
-* LibXML SAX
-* Nokogiri DOM
-* Nokogiri SAX
-* Hpricot DOM
-* REXML DOM
+	  :jdom         ->  JDOM
+	  :oxsax        ->  Ox SAX
+	  :libxml       ->  LibXML Tree
+	  :libxmlsax    ->  LibXML SAX
+	  :nokogirisax  ->  Nokogiri SAX
+	  :nokogiri     ->  Nokogiri Tree
+	  :hpricot      ->  Hpricot Tree
+	  :rexml        ->  REXML Tree
+	  :rexmlsax     ->  REXML SAX
 
 ### Configuration API
 
