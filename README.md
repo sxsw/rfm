@@ -15,11 +15,20 @@ Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and application
 
 ## New in version 2.0
 
+Ginjo-rfm 2.0 brings some major new features to Rfm. Some hightlights:
+
+* Rails-like modeling with ActiveModel
+* Support for multiple XML Parsers
+* Configuration API
+* Complex multi-request Filemaker queries
+* Full metadata support
+
+
 ### Data modeling with ActiveModel and graceful degradation without ActiveModel.
 	
 If you can load ActiveModel in your project, you can have model callbacks, validations, and other ActiveModel features.
 If you can't load ActiveModel (because you're using something incompatible, like Rails 2),
-you can still use Rfm models... minus callbacks & validations. Rfm models give you basic
+you can still use Rfm models... minus the ActiveModel-specific features like callbacks and validations. Rfm models give you basic
 data modeling with easy configuration and CRUD features.
 
 	  class User < Rfm::Base
@@ -58,8 +67,8 @@ Or create models for an entire database, all at once.
 ### Choice of XML parsers
 
 Ginjo-rfm 2.0 uses ActiveSupport's XmlMini parsing interface, which has built-in support for
-LibXML, Nokogiri, and REXML. Additionally, ginjo-rfm includes a module for Ox and Hpricot parsing.
-You can specifiy which parser to use or load them all and let Rfm decide.
+LibXML, Nokogiri, and REXML. Additionally, ginjo-rfm includes adapters for Ox and Hpricot parsing.
+You can specifiy which parser to use or let Rfm decide.
 
 	  Rfm.config :parser => :libxml
 
@@ -85,6 +94,28 @@ The current parsing options are
 	  :hpricot      ->  Hpricot Tree
 	  :rexml        ->  REXML Tree
 	  :rexmlsax     ->  REXML SAX
+	
+If you're wondering about performance, here are some preliminary benchmark results. Each backend parsed a fmresultset.xml and a FMPXMLLAYOUT.xml 30 times each. I have seen different results in different environments, so this data is by no means definitive. I do not have any data for the JDOM parser.
+
+		      user     system      total        real
+		ActiveSupport::XmlMini_OxSAX
+		  0.200000   0.010000   0.210000 (  0.211842)
+		ActiveSupport::XmlMini_LibXML
+		  0.400000   0.010000   0.410000 (  0.411823)
+		ActiveSupport::XmlMini_LibXMLSAX
+		  0.400000   0.010000   0.410000 (  0.411360)
+		ActiveSupport::XmlMini_NokogiriSAX
+		  0.670000   0.010000   0.680000 (  0.682885)
+		ActiveSupport::XmlMini_Nokogiri
+		  0.970000   0.030000   1.000000 (  0.998673)
+		ActiveSupport::XmlMini_Hpricot
+		  1.950000   0.060000   2.010000 (  2.011355)
+		ActiveSupport::XmlMini_REXML
+		  8.710000   0.180000   8.890000 (  9.015836)
+		ActiveSupport::XmlMini_REXMLSAX
+		  6.320000   0.040000   6.360000 (  6.377179)
+
+
 
 ### Configuration API
 
@@ -129,13 +160,15 @@ Set a model's configuration
 	     config :second_server, :layout => 'mylayout'
 	   end
 	
+	   # => {:use => :second_server, :layout => 'mylayout'}
+	
 View	model-specific configuration
    
 	   MyClass.config
 	
-	   # =>  {:host => 'second_host', :database => 'second_database'}
+	   # =>  {:use => :second_server, :layout => 'mylayout'}
 
-View the merged configurations of all relevent levels in the configuration chain.
+When rfm's objects need to access configuration settings, the entire heirarchy is compiled, starting at the top and merging in more specific settings down to the requesting object. Rfm uses the get_config method to retrieve this compiled hash.
 
 	   MyClass.get_config
 	   
@@ -145,13 +178,25 @@ View the merged configurations of all relevent levels in the configuration chain
 Calling the get_config method will show you what compilation of config settings are seen at any given point in Rfm and/or in your application. The current heirarchy of configurable objects in Rfm, starting at the top:
 
 * RFM_CONFIG   # a user-defined hash
-* Rfm::Config  # top-level config module
-* Rfm::Factory # where server, database, and layout objects are managed
-* Rfm::Base    # master modeling class
-* MyModel      # custom modeling class
+* Rfm::Config  # top-level config module, inherits settings from RFM_CONFIG
+* Rfm::Factory # where server, database, and layout objects are managed, inherits settings from Rfm::Config
+* Rfm::Base    # master modeling class, inherits settings from Rfm::Config
+* MyModel      # sublcassed custom modeling class, inherits settings from Rfm::Base
 
 
+You can include Rfm::Config in any object in your project and gain rfm configuration abilities for that object.
 
+	   module MyModule
+	     include Rfm::Config
+	     config :host => 'myhost.com', :database => 'mydb'   # inherits settings from Rfm::Config by default
+	     
+	     class Model1 < Rfm::Base
+	       config :parent => MyModule, :layout => 'some_layout'   # use :parent to set where this object inherits config settings from
+	     end
+	   end
+	     
+
+	   
 
 ### Complex Queries
 
@@ -170,13 +215,12 @@ This will create 3 "find requests" (in a single call to FM Server), one for each
 * Layout fields
 * Layout portals
 * Resultset meta
-* Field meta
-* Portal meta
+* Field definition meta
+* Portal definition meta
 
-From ginjo-rfm 1.4.x, the following enhancements are also included.
+From ginjo-rfm 1.4.x, the following features are also included.
 
 * Connection timeout settings
-
 * Value-list alternate display
 
 There are also many enhancements to make it easier than ever to get the objects or data you want. Some examples:
@@ -210,13 +254,14 @@ Ginjo-rfm 2.0 is compatible with previous versions of Rfm - Ginjo, Lardawge, and
 
 Ginjo-rfm requires ActiveSupport for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3. ActiveModel requires ActiveSupport 3+ and is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Basic model functionality and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
 
-To get the best performance, it is recommended that you use the LibXML or Nokogiri parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile, if you wish to use ActiveModel features.
+For the best performance, it is recommended that you use the Ox, LibXML, or Nokogiri parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile, if you wish to use ActiveModel features.
 
 ### Using Bundler and/or Rails >= 3.0
 
 In the Gemfile:
 
 	   gem 'ginjo-rfm'
+	   gem 'ox'          # optional
 	   gem 'libxml-ruby' # optional
 	   gem 'nokogiri'    # optional
 	   gem 'hpricot'     # optional
@@ -237,6 +282,7 @@ If you are not using Bundler, Rfm will pick up the XML parsers and ActiveModel a
 In your shell:
 
 	   gem install ginjo-rfm
+	   gem install ox           # optional
 	   gem install nokogiri     # optional
 	   gem install libxml-ruby  # optional
 	   gem install hpricot      # optional
@@ -314,12 +360,12 @@ Create a layout object passing in a layout name, multiple config subgroups to me
 Once you have an Rfm model or layout, you can use any of the standard Rfm commands to create, search, edit, and delete records. To learn more about these commands, see below for Databases, Layouts, Resultsets, and Records. Or checkout the documentation for Rfm::Layout, Rfm::Record, and Rfm::Base.
 
 
-# Working with "classic" Rfm features
+## Working with "classic" Rfm features
 
 All of Rfm's original features and functions are available as they were before, though some low-level functionality has changed slightly.
 
 
-## Connecting
+### Connecting
 
 IMPORTANT:SSL and Certificate verification are on by default. Please see Server#new in rdocs for explanation and setup.
 You connect with the Rfm::Server object. This little buddy will be your window into FileMaker data.
@@ -344,7 +390,7 @@ if your web publishing engine runs on a port other than 80, you can provide the 
 	     :root_cert      => false
 	   )
 
-## Databases and Layouts
+### Databases and Layouts
 
 All access to data in FileMaker's XML interface is done through layouts, and layouts live in databases. The Rfm::Server object has a collection of databases called 'db'. So to get ahold of a database called "My Database", you can do this:
 
@@ -374,7 +420,7 @@ Bringing it all together, you can do this to go straight from a server to a spec
 
 	   my_layout = my_server["My Database"]["My Layout"]
 
-## Working with Layouts
+### Working with Layouts
 
 Once you have a layout object, you can start doing some real work. To get every record from the layout:
 
@@ -417,7 +463,7 @@ For a complete list of the available options, see the "expand_options" method in
 Finally, if filemaker returns an error when executing any of these methods, an error will be raised in your ruby script. There is one exception to this, though. If a find results in no records being found (FileMaker error # 401) I just ignore it and return you a ResultSet with zero records in it. If you prefer an error in this case, add :raise_on_401 => true to the options you pass the Rfm::Server when you create it.
 
 
-## ResultSet and Record Objects
+### ResultSet and Record Objects
 
 Any method on the Layout object that returns data will return a ResultSet object. Rfm::Result::ResultSet is a subclass of Array, so first and foremost, you can use it like any other array:
 
@@ -489,7 +535,7 @@ Again, you can string things together with Ruby. This will calculate the total d
 	   total = 0.0
 	   my_order.portals["Line Items"].each {|line| total += line.quantity * line.price}
 
-## Data Types
+### Data Types
 
 FileMaker's field types are coerced to Ruby types thusly:
 
@@ -512,7 +558,7 @@ Finally, container fields will come back as URI objects. You can:
 
 Specifically, the URI refers to the _contents_ of the container field. When accessed, the file, picture, or movie in the field will be downloaded.
 
-## Troubleshooting
+### Troubleshooting
 
 There are two cheesy methods to help track down problems. When you create a server object, you can provide two additional optional parameters:
 

@@ -108,7 +108,7 @@ module Rfm
     
     attr_accessor :layout, :resultset
     attr_reader :record_id, :mod_id, :portals
-    def_delegators :resultset, :field_meta
+    def_delegators :resultset, :field_meta, :portal_names
     def_delegators :layout, :db, :database, :server
 
     def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)

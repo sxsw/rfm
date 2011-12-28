@@ -73,6 +73,33 @@ task :info do
 	puts Rfm.info
 end
 
+	X = File.read('local_testing/resultset2.xml')
+	#X.gsub!(/xmlns=\"[^\"]*\"/, '')
+	Y = File.read('local_testing/layout.xml')
+
+
+
+desc "benchmark XmlMini with available parsers"	
+task :benchmark do
+	require 'benchmark'
+	require 'yaml'
+	@records = File.read('spec/data/resultset.xml')
+	@layout = File.read('spec/data/layout.xml')
+	Benchmark.bm do |b|
+		[:oxsax, :libxml, :libxmlsax, :nokogirisax, :nokogiri, :hpricot, :rexml, :rexmlsax].each do |backend|
+			Rfm.backend = backend
+			b.report("#{Rfm::XmlParser.backend}\n") do
+				50.times do
+					Rfm::XmlParser.new(@records)
+					Rfm::XmlParser.new(@layout)
+				end
+			end
+		end
+	end
+end
+
+
+
 desc "pre-commit, build gem, tag with version, push to git, push to rubygems.org"
 task :release do
 	gem_name = 'ginjo-rfm'
