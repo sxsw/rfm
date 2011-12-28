@@ -13,10 +13,12 @@ module Rfm
 	# Do not put subsets in non-top-level configs. (maybe future feature?)
 	#
   module Config
-  	CONFIG_KEYS = %w(parser host port account_name password database layout ssl root_cert root_cert_name root_cert_path warn_on_redirect raise_on_401 timeout log_actions log_responses log_parser use parent)
+  	require 'yaml'
+  	
+  	CONFIG_KEYS = %w(file_name file_path parser host port account_name password database layout ssl root_cert root_cert_name root_cert_path warn_on_redirect raise_on_401 timeout log_actions log_responses log_parser use parent)
 
     extend self
-    @config = {}
+    @config = {}		
 	  	  
 	  # Set @config with args & options hash.
 	  # Args should be symbols representing configuration groups,
@@ -73,6 +75,22 @@ module Rfm
   	end
   		  
 	protected
+	
+		# Get or load a config file as the top-level config (above RFM_CONFIG constant).
+		# Default file name is rfm.yml.
+		# Default paths are '' and 'config/'.
+		# File name & paths can be set in RFM_CONFIG and Rfm.config.
+		# Change file name with :file_name => 'something.else'
+		# Change file paths with :file_path => ['array/of/', 'file/paths/']
+		def get_config_file
+			@@config_file_data ||= (
+				config_file_name = @config[:file_name] || (RFM_CONFIG[:file_name] rescue nil) || 'rfm.yml'
+				config_file_paths = [''] | (@config[:file_path] || (RFM_CONFIG[:file_path] rescue nil) || %w( config/ ))
+				config_file_paths.collect do |f|
+					(YAML.load_file("#{f}#{config_file_name}") rescue {})
+				end.inject({}){|h,a| h.merge(a)}
+			) || {}
+		end
 	  
 	  
 		# Merge args into @config, as :use=>[arg1, arg2, ...]
@@ -91,7 +109,7 @@ module Rfm
       remote = if (self != Rfm::Config) 
       	eval(@config[:parent] || 'Rfm::Config').config_merge_with_parent rescue {}
       else
-      	(defined?(RFM_CONFIG) and RFM_CONFIG.is_a?(Hash)) ? RFM_CONFIG : {}
+      	get_config_file.merge((defined?(RFM_CONFIG) and RFM_CONFIG.is_a?(Hash)) ? RFM_CONFIG : {})
       end
       
       use = (remote[:use].rfm_force_array | @config[:use].rfm_force_array).compact
