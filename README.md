@@ -247,18 +247,21 @@ Get the names of fields on the current layout
 
 ### Compatibility
 
-Ginjo-rfm 2.0 is compatible with previous versions of Rfm - Ginjo, Lardawge, and SFR. However, much has been changed in the low-level workings of the code, in orer to pave the way for data modeling and flexible XML adapters. If you have scripts that reach deep into the guts of Rfm 1.0 thru 1.4.x, you may find that some things are slightly different in 2.0. Additionally, some long-standing bugs have been fixed that may have been so de rigeur, that the "correct behavior" in Rfm 2.0 may break scripts that relied on the previously buggy functions. These low level changes, and the addition of major new functionality, led the decision to release this version of Rfm as 2.0, instead of 1.5.
+Ginjo-rfm 2.0 is compatible with previous versions of Rfm - Ginjo, Lardawge, and SFR. However, much has been changed in the low-level workings of the code. If you have scripts that reach deep into the guts of Rfm 1.0 thru 1.4.x, you may find that some things are slightly different in 2.0. Additionally, some long-standing bugs have been fixed that may have been so de rigeur, that the "correct behavior" in Rfm 2.0 may break scripts that relied on the previously buggy functions. These low level changes, and the addition of major new functionality, led the decision to release this version of Rfm as 2.0, instead of 1.5.
 
 
 ## Installation
 
-Ginjo-rfm requires ActiveSupport for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3. ActiveModel requires ActiveSupport 3+ and is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Basic model functionality and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
+Ginjo-rfm requires ActiveSupport for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3, on both ruby 1.8.7 and ruby 1.9.2. ActiveModel requires ActiveSupport 3+ and is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Basic modeling functionality and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
 
-For the best performance, it is recommended that you use the Ox, LibXML, or Nokogiri parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile, if you wish to use ActiveModel features.
+For the best performance, it is recommended that you use the Ox, LibXML, Nokogiri, or Hpricot parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. If you don't want to install any of these parsers, Rfm will use the REXML parser, included with the Ruby standard library. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile, if you wish to use ActiveModel features.
+
+Note that the installation of Ox, Libsml-ruby, Nokogiri, or Hpricot will require further dependencies. Please see the install instructions for each parser to get them installed and running on your system.
+
 
 ### Using Bundler and/or Rails >= 3.0
 
-In the Gemfile:
+In your Gemfile:
 
 	   gem 'ginjo-rfm'
 	   gem 'ox'          # optional
@@ -362,7 +365,7 @@ Once you have an Rfm model or layout, you can use any of the standard Rfm comman
 
 ## Working with "classic" Rfm features
 
-All of Rfm's original features and functions are available as they were before, though some low-level functionality has changed slightly.
+All of Rfm's original features and functions are available as they were before, though some low-level functionality has changed slightly. See the documentation for each module & class for the specifics on low-level methods and functionality.
 
 
 ### Connecting
@@ -590,6 +593,4 @@ Other lead contributors:
 * Jesse Antunes helped ensure that Rfm is stable and functional.
 * Larry Sprock added ssl support, switched the xml parser to a much faster Nokogiri, added the rspec testing framework, and refined code architecture.
 
-## Copyright
 
-Copyright (c) 2007 Six Fried Rice, LLC and Mufaddal Khumr. See LICENSE for details.
