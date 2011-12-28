@@ -5,10 +5,9 @@ end
 
 require 'thread' # some versions of ActiveSupport will raise error about Mutex unless 'thread' is loaded.
 require 'active_support'
-# ActiveSupport appears to load these automatcially
-	#require 'active_support/core_ext/object/blank'
-	#require 'active_support/ordered_hash'
-	require 'active_support/version'
+require 'active_support/core_ext/object/blank'
+require 'active_support/ordered_hash'
+require 'active_support/version'
 require 'rfm/utilities/core_ext'
 require 'rfm/utilities/case_insensitive_hash'
 #require 'rfm/utilities/config'
