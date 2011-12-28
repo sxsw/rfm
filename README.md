@@ -168,7 +168,7 @@ View	model-specific configuration
 	
 	   # =>  {:use => :second_server, :layout => 'mylayout'}
 
-When rfm's objects need to access configuration settings, the entire heirarchy is compiled, starting at the top and merging in more specific settings down to the requesting object. Rfm uses the get_config method to retrieve this compiled hash.
+When Rfm's objects need to access configuration settings, the entire heirarchy is compiled, starting at the top and merging in more specific settings down to the requesting object. Rfm uses the get_config method to retrieve this compiled hash.
 
 	   MyClass.get_config
 	   
@@ -184,7 +184,7 @@ Calling the get_config method will show you what compilation of config settings 
 * MyModel      # sublcassed custom modeling class, inherits settings from Rfm::Base
 
 
-You can include Rfm::Config in any object in your project and gain rfm configuration abilities for that object.
+You can include Rfm::Config in any object in your project and gain Rfm configuration abilities for that object.
 
 	   module MyModule
 	     include Rfm::Config
@@ -254,9 +254,9 @@ Ginjo-rfm 2.0 is compatible with previous versions of Rfm - Ginjo, Lardawge, and
 
 Ginjo-rfm requires ActiveSupport for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3, on both ruby 1.8.7 and ruby 1.9.2. ActiveModel requires ActiveSupport 3+ and is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Basic modeling functionality and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
 
-For the best performance, it is recommended that you use the Ox, LibXML, Nokogiri, or Hpricot parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. If you don't want to install any of these parsers, Rfm will use the REXML parser, included with the Ruby standard library. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile, if you wish to use ActiveModel features.
+For the best performance, it is recommended that you use the Ox, Libxml-ruby, Nokogiri, or Hpricot parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. If you don't want to install any of these parsers, Rfm will use the REXML parser, included with the Ruby standard library. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile, if you wish to use ActiveModel features.
 
-Note that the installation of Ox, Libsml-ruby, Nokogiri, or Hpricot will require further dependencies. Please see the install instructions for each parser to get them installed and running on your system.
+Note that the installation of Ox, Libxml-ruby, Nokogiri, or Hpricot will require further dependencies. Please see the install instructions for each parser to get them installed and running on your system.
 
 
 ### Using Bundler and/or Rails >= 3.0
