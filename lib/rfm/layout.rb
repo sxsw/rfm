@@ -156,6 +156,10 @@ module Rfm
     
     # These methods are to be inclulded in Layout and SubLayout, so that
     # they have their own descrete 'self' in the master class and the subclass.
+    # This means these methods will not get forwarded, and will talk to the correct
+    # variables & objects of the correct self.
+    # Do not get or set instance variables in Layout from other objects directly,
+    # always use getter & setter methods.
     module LayoutModule
     
 	    # Returns a ResultSet object containing _every record_ in the table associated with this layout.
@@ -256,6 +260,10 @@ module Rfm
     def value_lists
       load unless @loaded
       @value_lists
+    end
+    
+    def count(find_criteria)
+    	find(find_criteria, {:max_records => 0}).foundset_count
     end
     
   	def total_count

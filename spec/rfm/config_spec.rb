@@ -38,9 +38,9 @@ describe Rfm::Config do
 		end
 		
 		context "with array of symbols and hash of options" do
-			it "returns upstream config, merged with filtered groups, merged with options, ignoring preset filters" do
+			it "returns upstream config, merged with filtered groups, merged with options, merged with preset filters" do
 				klass.config :group1
-				klass.get_config(:group2, :ssl=>true).should == {:host=>'host1', :strings=>[], :database=>'db2', :ssl=>true, :use=>[:group1]}
+				klass.get_config(:group2, :ssl=>true).should == {:host=>'host1', :strings=>[], :database=>'db2', :ssl=>true, :use=>[:group1, :group2]}
 			end
 			
 			it "returns config including :strings parameter, if passed array of strings as first n arguments" do

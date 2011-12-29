@@ -199,7 +199,7 @@ module Rfm
 		
 	    # Access layout functions from base model
 	  	def_delegators :layout, :db, :server, :field_controls, :field_names, :value_lists, :total_count,
-	  									:query, :all, :delete, :portal_meta, :portal_names, :database, :table
+	  									:query, :all, :delete, :portal_meta, :portal_names, :database, :table, :count
 
 			def inherited(model)
 				(Rfm::Factory.models << model).uniq unless Rfm::Factory.models.include? model

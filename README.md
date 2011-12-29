@@ -119,37 +119,31 @@ If you're wondering about performance, here are some preliminary benchmark resul
 
 ### Configuration API
 
-The ginjo-rfm configuration module is a heirarchical system that allows you to configure settings at a global level
-and then recall just the settings you need, where you need them. Configuration settings can be simple
-values, or they can be named groups of values.
+The ginjo-rfm configuration module lets you store your settings in several different ways. Store some, or all, of your project-specific settings in a rfm.yml file at the root of your project, or in your Rails config/ directory. Settings can also be put in a RFM_CONFIG constant at the top level of your project.  Configuration settings can be simple key=>values, or they can be named groups of key=>values. Configuration can also be passed to various Rfm methods during load and runtime, as individual settings or as groups.
 
-For simple applications, put all of your configuration in a top-level hash, RFM_CONFIG,
-and let Rfm do the rest. For more complicated setups, use configuration subgroups,
-and/or set configuration on-the-fly when you create Server, Database, Layout, or Base objects.
+rfm.yml
 
-Use RFM_CONFIG
+	   ---
+	   :ssl: true
+	   :root_cert: false
+	   :timeout: 10
+	   :port: 443
+	   :development:
+	     :host: dev.mydomain.com
+	     :account_name: admin
+	     :password: pass
+	     :database: DevDB
+	   :production:
+	     :host: live.mydomain.com
+	     :account_name: admin
+	     :password: pass
+	     :database: LiveDB
 
-	   RFM_CONFIG = {
-	     :host          => 'main_host',
-	     :database      => 'main_database',
-	     :account_name  => 'myname',
-	     :password      => 'somepass',
-	     :second_server => {
-	       :host        => 'second_host',
-	       :database    => 'second_database'
-	     }
+In a RFM_CONFIG constant, perhaps in your development env file
 
-Or set global configuration with the 'config' method
+	   RFM_CONFIG = {:use => :development}
 
-	  Rfm.config :host => 'main_host',
-	    :database      => 'main_database',
-	    :account_name  => 'myname',
-	    :password      => 'somepass',
-	    :second_server => {
-	      :host        => 'second_host',
-	      :database    => 'second_database'
-	    }
-	
+
 Set configuration of RFM::Base
 
 	   Rfm::Base.config :ssl => true
