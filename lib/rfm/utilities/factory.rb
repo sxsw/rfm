@@ -64,6 +64,8 @@ module Rfm
     
     end # DbFactory
     
+    
+    
     class LayoutFactory < Rfm::CaseInsensitiveHash # :nodoc: all
     
       def initialize(server, database)
@@ -102,10 +104,9 @@ module Rfm
     	def names
     		keys
     	end
-    	
-
-    
     end # LayoutFactory
+    
+    
     
     class ScriptFactory < Rfm::CaseInsensitiveHash # :nodoc: all
     
