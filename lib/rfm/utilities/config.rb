@@ -114,16 +114,26 @@ module Rfm
       
       use = (remote[:use].rfm_force_array | @config[:use].rfm_force_array).compact
 			remote.merge(@config).merge(:use=>use)
-    end	  
-
-		# Given config hash, return filtered. Filters should be symbols.
+    end
+     
+		# This version uses either/or method input filters OR compiled config :use=>filters.
+		# Given config hash, return filtered subgroup settings. Filters should be symbols.
+		# 		def config_filter(conf, filters=nil)
+		# 			filters ||= conf[:use].rfm_force_array if !conf[:use].blank?
+		# 			filters.each{|f| next unless conf[f]; conf.merge!(conf[f] || {})} if !filters.blank?
+		# 			conf.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or v.to_s == '' }
+		# 			conf
+		# 		end
+		#
+		# This version combines both method input filters AND :use=>filters
 		def config_filter(conf, filters=nil)
-			filters ||= conf[:use].rfm_force_array if !conf[:use].blank?
+			filters = conf[:use] = (conf[:use].rfm_force_array | filters.rfm_force_array).compact
 			filters.each{|f| next unless conf[f]; conf.merge!(conf[f] || {})} if !filters.blank?
 			conf.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or v.to_s == '' }
 			conf
 		end
-    
+		
+		    
     # This loads RFM_CONFIG into @config. It is not necessary,
     # as get_config will merge all configuration into RFM_CONFIG at runtime.
     #config RFM_CONFIG if defined? RFM_CONFIG
