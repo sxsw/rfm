@@ -15,7 +15,7 @@ Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and application
 
 ## New in version 2.0
 
-Ginjo-rfm 2.0 brings some major new features to Rfm. Some hightlights:
+Ginjo-rfm 2.0 brings some major new features to Rfm. Some highlights:
 
 * Rails-like modeling with ActiveModel
 * Support for multiple XML Parsers
