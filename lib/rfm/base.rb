@@ -169,7 +169,7 @@ module Rfm
       include ActiveModel::Validations
       include ActiveModel::Serialization
       extend ActiveModel::Callbacks
-      define_model_callbacks(:create, :update, :destroy)
+      define_model_callbacks(:create, :update, :destroy, :validate)
     rescue LoadError, StandardError
     	def run_callbacks(*args)
     		yield

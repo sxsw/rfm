@@ -24,22 +24,12 @@ Ginjo-rfm 2.0 brings some major new features to Rfm. Some hightlights:
 * Full metadata support
 
 
-### Data modeling with ActiveModel and graceful degradation without ActiveModel.
+### Data modeling with ActiveModel.
 	
 If you can load ActiveModel in your project, you can have model callbacks, validations, and other ActiveModel features.
 If you can't load ActiveModel (because you're using something incompatible, like Rails 2),
 you can still use Rfm models... minus the ActiveModel-specific features like callbacks and validations. Rfm models give you basic
 data modeling with easy configuration and CRUD features.
-
-	  class User < Rfm::Base
-	    config      :layout => 'user_layout'
-	  end
-	
-	  @user = User.find 12345
-	  @user.update_attributes(:name => 'bill', :login => 'admin')
-	  @user.save!
-
-With ActiveModel loaded, you get callbacks, validations, and many other ActiveModel features.
 
 	  class User < Rfm::Base
 	    config      :layout=>'user_layout'
@@ -50,20 +40,8 @@ With ActiveModel loaded, you get callbacks, validations, and many other ActiveMo
 	  @user = User.new :username => 'bill', :password => 'pass'
 	  @user.email = 'my@email.com'
 	  @user.save!
-	
-If you prefer, you can create models on-the-fly from any layout.
 
-	  my_layout.modelize
-	  
-	  # => MyLayoutName   (subclassed from Rfm::Base, represented by your layout's name)
-	 
-Or create models for an entire database, all at once.
 
-	  Rfm.modelize :my_db_name_or_config
-	  
-	  # => [MyLayout, AnotherLayout, ThirdLayout, AndSoOn, ...]
-	
-  
 ### Choice of XML parsers
 
 Ginjo-rfm 2.0 uses ActiveSupport's XmlMini parsing interface, which has built-in support for
@@ -123,74 +101,21 @@ The ginjo-rfm configuration module lets you store your settings in several diffe
 
 rfm.yml
 
-	   ---
 	   :ssl: true
 	   :root_cert: false
 	   :timeout: 10
 	   :port: 443
-	   :development:
-	     :host: dev.mydomain.com
-	     :account_name: admin
-	     :password: pass
-	     :database: DevDB
-	   :production:
-	     :host: live.mydomain.com
-	     :account_name: admin
-	     :password: pass
-	     :database: LiveDB
+	   :host: live.mydomain.com
+	   :account_name: admin
+	   :password: pass
+	   :database: MyFmDb
 
-In a RFM_CONFIG constant, perhaps in your development env file
-
-	   RFM_CONFIG = {:use => :development}
-
-
-Set configuration of RFM::Base
-
-	   Rfm::Base.config :ssl => true
-
-Set a model's configuration
+Set a model's configuration.
 	
-	   class MyClass < Rfm::Base
-	     config :second_server, :layout => 'mylayout'
+	   class MyModel < Rfm::Base
+	     config :layout => 'mylayout'
 	   end
-	
-	   # => {:use => :second_server, :layout => 'mylayout'}
-	
-View	model-specific configuration
-   
-	   MyClass.config
-	
-	   # =>  {:use => :second_server, :layout => 'mylayout'}
 
-When Rfm's objects need to access configuration settings, the entire heirarchy is compiled, starting at the top and merging in more specific settings down to the requesting object. Rfm uses the get_config method to retrieve this compiled hash.
-
-	   MyClass.get_config
-	   
-	   # => {:host => 'second_host', :database => 'second_database', :account_name => 'myname', :password => 'somepass', :ssl => true}
-
-
-Calling the get_config method will show you what compilation of config settings are seen at any given point in Rfm and/or in your application. The current heirarchy of configurable objects in Rfm, starting at the top:
-
-* RFM_CONFIG   # a user-defined hash
-* Rfm::Config  # top-level config module, inherits settings from RFM_CONFIG
-* Rfm::Factory # where server, database, and layout objects are managed, inherits settings from Rfm::Config
-* Rfm::Base    # master modeling class, inherits settings from Rfm::Config
-* MyModel      # sublcassed custom modeling class, inherits settings from Rfm::Base
-
-
-You can include Rfm::Config in any object in your project and gain Rfm configuration abilities for that object.
-
-	   module MyModule
-	     include Rfm::Config
-	     config :host => 'myhost.com', :database => 'mydb'   # inherits settings from Rfm::Config by default
-	     
-	     class Model1 < Rfm::Base
-	       config :parent => MyModule, :layout => 'some_layout'   # use :parent to set where this object inherits config settings from
-	     end
-	   end
-	     
-
-	   
 
 ### Complex Queries
 
@@ -244,13 +169,20 @@ Get the names of fields on the current layout
 Ginjo-rfm 2.0 is compatible with previous versions of Rfm - Ginjo, Lardawge, and SFR. However, much has been changed in the low-level workings of the code. If you have scripts that reach deep into the guts of Rfm 1.0 thru 1.4.x, you may find that some things are slightly different in 2.0. Additionally, some long-standing bugs have been fixed that may have been so de rigeur, that the "correct behavior" in Rfm 2.0 may break scripts that relied on the previously buggy functions. These low level changes, and the addition of major new functionality, led the decision to release this version of Rfm as 2.0, instead of 1.5.
 
 
-## Installation
+## Download & Installation
+
+There are at least 4 ways to download ginjo-rfm.
+
+* With Bundler: gem 'ginjo-rfm'
+* With the command line: gem install ginjo-rfm
+* From https://rubygems.org/gems/ginjo-rfm
+* From https://github.com/ginjo/rfm
 
 Ginjo-rfm requires ActiveSupport for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3, on both ruby 1.8.7 and ruby 1.9.2. ActiveModel requires ActiveSupport 3+ and is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Basic modeling functionality and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
 
 For the best performance, it is recommended that you use the Ox, Libxml-ruby, Nokogiri, or Hpricot parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. If you don't want to install any of these parsers, Rfm will use the REXML parser, included with the Ruby standard library. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile, if you wish to use ActiveModel features.
 
-Note that the installation of Ox, Libxml-ruby, Nokogiri, or Hpricot will require further dependencies. Please see the install instructions for each parser to get them installed and running on your system.
+Note that the installation of Ox, Libxml-ruby, Nokogiri, or Hpricot gems will require further dependencies. Please see the install instructions for each parser to get them installed and running on your system.
 
 
 ### Using Bundler and/or Rails >= 3.0
@@ -291,55 +223,204 @@ Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
 	   require 'rfm'
 
 
-
 ### Edge - in an upcoming version of ginjo-rfm
 
 Try out unreleased features of ginjo-rfm in the edge branch.
 
 	   #gemfile
 	   gem 'ginjo-rfm', :git=>'git://github.com/ginjo/rfm.git', :branch=>'edge'
-   
-   
 
-## Basic usage
 
-Put your configuration settings in a hash represented by RFM_CONFIG. This will make it easier to get and use objects in Rfm.
+
+## Ginjo-rfm Basic Usage
+
+The first step in getting connected to your Filemaker databases with Rfm is to store your configuration settings in a yaml file or in the RFM_CONFIG hash. The second step is creating a model that represents a layout in one of your Filemaker databases. 
+
+### Configuration
+
+In previous versions of Rfm, you may have stored your configuration settings in a variable or constant, then passed those settings to Rfm::Server.new(MY_SETTINGS). Now you can put your configuration settings in a rfm.yml file at the root of your project or in your project's config/ directory, and Rfm will use those settings automatically when building your Model's Server, Database, and Layout objects.
+
+rfm.yml
+
+	   :ssl: true
+	   :root_cert: false
+	   :timeout: 10
+	   :port: 443
+	   :host: my.host.com
+	   :account_name: myname
+	   :password: somepass
+	   :database: MyFmDb
+
+Or put your configuration settings in a hash called RFM_CONFIG. Rfm will pick those up just as with the yaml file.
 
 	   RFM_CONFIG = {
-	     :host          => 'main_host',
-	     :database      => 'main_database',
+	     :host          => 'my.host.com',
+	     :database      => 'MyFmDb',
 	     :account_name  => 'myname',
 	     :password      => 'somepass',
-	     :ssl           => false,
-	     :second_server => {
-	       :host        => 'second_host',
-	       :database    => 'second_database'
+	     :ssl           => true,
+	     :root_cert     => false,
+	     :port          => 443,
+	     :timeout       => 10
 	     }
 
-Then you have two easy ways to access your layouts - and your data.
+You can use configuration subgroups to seperate global settings from environment-specific settings.
 
+	   :ssl: true
+	   :root_cert: false
+	   :timeout: 10
+	   :port: 443
+	   :development:
+	     :host: dev.mydomain.com
+	     :account_name: admin
+	     :password: pass
+	     :database: DevFmDb
+	   :production:
+	     :host: live.mydomain.com
+	     :account_name: admin
+	     :password: pass
+	     :database: LiveFmDb
 
-### With models
+Then in your environment files (or wherever you put environment-specific configuration in your ruby project),
+specifiy which subgroup to use.
 
-Rfm models provide easy access to the record-finder functions of Rfm layouts, and they give us a way to easily persist objects to the database.
+     RFM_CONFIG = {:use => :development}
+
+You can use configuration subgroups to contain any arbitrary groups of settings.
+
+	   :ssl: true
+	   :root_cert: false
+	   :timeout: 10
+	   :port: 443
+	   :customer1:
+	     :host: customer1.com
+	     :account_name: cust1
+	     :password: pass
+	     :database: custOneFmDb
+	   :customer2:
+	     :host: customer2.com
+	     :account_name: cust2
+	     :password: pass
+	     :database: custTwoFmDb
+
+Use the configuration setting method `config` to set configuration for specific objects, like Rfm models. When you pass a `:use => :subgroup` to the `config` method, you're saying use that subgroup of settings.
+
+	   class MyModel < Rfm::Base
+	     config :use => :customer1, :layout => 'some_layout'
+	   end
+	
+The current heirarchy of configurable objects in Rfm, starting at the top, is:
+
+* rfm.yml      # file of settings in yaml format
+* RFM_CONFIG   # user-defined hash
+* Rfm::Config  # top-level config module, inherits settings from RFM_CONFIG and rfm.yml
+* Rfm::Factory # where server, database, and layout objects are managed, inherits settings from Rfm::Config
+* Rfm::Base    # master modeling class, inherits settings from Rfm::Config
+* MyModel      # sublcassed custom modeling class, inherits settings from Rfm::Base
+
+You can also include or extend the Rfm::Config module in any object in your project to gain Rfm configuration abilities for that object.
+
+	   module MyModule
+	     include Rfm::Config
+	     config :host => 'myhost.com', :database => 'mydb', :account_name => 'name', :password => 'pass'
+	     # inherits settings from Rfm::Config by default
+	   end
+
+	   class Person < Rfm::Base
+	     config :parent => MyModule, :layout => 'some_layout'
+	     # using :parent to set where this object inherits config settings from
+	   end
+
+Use `get_config` to view the compiled configuration settings for any object. Configuration compilation will start at the top (rfm.yml), then work down the heirarchy of objects to wherever you call the `get_config` method, merging in all global settings along the way. Subgroupings of settings will also be merged, if they are specified in a subgroup filter. A subgroup filter occurs any time you put `:use => :subgroup` in your configuration setting. You can have multiple subgroup filters, and when configuration compilation occurs, all subgroup filters are stacked up into an array and processed in order (as if you typed `:use=>[:subgroup1, :subgroup2, subgroup3, ...]` which is also allowed). `get_config` returns a compiled configuration hash, leaving all configuration settings in all modules and classes un-touched.
+
+	   Person.get_config
+	
+	   # =>  {:ssl => true, :timeout => 10, :root_cert => false, :port => 443,
+	          :host => 'myhost', :database => 'mydb', :layout => 'some_layout',
+	          :account_name => 'name', :password => 'pass'
+	         }
+
+### Using Models
+
+Rfm models provide easy access, modeling, and persistence of your Filemaker data.
 
 	   class User < Rfm::Base
 	     config :layout => 'my_layout_name'
+	     attr_accessor :password
 	   end
 	
 	   @user = User.new(:login => 'bill', :password => 'xxxxxxxx', :email => 'my@email.com')
+	   @user.encrypt_password
 	   @user.save!
 	
-	   @user.login
-	   # => 'bill'
+	   @user.record_id
+	   # => '12345'
 
 	   @user.field_names
 	   # => ['login', 'encryptedPassword', 'email', 'groups', 'lastLogin' ]
 	
-	   User.field_names
-	   # => ['login', 'encryptedPassword', 'email', 'groups', 'lastLogin' ]
+	   User.total_count
+	   # => 35467
 
-### Manually
+	   @user = User.find 12345
+	   @user.update_attributes(:login => 'william', :email => 'myother@email.com')
+	   @user.save!
+
+If you prefer, you can create models on-the-fly from any layout.
+
+	   my_rfm_layout.modelize
+
+	   # => MyLayoutName   (subclassed from Rfm::Base, represented by your layout's name)
+
+Or create models for an entire database, all at once.
+
+	   Rfm.modelize /_xml/i, 'my_database', :my_config_group
+
+	   # => [MyLayout, AnotherLayout, ThirdLayout, AndSoOn, ...]
+	   # The regex in the first parameter is optional and filters the layout names in the specified database.
+
+With ActiveModel loaded, you get callbacks, validations, errors, serialization, and a handful of other features extracted from Rails ActiveRecord.
+
+In your Gemfile
+
+	   gem 'activemodel'
+	
+Or without Bundler
+
+	   require 'active_model'
+	
+Then use ActiveModel features in your Rfm models
+
+	   class MyModel < Rfm::Base
+	     before_create    :encrypt_password
+	     after_validate   "puts 'yay!'"
+	     validates        :email, :presence => true
+	   end
+	
+	   @my_model = MyModel.new
+	   @my_model.valid?
+	   @my_model.save!
+	   @my_model.errors
+	
+To learn more about ActiveModel, see the ActiveModel or RubyOnRails documentation:
+
+* <http://rubydoc.info/gems/activemodel/frames>
+* <http://api.rubyonrails.org/>
+* <http://guides.rubyonrails.org/active_record_validations_callbacks.html>
+
+Once you have an Rfm model or layout, you can use any of the standard Rfm commands to create, search, edit, and delete records. To learn more about these commands, see below for Databases, Layouts, Resultsets, and Records. Or checkout the API documentation for Rfm::Server, Rfm::Database, Rfm::Layout, Rfm::Record, and Rfm::Base.
+
+#### Two Small Changes in Rfm return values
+
+When using Models to retrieve records using the `any` method or the `find(record_id)` method, the return values will be single Rfm::Record objects. This differs from the traditional Rfm behavior of these methods when accessed directly from the the Rfm::Layout instance, where the return value is always a Rfm::Resultset.
+
+	   MyModel.find(record_id)  ==  my_layout.find(record_id)[0]
+	   MyModel.any              ==  my_layout.any[0]
+
+
+### Getting Rfm Server, Database, and Layout objects manually
+
+Well... not entirely manually. To get server, db, and layout objects as in previous versions of Rfm, see the section "Working with classic Rfm features". Ginjo-rfm 2.0 has some new methods to create/locate Filemaker objects and meta data.
 
 Create a layout object using default configuration settings.
 
@@ -351,11 +432,61 @@ Create a layout object using a subgroup of configuration settings.
 	
 Create a layout object passing in a layout name, multiple config subgroups to merge, and specific settings.
 
-	   my_layout = Rfm.layout 'layout_name', :second_server, :log_actions => true
+	   my_layout = Rfm.layout 'layout_name', :other_server, :log_actions => true
+	
+The same can be done for servers and databases.
 
+	   my_server   = Rfm.server 'my.host.com'
+	   my_database = Rfm.database :development, :ssl => false, :root_cert => false 
+	   my_database = Rfm.db :production
+	     # db and database are interchangeable aliases in Ginjo-rfm 2.0
+	
+You can query your Filemaker objects for the familiar meta-data.
 
-Once you have an Rfm model or layout, you can use any of the standard Rfm commands to create, search, edit, and delete records. To learn more about these commands, see below for Databases, Layouts, Resultsets, and Records. Or checkout the documentation for Rfm::Layout, Rfm::Record, and Rfm::Base.
+	   my_server.databases.all.names
+	   my_server.databases['MyFmDb']
+	   my_database.layouts
+	   my_layout.value_lists
+	   my_layout.field_names
+	   my_layout.portal_meta
 
+Here are two new fun Layout methods:
+
+	   my_layout.total_count # => total records in table
+	   my_layout.count(:some_field => 'search criteria', ...)   # Returns foundset_count only, no records.
+
+See the API documentation for the lowdown on new methods in Rfm Server, Database, and Layout objects.
+
+### Shortcuts, tips & tricks
+
+All Rfm methods that take a configuration hash have two possible shortcuts.
+
+If you pass a symbol before the hash, it is interpreted as subgroup specification or subgroup filter
+
+	   config :mygroup, :layout => 'mylayout'
+	   # :use => :mygroup, :layout => 'mylayout'
+	
+	   get_config :othergroup
+	   # :use => [:mygroup, :othergroup], :layout => 'mylayout'
+
+If you pass a string before any symbols or hashes, it is interepreted as one of several possible configuration settings - usually a layout name, a database name, or a server hostname. The interpretation is dependent on the method being called
+
+	   class MyModel < Rfm::Base
+	     config 'MyLayoutName'
+	     # :layout => 'MyLayoutName'
+	   end
+	
+	   Rfm.database 'MyDatabaseName'
+	   # :database => 'MyDatabaseName'
+	
+	   Rfm.modelize 'MyDatabaseName', :group1
+	   # :database => 'MyDatabaseName', :use => :group1
+
+Just about anything you can do with a Rfm layout, you can also do with a Rfm model.
+
+	   MyModel.total_count
+	   MyModel.field_names
+	   MyModel.database.name
 
 ## Working with "classic" Rfm features
 
