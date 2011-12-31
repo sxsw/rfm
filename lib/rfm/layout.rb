@@ -119,9 +119,7 @@ module Rfm
   #   list that is attached to any field on the layout
   
   class Layout
-		
-  	include ComplexQuery
-    
+		    
     # Initialize a layout object. You never really need to do this. Instead, just do this:
     # 
     #   myServer = Rfm::Server.new(...)
@@ -183,7 +181,11 @@ module Rfm
 	    # assumed to be FileMaker's internal id for a record (the recid).
 	    def find(hash_or_recid, options = {})
 	      if hash_or_recid.kind_of? Hash
-	        get_records('-find', hash_or_recid, options)
+		      if hash_or_recid.detect{|k,v| v.kind_of? Array}
+		      	get_records('-findquery', assemble_query(hash_or_recid), options)
+		      else
+		        get_records('-find', hash_or_recid, options)
+		      end
 	      else
 	        get_records('-find', {'-recid' => hash_or_recid.to_s}, options)
 	      end
@@ -229,6 +231,10 @@ module Rfm
 	      return nil
 	    end
 	    
+	    def view(options = {})
+	    	get_records('-view', {}, options)
+	    end
+	    
 	    def get_records(action, extra_params = {}, options = {})
 	      include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
 	      xml_response = db.server.connect(db.account_name, db.password, action, params.merge(extra_params), options).body
@@ -238,6 +244,60 @@ module Rfm
 	    def params
 	      {"-db" => db.name, "-lay" => self.name}
 	    end
+	    
+			# Methods for Rfm::Layout to build complex queries
+			# Perform RFM find using complex boolean logic (multiple value options for a single field)
+			# Mimics creation of multiple find requests for "or" logic
+			# Use: rlayout_object.query({'fieldOne'=>['val1','val2','val3'], 'fieldTwo'=>'someValue', ...})
+			# 	def query(hash_or_recid, options = {})
+			# 	  if hash_or_recid.kind_of? Hash
+			# 	    get_records('-findquery', assemble_query(hash_or_recid), options)
+			# 	  else
+			# 	    get_records('-find', {'-recid' => hash_or_recid.to_s}, options)
+			# 	  end
+			# 	end
+			alias_method :query, :find
+	
+			# Build ruby params to send to -query action via RFM
+			def assemble_query(query_hash)
+				key_values, query_map = build_key_values(query_hash)
+				key_values.merge("-query"=>query_translate(array_mix(query_map)))
+			end
+	
+			# Build key-value definitions and query map  '-q1...'
+			def build_key_values(qh)
+				key_values = {}
+				query_map = []
+				counter = 0
+				qh.each_with_index do |ha,i|
+					ha[1] = ha[1].to_a
+					query_tag = []
+					ha[1].each do |v|
+						key_values["-q#{counter}"] = ha[0]
+						key_values["-q#{counter}.value"] = v
+						query_tag << "q#{counter}"
+						counter += 1
+					end
+					query_map << query_tag
+				end
+				return key_values, query_map
+			end
+	
+			# Build query request logic for FMP requests  '-query...'
+			def array_mix(ary, line=[], rslt=[])
+				ary[0].to_a.each_with_index do |v,i|
+					array_mix(ary[1,ary.size], (line + [v]), rslt)
+					rslt << (line + [v]) if ary.size == 1
+				end
+				return rslt
+			end
+	
+			# Translate query request logic to string
+			def query_translate(mixed_ary)
+				rslt = ""
+				sub = mixed_ary.collect {|a| "(#{a.join(',')})"}
+				sub.join(";")
+			end
 	    
 	  end # LayoutModule
 	  include LayoutModule
@@ -267,11 +327,11 @@ module Rfm
     end
     
   	def total_count
-  		any.total_count
+  		view.total_count
   	end
   	
   	def portal_meta
-  		@portal_meta ||= any.portal_meta
+  		@portal_meta ||= view.portal_meta
   	end
   	
   	def portal_meta_no_load
@@ -283,7 +343,7 @@ module Rfm
   	end
   	
   	def table
-  		@table ||= any.table
+  		@table ||= view.table
   	end
   	
   	def table_no_load

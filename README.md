@@ -20,7 +20,7 @@ Ginjo-rfm 2.0 brings some major new features to Rfm. Some highlights:
 * Rails-like modeling with ActiveModel
 * Support for multiple XML Parsers
 * Configuration API
-* Complex multi-request Filemaker queries
+* Compound Filemaker queries
 * Full metadata support
 
 
@@ -117,11 +117,11 @@ Set a model's configuration.
 	   end
 
 
-### Complex Queries
+### Compound Filemaker Queries
 
 Create queries with mixed boolean logic, mimicing Filemaker's multiple-request find.
 
-	   layout.query :fieldOne => ['=val1','>=val2','<val3'], :fieldTwo =>'someValue'
+	   my_layout.find :fieldOne => ['val1','val2','val3'], :fieldTwo =>'someValue'
    
 This will create 3 "find requests" (in a single call to FM Server), one for each value in the fieldOne array, AND'd with the fieldTwo value.
 
@@ -376,8 +376,9 @@ Or create models for an entire database, all at once.
 
 	   Rfm.modelize /_xml/i, 'my_database', :my_config_group
 
-	   # => [MyLayout, AnotherLayout, ThirdLayout, AndSoOn, ...]
+	   # => [MyLayoutXml, AnotherLayoutXml, ThirdLayoutXml, AndSoOnXml, ...]
 	   # The regex in the first parameter is optional and filters the layout names in the specified database.
+	   # Omit the regex parameter to modelize all possible layouts in the specified database.
 
 With ActiveModel loaded, you get callbacks, validations, errors, serialization, and a handful of other features extracted from Rails ActiveRecord.
 
@@ -469,7 +470,7 @@ If you pass a symbol before the hash, it is interpreted as subgroup specificatio
 	   get_config :othergroup
 	   # :use => [:mygroup, :othergroup], :layout => 'mylayout'
 
-If you pass a string before any symbols or hashes, it is interepreted as one of several possible configuration settings - usually a layout name, a database name, or a server hostname. The interpretation is dependent on the method being called
+If you pass a string before any symbols or hashes, it is interepreted as one of several possible configuration settings - usually a layout name, a database name, or a server hostname. The interpretation is dependent on the method being called. Not all methods will make use of a string parameter.
 
 	   class MyModel < Rfm::Base
 	     config 'MyLayoutName'

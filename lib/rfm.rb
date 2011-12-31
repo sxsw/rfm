@@ -28,7 +28,6 @@ module Rfm
   autoload :Record,       'rfm/record'
   autoload :Base,         'rfm/base'
   autoload :XmlParser,    'rfm/utilities/xml_parser'
-  autoload :ComplexQuery, 'rfm/utilities/complex_query'
   autoload :Config,       'rfm/utilities/config'
   autoload :Factory,      'rfm/utilities/factory'
   autoload :VERSION,      'rfm/version'
