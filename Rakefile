@@ -21,6 +21,7 @@ require './lib/rfm'
 #     gem.add_development_dependency('hpricot')
 #     gem.add_development_dependency('libxml-ruby')
 #     gem.add_development_dependency('nokogiri')
+#     gem.add_development_dependency('ox')
 #     gem.add_development_dependency('activemodel')
 #     gem.rdoc_options = [ "--line-numbers", "--main", "README.md" ]
 #     gem.version = Rfm::VERSION
