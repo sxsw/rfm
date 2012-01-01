@@ -290,8 +290,10 @@ module Rfm
         raise Rfm::CommunicationError.new("While trying to reach the Web Publishing Engine, RFM was redirected too many times.") if limit == 0
     
         if @state[:log_actions] == true
-          qs = post_data.collect{|key,val| "#{CGI::escape(key.to_s)}=#{CGI::escape(val.to_s)}"}.join("&")
-          warn "#{@scheme}://#{@host_name}:#{@port}#{path}?#{qs}"
+          #qs = post_data.collect{|key,val| "#{CGI::escape(key.to_s)}=#{CGI::escape(val.to_s)}"}.join("&")
+          qs_unescaped = post_data.collect{|key,val| "#{key.to_s}=#{val.to_s}"}.join("&")
+          #warn "#{@scheme}://#{@host_name}:#{@port}#{path}?#{qs}"
+          warn "#{@scheme}://#{@host_name}:#{@port}#{path}?#{qs_unescaped}"
         end
     
         request = Net::HTTP::Post.new(path)

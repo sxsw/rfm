@@ -15,7 +15,7 @@ Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and application
 
 ## New in version 2.0
 
-Ginjo-rfm 2.0 brings some major new features to Rfm. Some highlights:
+Ginjo-rfm 2.0 brings some major new features to Rfm.
 
 * Rails-like modeling with ActiveModel
 * Support for multiple XML Parsers
@@ -24,7 +24,7 @@ Ginjo-rfm 2.0 brings some major new features to Rfm. Some highlights:
 * Full metadata support
 
 
-### Data modeling with ActiveModel.
+### Data Modeling with ActiveModel
 	
 If you can load ActiveModel in your project, you can have model callbacks, validations, and other ActiveModel features.
 If you can't load ActiveModel (because you're using something incompatible, like Rails 2),
@@ -42,7 +42,7 @@ data modeling with easy configuration and CRUD features.
 	  @user.save!
 
 
-### Choice of XML parsers
+### Choice of XML Parsers
 
 Ginjo-rfm 2.0 uses ActiveSupport's XmlMini parsing interface, which has built-in support for
 LibXML, Nokogiri, and REXML. Additionally, ginjo-rfm includes adapters for Ox and Hpricot parsing.
@@ -411,7 +411,7 @@ To learn more about ActiveModel, see the ActiveModel or RubyOnRails documentatio
 
 Once you have an Rfm model or layout, you can use any of the standard Rfm commands to create, search, edit, and delete records. To learn more about these commands, see below for Databases, Layouts, Resultsets, and Records. Or checkout the API documentation for Rfm::Server, Rfm::Database, Rfm::Layout, Rfm::Record, and Rfm::Base.
 
-#### Two Small Changes in Rfm return values
+#### Two Small Changes in Rfm Return Values
 
 When using Models to retrieve records using the `any` method or the `find(record_id)` method, the return values will be single Rfm::Record objects. This differs from the traditional Rfm behavior of these methods when accessed directly from the the Rfm::Layout instance, where the return value is always a Rfm::Resultset.
 
@@ -419,7 +419,7 @@ When using Models to retrieve records using the `any` method or the `find(record
 	   MyModel.any              ==  my_layout.any[0]
 
 
-### Getting Rfm Server, Database, and Layout objects manually
+### Getting Rfm Server, Database, and Layout Objects Manually
 
 Well... not entirely manually. To get server, db, and layout objects as in previous versions of Rfm, see the section "Working with classic Rfm features". Ginjo-rfm 2.0 has some new methods to create/locate Filemaker objects and meta data.
 
@@ -458,7 +458,7 @@ Here are two new fun Layout methods:
 
 See the API documentation for the lowdown on new methods in Rfm Server, Database, and Layout objects.
 
-### Shortcuts, tips & tricks
+### Shortcuts, Tips & Tricks
 
 All Rfm methods that take a configuration hash have two possible shortcuts.
 
@@ -489,7 +489,7 @@ Just about anything you can do with a Rfm layout, you can also do with a Rfm mod
 	   MyModel.field_names
 	   MyModel.database.name
 
-## Working with "classic" Rfm features
+## Working with "Classic" Rfm Features
 
 All of Rfm's original features and functions are available as they were before, though some low-level functionality has changed slightly. See the documentation for each module & class for the specifics on low-level methods and functionality.
 

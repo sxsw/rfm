@@ -57,6 +57,8 @@ module Rfm
   # In the above example, the Price field is a repeating field. The code puts the first repetition in a variable called 
   # +val1+ and the second in a variable called +val2+.
   #
+  # It is not currently possible to create or edit a record's repeating fields beyond the first repitition, using Rfm.
+  #
   # =Accessing Portals
   #
   # If the ResultSet includes portals (because the layout it comes from has portals on it) you can access them

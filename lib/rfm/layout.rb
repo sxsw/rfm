@@ -201,6 +201,7 @@ module Rfm
 	    # first name to _Steve_.
 	    def edit(recid, values, options = {})
 	      get_records('-edit', {'-recid' => recid}.merge(values), options)
+	      #get_records('-edit', {'-recid' => recid}.merge(expand_repeats(values)), options) # attempt to set repeating fields.
 	    end
 	    
 	    # Creates a new record in the table associated with this layout. Pass field data as a hash in the 
@@ -231,6 +232,7 @@ module Rfm
 	      return nil
 	    end
 	    
+	    # Retrieves metadata only, with an empty resultset.
 	    def view(options = {})
 	    	get_records('-view', {}, options)
 	    end
@@ -297,6 +299,27 @@ module Rfm
 				rslt = ""
 				sub = mixed_ary.collect {|a| "(#{a.join(',')})"}
 				sub.join(";")
+			end
+			
+			# Intended to set each repeat individually but doesn't work with FM
+			def expand_repeats(hash)
+				hash.each do |key,val|
+					if val.kind_of? Array
+						val.each_with_index{|v, i| hash["#{key}(#{i+1})"] = v}
+						hash.delete(key)
+					end
+				end
+				hash
+			end
+			
+			# Intended to brute-force repeat setting but doesn't work with FM
+			def join_repeats(hash)
+				hash.each do |key,val|
+					if val.kind_of? Array
+						hash[key] = val.join('\x1D')
+					end
+				end
+				hash
 			end
 	    
 	  end # LayoutModule
