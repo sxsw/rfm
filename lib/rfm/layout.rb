@@ -181,7 +181,7 @@ module Rfm
 	    # assumed to be FileMaker's internal id for a record (the recid).
 	    def find(hash_or_recid, options = {})
 	      if hash_or_recid.kind_of? Hash
-		      if hash_or_recid.detect{|k,v| v.kind_of? Array}
+		      if hash_or_recid.detect{|k,v| v.kind_of? Array or k == :omit}
 		      	get_records('-findquery', assemble_query(hash_or_recid), options)
 		      else
 		        get_records('-find', hash_or_recid, options)
@@ -262,30 +262,60 @@ module Rfm
 	
 			# Build ruby params to send to -query action via RFM
 			def assemble_query(query_hash)
-				key_values, query_map = build_key_values(query_hash)
-				key_values.merge("-query"=>query_translate(array_mix(query_map)))
+				key_values, query_map, omit_map = build_key_values(query_hash)
+				#return combine_query(query_map) + combine_query(omit_map)
+				#key_values.merge("-query"=>query_translate(array_mix(query_map)))
+				key_values.merge!("-query"=>query_translate(combine_query(query_map)))
+				(key_values["-query"] <<  ";" + query_translate(combine_query(omit_map), true)) if omit_map.size > 0
+				key_values
 			end
 	
 			# Build key-value definitions and query map  '-q1...'
-			def build_key_values(qh)
+			def build_key_values(query_hash)
 				key_values = {}
 				query_map = []
+				omit_map  = []
 				counter = 0
-				qh.each_with_index do |ha,i|
-					ha[1] = ha[1].to_a
+				omit_hash = query_hash.delete :omit
+				#qh.each
+				build_values = proc { |key,val,omit|
+					val = val.rfm_force_array
 					query_tag = []
-					ha[1].each do |v|
-						key_values["-q#{counter}"] = ha[0]
+					val.each do |v|
+						key_values["-q#{counter}"] = key
 						key_values["-q#{counter}.value"] = v
 						query_tag << "q#{counter}"
 						counter += 1
 					end
-					query_map << query_tag
-				end
-				return key_values, query_map
+					(omit ? omit_map : query_map) << query_tag
+				}
+				query_hash.each {|key,val| build_values.call(key,val,false)}
+				omit_hash.each {|key,val| build_values.call(key,val,true)} if omit_hash
+				return key_values, query_map, omit_map
 			end
+
+			# 			# Build key-value definitions and query map  '-q1...'
+			# 			def build_key_values(qh)
+			# 				key_values = {}
+			# 				query_map = []
+			# 				counter = 0
+			# 				qh.each_with_index do |ha,i|
+			# 					ha[1] = ha[1].to_a
+			# 					query_tag = []
+			# 					ha[1].each do |v|
+			# 						key_values["-q#{counter}"] = ha[0]
+			# 						key_values["-q#{counter}.value"] = v
+			# 						query_tag << "q#{counter}"
+			# 						counter += 1
+			# 					end
+			# 					query_map << query_tag
+			# 				end
+			# 				return key_values, query_map
+			# 			end
 	
-			# Build query request logic for FMP requests  '-query...'
+			# Input array of arrays.
+			# Creates all combinations of sub-arrays where each combination contains one element of each subarray.
+			# Old way.
 			def array_mix(ary, line=[], rslt=[])
 				ary[0].to_a.each_with_index do |v,i|
 					array_mix(ary[1,ary.size], (line + [v]), rslt)
@@ -293,13 +323,22 @@ module Rfm
 				end
 				return rslt
 			end
+			
+			# Input array of arrays.
+			# Creates all combinations of sub-arrays where each combination contains one element of each subarray.
+			def combine_query(ary)
+				len = ary.length
+				flat = ary.flatten
+				rslt = flat.combination(len).select{|c| ary.all?{|a| (a & c).size > 0}}
+			end
 	
-			# Translate query request logic to string
-			def query_translate(mixed_ary)
+			# Translate query request logic to FMP -query string
+			def query_translate(query_array, omit=false)
 				rslt = ""
-				sub = mixed_ary.collect {|a| "(#{a.join(',')})"}
+				sub = query_array.collect {|a| "#{'!' if omit}(#{a.join(',')})"}
 				sub.join(";")
 			end
+			
 			
 			# Intended to set each repeat individually but doesn't work with FM
 			def expand_repeats(hash)
