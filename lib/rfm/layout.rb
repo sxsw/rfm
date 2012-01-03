@@ -186,9 +186,16 @@ module Rfm
 		      else
 		        get_records('-find', hash_or_recid, options)
 		      end
+	      elsif hash_or_recid.kind_of? Array
+	      
 	      else
 	        get_records('-find', {'-recid' => hash_or_recid.to_s}, options)
 	      end
+	    end
+	    
+	    # Access to raw -findquery command.
+	    def query(query_hash, options = {})
+	    	get_records('-findquery', query_hash, options)
 	    end
 	  
 	    # Updates the contents of the record whose internal +recid+ is specified. Send in a hash of new
@@ -250,34 +257,24 @@ module Rfm
 			# Methods for Rfm::Layout to build complex queries
 			# Perform RFM find using complex boolean logic (multiple value options for a single field)
 			# Mimics creation of multiple find requests for "or" logic
-			# Use: rlayout_object.query({'fieldOne'=>['val1','val2','val3'], 'fieldTwo'=>'someValue', ...})
-			# 	def query(hash_or_recid, options = {})
-			# 	  if hash_or_recid.kind_of? Hash
-			# 	    get_records('-findquery', assemble_query(hash_or_recid), options)
-			# 	  else
-			# 	    get_records('-find', {'-recid' => hash_or_recid.to_s}, options)
-			# 	  end
-			# 	end
-			alias_method :query, :find
-	
-			# Build ruby params to send to -query action via RFM
+			#	
+			# Master controlling method to build fmresultset uri for -findquery command
+			# Use: {:field1=>['val','val2','val3'], :field2=>'val4', :omit{:field3=>[...], :field4=>''}}
 			def assemble_query(query_hash)
 				key_values, query_map, omit_map = build_key_values(query_hash)
-				#return combine_query(query_map) + combine_query(omit_map)
-				#key_values.merge("-query"=>query_translate(array_mix(query_map)))
 				key_values.merge!("-query"=>query_translate(combine_query(query_map)))
 				(key_values["-query"] <<  ";" + query_translate(combine_query(omit_map), true)) if omit_map.size > 0
 				key_values
 			end
 	
 			# Build key-value definitions and query map  '-q1...'
+			# Converts query_hash to fmresultset uri format for -findquery query type.
 			def build_key_values(query_hash)
 				key_values = {}
 				query_map = []
 				omit_map  = []
 				counter = 0
 				omit_hash = query_hash.delete :omit
-				#qh.each
 				build_values = proc { |key,val,omit|
 					val = val.rfm_force_array
 					query_tag = []
@@ -293,25 +290,6 @@ module Rfm
 				omit_hash.each {|key,val| build_values.call(key,val,true)} if omit_hash
 				return key_values, query_map, omit_map
 			end
-
-			# 			# Build key-value definitions and query map  '-q1...'
-			# 			def build_key_values(qh)
-			# 				key_values = {}
-			# 				query_map = []
-			# 				counter = 0
-			# 				qh.each_with_index do |ha,i|
-			# 					ha[1] = ha[1].to_a
-			# 					query_tag = []
-			# 					ha[1].each do |v|
-			# 						key_values["-q#{counter}"] = ha[0]
-			# 						key_values["-q#{counter}.value"] = v
-			# 						query_tag << "q#{counter}"
-			# 						counter += 1
-			# 					end
-			# 					query_map << query_tag
-			# 				end
-			# 				return key_values, query_map
-			# 			end
 	
 			# Input array of arrays.
 			# Creates all combinations of sub-arrays where each combination contains one element of each subarray.
