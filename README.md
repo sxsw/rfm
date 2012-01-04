@@ -119,11 +119,17 @@ Set a model's configuration.
 
 ### Compound Filemaker Queries
 
-Create queries with mixed boolean logic, mimicing Filemaker's multiple-request find.
+Create queries with mixed boolean logic, utilizing Filemaker's multiple-request query capability.
+If the value of a field in a find request is an array of strings, the string values will be OR'd in the query.
 
 	   my_layout.find :fieldOne => ['val1','val2','val3'], :fieldTwo =>'someValue'
    
 This will create 3 "find requests" (in a single call to FM Server), one for each value in the fieldOne array, AND'd with the fieldTwo value.
+
+If you include a hash as one of your find request criteria, key'd as :omit=>{...}, it will treat everything within that hash as a find request(s) to be omitted from the found set.
+
+	   my_layout.find :fieldOne=>'...', :fieldTwo=>[...], :omit => {:fieldOne => ['val1','val2','val3], :fieldThree => '...'}
+
 
 
 ### Full Metadata Support
@@ -339,6 +345,33 @@ Use `get_config` to view the compiled configuration settings for any object. Con
 	          :host => 'myhost', :database => 'mydb', :layout => 'some_layout',
 	          :account_name => 'name', :password => 'pass'
 	         }
+	
+#### Possible Configuration Options
+
+Following are all of the recognized configuration options, including defaults if applicable.
+
+	   :host             => 'localhost'
+	   :port             => 80
+	   :ssl              => true
+	   :root_cert        => true
+	   :root_cert_name   => ''
+	   :root_cert_path   => '/'
+	   :account_name     => ''
+	   :password         => ''
+	   :log_actions      => false
+	   :log_responses    => false
+	   :log_parser       => false
+	   :warn_on_redirect => true
+	   :raise_on_401     => false
+	   :timeout          => 60
+	   
+	   :use                                               # use configuration subgroups, or filter configuration subgoups
+	   :layout                                            # specify which layout to use
+	   :parent           => 'Rfm::Config'                 # the parent configuration object of the current configuration object
+	   :file_name        => 'rfm.yml                      # name of configuration file to load yaml from
+	   :file_path        => ['', 'config/']               # array of additional file paths to look for configuration file
+	   :parser           => ActiveSupport::XmlMini_REXML  # XmlParser to use if no other is specified or can be found
+	
 
 ### Using Models
 

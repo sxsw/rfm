@@ -30,6 +30,7 @@ module Rfm
   autoload :XmlParser,    'rfm/utilities/xml_parser'
   autoload :Config,       'rfm/utilities/config'
   autoload :Factory,      'rfm/utilities/factory'
+  autoload :CompoundQuery,'rfm/utilities/compound_query'
   autoload :VERSION,      'rfm/version'
 
 	module Metadata
