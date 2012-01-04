@@ -1,5 +1,10 @@
 module Rfm
 
+
+	# Class to build complex FMP queries
+	# Perform Filemaker find using complex boolean logic (multiple value options for a single field)
+	# Or create multiple find requests.
+	# Also allow find requests to be :omit
   class CompoundQuery < Array # @private :nodoc:
   
   	attr_accessor :original_input, :query_type, :key_values, :key_arrays, :key_map, :key_map_string, :key_counter
@@ -8,7 +13,13 @@ module Rfm
   		new([{:field1=>['val1a','val1b','val1c'], :field2=>'val2'},{:omit=>true, :field3=>'val3', :field4=>'val4'}, {:omit=>true, :field5=>['val5a','val5b'], :field6=>['val6a','val6b']}], {})
   	end
   	
-  	def initialize(query, options)
+  	# New CompoundQuery objects expect one of 3 data types:
+  	# * string/integer representing FMP internal record id
+  	# * hash of find-criteria
+  	# * array of find-criteria hashes
+  	#
+  	# Returns self as ['-fmpaction', {:hash=>'of', :key=>'values'}, {:options=>'hash'}]
+  	def initialize(query, options={})
   		@options = options
   		@original_input = query
 			@key_values = {}
@@ -32,7 +43,7 @@ module Rfm
 			build_query
   	end
 
-
+		# Master control method to build output
   	def build_query(input=original_input)
   		case @query_type
 	  	when 'mixed', 'compound'
@@ -52,20 +63,7 @@ module Rfm
 	  	self.push @options
 	  	self
   	end
-  	
-  	
-		# Methods for Rfm::Layout to build complex queries
-		# Perform RFM find using complex boolean logic (multiple value options for a single field)
-		# Mimics creation of multiple find requests for "or" logic
-		#	
-		# Master controlling method to build fmresultset uri for -findquery command
-		# Use: {:field1=>['val','val2','val3'], :field2=>'val4', :omit{:field3=>[...], :field4=>''}}
-		def assemble_query(query_hash)
-			key_values, key_map, omit_map = build_key_values(query_hash)
-			key_values.merge!("-query"=>query_translate(combine_query(key_map)))
-			(key_values["-query"] <<  ";" + query_translate(combine_query(omit_map), true)) if omit_map.size > 0
-			key_values
-		end  
+
 
 		# Build key-value definitions and query map  '-q1...'
 		# Converts query_hash to fmresultset uri format for -findquery query type.

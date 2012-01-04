@@ -179,18 +179,8 @@ module Rfm
 	    #
 	    # If you pass anything other than a hash as the first parameter, it is converted to a string and
 	    # assumed to be FileMaker's internal id for a record (the recid).
-	    def find(hash_or_recid, options = {})
-	      if hash_or_recid.kind_of? Hash
-		      if hash_or_recid.detect{|k,v| v.kind_of? Array or k == :omit}
-		      	get_records('-findquery', assemble_query(hash_or_recid), options)
-		      else
-		        get_records('-find', hash_or_recid, options)
-		      end
-	      elsif hash_or_recid.kind_of? Array
-	      
-	      else
-	        get_records('-find', {'-recid' => hash_or_recid.to_s}, options)
-	      end
+	    def find(find_criteria, options = {})
+				get_records(*Rfm::CompoundQuery.new(find_criteria, options))
 	    end
 	    
 	    # Access to raw -findquery command.
@@ -253,70 +243,7 @@ module Rfm
 	    def params
 	      {"-db" => db.name, "-lay" => self.name}
 	    end
-	    
-			# Methods for Rfm::Layout to build complex queries
-			# Perform RFM find using complex boolean logic (multiple value options for a single field)
-			# Mimics creation of multiple find requests for "or" logic
-			#	
-			# Master controlling method to build fmresultset uri for -findquery command
-			# Use: {:field1=>['val','val2','val3'], :field2=>'val4', :omit{:field3=>[...], :field4=>''}}
-			def assemble_query(query_hash)
-				key_values, query_map, omit_map = build_key_values(query_hash)
-				key_values.merge!("-query"=>query_translate(combine_query(query_map)))
-				(key_values["-query"] <<  ";" + query_translate(combine_query(omit_map), true)) if omit_map.size > 0
-				key_values
-			end
-	
-			# Build key-value definitions and query map  '-q1...'
-			# Converts query_hash to fmresultset uri format for -findquery query type.
-			def build_key_values(query_hash)
-				key_values = {}
-				query_map = []
-				omit_map  = []
-				counter = 0
-				omit_hash = query_hash.delete :omit
-				build_values = proc { |key,val,omit|
-					val = val.rfm_force_array
-					query_tag = []
-					val.each do |v|
-						key_values["-q#{counter}"] = key
-						key_values["-q#{counter}.value"] = v
-						query_tag << "q#{counter}"
-						counter += 1
-					end
-					(omit ? omit_map : query_map) << query_tag
-				}
-				query_hash.each {|key,val| build_values.call(key,val,false)}
-				omit_hash.each {|key,val| build_values.call(key,val,true)} if omit_hash
-				return key_values, query_map, omit_map
-			end
-	
-			# Input array of arrays.
-			# Creates all combinations of sub-arrays where each combination contains one element of each subarray.
-			# Old way.
-			def array_mix(ary, line=[], rslt=[])
-				ary[0].to_a.each_with_index do |v,i|
-					array_mix(ary[1,ary.size], (line + [v]), rslt)
-					rslt << (line + [v]) if ary.size == 1
-				end
-				return rslt
-			end
-			
-			# Input array of arrays.
-			# Creates all combinations of sub-arrays where each combination contains one element of each subarray.
-			def combine_query(ary)
-				len = ary.length
-				flat = ary.flatten
-				rslt = flat.combination(len).select{|c| ary.all?{|a| (a & c).size > 0}}
-			end
-	
-			# Translate query request logic to FMP -query string
-			def query_translate(query_array, omit=false)
-				rslt = ""
-				sub = query_array.collect {|a| "#{'!' if omit}(#{a.join(',')})"}
-				sub.join(";")
-			end
-			
+	    			
 			
 			# Intended to set each repeat individually but doesn't work with FM
 			def expand_repeats(hash)
@@ -362,8 +289,8 @@ module Rfm
       @value_lists
     end
     
-    def count(find_criteria)
-    	find(find_criteria, {:max_records => 0}).foundset_count
+    def count(find_criteria, options={})
+    	find(find_criteria, options.merge({:max_records => 0})).foundset_count
     end
     
   	def total_count

@@ -117,19 +117,19 @@ Set a model's configuration.
 	   end
 
 
-### Compound Filemaker Queries
+### Compound Filemaker Queries, with Omitable FMP Find Requests
 
-Create queries with mixed boolean logic, utilizing Filemaker's multiple-request query capability.
+Create a Filemaker 'omit' request by including a key :omit with a value of true.
+
+	   my_layout.find :field1 => 'val1', :field2 => 'val2', :omit => true
+
+Create multiple Filemaker find requests by passing an array of hashes to the #find method.
+
+	   my_layout.find [{:field1 => 'val1', :field2 => 'val2'}, {:field2 => 'val3', :field3 => 'val4', :omit => true}, ...]
+
 If the value of a field in a find request is an array of strings, the string values will be OR'd in the query.
 
 	   my_layout.find :fieldOne => ['val1','val2','val3'], :fieldTwo =>'someValue'
-   
-This will create 3 "find requests" (in a single call to FM Server), one for each value in the fieldOne array, AND'd with the fieldTwo value.
-
-If you include a hash as one of your find request criteria, key'd as :omit=>{...}, it will treat everything within that hash as a find request(s) to be omitted from the found set.
-
-	   my_layout.find :fieldOne=>'...', :fieldTwo=>[...], :omit => {:fieldOne => ['val1','val2','val3], :fieldThree => '...'}
-
 
 
 ### Full Metadata Support
@@ -375,7 +375,7 @@ Following are all of the recognized configuration options, including defaults if
 
 ### Using Models
 
-Rfm models provide easy access, modeling, and persistence of your Filemaker data.
+Rfm models provide easy access, modeling, and persistence of your Filemaker data.h
 
 	   class User < Rfm::Base
 	     config :layout => 'my_layout_name'
