@@ -74,11 +74,6 @@ task :info do
 	puts Rfm.info
 end
 
-	X = File.read('local_testing/resultset2.xml')
-	#X.gsub!(/xmlns=\"[^\"]*\"/, '')
-	Y = File.read('local_testing/layout.xml')
-
-
 
 desc "benchmark XmlMini with available parsers"	
 task :benchmark do
