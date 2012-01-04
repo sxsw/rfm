@@ -230,9 +230,9 @@ module Rfm
 	  	end
 		  			
 			# Just like Layout#find, but searching by record_id will return a record, not a resultset.
-	  	def find(*args)
-	  	  r = layout.find(*args)
-	  	  if args[0].class != Hash and r.size == 1
+	  	def find(find_criteria, options={})
+	  	  r = layout.find(find_criteria, options={})
+	  	  if ![Hash,Array].include?(find_criteria.class) and r.size == 1
 	  	    r[0]
 		    else
 		      r

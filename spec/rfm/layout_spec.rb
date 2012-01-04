@@ -62,6 +62,16 @@ describe Rfm::Layout do
 		end
 	end
 	
+	describe "#find" do
+		it "sends compound find criteria to #get_records" do
+			layout.should_receive(:get_records) do |action, query, options|
+				action.should == '-findquery'
+				query['-query'].should == '(q0,q2);(q1,q2);!(q3)'
+			end
+			layout.find([{:memotext=>['one','two'], :memosubject=>'three'}, {:omit=>true, :memotext=>'test'}])
+		end
+	end
+	
 	describe "#modelize" do
 		before(:all){layout.modelize}
 		
