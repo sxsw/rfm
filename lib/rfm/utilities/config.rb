@@ -5,13 +5,6 @@ module Rfm
 	# The subsets can be any grouping of defined config parameters, as a hash.
 	# See CONFIG_KEYS for defined config parameters.
 	#
-	# All filters are honored, unless filters are included in calls to get_config,
-	# in which case only the immediately specified filters will be used.
-	#
-	# Do not put a :use=>:group filter in a subset (maybe future feature?).
-	# Do not put a :use=>:group filter in the top-level global parameters.
-	# Do not put subsets in non-top-level configs. (maybe future feature?)
-	#
   module Config
   	require 'yaml'
   	
