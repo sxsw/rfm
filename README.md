@@ -375,8 +375,8 @@ Following are all of the recognized configuration options, including defaults if
 	   :timeout          => 60
 	   
 	   :use                                               # use configuration subgroups, or filter configuration subgoups
-	   :layout                                            # specify which layout to use
-	   :parent           => 'Rfm::Config'                 # the parent configuration object of the current configuration object
+	   :layout                                            # specify the name of the layout to use
+	   :parent           => 'Rfm::Config'                 # the parent configuration object of the current configuration object, as string
 	   :file_name        => 'rfm.yml                      # name of configuration file to load yaml from
 	   :file_path        => ['', 'config/']               # array of additional file paths to look for configuration file
 	   :parser           => ActiveSupport::XmlMini_REXML  # XmlParser to use if no other is specified or can be found
@@ -463,7 +463,7 @@ When using Models to retrieve records using the `any` method or the `find(record
 
 ### Getting Rfm Server, Database, and Layout Objects Manually
 
-Well... not entirely manually. To get server, db, and layout objects as in previous versions of Rfm, see the section "Working with classic Rfm features". Ginjo-rfm 2.0 has some new methods to create/locate Filemaker objects and meta data.
+Well... not entirely manually. To get server, db, and layout objects as in previous versions of Rfm, see the section "Working with classic Rfm features". Ginjo-rfm 2.0 has some new methods to create/locate Filemaker objects and meta data. Many of these new methods are configuration-aware.
 
 Create a layout object using default configuration settings.
 
@@ -530,6 +530,14 @@ Just about anything you can do with a Rfm layout, you can also do with a Rfm mod
 	   MyModel.total_count
 	   MyModel.field_names
 	   MyModel.database.name
+	
+There are a number of methods within Rfm that have been made accessible from the top-level Rfm module. Note that the server/database/layout methods are new to Rfm and are not the same as Rfm::Server, Rfm::Database, and Rfm::Layout. See the above section on "Getting Rfm Server, Database, and Layout Objects Manually" for an overview of how to use the new server/database/layout methods.
+
+	   # Any of these methods can be assed via Rfm.<method_name>
+	   
+	   Rfm::Factory    :servers, :server, :db, :database, :layout, :models, :modelize
+	   Rfm::XmlParser  :backend, :backend=
+	   Rfm::Config     :config, :get_config, :config_clear
 
 ## Working with "Classic" Rfm Features
 
