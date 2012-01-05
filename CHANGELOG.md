@@ -1,12 +1,12 @@
 # Changelog
 
-## Ginjo-Rfm 2.0.pre
+## Ginjo-Rfm 2.0.0
+
+* ActiveModel compatibility allows Rails ActiveRecord-style models
 
 * Alternative XML parsers using ActiveSupport::XmlMini interface
 
-* ActiveModel compatibility allows Rails-like models
-
-* Complex queries with Layout#query method
+* Compound queries with multiple omitable find-requests
 
 * Configuration API manages settings of multiple server/db/layout/etc setups
 

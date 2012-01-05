@@ -1,26 +1,26 @@
 # ginjo-rfm
 
-Rfm is a Ruby/Filemaker adapter - a ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 2.0 adds some major enhancements, while remaining compatible with ginjo-rfm 1.4.x and lardawge-rfm 1.4.x. 
+Rfm is a Ruby-Filemaker adapter, a Ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 2.0 adds some major enhancements, while remaining compatible with ginjo-rfm 1.4.x and lardawge-rfm 1.4.x. 
 
 
 ## Documentation & Links
 
-* Ginjo-rfm rubygem		<https://rubygems.org/gems/ginjo-rfm>
-* Original homepage		<http://sixfriedrice.com/wp/products/rfm/>
-* Rdoc location				<http://rubydoc.info/github/ginjo/rfm/frames>
-* Discussion					<http://groups.google.com/group/rfmcommunity>
-* Ginjo at github			<https://github.com/ginjo/rfm>
-* Lardawge at github	<https://github.com/lardawge/rfm>
+* Ginjo-rfm rubygem   <https://rubygems.org/gems/ginjo-rfm>
+* Original homepage   <http://sixfriedrice.com/wp/products/rfm/>
+* Rdoc location       <http://rubydoc.info/github/ginjo/rfm/frames>
+* Discussion          <http://groups.google.com/group/rfmcommunity>
+* Ginjo at github     <https://github.com/ginjo/rfm>
+* Lardawge at github  <https://github.com/lardawge/rfm>
 
 
 ## New in version 2.0
 
-Ginjo-rfm 2.0 brings some major new features to Rfm.
+Ginjo-rfm 2.0 brings new features to Rfm, making it easier than ever to work with Filemaker data from your Ruby scripts.
 
 * Rails-like modeling with ActiveModel
 * Support for multiple XML Parsers
 * Configuration API
-* Compound Filemaker queries
+* Compound Filemaker queries with omitable requests
 * Full metadata support
 
 
@@ -63,7 +63,7 @@ Choose your preferred parser globaly, as in the above example, or set a differen
 	
 The current parsing options are
 
-	  :jdom         ->  JDOM
+	  :jdom         ->  JDOM (for JRuby)
 	  :oxsax        ->  Ox SAX
 	  :libxml       ->  LibXML Tree
 	  :libxmlsax    ->  LibXML SAX
@@ -73,7 +73,7 @@ The current parsing options are
 	  :rexml        ->  REXML Tree
 	  :rexmlsax     ->  REXML SAX
 	
-If you're wondering about performance, here are some preliminary benchmark results. Each backend parsed a fmresultset.xml and a FMPXMLLAYOUT.xml 30 times each. I have seen different results in different environments, so this data is by no means definitive. I do not have any data for the JDOM parser.
+If you're wondering about performance, here are some preliminary benchmark results. Each backend parsed a fmresultset.xml and a FMPXMLLAYOUT.xml 30 times each. Results have differed across environments with different test data, so this data is by no means definitive.
 
 		      user     system      total        real
 		ActiveSupport::XmlMini_OxSAX
@@ -119,17 +119,17 @@ Set a model's configuration.
 
 ### Compound Filemaker Queries, with Omitable FMP Find Requests
 
-Create a Filemaker 'omit' request by including a key :omit with a value of true.
+Create a Filemaker 'omit' request by including an :omit key with a value of true.
 
 	   my_layout.find :field1 => 'val1', :field2 => 'val2', :omit => true
 
 Create multiple Filemaker find requests by passing an array of hashes to the #find method.
 
-	   my_layout.find [{:field1 => 'val1', :field2 => 'val2'}, {:field2 => 'val3', :field3 => 'val4', :omit => true}, ...]
+	   my_layout.find [{:field1 => 'bill', :field2 => 'admin'}, {:field2 => 'staff', :field3 => 'inactive', :omit => true}, ...]
 
-If the value of a field in a find request is an array of strings, the string values will be OR'd in the query.
+If the value of a field in a find request is an array of strings, the string values will be logically OR'd in the query.
 
-	   my_layout.find :fieldOne => ['val1','val2','val3'], :fieldTwo =>'someValue'
+	   my_layout.find :fieldOne => ['bill','mike','bob'], :fieldTwo =>'staff'
 
 
 ### Full Metadata Support
@@ -143,12 +143,21 @@ If the value of a field in a find request is an array of strings, the string val
 * Field definition meta
 * Portal definition meta
 
+### From ginjo-rfm 1.4.x
+
 From ginjo-rfm 1.4.x, the following features are also included.
 
-* Connection timeout settings
-* Value-list alternate display
+Connection timeout settings
 
-There are also many enhancements to make it easier than ever to get the objects or data you want. Some examples:
+	  Rfm.config :timeout => 10
+
+Value-list alternate display
+
+	   i = array_of_value_list_items[3]  # => '8765'
+	   i.value                           # => '8765'
+	   i.display                         # => '8765 Amy'
+
+There are also many enhancements to make it easier to get the objects or data you want. Some examples:
 
 Get a database object using default config
 
@@ -186,7 +195,7 @@ There are at least 4 ways to download ginjo-rfm.
 
 Ginjo-rfm requires ActiveSupport for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3, on both ruby 1.8.7 and ruby 1.9.2. ActiveModel requires ActiveSupport 3+ and is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Basic modeling functionality and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
 
-For the best performance, it is recommended that you use the Ox, Libxml-ruby, Nokogiri, or Hpricot parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. If you don't want to install any of these parsers, Rfm will use the REXML parser, included with the Ruby standard library. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile, if you wish to use ActiveModel features.
+For the best performance, it is recommended that you use the Ox, Libxml-ruby, Nokogiri, or Hpricot parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. If you don't want to install any of these parsers, Rfm will use the REXML parser included with the Ruby standard library. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile if you wish to use ActiveModel features.
 
 Note that the installation of Ox, Libxml-ruby, Nokogiri, or Hpricot gems will require further dependencies. Please see the install instructions for each parser to get them installed and running on your system.
 
@@ -240,7 +249,7 @@ Try out unreleased features of ginjo-rfm in the edge branch.
 
 ## Ginjo-rfm Basic Usage
 
-The first step in getting connected to your Filemaker databases with Rfm is to store your configuration settings in a yaml file or in the RFM_CONFIG hash. The second step is creating a model that represents a layout in one of your Filemaker databases. 
+The first step in getting connected to your Filemaker databases with Rfm is to store your configuration settings in a yaml file or in the RFM_CONFIG hash. The second step is creating a model that represents a layout from one of your Filemaker databases. 
 
 ### Configuration
 
