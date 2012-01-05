@@ -63,12 +63,45 @@ describe Rfm::Layout do
 	end
 	
 	describe "#find" do
-		it "sends compound find criteria to #get_records" do
-			layout.should_receive(:get_records) do |action, query, options|
-				action.should == '-findquery'
-				query['-query'].should == '(q0,q2);(q1,q2);!(q3)'
+	
+		context "when passed FMP internal record id" do
+			it "sends -find action & -recid & record id to #get_records" do
+				layout.should_receive(:get_records) do |action, query, options|
+					action.should == '-find'
+					query['-recid'].should == '54321'
+				end
+				layout.find(54321)			
 			end
-			layout.find([{:memotext=>['one','two'], :memosubject=>'three'}, {:omit=>true, :memotext=>'test'}])
+		end
+		
+		context "when passed plain hash" do
+			it "sends -find action & plain hash to #get_records" do
+				layout.should_receive(:get_records) do |action, query, options|
+					action.should == '-find'
+					query[:memotext].should == 'val1'
+				end
+				layout.find(:memotext=>'val1', :memosubject=>'val2')			
+			end		
+		end		
+
+		context "when passed plain hash with multiple value options for at least one field" do
+			it "sends -findquery action & compound find criteria to #get_records" do
+				layout.should_receive(:get_records) do |action, query, options|
+					action.should == '-findquery'
+					query['-query'].should == '(q0,q2);(q1,q2)'
+				end
+				layout.find(:memotext=>['one','two'], :memosubject=>'three')
+			end
+		end
+		
+		context "when passed array of hashes" do
+			it "sends -findquery action & compound find criteria to #get_records" do
+				layout.should_receive(:get_records) do |action, query, options|
+					action.should == '-findquery'
+					query['-query'].should == '(q0,q2);(q1,q2);!(q3)'
+				end
+				layout.find([{:memotext=>['one','two'], :memosubject=>'three'}, {:omit=>true, :memotext=>'test'}])
+			end
 		end
 	end
 	
