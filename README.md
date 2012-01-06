@@ -7,7 +7,7 @@ Rfm is a Ruby-Filemaker adapter, a Ruby gem that allows scripts and applications
 
 * Ginjo-rfm rubygem   <https://rubygems.org/gems/ginjo-rfm>
 * Original homepage   <http://sixfriedrice.com/wp/products/rfm/>
-* Rdoc location       <http://rubydoc.info/github/ginjo/rfm/master/frames>
+* Rdoc location       <http://rubydoc.info/github/ginjo/rfm/frames>
 * Discussion          <http://groups.google.com/group/rfmcommunity>
 * Ginjo at github     <https://github.com/ginjo/rfm>
 * Lardawge at github  <https://github.com/lardawge/rfm>
