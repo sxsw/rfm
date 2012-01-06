@@ -7,7 +7,7 @@ Rfm is a Ruby-Filemaker adapter, a Ruby gem that allows scripts and applications
 
 * Ginjo-rfm rubygem   <https://rubygems.org/gems/ginjo-rfm>
 * Original homepage   <http://sixfriedrice.com/wp/products/rfm/>
-* Rdoc location       <http://rubydoc.info/github/ginjo/rfm/frames>
+* Rdoc location       <http://rubydoc.info/github/ginjo/rfm/master/frames>
 * Discussion          <http://groups.google.com/group/rfmcommunity>
 * Ginjo at github     <https://github.com/ginjo/rfm>
 * Lardawge at github  <https://github.com/lardawge/rfm>
@@ -73,7 +73,7 @@ The current parsing options are
 	  :rexml        ->  REXML Tree
 	  :rexmlsax     ->  REXML SAX
 	
-If you're wondering about performance, here are some preliminary benchmark results. Each backend parsed a fmresultset.xml and a FMPXMLLAYOUT.xml 30 times each. Results have differed across environments with different test data, so this data is by no means definitive.
+If you're wondering about performance, here are some preliminary benchmark results. Each backend parsed a fmresultset.xml and a FMPXMLLAYOUT.xml 30 times each. Results have differed across environments with different test data, so this data is by no means definitive. Also note that earlier versions of ActiveSupport did not contain all of the parsing backend options mentioned here.
 
 		      user     system      total        real
 		ActiveSupport::XmlMini_OxSAX
@@ -143,20 +143,6 @@ If the value of a field in a find request is an array of strings, the string val
 * Field definition meta
 * Portal definition meta
 
-### From ginjo-rfm 1.4.x
-
-From ginjo-rfm 1.4.x, the following features are also included.
-
-Connection timeout settings
-
-	  Rfm.config :timeout => 10
-
-Value-list alternate display
-
-	   i = array_of_value_list_items[3]  # => '8765'
-	   i.value                           # => '8765'
-	   i.display                         # => '8765 Amy'
-
 There are also many enhancements to make it easier to get the objects or data you want. Some examples:
 
 Get a database object using default config
@@ -178,6 +164,21 @@ Get the portal names (table-occurence names) on the current layout
 Get the names of fields on the current layout
 
 	  my_record.field_names
+	
+### From ginjo-rfm 1.4.x
+
+From ginjo-rfm 1.4.x, the following features are also included.
+
+Connection timeout settings
+
+	  Rfm.config :timeout => 10
+
+Value-list alternate display
+
+	   i = array_of_value_list_items[3]  # => '8765'
+	   i.value                           # => '8765'
+	   i.display                         # => '8765 Amy'
+
 
 ### Compatibility
 
@@ -193,7 +194,7 @@ There are at least 4 ways to download ginjo-rfm.
 * From https://rubygems.org/gems/ginjo-rfm
 * From https://github.com/ginjo/rfm
 
-Ginjo-rfm requires ActiveSupport for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3, on both ruby 1.8.7 and ruby 1.9.2. ActiveModel requires ActiveSupport 3+ and is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Basic modeling functionality and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
+Ginjo-rfm requires the ActiveSupport gem for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3, on both ruby 1.8.7 and ruby 1.9.2. ActiveModel requires ActiveSupport 3+ and is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Basic modeling functionality and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
 
 For the best performance, it is recommended that you use the Ox, Libxml-ruby, Nokogiri, or Hpricot parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. If you don't want to install any of these parsers, Rfm will use the REXML parser included with the Ruby standard library. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile if you wish to use ActiveModel features.
 
@@ -387,7 +388,7 @@ Following are all of the recognized configuration options, including defaults if
 Rfm models provide easy access, modeling, and persistence of your Filemaker data.h
 
 	   class User < Rfm::Base
-	     config :layout => 'my_layout_name'
+	     config :layout => 'my_user_layout'
 	     attr_accessor :password
 	   end
 	
@@ -410,7 +411,7 @@ Rfm models provide easy access, modeling, and persistence of your Filemaker data
 
 If you prefer, you can create models on-the-fly from any layout.
 
-	   my_rfm_layout.modelize
+	   my_rfm_layout_object.modelize
 
 	   # => MyLayoutName   (subclassed from Rfm::Base, represented by your layout's name)
 
