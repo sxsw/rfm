@@ -177,8 +177,23 @@ module Rfm
 	    # Values in the hash work just like value in FileMaker's Find mode. You can use any special
 	    # symbols (+==+, +...+, +>+, etc...).
 	    #
-	    # If you pass anything other than a hash as the first parameter, it is converted to a string and
+			# Create a Filemaker 'omit' request by including an :omit key with a value of true.
+			# 
+			# 	myLayout.find :field1 => 'val1', :field2 => 'val2', :omit => true
+			# 
+			# Create multiple Filemaker find requests by passing an array of hashes to the #find method.
+			# 
+			# 	myLayout.find [{:field1 => 'bill', :field2 => 'admin'}, {:field3 => 'inactive', :omit => true}, ...]
+			# 
+			# If the value of a field in a find request is an array of strings, the string values will be logically OR'd in the query.
+			# 
+			# 	myLayout.find :fieldOne => ['bill','mike','bob'], :fieldTwo =>'staff'	    
+	    #
+	    # If you pass anything other than a hash or an array as the first parameter, it is converted to a string and
 	    # assumed to be FileMaker's internal id for a record (the recid).
+	    #
+	    #   myLayout.find 54321
+	    #
 	    def find(find_criteria, options = {})
 				get_records(*Rfm::CompoundQuery.new(find_criteria, options))
 	    end
