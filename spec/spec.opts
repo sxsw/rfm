@@ -3,4 +3,4 @@
 --backtrace
 --timeout 20
 --diff unified
---require spec/spec_helper
+--require ./spec/spec_helper

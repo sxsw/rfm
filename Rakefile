@@ -17,6 +17,7 @@ require './lib/rfm'
 #     gem.add_development_dependency('rake')
 #     gem.add_development_dependency('rdoc')
 #     gem.add_development_dependency('rspec', '~>1.3.0')
+#			gem.add_development_dependency('diff-lcs', '>= 0')
 #     gem.add_development_dependency('yard')
 #     gem.add_development_dependency('hpricot')
 #     gem.add_development_dependency('libxml-ruby')

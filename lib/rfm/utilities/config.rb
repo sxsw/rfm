@@ -8,7 +8,29 @@ module Rfm
   module Config
   	require 'yaml'
   	
-  	CONFIG_KEYS = %w(file_name file_path parser host port account_name password database layout ssl root_cert root_cert_name root_cert_path warn_on_redirect raise_on_401 timeout log_actions log_responses log_parser use parent)
+  	CONFIG_KEYS = %w(
+  		file_name
+  		file_path
+  		parser
+  		host
+  		port
+			account_name
+			password
+			database
+			layout
+			ssl
+			root_cert
+			root_cert_name
+			root_cert_path
+			warn_on_redirect
+			raise_on_401
+			timeout
+			log_actions
+			log_responses
+			log_parser
+			use
+			parent
+		)
 
     extend self
     @config = {}		
@@ -122,7 +144,7 @@ module Rfm
 		def config_filter(conf, filters=nil)
 			filters = conf[:use] = (conf[:use].rfm_force_array | filters.rfm_force_array).compact
 			filters.each{|f| next unless conf[f]; conf.merge!(conf[f] || {})} if !filters.blank?
-			conf.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or v.to_s == '' }
+			conf.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or v.blank? }
 			conf
 		end
 		

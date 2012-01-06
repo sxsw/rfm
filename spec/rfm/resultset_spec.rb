@@ -15,7 +15,7 @@ describe Rfm::Resultset do
 			Rfm::Record.should_receive(:build_records) do  |rec,rsl,fld,lay|        #|record_xml, resultset, field_meta, layout|
 				rec.size.should == 2
 				rsl.foundset_count.should == 2
-				fld.keys[0].should == 'memokeymaster'
+				fld.keys.include?('memokeymaster').should be_true
 				lay.should == layout
 			end
 			subject
