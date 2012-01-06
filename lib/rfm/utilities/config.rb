@@ -9,11 +9,11 @@ module Rfm
   	require 'yaml'
   	
   	CONFIG_KEYS = %w(
-  		file_name
-  		file_path
-  		parser
-  		host
-  		port
+			file_name
+			file_path
+			parser
+			host
+			port
 			account_name
 			password
 			database
@@ -144,7 +144,7 @@ module Rfm
 		def config_filter(conf, filters=nil)
 			filters = conf[:use] = (conf[:use].rfm_force_array | filters.rfm_force_array).compact
 			filters.each{|f| next unless conf[f]; conf.merge!(conf[f] || {})} if !filters.blank?
-			conf.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or v.blank? }
+			conf.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v) }
 			conf
 		end
 		
