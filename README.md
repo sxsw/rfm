@@ -408,6 +408,25 @@ Rfm models provide easy access, modeling, and persistence of your Filemaker data
 	   @user = User.find 12345
 	   @user.update_attributes(:login => 'william', :email => 'myother@email.com')
 	   @user.save!
+	
+Put your model code anywhere at the top level of your script/application. In Rails, this could be your initialization file(s), your environment file(s), or in a file in your Models directory called something like `rfm_models.rb`. Then require 'rfm_models' in your initialization or environment.  
+
+rfm_models.rb
+
+	   require 'rfm'
+	   
+	   class User < Rfm::Base
+	     config :layout => 'user_layout'
+	   end
+	
+	   class Order < Rfm::Base
+	     config :layout => 'order_layout'
+	   end
+	
+main_initializer.rb
+
+	   require 'rfm_models'
+
 
 If you prefer, you can create models on-the-fly from any layout.
 
