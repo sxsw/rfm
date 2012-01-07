@@ -89,9 +89,9 @@ task :benchmark do
 				50.times do
 					Rfm::XmlParser.new(@records)
 					Rfm::XmlParser.new(@layout)
-					#Thread.new {Rake::Task["spec"].execute}
-					#`rake spec > /dev/null`
 				end
+				#Thread.new {Rake::Task["spec"].execute}
+				#`rake spec parser=#{backend} > /dev/null`
 			end
 		end
 	end
