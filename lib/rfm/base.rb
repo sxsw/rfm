@@ -31,12 +31,6 @@ module Rfm
 	#   @person.save
 	# 
 	# 
-	#
-	#
-	# :nodoc: TODO: make sure all methods return something (a record?) if successful, otherwise nil or error
-	# :nodoc: TODO: move rfm methods & patches from fetch_mail_with_ruby to this file
-	#
-	# TODO: Are these really needed here?
 	require 'rfm/database'
 	require 'rfm/layout'
 	require 'rfm/record'
