@@ -90,8 +90,27 @@ task :benchmark do
 					Rfm::XmlParser.new(@records)
 					Rfm::XmlParser.new(@layout)
 				end
-				#Thread.new {Rake::Task["spec"].execute}
-				#`rake spec parser=#{backend} > /dev/null`
+			end
+		end
+	end
+end
+
+desc "run specs with all parsers"	
+task :spec_multi do
+	require 'benchmark'
+	require 'yaml'
+	@records = File.read('spec/data/resultset.xml')
+	@layout = File.read('spec/data/layout.xml')
+	Benchmark.bm do |b|
+		[:oxsax, :libxml, :libxmlsax, :nokogirisax, :nokogiri, :hpricot, :rexml, :rexmlsax].each do |backend|
+			#Rfm.backend = backend
+			ENV['parser'] = backend.to_s
+			b.report("#{backend.to_s.upcase}\n") do
+				begin
+					Rake::Task["spec"].execute
+				rescue
+					#puts $1
+				end
 			end
 		end
 	end
