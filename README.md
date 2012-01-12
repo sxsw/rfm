@@ -6,10 +6,10 @@ Rfm is a Ruby-Filemaker adapter, a Ruby gem that allows scripts and applications
 ## Documentation & Links
 
 * Ginjo-rfm rubygem   <https://rubygems.org/gems/ginjo-rfm>
-* Original homepage   <http://sixfriedrice.com/wp/products/rfm/>
 * Rdoc location       <http://rubydoc.info/github/ginjo/rfm/frames>
 * Discussion          <http://groups.google.com/group/rfmcommunity>
 * Ginjo at github     <https://github.com/ginjo/rfm>
+* Original homepage   <http://sixfriedrice.com/wp/products/rfm/>
 * Lardawge at github  <https://github.com/lardawge/rfm>
 
 
@@ -237,15 +237,6 @@ Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
 
 	   require 'rubygems'
 	   require 'rfm'
-
-
-### Edge - in an upcoming version of ginjo-rfm
-
-Try out unreleased features of ginjo-rfm in the edge branch.
-
-	   #gemfile
-	   gem 'ginjo-rfm', :git=>'git://github.com/ginjo/rfm.git', :branch=>'edge'
-
 
 
 ## Ginjo-rfm Basic Usage
@@ -776,6 +767,10 @@ So, for an annoying, but detailed load of output, make a connection like this:
 	     :log_actions      => true,
 	     :log_responses    => true
 	   )
+
+### Source Code
+
+If you were tracking ginjo-rfm on github before the switch to version 2.0.0, please accept my humblest apologies for making a mess of the branching. The pre 2.0.0 edge branch has become master, and the pre 2.0.0 master branch has become ginjo-1-4-stable. I don't intend to make that kind of hard reset again, at least not on public branches. Master will be the branch to find the latest-greatest public source, and 'stable' branches will emerge as necessary to preserve historical releases.
 
 
 ## Credits
