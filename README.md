@@ -347,7 +347,7 @@ Use `get_config` to view the compiled configuration settings for any object. Con
 	          :account_name => 'name', :password => 'pass'
 	         }
 	
-#### Possible Configuration Options
+**Possible Configuration Options**
 
 Following are all of the recognized configuration options, including defaults if applicable.
 
@@ -464,7 +464,7 @@ To learn more about ActiveModel, see the ActiveModel or RubyOnRails documentatio
 
 Once you have an Rfm model or layout, you can use any of the standard Rfm commands to create, search, edit, and delete records. To learn more about these commands, see below for Databases, Layouts, Resultsets, and Records. Or checkout the API documentation for Rfm::Server, Rfm::Database, Rfm::Layout, Rfm::Record, and Rfm::Base.
 
-#### Two Small Changes in Rfm Return Values
+**Two Small Changes in Rfm Return Values**
 
 When using Models to retrieve records using the `any` method or the `find(record_id)` method, the return values will be single Rfm::Record objects. This differs from the traditional Rfm behavior of these methods when accessed directly from the the Rfm::Layout instance, where the return value is always a Rfm::Resultset.
 
