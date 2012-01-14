@@ -12,7 +12,7 @@ module Rfm
   	extend Config
   	config :parent=>'Rfm::Config'
   
-  	class ServerFactory < Rfm::CaseInsensitiveHash # @private :nodoc: all
+  	class ServerFactory < Rfm::CaseInsensitiveHash
       
       def [](host, conf = Factory.get_config) #(Factory.instance_variable_get(:@config) || {}))
       	conf[:host] = host

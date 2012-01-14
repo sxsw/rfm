@@ -2,8 +2,8 @@ require 'active_support/core_ext/kernel/reporting'
 require 'active_support/core_ext/object/blank'
 require 'stringio'
 
-module ActiveSupport # @private :nodoc:
-  module XmlMini_Hpricot # @private :nodoc:
+module ActiveSupport
+  module XmlMini_Hpricot
     extend self
 
     CONTENT_KEY = '__content__'.freeze

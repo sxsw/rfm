@@ -1,11 +1,12 @@
+# The classes in this module are used internally by RFM and are not intended for outside use.
 module Rfm
 
 
-	# Class to build complex FMP queries
-	# Perform Filemaker find using complex boolean logic (multiple value options for a single field)
-	# Or create multiple find requests.
-	# Also allow find requests to be :omit
-  class CompoundQuery < Array # @private :nodoc:
+	# Class to build complex FMP queries.
+	# Perform Filemaker find using complex boolean logic (multiple value options for a single field),
+	# or create multiple find requests.
+	# Also allow find requests to be :omit.
+  class CompoundQuery < Array
   
   	attr_accessor :original_input, :query_type, :key_values, :key_arrays, :key_map, :key_map_string, :key_counter
   	
@@ -65,7 +66,7 @@ module Rfm
   	end
 
 
-		# Build key-value definitions and query map  '-q1...'
+		# Build key-value definitions and query map  '-q1...'.
 		# Converts query_hash to fmresultset uri format for -findquery query type.
 		def build_key_values(input_hash)
 			input_hash = input_hash.clone
@@ -89,7 +90,7 @@ module Rfm
 
 		
 		# Input array of arrays.
-		# Transform single key_array into key_map (array of requests)
+		# Transform single key_array into key_map (array of requests).
 		# Creates all combinations of sub-arrays where each combination contains one element of each subarray.
 		def build_key_map(key_array)
 			key_array = key_array.clone

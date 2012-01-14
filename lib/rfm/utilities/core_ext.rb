@@ -5,7 +5,7 @@ Module.module_eval do
 	include Forwardable
 end
 
-class Object # @private :nodoc: all
+class Object
 
 	#extend Forwardable
 

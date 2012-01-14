@@ -10,7 +10,7 @@ require 'stringio'
 # = XmlMini Ox implementation using a SAX-based parser
 # This Ox Sax parser was lifted directly from multi_xml gem.
 module ActiveSupport
-  module XmlMini_OxSAX # @private :nodoc: all
+  module XmlMini_OxSAX
 
     extend self
     

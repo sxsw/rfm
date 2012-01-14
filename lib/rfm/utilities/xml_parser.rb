@@ -1,5 +1,5 @@
 module Rfm
-	module XmlParser # @private :nodoc: all
+	module XmlParser
 
 		extend Config
 		config :parent=>'Rfm::Config'
@@ -12,7 +12,7 @@ module Rfm
 		BACKENDS[:jdom]					= {:require=>'jdom',			:class =>	'JDOM'}
 
 		BACKENDS[:oxsax]				= {:require=>'ox',	  :class =>	proc{
-																# rexmlsax module is part of Rfm, not XmlMini,
+																# Ox module is part of Rfm, not XmlMini,
 																# and needs to be handed manually to XmlMini.
 																require File.join(File.dirname(__FILE__), '../xml_mini/ox_sax.rb')
 																ActiveSupport::XmlMini_OxSAX}}
@@ -34,7 +34,7 @@ module Rfm
 		BACKENDS[:rexml]				= {:require=>'rexml/document',	:class=>'REXML'}
 
 		BACKENDS[:rexmlsax]			= {:require=>'rexml/parsers/sax2parser',	  :class =>	proc{
-																# rexmlsax module is part of Rfm, not XmlMini,
+																# Rexmlsax module is part of Rfm, not XmlMini,
 																# and needs to be handed manually to XmlMini.
 																require File.join(File.dirname(__FILE__), '../xml_mini/rexml_sax.rb')
 																ActiveSupport::XmlMini_REXMLSAX}}
