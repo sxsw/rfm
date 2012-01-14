@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
     "CHANGELOG.md",
     "lib/rfm/VERSION"
   ]
-  s.files = Dir['lib/**/*.rb', 'lib/**/VERSION']
+  s.files = Dir['lib/**/*.rb', 'lib/**/VERSION', '.yardopts']
   
   s.homepage = "https://rubygems.org/gems/ginjo-rfm"
   s.rdoc_options = ["--line-numbers", "--main", "README.md"]
