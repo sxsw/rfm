@@ -58,9 +58,19 @@ module Rfm
 		"Using ginjo-rfm version #{::Rfm::VERSION} with #{XmlParser.backend}"
 	end
 	
-	def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout, :models, :modelize
+	def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout
 	def_delegators 'Rfm::XmlParser', :backend, :backend=
 	def_delegators 'Rfm::Config', :config, :get_config, :config_clear
+	
+	def models(*args)
+		Rfm::Base
+		Rfm::Factory.models(*args)
+	end
+	
+	def modelize(*args)
+		Rfm::Base
+		Rfm::Factory.modelize(*args)
+	end
 	
 	extend self
 
