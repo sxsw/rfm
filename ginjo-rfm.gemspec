@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.summary = "Ruby to Filemaker adapter"
   s.version = File.read('./lib/rfm/VERSION') #Rfm::VERSION
 
-  #s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
+  s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
   s.date = Date.today.to_s
   s.description = "Rfm lets your Ruby scripts and Rails applications talk directly to your Filemaker server. Ginjo-rfm includes ActiveModel compatibility, multiple XML parsers, compound Filemaker find requests, and a configuration API."
