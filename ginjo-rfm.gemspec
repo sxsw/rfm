@@ -5,34 +5,35 @@ require 'date'
 
 Gem::Specification.new do |s|
   s.name = "ginjo-rfm"
+  s.summary = "Ruby to Filemaker adapter"
   s.version = File.read('./lib/rfm/VERSION') #Rfm::VERSION
 
-  s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
+  #s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
   s.date = Date.today.to_s
   s.description = "Rfm lets your Ruby scripts and Rails applications talk directly to your Filemaker server. Ginjo-rfm includes ActiveModel compatibility, multiple XML parsers, compound Filemaker find requests, and a configuration API."
   s.email = "http://groups.google.com/group/rfmcommunity"
+  s.homepage = "https://rubygems.org/gems/ginjo-rfm"
+  
+  s.require_paths = ["lib"]
+  s.files = Dir['lib/**/*.rb', 'lib/**/VERSION', '.yardopts']
+  
+  s.rdoc_options = ["--line-numbers", "--main", "README.md"]
   s.extra_rdoc_files = [
     "LICENSE",
     "README.md",
     "CHANGELOG.md",
     "lib/rfm/VERSION"
   ]
-  s.files = Dir['lib/**/*.rb', 'lib/**/VERSION', '.yardopts']
-  
-  s.homepage = "https://rubygems.org/gems/ginjo-rfm"
-  s.rdoc_options = ["--line-numbers", "--main", "README.md"]
-  s.require_paths = ["lib"]
-  s.summary = "Ruby to Filemaker adapter"
 
-  s.add_runtime_dependency(%q<activesupport>, [">= 2.3.5"])
+  s.add_runtime_dependency('activesupport', '>= 2.3.5')
   s.add_development_dependency(%q<activemodel>, [">= 0"])
   s.add_development_dependency(%q<rake>, [">= 0"])
   s.add_development_dependency(%q<rdoc>, [">= 0"])
   s.add_development_dependency(%q<rspec>, ["~> 1.3.0"])
   s.add_development_dependency(%q<diff-lcs>, [">= 0"])
   s.add_development_dependency(%q<yard>, [">= 0"])
-  s.add_development_dependency(%q<libxml-ruby>, [">= 0"])
+  s.add_development_dependency(%q<libxml-ruby>, [">= 0"]) unless RUBY_PLATFORM == 'java'
   s.add_development_dependency(%q<nokogiri>, [">= 0"])
   s.add_development_dependency(%q<hpricot>, [">= 0"])
   s.add_development_dependency(%q<ox>, [">= 0"])
