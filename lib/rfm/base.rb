@@ -30,7 +30,8 @@ module Rfm
 	#   @person.update_attributes(:name => 'Michael', :title => "Senior Partner")
 	#   @person.save
 	# 
-	# 
+	#
+	require 'active_support/core_ext/string/inflections'
 	require 'rfm/database'
 	require 'rfm/layout'
 	require 'rfm/record'
