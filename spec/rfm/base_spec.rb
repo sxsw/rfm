@@ -25,13 +25,17 @@ describe Rfm::Base do
 		it("layout object is a SubLayout"){Memo.layout.is_a?(Rfm::Layout::SubLayout)}
 	end
 	
+	# This works in ruby 1.8.7 but fails in ruby 1.9.2.
+	# Dunno why, maybe something to do with DelegateClass?
 	describe '.find' do
 		it("passes parameters & options to Layout object") do
+			puts Memo.layout.object_id
+			puts Memo.layout.parent_layout.object_id
 			Memo.layout.should_receive(:find) do |*args|
 				args[0].should == {:field_one=>'test'}
 				args[1].should == {:max_records=>5}
 			end
-			Memo.find({:field_one=>'test'}, :max_records=>5)
+			Memo.find({:field_one=>'test'}, :max_records=>5)			
 		end
 	end
 	
