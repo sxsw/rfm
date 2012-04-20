@@ -544,7 +544,7 @@ Just about anything you can do with a Rfm layout, you can also do with a Rfm mod
 	
 There are a number of methods within Rfm that have been made accessible from the top-level Rfm module. Note that the server/database/layout methods are new to Rfm and are not the same as Rfm::Server, Rfm::Database, and Rfm::Layout. See the above section on "Getting Rfm Server, Database, and Layout Objects Manually" for an overview of how to use the new server/database/layout methods.
 
-	   # Any of these methods can be assed via Rfm.<method_name>
+	   # Any of these methods can be accessed via Rfm.<method_name>
 	   
 	   Rfm::Factory    :servers, :server, :db, :database, :layout, :models, :modelize
 	   Rfm::XmlParser  :backend, :backend=
