@@ -25,8 +25,16 @@ describe Rfm::Base do
 		it("layout object is a SubLayout"){Memo.layout.is_a?(Rfm::Layout::SubLayout)}
 	end
 	
-	# describe '.find'
-	# 
+	describe '.find' do
+		it("passes parameters & options to Layout object") do
+			Memo.layout.should_receive(:find) do |*args|
+				args[0].should == {:field_one=>'test'}
+				args[1].should == {:max_records=>5}
+			end
+			Memo.find({:field_one=>'test'}, :max_records=>5)
+		end
+	end
+	
 	# describe '.create_from_instance'
 	# 
 	# describe '#initialize'
