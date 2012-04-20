@@ -2,7 +2,7 @@
 
 ## Ginjo-Rfm 2.0.1
 
-* Fixed bug in Base#find where options weren't being passed to Layout#find correctly
+* Fixed bug in Base.find where options weren't being passed to Layout#find correctly
 
 * Fixed bug in rfm.rb when calling #models or #modelize.
 
