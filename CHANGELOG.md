@@ -2,9 +2,11 @@
 
 ## Ginjo-Rfm 2.0.2
 
-* Added configuration parameter ignore_bad_data that silences data mismatch errors when loading resultset into records.
+* Added configuration parameter ignore_bad_data to silence data mismatch errors when loading resultset into records.
 
-* Added method to load a resultset from file or string: Rfm::Resultset.load_data(file_or_string).
+* Added method to load a resultset from file or string. Rfm::Resultset.load_data(file_or_string).
+
+* Added more specs for the above features and for the XmlParser module.
 
 ## Ginjo-Rfm 2.0.1
 
