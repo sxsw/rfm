@@ -29,8 +29,6 @@ describe Rfm::Base do
 	# Dunno why, maybe something to do with DelegateClass?
 	describe '.find' do
 		it("passes parameters & options to Layout object") do
-			puts Memo.layout.object_id
-			puts Memo.layout.parent_layout.object_id
 			Memo.layout.should_receive(:find) do |*args|
 				args[0].should == {:field_one=>'test'}
 				args[1].should == {:max_records=>5}
