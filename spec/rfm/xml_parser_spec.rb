@@ -8,12 +8,29 @@ subject {Rfm::XmlParser}
 	end
 	
 	describe '.get_backend_from_hash' do
-		it 'returns backend usable by XmlMini, given input symbol' do
+		it 'loads OxSAX' do
+			subject.send(:get_backend_from_hash, :oxsax).should == ActiveSupport::XmlMini_OxSAX
+		end
+		it 'loads LibXML' do
 			subject.send(:get_backend_from_hash, :libxml).should == 'LibXML'
+		end
+		it 'loads LibXMLSAX' do
 			subject.send(:get_backend_from_hash, :libxmlsax).should == 'LibXMLSAX'
+		end
+		it 'loads NokogiriSAX' do
 			subject.send(:get_backend_from_hash, :nokogirisax).should == 'NokogiriSAX'
+		end
+		it 'loads Nokogiri' do
 			subject.send(:get_backend_from_hash, :nokogiri).should == 'Nokogiri'
+		end
+		it 'loads Hpricot' do
 			subject.send(:get_backend_from_hash, :hpricot).should == ActiveSupport::XmlMini_Hpricot
+		end
+		it 'loads REXML' do
+			subject.send(:get_backend_from_hash, :rexml).should == 'REXML'
+		end
+		it 'loads REXMLSAX' do
+			subject.send(:get_backend_from_hash, :rexmlsax).should == ActiveSupport::XmlMini_REXMLSAX
 		end
 	end
 

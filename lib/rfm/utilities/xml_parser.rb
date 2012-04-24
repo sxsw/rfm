@@ -6,7 +6,7 @@ module Rfm
 		
 		extend self
 		
-		# Backend configurations
+		# Backend definitions & configurations
 		BACKENDS = ActiveSupport::OrderedHash.new
 		
 		BACKENDS[:jdom]					= {:require=>'jdom',			:class =>	'JDOM'}
