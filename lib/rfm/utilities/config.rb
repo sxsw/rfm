@@ -18,6 +18,7 @@ module Rfm
 			password
 			database
 			layout
+			ignore_bad_data
 			ssl
 			root_cert
 			root_cert_name

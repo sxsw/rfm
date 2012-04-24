@@ -72,22 +72,22 @@ module Rfm
       @portal_meta    ||= Rfm::CaseInsensitiveHash.new
       @include_portals  = portals 
       
-      doc = XmlParser.new(xml_response, :namespace=>false, :parser=>server.state[:parser])
+      doc = XmlParser.new(xml_response, :namespace=>false, :parser=>(server.state[:parser] rescue nil))
       
       error = doc['fmresultset']['error']['code'].to_i
-      check_for_errors(error, server.state[:raise_on_401])
+      check_for_errors(error, (server.state[:raise_on_401] rescue nil))
 
-      datasource        = doc['fmresultset']['datasource']
+      @datasource       = doc['fmresultset']['datasource']
       meta              = doc['fmresultset']['metadata']
       resultset         = doc['fmresultset']['resultset']
 
-      @date_format      = convert_date_time_format(datasource['date-format'].to_s)
-      @time_format      = convert_date_time_format(datasource['time-format'].to_s)
-      @timestamp_format = convert_date_time_format(datasource['timestamp-format'].to_s)
+      @date_format      = convert_date_time_format(@datasource['date-format'].to_s)
+      @time_format      = convert_date_time_format(@datasource['time-format'].to_s)
+      @timestamp_format = convert_date_time_format(@datasource['timestamp-format'].to_s)
 
       @foundset_count   = resultset['count'].to_s.to_i
-      @total_count      = datasource['total-count'].to_s.to_i
-      @table            = datasource['table']
+      @total_count      = @datasource['total-count'].to_s.to_i
+      @table            = @datasource['table']
       
       (layout.table = @table) if layout and layout.table_no_load.blank?
       
@@ -96,6 +96,17 @@ module Rfm
       # This will always load portal meta, even if :include_portals was not specified.
       # See Record for control of portal data loading.
       parse_portals(meta)
+      
+      # These were added for loading resultset from file
+      unless @layout
+      	@layout = @datasource['layout']
+      	@layout.instance_variable_set '@database', @datasource['database']
+      	@layout.instance_eval do
+      		def database
+      			@database
+      		end
+      	end
+      end			
       
       return if resultset['record'].nil?
       Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, @layout)
@@ -109,6 +120,10 @@ module Rfm
   		portal_meta.keys
   	end
     
+    # Load Resultset data from file-spec or string
+    def self.load_data(file_or_string)
+    	self.new(nil, file_or_string, nil)
+    end
     
     private
     

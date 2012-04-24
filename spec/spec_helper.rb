@@ -12,6 +12,7 @@ if ENV['parser']; Rfm.backend = ENV['parser'].to_sym; end
 puts Rfm.info_short
 
 RFM_CONFIG = {
+	:ignore_bad_data => true,
 	:host=>'host1',
 	:group1=>{
 		:database=>'db1'
@@ -21,7 +22,7 @@ RFM_CONFIG = {
 	},
 	:base_test=>{
 		:database=>'testdb1',
-		:layout=>'testlay1'
+		:layout=>'testlay1',
 	}
 }
 

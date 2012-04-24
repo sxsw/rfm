@@ -209,7 +209,8 @@ module Rfm
         :log_parser => false,
         :warn_on_redirect => true,
         :raise_on_401 => false,
-        :timeout => 60
+        :timeout => 60,
+        :ignore_bad_data => false
       }.merge(options)
     
       @state.freeze

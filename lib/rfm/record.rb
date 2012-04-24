@@ -133,7 +133,12 @@ module Rfm
         data = field['data']; data = data.is_a?(Hash) ? [data] : data
         data.each do |x|
         	next unless field_meta[field_name]
-          datum.push(field_meta[field_name].coerce(x['__content__'], resultset_obj))
+        	begin
+	          datum.push(field_meta[field_name].coerce(x['__content__'], resultset_obj))
+        	rescue StandardError => error
+        		self.errors.add(field_name, error) if self.respond_to? :errors
+        		raise error unless @layout.ignore_bad_data
+        	end
         end if data
       
         if datum.length == 1

@@ -5,6 +5,7 @@ describe Rfm::Resultset do
   let(:server) {Rfm::Server.allocate}
   let(:layout) {Rfm::Layout.allocate}
   let(:data)   {File.read("spec/data/resultset.xml")}
+  let(:bad_data) {File.read("spec/data/resultset_with_bad_data.xml")}
   subject      {Rfm::Resultset.new(server, data, layout)}
   before(:each) do
   	server.stub!(:state).and_return({})
@@ -30,6 +31,17 @@ describe Rfm::Resultset do
 			Rfm::Resultset.new(@Server, RESULTSET_PORTALS_XML, @Layout).portal_meta['buyouts']['PurchaseOrderNumber'].global.should == 'no'
 		end
 		
+		it "loads data into records & fields, storing errors if data mismatch & ignore_bad_data == true" do
+			result_set = Rfm::Resultset.new(Memo.server, bad_data, Memo.layout)
+			result_set[1].errors.messages[:TestDate][0].message.should == 'invalid date'
+		end
+		
 	end # initialize
+	
+	describe ".load_data" do
+		it "loads resultset data from filespec or string" do
+		 result_set = Rfm::Resultset.load_data File.new('spec/data/resultset.xml')
+		end
+	end
 
 end # Rfm::Resultset

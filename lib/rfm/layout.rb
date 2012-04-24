@@ -143,6 +143,7 @@ module Rfm
       @value_lists = Rfm::CaseInsensitiveHash.new
 			#       @portal_meta = nil
 			#       @field_names = nil
+			@ignore_bad_data = (db_obj.server.state[:ignore_bad_data] rescue nil)
     end
     
     meta_attr_reader :db
@@ -374,6 +375,11 @@ module Rfm
       }
       @field_names ||= @field_controls.collect{|k,v| v.name rescue v[0].name}
       @field_controls.freeze
+    end
+    
+    def ignore_bad_data(val = nil)
+    	@ignore_bad_data = val if !val.blank?
+    	@ignore_bad_data
     end
     
   	private :load, :get_records, :params
