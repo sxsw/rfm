@@ -1,22 +1,28 @@
 # Changelog
 
+## Ginjo-Rfm 2.0.2
+
+* Added configuration parameter ignore_bad_data that silences data mismatch errors when loading resultset into records.
+
+* Added method to load a resultset from file or string: Rfm::Resultset.load_data(file_or_string).
+
 ## Ginjo-Rfm 2.0.1
 
-* Fixed bug in Base.find where options weren't being passed to Layout#find correctly
+* Fixed bug in Base.find where options weren't being passed to Layout#find correctly.
 
 * Fixed bug in rfm.rb when calling #models or #modelize.
 
 ## Ginjo-Rfm 2.0.0
 
-* ActiveModel compatibility allows Rails ActiveRecord-style models
+* ActiveModel compatibility allows Rails ActiveRecord-style models.
 
-* Alternative XML parsers using ActiveSupport::XmlMini interface
+* Alternative XML parsers using ActiveSupport::XmlMini interface.
 
-* Compound queries with multiple omitable find-requests
+* Compound queries with multiple omitable find-requests.
 
-* Configuration API manages settings of multiple server/db/layout/etc setups
+* Configuration API manages settings of multiple server/db/layout/etc setups.
 
-* Full Filemaker metadata support
+* Full Filemaker metadata support.
 
 ## Ginjo-Rfm 1.4.4
 

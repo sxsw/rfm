@@ -372,6 +372,7 @@ Following are all of the recognized configuration options, including defaults if
 	   :file_name        => 'rfm.yml                      # name of configuration file to load yaml from
 	   :file_path        => ['', 'config/']               # array of additional file paths to look for configuration file
 	   :parser           => ActiveSupport::XmlMini_REXML  # XmlParser to use if no other is specified or can be found
+	   :ignore_bad_data  => nil                           # Instruct Rfm to ignore data mismatch errors when loading a resultset
 	
 
 ### Using Models
@@ -515,26 +516,31 @@ See the API documentation for the lowdown on new methods in Rfm Server, Database
 
 All Rfm methods that take a configuration hash have two possible shortcuts.
 
-If you pass a symbol before the hash, it is interpreted as subgroup specification or subgroup filter
+(1) If you pass a symbol before the hash, it is interpreted as subgroup specification or subgroup filter
 
 	   config :mygroup, :layout => 'mylayout'
+	   # This will add the following configuration options to the object you called 'config' on.
 	   # :use => :mygroup, :layout => 'mylayout'
 	
 	   get_config :othergroup
+	   # This will return global configuration options merged with configuration options from :othergroup.
 	   # :use => [:mygroup, :othergroup], :layout => 'mylayout'
 
-If you pass a string before any symbols or hashes, it is interepreted as one of several possible configuration settings - usually a layout name, a database name, or a server hostname. The interpretation is dependent on the method being called. Not all methods will make use of a string parameter.
+(2) If you pass a string before any symbols or hashes, it is interpreted as one of several possible configuration settings - usually a layout name, a database name, or a server hostname. The interpretation is dependent on the method being called. Not all methods will make use of a string parameter.
 
 	   class MyModel < Rfm::Base
 	     config 'MyLayoutName'
-	     # :layout => 'MyLayoutName'
+	     # In this context, this is the same as
+	     # config :layout => 'MyLayoutName'
 	   end
 	
 	   Rfm.database 'MyDatabaseName'
-	   # :database => 'MyDatabaseName'
+	   # In this context, this is the same as
+	   # Rfm.database :database => 'MyDatabaseName'
 	
 	   Rfm.modelize 'MyDatabaseName', :group1
-	   # :database => 'MyDatabaseName', :use => :group1
+	   # In this context, this is the same as
+	   # Rfm.modelize :database => 'MyDatabaseName', :use => :group1
 
 Just about anything you can do with a Rfm layout, you can also do with a Rfm model.
 
@@ -549,6 +555,23 @@ There are a number of methods within Rfm that have been made accessible from the
 	   Rfm::Factory    :servers, :server, :db, :database, :layout, :models, :modelize
 	   Rfm::XmlParser  :backend, :backend=
 	   Rfm::Config     :config, :get_config, :config_clear
+	   Rfm::Resultset  :ignore_bad_data
+	
+If you are working with a Filemaker database that returns codes like '?' for a missing value in a date field, Rfm will throw an error. Set your main configuration, your server, or your layout to `ignore_bad_data true`, if you want Rfm to silently ignore data mismatch errors when loading resultset data. If ActiveRecord is loaded, and your resultset is loaded into a Rfm model, your model records will log these errors in the @errors attribute.
+
+	   Rfm.config :ignore_bad_data => true
+	   
+	   class MyModel < Rfm::Base
+	     config 'my_layout'
+	   end
+	   
+	   result = MyModel.find(:name => 'mike')
+	   # Assuming the Filemaker field 'some_date_field' contains a bad date value '?'
+	   result[0].errors.full_messages
+	   # ['some_date_field invalid date']
+	
+	   # To be more specific about what objects you want to ignore data errors
+	   MyModel.layout.ignore_bad_data true
 
 ## Working with "Classic" Rfm Features
 

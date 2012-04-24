@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE fmresultset PUBLIC "-//FMI//DTD fmresultset//EN" "https://test.domain.com:443/fmi/xml/fmresultset.dtd">
+<fmresultset xmlns="http://www.filemaker.com/xml/fmresultset" version="1.0">
+	<error code="0"/>
+	<product build="03/02/2011" name="FileMaker Web Publishing Engine" version="11.0.3.302"/>
+	<datasource database="SevenGables" date-format="MM/dd/yyyy" layout="Memo_test_xml" table="Memo_" time-format="HH:mm:ss" timestamp-format="MM/dd/yyyy HH:mm:ss" total-count="117866"/>
+	<metadata>
+		<field-definition auto-enter="yes" four-digit-year="no" global="no" max-repeat="1" name="TestText" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
+		<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="TestNumber" not-empty="no" numeric-only="no" result="number" time-of-day="no" type="normal"/>
+		<field-definition auto-enter="yes" four-digit-year="no" global="no" max-repeat="1" name="TestDate" not-empty="no" numeric-only="no" result="date" time-of-day="no" type="normal"/>
+		<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="TestTime" not-empty="no" numeric-only="no" result="time" time-of-day="no" type="normal"/>
+		<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="TestTimestamp" not-empty="no" numeric-only="no" result="timestamp" time-of-day="no" type="normal"/>
+		<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="TestContainer" not-empty="no" numeric-only="no" result="container" time-of-day="no" type="normal"/>
+	</metadata>
+	<resultset count="2" fetch-size="2">
+		<record mod-id="1" record-id="149535">
+			<field name="TestText">
+				<data>some-text</data>
+			</field>
+			<field name="TestNumber">
+				<data>3</data>
+			</field>
+			<field name="TestDate">
+				<data>4/21/2012</data>
+			</field>
+			<field name="TestTime">
+				<data>16:45:01</data>
+			</field>
+			<field name="TestTimestamp">
+				<data>4/21/2012 18:25:00</data>
+			</field>
+			<field name="TestContainer">
+				<data>/fmi/xml/cnt/data.jpg?-db=products&amp;-lay=sales&amp;-field=product_image(1)&amp;-recid=2</data>
+			</field>
+		</record>
+		<record mod-id="0" record-id="150263">
+			<field name="TestText">
+				<data>9</data>
+			</field>
+			<field name="TestNumber">
+				<data>three</data>
+			</field>
+			<field name="TestDate">
+				<data>2-2-2000</data>
+			</field>
+			<field name="TestTime">
+				<data>2 38 pm</data>
+			</field>
+			<field name="TestTimestamp">
+				<data>this-is-a-bad-timestamp</data>
+			</field>
+			<field name="TestContainer">
+				<data>not-a-url</data>
+			</field>
+		</record>
+	</resultset>
+</fmresultset>

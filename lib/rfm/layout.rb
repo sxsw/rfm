@@ -378,7 +378,7 @@ module Rfm
     end
     
     def ignore_bad_data(val = nil)
-    	@ignore_bad_data = val if !val.blank?
+    	(@ignore_bad_data = val) unless val.nil?
     	@ignore_bad_data
     end
     

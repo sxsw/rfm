@@ -61,6 +61,7 @@ module Rfm
 	def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout
 	def_delegators 'Rfm::XmlParser', :backend, :backend=
 	def_delegators 'Rfm::Config', :config, :get_config, :config_clear
+	def_delegators 'Rfm::Resultset', :load_data
 	
 	def models(*args)
 		Rfm::Base
