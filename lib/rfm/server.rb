@@ -242,7 +242,7 @@ module Rfm
 		#     def [](dbname, acnt=nil, pass=nil)
 		#       self.db[dbname, acnt, pass]
 		#     end
-    def_delegator :db, :[]
+    def_delegator :databases, :[]
     
     attr_reader :databases #, :host_name, :port, :scheme, :state
     # Legacy Rfm method to get/create databases from server object
