@@ -58,6 +58,9 @@ module Rfm
   # * *name* is the name of this database
   # * *state* is a hash of all server options used to initialize this server
   class Database
+  extend Config
+  include Config
+  config :parent => 'Rfm::Config'
   
     # Initialize a database object. You never really need to do this. Instead, just do this:
     # 
@@ -65,21 +68,38 @@ module Rfm
     #   myDatabase = myServer["Customers"]
     #
     # This sample code gets a database object representing the Customers database on the FileMaker server.
-    def initialize(name, server_obj, acnt=nil, pass=nil)
-    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Database has no name. Attempted name '#{name}'.") if name.to_s == ''
-      @name = name.to_s
-      rfm_metaclass.instance_variable_set :@server, server_obj
-      @account_name = acnt #server.state[:account_name] or ""
-      @password = pass #server.state[:password] or ""
-      @layout = Rfm::Factory::LayoutFactory.new(server, self)
-      @script = Rfm::Factory::ScriptFactory.new(server, self)
+    def initialize(*args) #name, server_obj, acnt=nil, pass=nil
+    	options = args.rfm_extract_options!
+    	config options
+    	config :database=>args[0] if args[0]
+    	config :account_name=>args[2] if args[2]
+    	config :password=>args[3] if args[3]
+      
+      raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Database has no name. Attempted name '#{state[:database]}'.") if state[:database].to_s == ''
+      rfm_metaclass.instance_variable_set :@server, (args[1] || state[:server_object])
+      @config.delete(:server_object)
+      
+      @layouts = Rfm::Factory::LayoutFactory.new(server, self)
+      @scripts = Rfm::Factory::ScriptFactory.new(server, self)
     end
     
     meta_attr_reader :server
-    #attr_reader :server
-    attr_reader :name, :account_name, :password, :layout, :script
-    attr_writer :account_name, :password
-    alias_method :layouts, :layout
+    attr_reader :layouts, :scripts
+    # Not sure if these writers are ever used
+    #attr_writer :account_name, :password
+    # Legacy methods
+    alias_method :layout, :layouts
+    alias_method :script, :scripts
+    
+    def name; state[:database].to_s; end
+    def account_name; state[:account_name]; end
+    def account_name=(x); config :account_name=>x; end
+    def password; state[:password]; end
+    def password=(x); config :password=>x; end
+    
+		def state
+			get_config
+		end
 
     # Access the Layout object representing a layout in this database. For example:
     #
@@ -95,7 +115,7 @@ module Rfm
 		#     def [](layout_name)
 		#       self.layout[layout_name]
 		#     end
-    def_delegator :layout, :[]
+    def_delegator :layouts, :[]
 
   end
 end
