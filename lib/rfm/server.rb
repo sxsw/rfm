@@ -224,7 +224,7 @@ module Rfm
       def scheme; state[:ssl] ? "https" : "http"; end
       def port; state[:ssl] && state[:port].nil? ? 443 : state[:port]; end
       
-      @db = Rfm::Factory::DbFactory.new(self)
+      @databases = Rfm::Factory::DbFactory.new(self)
     end
     
     # Access the database object representing a database on the server. For example:
@@ -244,8 +244,9 @@ module Rfm
 		#     end
     def_delegator :db, :[]
     
-    attr_reader :db #, :host_name, :port, :scheme, :state
-    alias_method :databases, :db
+    attr_reader :databases #, :host_name, :port, :scheme, :state
+    # Legacy Rfm method to get/create databases from server object
+    alias_method :db, :databases
     
     def state
     	@defaults.merge(get_config)
