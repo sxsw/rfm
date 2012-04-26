@@ -58,9 +58,9 @@ module Rfm
   # * *name* is the name of this database
   # * *state* is a hash of all server options used to initialize this server
   class Database
-  extend Config
+  #extend Config
   include Config
-  config :parent => 'Rfm::Config'
+  #config :parent => 'Rfm::Server'
   
     # Initialize a database object. You never really need to do this. Instead, just do this:
     # 
@@ -76,8 +76,10 @@ module Rfm
     	config :password=>args[3] if args[3]
       
       raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Database has no name. Attempted name '#{state[:database]}'.") if state[:database].to_s == ''
+      
       rfm_metaclass.instance_variable_set :@server, (args[1] || state[:server_object])
       @config.delete(:server_object)
+      config :parent=> 'server'
       
       @layouts = Rfm::Factory::LayoutFactory.new(server, self)
       @scripts = Rfm::Factory::ScriptFactory.new(server, self)

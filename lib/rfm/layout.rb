@@ -119,6 +119,7 @@ module Rfm
   #   list that is attached to any field on the layout
   
   class Layout
+	  include Config
 		    
     # Initialize a layout object. You never really need to do this. Instead, just do this:
     # 
@@ -133,25 +134,41 @@ module Rfm
     #
     #   myServer = Rfm::Server.new(...)
     #   myLayout = myServer["Customers"]["Details"]
-    def initialize(name, db_obj)
-    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{name}'.") if name.to_s == ''
-      @name = name.to_s
-      rfm_metaclass.instance_variable_set :@db, db_obj
+    def initialize(*args) #name, db_obj
+    	options = args.rfm_extract_options!
+    	config options
+    	config :layout => args[0] if args[0]
+    
+    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''
+            
+      rfm_metaclass.instance_variable_set :@db, (args[1] || state[:database_object])
+      @config.delete(:database_object)
+      config :parent=> 'db'
       
       @loaded = false
       @field_controls = Rfm::CaseInsensitiveHash.new
       @value_lists = Rfm::CaseInsensitiveHash.new
-			#       @portal_meta = nil
-			#       @field_names = nil
-			@ignore_bad_data = (db_obj.server.state[:ignore_bad_data] rescue nil)
+			#	@portal_meta = nil
+			#	@field_names = nil
+			#@ignore_bad_data = (db_obj.server.state[:ignore_bad_data] rescue nil)
     end
     
     meta_attr_reader :db
-    attr_reader :name #, :db
+    #attr_reader :name #, :db
     attr_writer :field_names, :portal_meta, :table
     def_delegator :db, :server
     alias_method :database, :db
     
+    def name; state[:layout].to_s; end
+    
+		def state
+			get_config
+		end
+		
+    def ignore_bad_data(val = nil)
+    	(config :ignore_bad_data => val) unless val.nil?
+    	state[:ignore_bad_data]
+    end
     
     # These methods are to be inclulded in Layout and SubLayout, so that
     # they have their own descrete 'self' in the master class and the subclass.
@@ -375,11 +392,6 @@ module Rfm
       }
       @field_names ||= @field_controls.collect{|k,v| v.name rescue v[0].name}
       @field_controls.freeze
-    end
-    
-    def ignore_bad_data(val = nil)
-    	(@ignore_bad_data = val) unless val.nil?
-    	@ignore_bad_data
     end
     
   	private :load, :get_records, :params
