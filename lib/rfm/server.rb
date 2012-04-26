@@ -107,6 +107,9 @@ module Rfm
   # * *name* is the name of this database
   # * *state* is a hash of all server options used to initialize this server
   class Server
+    extend Config
+    include Config
+    config :parent => 'Rfm::Config'
   
     # To create a Server object, you typically need at least a host name:
     # 
@@ -192,10 +195,11 @@ module Rfm
     #            :root_cert_name => 'example.pem'
     #            :root_cert_path => '/usr/cert_file/'
     #            })
-    def initialize(options)
+    def initialize(*args)
+    	options = args.rfm_extract_options!
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{options[:host]}'.") if options[:host].to_s == ''
       
-      @state = {
+      @defaults = {
         :host => 'localhost',
         :port => 80,
         :ssl => true,
@@ -211,13 +215,14 @@ module Rfm
         :raise_on_401 => false,
         :timeout => 60,
         :ignore_bad_data => false
-      }.merge(options)
+      }   #.merge(options)
     
-      @state.freeze
-          
-      @host_name = @state[:host]
-      @scheme = @state[:ssl] ? "https" : "http"
-      @port = @state[:ssl] && options[:port].nil? ? 443 : @state[:port]
+			config options
+			   
+      def host_name; state[:host]; end
+      
+      def scheme; state[:ssl] ? "https" : "http"; end
+      def port; state[:ssl] && state[:port].nil? ? 443 : state[:port]; end
       
       @db = Rfm::Factory::DbFactory.new(self)
     end
@@ -239,8 +244,12 @@ module Rfm
 		#     end
     def_delegator :db, :[]
     
-    attr_reader :db, :host_name, :port, :scheme, :state
+    attr_reader :db #, :host_name, :port, :scheme, :state
     alias_method :databases, :db
+    
+    def state
+    	@defaults.merge(get_config)
+    end
     
     # Performs a raw FileMaker action. You will generally not call this method directly, but it
     # is exposed in case you need to do something "under the hood."
@@ -271,12 +280,12 @@ module Rfm
     #   )
     def connect(account_name, password, action, args, options = {})
       post = args.merge(expand_options(options)).merge({action => ''})
-      http_fetch(@host_name, @port, "/fmi/xml/fmresultset.xml", account_name, password, post)
+      http_fetch(host_name, port, "/fmi/xml/fmresultset.xml", account_name, password, post)
     end
     
     def load_layout(layout)
       post = {'-db' => layout.db.name, '-lay' => layout.name, '-view' => ''}
-      resp = http_fetch(@host_name, @port, "/fmi/xml/FMPXMLLAYOUT.xml", layout.db.account_name, layout.db.password, post)
+      resp = http_fetch(host_name, port, "/fmi/xml/FMPXMLLAYOUT.xml", layout.db.account_name, layout.db.password, post)
       #remove_namespace(resp.body)
     end
     
@@ -290,11 +299,11 @@ module Rfm
       def http_fetch(host_name, port, path, account_name, password, post_data, limit=10)
         raise Rfm::CommunicationError.new("While trying to reach the Web Publishing Engine, RFM was redirected too many times.") if limit == 0
     
-        if @state[:log_actions] == true
+        if state[:log_actions] == true
           #qs = post_data.collect{|key,val| "#{CGI::escape(key.to_s)}=#{CGI::escape(val.to_s)}"}.join("&")
           qs_unescaped = post_data.collect{|key,val| "#{key.to_s}=#{val.to_s}"}.join("&")
           #warn "#{@scheme}://#{@host_name}:#{@port}#{path}?#{qs}"
-          warn "#{@scheme}://#{@host_name}:#{@port}#{path}?#{qs_unescaped}"
+          warn "#{scheme}://#{host_name}:#{port}#{path}?#{qs_unescaped}"
         end
     
         request = Net::HTTP::Post.new(path)
@@ -303,19 +312,19 @@ module Rfm
     
         response = Net::HTTP.new(host_name, port)
         #ADDED LONG TIMEOUT TIMOTHY TING 05/12/2011
-        response.open_timeout = response.read_timeout = @state[:timeout]
-        if @state[:ssl]
+        response.open_timeout = response.read_timeout = state[:timeout]
+        if state[:ssl]
           response.use_ssl = true
-          if @state[:root_cert]
+          if state[:root_cert]
             response.verify_mode = OpenSSL::SSL::VERIFY_PEER
-            response.ca_file = File.join(@state[:root_cert_path], @state[:root_cert_name])
+            response.ca_file = File.join(state[:root_cert_path], state[:root_cert_name])
           else
             response.verify_mode = OpenSSL::SSL::VERIFY_NONE
           end
         end
     
         response = response.start { |http| http.request(request) }
-        if @state[:log_responses] == true
+        if state[:log_responses] == true
           response.to_hash.each { |key, value| warn "#{key}: #{value}" }
           warn response.body
         end
@@ -324,7 +333,7 @@ module Rfm
         when Net::HTTPSuccess
           response
         when Net::HTTPRedirection
-          if @state[:warn_on_redirect]
+          if state[:warn_on_redirect]
             warn "The web server redirected to " + response['location'] + 
             ". You should revise your connection hostname or fix your server configuration if possible to improve performance."
           end
