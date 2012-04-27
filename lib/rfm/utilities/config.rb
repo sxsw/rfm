@@ -83,11 +83,11 @@ module Rfm
   		opt = args.rfm_extract_options!
   		strings = []
   		while args[0].is_a?(String) do; strings << args.shift; end
-	    if args.size == 0
-	    	config_filter(config_merge_with_parent)
-	    else
-	    	config_filter(config_merge_with_parent, args)
-	    end.merge(opt).merge(:strings=>strings)
+
+			rslt = config_merge_with_parent(args).merge(opt)
+			using = rslt[:using].rfm_force_array
+			rslt.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v) }
+			rslt.merge(:strings=>strings, :using=>using)
   	end
   		  
 	protected
@@ -119,33 +119,26 @@ module Rfm
 	  	yield(strings) if block_given?
 	  end
 	  	
-	  # Get composite config from all levels, adding :use parameters to a
-	  # temporary top-level value.
-	  def config_merge_with_parent
+	  # Get composite config from all levels, processing :use parameters at each level
+	  def config_merge_with_parent(filters=nil)
       remote = if (self != Rfm::Config) 
       	eval(@config[:parent] || 'Rfm::Config').config_merge_with_parent rescue {}
       else
       	get_config_file.merge((defined?(RFM_CONFIG) and RFM_CONFIG.is_a?(Hash)) ? RFM_CONFIG : {})
       end
-      
-      use = (remote[:use].rfm_force_array | @config[:use].rfm_force_array).compact
-			remote.merge(@config).merge(:use=>use)
+
+			filters = (@config[:use].rfm_force_array | filters.rfm_force_array).compact
+			config_filter(remote, filters).merge(config_filter(@config, filters))
     end
      
-		# This version uses either/or method input filters OR compiled config :use=>filters.
-		# Given config hash, return filtered subgroup settings. Filters should be symbols.
-		# 		def config_filter(conf, filters=nil)
-		# 			filters ||= conf[:use].rfm_force_array if !conf[:use].blank?
-		# 			filters.each{|f| next unless conf[f]; conf.merge!(conf[f] || {})} if !filters.blank?
-		# 			conf.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or v.to_s == '' }
-		# 			conf
-		# 		end
-		#
-		# This version combines both method input filters AND :use=>filters
+		# Returns a configuration hash overwritten by :use filters in the hash
+		# that match passed-in filter names or any filter names contained within the hash's :use key.
 		def config_filter(conf, filters=nil)
-			filters = conf[:use] = (conf[:use].rfm_force_array | filters.rfm_force_array).compact
+			conf = conf.dup
+			filters = (conf[:use].rfm_force_array | filters.rfm_force_array).compact
 			filters.each{|f| next unless conf[f]; conf.merge!(conf[f] || {})} if !filters.blank?
-			conf.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v) }
+			conf[:using] = (conf[:use].rfm_force_array | filters).compact
+			conf.delete(:use)
 			conf
 		end
 		
