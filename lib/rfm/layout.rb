@@ -269,7 +269,7 @@ module Rfm
 	    
 	    def get_records(action, extra_params = {}, options = {})
 	      include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
-	      xml_response = db.server.connect(db.account_name, db.password, action, params.merge(extra_params), options).body
+	      xml_response = server.connect(state[:account_name], state[:password], action, params.merge(extra_params), options).body
 	      Rfm::Resultset.new(db.server, xml_response, self, include_portals)
 	    end
 	    
