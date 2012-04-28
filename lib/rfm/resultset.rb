@@ -67,14 +67,15 @@ module Rfm
     #   layout contains portals, you can find out what fields they contain here. Again, if it's the data you're
     #   after, you want to look at the Record object.
     
-    def initialize(*args) # xml, caller, portals
+    def initialize(*args) # xml_response, caller, portals
     	#Was (server_obj, xml_response, layout_obj, portals=nil)
     	
     	options = args.rfm_extract_options!
     	#config options
 
+			xml_response			= args[0] || options[:xml_response]
 			@caller						= args[1] || options[:caller]
-      @layout           = @caller.class == Rfm::Layout ? @caller : options[:layout_object]
+      @layout           = @caller.class == Rfm::Layout::SubLayout ? @caller : options[:layout_object]
       @database					= (@layout.database rescue nil) || @caller.class == Rfm::Database ? @caller : options[:database_object]
       @server           = (@database.server rescue nil) || @caller.class == Rfm::Server ? @caller : options[:server_object]
       @field_meta     ||= Rfm::CaseInsensitiveHash.new
@@ -84,7 +85,7 @@ module Rfm
       config :parent=>'caller'
       config sanitize_config(options, true)
       
-      doc = XmlParser.new(xml, :namespace=>false, :parser=>(state[:parser] rescue nil))
+      doc = XmlParser.new(xml_response, :namespace=>false, :parser=>(state[:parser] rescue nil))
       
       error = doc['fmresultset']['error']['code'].to_i
       check_for_errors(error, (server.state[:raise_on_401] rescue nil))
