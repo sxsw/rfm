@@ -136,14 +136,14 @@ module Rfm
     #   myLayout = myServer["Customers"]["Details"]
     def initialize(*args) #name, db_obj
     	options = args.rfm_extract_options!
-    	config options
+    	
+    	config sanitize_config(options, true)
     	config :layout => args[0] if args[0]
+    	config :parent=> 'db'
     
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''
             
-      rfm_metaclass.instance_variable_set :@db, (args[1] || state[:database_object])
-      @config.delete(:database_object)
-      config :parent=> 'db'
+      rfm_metaclass.instance_variable_set :@db, (args[1] || options[:database_object])
       
       @loaded = false
       @field_controls = Rfm::CaseInsensitiveHash.new
@@ -270,7 +270,8 @@ module Rfm
 	    def get_records(action, extra_params = {}, options = {})
 	      include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
 	      xml_response = server.connect(state[:account_name], state[:password], action, params.merge(extra_params), options).body
-	      Rfm::Resultset.new(db.server, xml_response, self, include_portals)
+	      #Rfm::Resultset.new(db.server, xml_response, self, include_portals)
+	      Rfm::Resultset.new(xml_response, self, include_portals)
 	    end
 	    
 	    def params

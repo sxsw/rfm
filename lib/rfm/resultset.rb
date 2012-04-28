@@ -36,12 +36,14 @@ module Rfm
   #   it provides metadata about the portals in the ResultSet and the Fields on those portals
 
   class Resultset < Array
+  	include Config
     
-    attr_reader :layout, :server
+    attr_reader :layout, :database, :server, :caller
     attr_reader :field_meta, :portal_meta
     attr_reader :date_format, :time_format, :timestamp_format
     attr_reader :total_count, :foundset_count, :table
-    def_delegators :layout, :db, :database
+    #def_delegators :layout, :db, :database
+    	alias_method :db, :database
     
     # Initializes a new ResultSet object. You will probably never do this your self (instead, use the Layout
     # object to get various ResultSet obejects).
@@ -65,14 +67,24 @@ module Rfm
     #   layout contains portals, you can find out what fields they contain here. Again, if it's the data you're
     #   after, you want to look at the Record object.
     
-    def initialize(server_obj, xml_response, layout_obj, portals=nil)
-      @layout           = layout_obj
-      @server           = server_obj
+    def initialize(*args) # xml, caller, portals
+    	#Was (server_obj, xml_response, layout_obj, portals=nil)
+    	
+    	options = args.rfm_extract_options!
+    	#config options
+
+			@caller						= args[1] || options[:caller]
+      @layout           = @caller.class == Rfm::Layout ? @caller : options[:layout_object]
+      @database					= (@layout.database rescue nil) || @caller.class == Rfm::Database ? @caller : options[:database_object]
+      @server           = (@database.server rescue nil) || @caller.class == Rfm::Server ? @caller : options[:server_object]
       @field_meta     ||= Rfm::CaseInsensitiveHash.new
       @portal_meta    ||= Rfm::CaseInsensitiveHash.new
-      @include_portals  = portals 
+      @include_portals  = args[2] || options[:include_portals]
       
-      doc = XmlParser.new(xml_response, :namespace=>false, :parser=>(server.state[:parser] rescue nil))
+      config :parent=>'caller'
+      config sanitize_config(options, true)
+      
+      doc = XmlParser.new(xml, :namespace=>false, :parser=>(state[:parser] rescue nil))
       
       error = doc['fmresultset']['error']['code'].to_i
       check_for_errors(error, (server.state[:raise_on_401] rescue nil))
@@ -98,6 +110,7 @@ module Rfm
       parse_portals(meta)
       
       # These were added for loading resultset from file
+      # Kind of a hack. This should ideally condense down to just another option on the main @layout = ...
       unless @layout
       	@layout = @datasource['layout']
       	@layout.instance_variable_set '@database', @datasource['database']
@@ -111,6 +124,10 @@ module Rfm
       return if resultset['record'].nil?
       Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, @layout)
     end
+    
+		def state
+			get_config
+		end
         
     def field_names
     	field_meta.collect{|k,v| v.name}

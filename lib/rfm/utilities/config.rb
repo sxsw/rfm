@@ -86,8 +86,15 @@ module Rfm
 
 			rslt = config_merge_with_parent(args).merge(opt)
 			using = rslt[:using].rfm_force_array
-			rslt.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v) }
+			#rslt.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v) }
+			sanitize_config(rslt)
 			rslt.merge(:strings=>strings, :using=>using)
+  	end
+  	
+  	def sanitize_config(conf={}, dupe=false)
+  		(conf = conf.dup) if dupe
+  		conf.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v) }
+  		conf
   	end
   		  
 	protected

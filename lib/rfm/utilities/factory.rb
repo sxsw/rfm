@@ -49,7 +49,8 @@ module Rfm
       
       def all
         if !@loaded
-          Rfm::Resultset.new(@server, @server.connect(@server.state[:account_name], @server.state[:password], '-dbnames', {}).body, nil).each {|record|
+        	xml = @server.connect(@server.state[:account_name], @server.state[:password], '-dbnames', {}).body
+          Rfm::Resultset.new(xml, :server_object => @server).each {|record|
             name = record['DATABASE_NAME']
             self[name] = Rfm::Database.new(name, @server) if self.keys.find{|k| k.to_s.downcase == name.to_s.downcase} == nil
           }
@@ -98,7 +99,8 @@ module Rfm
       end
       
       def get_layout_names
-      	Rfm::Resultset.new(@server, get_layout_names_xml.body, nil)
+      	#Rfm::Resultset.new(@server, get_layout_names_xml.body, nil)
+      	Rfm::Resultset.new(get_layout_names_xml.body, :database_object => @database)
       end
     
     	def names
@@ -122,7 +124,8 @@ module Rfm
       
       def all
         if !@loaded
-          Rfm::Resultset.new(@server, @server.connect(@database.account_name, @database.password, '-scriptnames', {"-db" => @database.name}).body, nil).each {|record|
+        	xml = @server.connect(@database.account_name, @database.password, '-scriptnames', {"-db" => @database.name}).body
+          Rfm::Resultset.new(xml, :database_object => @database).each {|record|
             name = record['SCRIPT_NAME']
             self[name] = Rfm::Metadata::Script.new(name, @database) if self[name] == nil
           }
