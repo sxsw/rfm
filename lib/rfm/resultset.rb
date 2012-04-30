@@ -39,11 +39,15 @@ module Rfm
   	include Config
     
     attr_reader :layout, :database, :server, :caller
-    attr_reader :field_meta, :portal_meta
+    attr_reader :field_meta, :portal_meta, :include_portals, :datasource
     attr_reader :date_format, :time_format, :timestamp_format
     attr_reader :total_count, :foundset_count, :table
     #def_delegators :layout, :db, :database
-    	alias_method :db, :database
+    alias_method :db, :database
+    
+    class << self
+    	alias_method :load_data, :new
+    end
     
     # Initializes a new ResultSet object. You will probably never do this your self (instead, use the Layout
     # object to get various ResultSet obejects).
@@ -66,29 +70,26 @@ module Rfm
     # * *portals* is a hash (with table occurrence names for keys and Field objects for values). If your
     #   layout contains portals, you can find out what fields they contain here. Again, if it's the data you're
     #   after, you want to look at the Record object.
-    
     def initialize(*args) # xml_response, caller, portals
     	#Was (server_obj, xml_response, layout_obj, portals=nil)
     	
-    	options = args.rfm_extract_options!
-    	#config options
-
-			xml_response			= args[0] || options[:xml_response]
-			@caller						= args[1] || options[:caller]
-      @layout           = @caller.class == Rfm::Layout::SubLayout ? @caller : options[:layout_object]
-      @database					= (@layout.database rescue nil) || @caller.class == Rfm::Database ? @caller : options[:database_object]
-      @server           = (@database.server rescue nil) || @caller.class == Rfm::Server ? @caller : options[:server_object]
-      @field_meta     ||= Rfm::CaseInsensitiveHash.new
-      @portal_meta    ||= Rfm::CaseInsensitiveHash.new
-      @include_portals  = args[2] || options[:include_portals]
-      
+    	options = args.rfm_extract_options!      
       config :parent=>'caller'
       config sanitize_config(options, true)
       
+      xml_response			= args[0] || options[:xml_response]
       doc = XmlParser.new(xml_response, :namespace=>false, :parser=>(state[:parser] rescue nil))
       
       error = doc['fmresultset']['error']['code'].to_i
       check_for_errors(error, (server.state[:raise_on_401] rescue nil))
+      
+			@caller						= args[1] || options[:caller]
+      @layout           = (@caller.class.ancestors.include? Rfm::Layout::LayoutModule) ? @caller : options[:layout_object]
+      @database					= (@layout.database rescue nil) || (@caller.class == Rfm::Database ? @caller : options[:database_object])
+      @server           = (@database.server rescue nil) || (@caller.class == Rfm::Server ? @caller : options[:server_object])
+      @field_meta     ||= Rfm::CaseInsensitiveHash.new
+      @portal_meta    ||= Rfm::CaseInsensitiveHash.new
+      @include_portals  = args[2] || options[:include_portals]            
 
       @datasource       = doc['fmresultset']['datasource']
       meta              = doc['fmresultset']['metadata']
@@ -101,7 +102,7 @@ module Rfm
       @foundset_count   = resultset['count'].to_s.to_i
       @total_count      = @datasource['total-count'].to_s.to_i
       @table            = @datasource['table']
-      
+            
       (layout.table = @table) if layout and layout.table_no_load.blank?
       
       parse_fields(meta)
@@ -112,19 +113,24 @@ module Rfm
       
       # These were added for loading resultset from file
       # Kind of a hack. This should ideally condense down to just another option on the main @layout = ...
-      unless @layout
-      	@layout = @datasource['layout']
-      	@layout.instance_variable_set '@database', @datasource['database']
-      	@layout.instance_eval do
-      		def database
-      			@database
-      		end
-      	end
-      end			
+			#       unless @layout
+			#       	@layout = @datasource['layout']
+			#       	@layout.instance_variable_set '@database', @datasource['database']
+			#       	@layout.instance_eval do
+			#       		def database
+			#       			@database
+			#       		end
+			#       	end
+			#       end			
       
       return if resultset['record'].nil?
       Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, @layout)
     end
+    
+    # Load Resultset data from file-spec or string
+		#     def self.load_data(file_or_string)
+		#     	self.new(file_or_string, nil)
+		#     end
     
 		def state
 			get_config
@@ -137,11 +143,6 @@ module Rfm
   	def portal_names
   		portal_meta.keys
   	end
-    
-    # Load Resultset data from file-spec or string
-    def self.load_data(file_or_string)
-    	self.new(nil, file_or_string, nil)
-    end
     
     private
     

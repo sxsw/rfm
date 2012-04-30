@@ -25,7 +25,7 @@ describe Rfm::Layout do
 	end # initialize
 	
 	describe "#get_records" do
-		it "calls db.server.connect(db.account_name, db.password, action, params.merge(extra_params), options)" do
+		it "calls server.connect(state[:account_name], state[:password], action, params.merge(extra_params), options)" do
 			server.should_receive(:connect) do |acnt, pass, actn, prms, opts|
 				actn.should == '-find'
 				prms[:prms].should == 'tst'
@@ -34,9 +34,9 @@ describe Rfm::Layout do
 			layout.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'})
 		end
 		
-		it "calls Rfm::Resultset.new(db.server, xml_response, self, include_portals)" do
-			Rfm::Resultset.should_receive(:new) do |srv, rsp, slf, incprt|
-				srv.class.should == Rfm::Server
+		it "calls Rfm::Resultset.new(xml_response, self, include_portals)" do
+			Rfm::Resultset.should_receive(:new) do |xml, slf, incprt|
+				xml[0..4].should == '<?xml'
 				slf.should == layout
 				incprt.should == nil
 			end
