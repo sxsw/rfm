@@ -33,7 +33,6 @@ describe Rfm::Factory do
   describe '.db' do
   	it "returns Rfm::Database instance, given name, filters, options hash" do
   		database = subject.db('test-db-name', :group1, :account_name=>'my-name')
-  		y database.get_config
   		database.name.should == 'test-db-name'
   		database.account_name.should == 'my-name'
   	end
