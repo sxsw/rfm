@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<FMPXMLRESULT xmlns="http://www.filemaker.com/fmpxmlresult">
+	<ERRORCODE>0</ERRORCODE>
+	<PRODUCT BUILD="03/15/2012" NAME="FileMaker Web Publishing Engine" VERSION="12.0.1.150"/>
+	<DATABASE DATEFORMAT="" LAYOUT="" NAME="DBNAMES" RECORDS="6" TIMEFORMAT=""/>
+	<METADATA>
+		<FIELD EMPTYOK="NO" MAXREPEAT="1" NAME="DATABASE_NAME" TYPE="TEXT"/>
+	</METADATA>
+	<RESULTSET FOUND="6">
+		<ROW MODID="0" RECORDID="0">
+			<COL>
+				<DATA>FMServer_Sample</DATA>
+			</COL>
+		</ROW>
+		<ROW MODID="0" RECORDID="0">
+			<COL>
+				<DATA>Graphene</DATA>
+			</COL>
+		</ROW>
+		<ROW MODID="0" RECORDID="0">
+			<COL>
+				<DATA>LucyLuLu</DATA>
+			</COL>
+		</ROW>
+		<ROW MODID="0" RECORDID="0">
+			<COL>
+				<DATA>Palais</DATA>
+			</COL>
+		</ROW>
+		<ROW MODID="0" RECORDID="0">
+			<COL>
+				<DATA>PalaisWeb</DATA>
+			</COL>
+		</ROW>
+		<ROW MODID="0" RECORDID="0">
+			<COL>
+				<DATA>Totel</DATA>
+			</COL>
+		</ROW>
+	</RESULTSET>
+</FMPXMLRESULT>
