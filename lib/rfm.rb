@@ -32,6 +32,7 @@ module Rfm
   autoload :Factory,      'rfm/utilities/factory'
   autoload :CompoundQuery,'rfm/utilities/compound_query'
   autoload :VERSION,      'rfm/version'
+  autoload :Fmresultset,	'rfm/utilities/fmresultset.rb'
 
 	module Metadata
 		autoload :Script,         'rfm/metadata/script'

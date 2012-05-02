@@ -62,6 +62,34 @@ class Array
 	def rfm_extract_options!
 	  last.is_a?(::Hash) ? pop : {}
 	end
+	
+	# This is for xml_mini/filemaker translation modules.
+	# This might slow down ruby in general, as
+	# it adds interpreted code to a method that was otherwise pure C.
+	def rfm_extend_members(klass)
+		@member_extension = klass
+		self.class_eval do
+		
+			alias_method 'old_reader', '[]'
+			def [](*args)
+				r = old_reader(*args)
+				r.extend(@member_extension) if @member_extension
+				r
+			end
+			
+			alias_method 'old_each', 'each'
+			def each #(&block)
+				old_each do |i|
+					i.extend(@member_extension) if @member_extension
+					yield(i)
+				end
+			end
+			
+		end unless defined? old_reader
+		self
+	end
+	
+	
 end # Array
 
 # Allows access to superclass object

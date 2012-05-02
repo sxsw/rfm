@@ -78,9 +78,9 @@ module Rfm
       config sanitize_config(options, true)
       
       xml_response			= args[0] || options[:xml_response]
-      doc = XmlParser.new(xml_response, :namespace=>false, :parser=>(state[:parser] rescue nil))
+      doc = XmlParser.parse(xml_response, :namespace=>false, :parser=>(state[:parser] rescue nil))
       
-      error = doc['fmresultset']['error']['code'].to_i
+      error = doc.error
       check_for_errors(error, (server.state[:raise_on_401] rescue nil))
       
 			@caller						= args[1] || options[:caller]
@@ -91,25 +91,25 @@ module Rfm
       @portal_meta    ||= Rfm::CaseInsensitiveHash.new
       @include_portals  = args[2] || options[:include_portals]            
 
-      @datasource       = doc['fmresultset']['datasource']
-      meta              = doc['fmresultset']['metadata']
-      resultset         = doc['fmresultset']['resultset']
+      @datasource       = doc.datasource
+      meta              = doc.meta
+      resultset         = doc.resultset
 
-      @date_format      = convert_date_time_format(@datasource['date-format'].to_s)
-      @time_format      = convert_date_time_format(@datasource['time-format'].to_s)
-      @timestamp_format = convert_date_time_format(@datasource['timestamp-format'].to_s)
+      @date_format      = doc.date_format
+      @time_format      = doc.time_format
+      @timestamp_format = doc.timestamp_format
 
-      @foundset_count   = resultset['count'].to_s.to_i
-      @total_count      = @datasource['total-count'].to_s.to_i
-      @table            = @datasource['table']
+      @foundset_count   = doc.foundset_count
+      @total_count      = doc.total_count
+      @table            = doc.table
             
       (layout.table = @table) if layout and layout.table_no_load.blank?
       
-      parse_fields(meta)
+      parse_fields(doc)
       
       # This will always load portal meta, even if :include_portals was not specified.
       # See Record for control of portal data loading.
-      parse_portals(meta)
+      parse_portals(doc)
       
       # These were added for loading resultset from file
       # Kind of a hack. This should ideally condense down to just another option on the main @layout = ...
@@ -123,8 +123,8 @@ module Rfm
 			#       	end
 			#       end			
       
-      return if resultset['record'].nil?
-      Rfm::Record.build_records(resultset['record'].rfm_force_array, self, @field_meta, @layout)
+      return if doc.records.blank?
+      Rfm::Record.build_records(doc.records, self, @field_meta, @layout)
     end
     
     # Load Resultset data from file-spec or string
@@ -150,23 +150,23 @@ module Rfm
         raise Rfm::Error.getError(code) if code != 0 && (code != 401 || raise_401)
       end
     
-      def parse_fields(meta)
-      	return if meta['field-definition'].blank?
+      def parse_fields(doc)
+      	return if doc.fields.blank?
 
-        meta['field-definition'].rfm_force_array.each do |field|
-          @field_meta[field['name']] = Rfm::Metadata::Field.new(field)
+        doc.fields.each do |field|
+          @field_meta[field.name] = Rfm::Metadata::Field.new(field)
         end
         (layout.field_names = field_names) if layout and layout.field_names_no_load.blank?
       end
 
-      def parse_portals(meta)
-      	return if meta['relatedset-definition'].blank?
-        meta['relatedset-definition'].rfm_force_array.each do |relatedset|
+      def parse_portals(doc)
+      	return if doc.portals.blank?
+        doc.portals.each do |relatedset|
         	next if relatedset.blank?
-          table, fields = relatedset['table'], {}
+          table, fields = relatedset.table, {}
 
-          relatedset['field-definition'].rfm_force_array.each do |field|
-            name = field['name'].to_s.gsub(Regexp.new(table + '::'), '')
+          relatedset.fields.each do |field|
+            name = field.name.to_s.gsub(Regexp.new(table + '::'), '')
             fields[name] = Rfm::Metadata::Field.new(field)
           end
 
@@ -175,15 +175,15 @@ module Rfm
         (layout.portal_meta = @portal_meta) if layout and layout.portal_meta_no_load.blank?
       end
     
-      def convert_date_time_format(fm_format)
-        fm_format.gsub!('MM', '%m')
-        fm_format.gsub!('dd', '%d')
-        fm_format.gsub!('yyyy', '%Y')
-        fm_format.gsub!('HH', '%H')
-        fm_format.gsub!('mm', '%M')
-        fm_format.gsub!('ss', '%S')
-        fm_format
-      end
+			#   def convert_date_time_format(fm_format)
+			#     fm_format.gsub!('MM', '%m')
+			#     fm_format.gsub!('dd', '%d')
+			#     fm_format.gsub!('yyyy', '%Y')
+			#     fm_format.gsub!('HH', '%H')
+			#     fm_format.gsub!('mm', '%M')
+			#     fm_format.gsub!('ss', '%S')
+			#     fm_format
+			#   end
     
   end
 end

@@ -1,21 +1,6 @@
 module Rfm
 
-	# This might slow down ruby in general - it adds interpreted code to a method that was otherwise pure C.
-	class ::Array
-		def rfm_extend_members(klass)
-			@member_extension = klass
-			self.class_eval do
-				alias_method 'old_reader', '[]'
-				def [](*args)
-					r = old_reader(*args)
-					r.extend(@member_extension) if @member_extension
-					r
-				end			
-			end unless defined? old_reader
-			self
-		end
-	end
-	
+	# Methods to help translate xml_mini document into Rfm/Filemaker objects.
 	module Fmresultset
 	
 	  module Resultset
@@ -37,15 +22,15 @@ module Rfm
 	    end
 	      
 	    def date_format
-	    	convert_date_time_format(datasource['date-format'].to_s)
+	    	Rfm.convert_date_time_format(datasource['date-format'].to_s)
 	  	end
 	  	
 	    def time_format
-	    	convert_date_time_format(datasource['time-format'].to_s)
+	    	Rfm.convert_date_time_format(datasource['time-format'].to_s)
 	    end
 	    
 	    def timestamp_format
-	    	convert_date_time_format(datasource['timestamp-format'].to_s)
+	    	Rfm.convert_date_time_format(datasource['timestamp-format'].to_s)
 	    end
 	
 	    def foundset_count

@@ -55,6 +55,18 @@ module Rfm
 				ActiveSupport::XmlMini.with_backend(get_backend_from_hash(opts[:parser])) {ActiveSupport::XmlMini.parse(string_or_file)}
 			end
 		end
+		
+		# Creates new hash with #new, plus extends the hash with result-dependent translation class.
+		def parse(string_or_file, opts={})
+			doc = new(string_or_file, opts)
+			case
+				when doc.has_key?('fmresultset') : doc.extend(Fmresultset::Resultset)
+				when doc.has_key?('FMPXMLRESULT') : doc.extend(Fmpxmlresult::Resultset)
+				when doc.has_key?('FMPDSORESULT') : doc.extend(Fmpdsoresult::Resultset)
+				when doc.has_key?('FMPXMLLAYOUT') : doc.extend(Fmpxmllayout::Resultset)
+				else doc
+			end
+		end
 				
 		# Shortcut to XmlMini config getter.
 		# If a parameter is passed, it will be used to get the local backend description
