@@ -16,7 +16,8 @@ describe Rfm::Record do
 	  
   	context "when no model exists" do
 	  	it "creates an instance of Rfm::Record" do
-	  		Rfm::Record.new({},[],'', @Layout).class.should == Rfm::Record
+	  		r = {}.extend Rfm::Fmresultset::Record
+	  		Rfm::Record.new(r,[],'', @Layout).class.should == Rfm::Record
 	  	end
 	  end
   end

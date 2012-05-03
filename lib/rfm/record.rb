@@ -117,24 +117,24 @@ module Rfm
 
       @layout        = layout_obj
       @resultset     = resultset_obj
-      @record_id     = record['record-id']
-      @mod_id        = record['mod-id']
+      @record_id     = record.record_id
+      @mod_id        = record.mod_id
       @mods          = {}
       @portals     ||= Rfm::CaseInsensitiveHash.new
 
-      relatedsets = !portal && resultset_obj.instance_variable_get(:@include_portals) ? record['relatedset'].rfm_force_array : []
+      relatedsets = !portal && resultset_obj.instance_variable_get(:@include_portals) ? record.portals : []
             
-      record['field'].rfm_force_array.each do |field|
+      record.columns.each do |field|
       	next unless field
-        field_name = field['name']
+        field_name = field.name
         field_name.gsub!(Regexp.new(portal + '::'), '') if portal
         datum = []
         
-        data = field['data']; data = data.is_a?(Hash) ? [data] : data
+        data = field.data #['data']; data = data.is_a?(Hash) ? [data] : data
         data.each do |x|
         	next unless field_meta[field_name]
         	begin
-	          datum.push(field_meta[field_name].coerce(x['__content__'], resultset_obj))
+	          datum.push(field_meta[field_name].coerce(x, resultset_obj)) #(x['__content__'], resultset_obj))
         	rescue StandardError => error
         		self.errors.add(field_name, error) if self.respond_to? :errors
         		raise error unless @layout.ignore_bad_data
@@ -153,9 +153,9 @@ module Rfm
       unless relatedsets.empty?
         relatedsets.each do |relatedset|
         	next if relatedset.blank?
-          tablename, records = relatedset['table'], []
+          tablename, records = relatedset.table, []
       
-          relatedset['record'].rfm_force_array.each do |record|
+          relatedset.records.each do |record|
           	next unless record
             records << self.class.new(record, resultset_obj, resultset_obj.portal_meta[tablename], layout_obj, tablename)
           end
