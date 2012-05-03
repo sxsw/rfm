@@ -77,7 +77,7 @@ module Rfm
 	    	self['type']
 	    end
 	    
-	    def repeats
+	    def max_repeats
 	    	self['max-repeats']
 	    end
 	    

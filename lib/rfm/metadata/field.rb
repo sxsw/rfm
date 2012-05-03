@@ -64,11 +64,11 @@ module Rfm
       # Initializes a field object. You'll never need to do this. Instead, get your Field objects from
       # ResultSet::fields
       def initialize(field)
-        @name        = field['name']
-        @result      = field['result']
-        @type        = field['type']
-        @max_repeats = field['max-repeats']
-        @global      = field['global']
+        @name        = field.name #['name']
+        @result      = field.result #['result']
+        @type        = field.type #['type']
+        @max_repeats = field.max_repeats #['max-repeats']
+        @global      = field.global #['global']
       end
     
       # Coerces the text value from an +fmresultset+ document into proper Ruby types based on the 

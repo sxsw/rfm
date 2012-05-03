@@ -81,7 +81,7 @@ module Rfm
 	    	''
 	    end
 	    
-	    def repeats
+	    def max_repeats
 	    	self['MAXREPEAT']
 	    end
 	    
