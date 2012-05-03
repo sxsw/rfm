@@ -62,32 +62,47 @@ class Array
 	def rfm_extract_options!
 	  last.is_a?(::Hash) ? pop : {}
 	end
+
+	# These methods allow dynamic extension of array members with other modules.
+	# These methods also carry the @root object for reference, when you don't have the
+	# root object explicity referenced anywhere.
+	#
+	# These methods might slow down array traversal, as
+	# they add interpreted code to methods that were otherwise pure C.	
+  def rfm_extend_members(klass, caller=nil)
+    @root = caller.instance_variable_get(:@root)
+  	@member_extension = klass
+  	self.instance_eval do
+  	  class << self
 	
-	# This is for xml_mini/filemaker translation modules.
-	# This might slow down ruby in general, as
-	# it adds interpreted code to a method that was otherwise pure C.
-	def rfm_extend_members(klass)
-		@member_extension = klass
-		self.class_eval do
+    		alias_method 'old_reader', '[]'
+    		def [](*args)
+    			member = old_reader(*args)
+          rfm_extend_member(member, @member_extension)
+    			member
+    		end
 		
-			alias_method 'old_reader', '[]'
-			def [](*args)
-				r = old_reader(*args)
-				r.extend(@member_extension) if @member_extension
-				r
-			end
-			
-			alias_method 'old_each', 'each'
-			def each #(&block)
-				old_each do |i|
-					i.extend(@member_extension) if @member_extension
-					yield(i)
-				end
-			end
-			
-		end unless defined? old_reader
-		self
-	end
+    		alias_method 'old_each', 'each'
+    		def each
+    			old_each do |member|
+    				rfm_extend_member(member, @member_extension)
+    				yield(member)
+    			end
+    		end
+  	  end
+  	end unless defined? old_reader
+  	self
+  end
+  
+  def rfm_extend_member(member, extension)
+  	if member and extension
+	    unless member.instance_variable_get(:@root)
+			  member.instance_variable_set(:@root, @root)
+	  		member.instance_eval(){def root; @root; end}
+	  	end
+			member.extend(extension)
+		end  
+  end
 	
 	
 end # Array

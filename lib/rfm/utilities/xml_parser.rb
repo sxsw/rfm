@@ -60,10 +60,10 @@ module Rfm
 		def parse(string_or_file, opts={})
 			doc = new(string_or_file, opts)
 			case
-				when doc.has_key?('fmresultset') : doc.extend(Fmresultset::Resultset)
-				when doc.has_key?('FMPXMLRESULT') : doc.extend(Fmpxmlresult::Resultset)
-				when doc.has_key?('FMPDSORESULT') : doc.extend(Fmpdsoresult::Resultset)
-				when doc.has_key?('FMPXMLLAYOUT') : doc.extend(Fmpxmllayout::Resultset)
+				when doc.has_key?('fmresultset') : doc.extend(Fmresultset)
+				when doc.has_key?('FMPXMLRESULT') : doc.extend(Fmpxmlresult)
+				when doc.has_key?('FMPDSORESULT') : doc.extend(Fmpdsoresult)
+				when doc.has_key?('FMPXMLLAYOUT') : doc.extend(Fmpxmllayout)
 				else doc
 			end
 		end

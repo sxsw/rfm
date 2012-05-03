@@ -6,83 +6,88 @@ module Rfm
 		  obj.instance_variable_set :@root, obj
 		  obj.extend Resultset
 		end
-			
+	
 	  module Resultset
 	
 	    def error
-	    	self['fmresultset']['error']['code'].to_i
+	    	self['FMPXMLRESULT']['ERRORCODE'].to_i
 			end      
 	       
 	    def datasource
-	      self['fmresultset']['datasource']
+	      self['FMPXMLRESULT']['DATABASE']
 	    end
 	    
 	    def meta
-	    	self['fmresultset']['metadata']
+	    	self['FMPXMLRESULT']['METADATA']
 	    end
 	    
 	    def resultset
-	    	self['fmresultset']['resultset']
+	    	self['FMPXMLRESULT']['RESULTSET']
 	    end
 	      
 	    def date_format
-	    	Rfm.convert_date_time_format(datasource['date-format'].to_s)
+	    	Rfm.convert_date_time_format(datasource['DATEFORMAT'].to_s)
 	  	end
 	  	
 	    def time_format
-	    	Rfm.convert_date_time_format(datasource['time-format'].to_s)
+	    	Rfm.convert_date_time_format(datasource['TIMEFORMAT'].to_s)
 	    end
 	    
 	    def timestamp_format
-	    	Rfm.convert_date_time_format(datasource['timestamp-format'].to_s)
+	    	#Rfm.convert_date_time_format(datasource['timestamp-format'].to_s)
+	    	''
 	    end
 	
 	    def foundset_count
-	    	resultset['count'].to_s.to_i
+	    	resultset['FOUND'].to_s.to_i
 	    end
 	    	
 	    def total_count
-	    	datasource['total-count'].to_s.to_i
+	    	datasource['RECORDS'].to_s.to_i
 	    end
 	    	
 	    def table
-	    	datasource['table']
+	    	#datasource['table'].to_s
+	    	''
 			end
 	    
 	    def records
-	      resultset['record'].rfm_force_array.rfm_extend_members(Record)
+	      resultset['ROW'].rfm_force_array.rfm_extend_members(Record, self)
 	    end
 	
 	    
 	    def fields
-	    	meta['field-definition'].rfm_force_array.rfm_extend_members(Field)
+	    	meta['FIELD'].rfm_force_array.rfm_extend_members(Field, self)
 	    end
 	    
 	    def portals
-		    meta['relatedset-definition'].rfm_force_array.rfm_extend_members(RelatedsetDefinition)
+		    #meta['relatedset-definition'].rfm_force_array.rfm_extend_members(RelatedsetDefinition)
+		    []
 	    end
 	
 		end
 		
 		module Field
 			def name
-				self['name']
+				self['NAME']
 			end
 			
 			def result
-	    	self['result']
+	    	self['TYPE']
 	    end
 	    
 	    def type
-	    	self['type']
+	    	#self['type']
+	    	''
 	    end
 	    
 	    def repeats
-	    	self['max-repeats']
+	    	self['MAXREPEAT']
 	    end
 	    
 	    def global
-	    	self['global']	
+	    	#self['global']
+	    	''
 	    end
 		end
 		
@@ -96,6 +101,8 @@ module Rfm
 			end
 		end
 		
+		# May need to add @parent to each level of heirarchy in #rfm_extend_member,
+		# so we can get the container and it's parent from records, columns, data, etc..
 		module Record	
 			def columns
 				self['field'].rfm_force_array.rfm_extend_members(Column)
@@ -115,12 +122,18 @@ module Rfm
 		end
 			
 		module Column
-			def name
-				self['name']
+			def name #(fields)
+				#self['name']
+				
 			end
 			
 			def data
 				self['data'].values #['__content__']
+			end
+			
+			private
+			def position #(records)
+				records.index(self)
 			end
 		end
 		
