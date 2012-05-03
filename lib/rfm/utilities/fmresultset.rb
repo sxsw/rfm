@@ -120,7 +120,7 @@ module Rfm
 			end
 			
 			def data
-				self['data'].values #['__content__']
+				self['data'].rfm_force_array.collect{|d| d['__content__']}
 			end
 		end
 		

@@ -70,10 +70,12 @@ class Array
 	# These methods might slow down array traversal, as
 	# they add interpreted code to methods that were otherwise pure C.	
   def rfm_extend_members(klass, caller=nil)
+  	@parent = caller
     @root = caller.instance_variable_get(:@root)
   	@member_extension = klass
   	self.instance_eval do
   	  class << self
+  	  	attr_accessor :parent
 	
     		alias_method 'old_reader', '[]'
     		def [](*args)
@@ -98,7 +100,9 @@ class Array
   	if member and extension
 	    unless member.instance_variable_get(:@root)
 			  member.instance_variable_set(:@root, @root)
+			  member.instance_variable_set(:@parent, self)
 	  		member.instance_eval(){def root; @root; end}
+	  		member.instance_eval(){def parent; @parent; end}
 	  	end
 			member.extend(extension)
 		end  

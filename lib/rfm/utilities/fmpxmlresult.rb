@@ -1,7 +1,7 @@
 module Rfm
 
 	# Methods to help translate xml_mini document into Rfm/Filemaker objects.
-	module Fmresultset
+	module Fmpxmlresult
 		def self.extended(obj)
 		  obj.instance_variable_set :@root, obj
 		  obj.extend Resultset
@@ -105,35 +105,31 @@ module Rfm
 		# so we can get the container and it's parent from records, columns, data, etc..
 		module Record	
 			def columns
-				self['field'].rfm_force_array.rfm_extend_members(Column)
+				self['COL'].rfm_force_array.rfm_extend_members(Column, self)
 			end
 			
 			def record_id
-				self['record-id']
+				self['RECORDID']
 			end
 			
 			def mod_id
-				self['mod-id']
+				self['MODID']
 			end
 			
 			def portals
-				self['relatedset'].rfm_force_array.rfm_extend_members(Relatedset)
+				#self['relatedset'].rfm_force_array.rfm_extend_members(Relatedset)
+				[]
 			end
 		end
 			
 		module Column
-			def name #(fields)
-				#self['name']
-				
+			def name
+				n = parent.index self
+				root.fields[n].name				
 			end
 			
 			def data
-				self['data'].values #['__content__']
-			end
-			
-			private
-			def position #(records)
-				records.index(self)
+				self['DATA'].rfm_force_array.collect{|d| d['__content__']}
 			end
 		end
 		
