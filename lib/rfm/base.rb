@@ -172,7 +172,7 @@ module Rfm
     end
     
 		def initialize(record={}, resultset_obj=[], field_meta='', layout_obj=self.class.layout, portal=nil)
-			if resultset_obj == [] and !record.has_key? 'field'
+			if resultset_obj == [] and !record.respond_to?(:columns) #.has_key? 'field'
 				@mods = Rfm::CaseInsensitiveHash.new
 				@layout = layout_obj
 				@resultset = Resultset.allocate

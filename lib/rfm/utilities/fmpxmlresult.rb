@@ -10,7 +10,7 @@ module Rfm
 	  module Resultset
 	
 	    def error
-	    	self['FMPXMLRESULT']['ERRORCODE'].to_i
+	    	self['FMPXMLRESULT']['ERRORCODE']['__content__'].to_i
 			end      
 	       
 	    def datasource

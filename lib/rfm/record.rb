@@ -114,7 +114,7 @@ module Rfm
     def_delegators :layout, :db, :database, :server
 
     def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
-
+    
       @layout        = layout_obj
       @resultset     = resultset_obj
       @record_id     = record.record_id
@@ -123,13 +123,12 @@ module Rfm
       @portals     ||= Rfm::CaseInsensitiveHash.new
 
       relatedsets = !portal && resultset_obj.instance_variable_get(:@include_portals) ? record.portals : []
-            
+      
       record.columns.each do |field|
       	next unless field
         field_name = field.name
         field_name.gsub!(Regexp.new(portal + '::'), '') if portal
         datum = []
-        
         data = field.data #['data']; data = data.is_a?(Hash) ? [data] : data
         data.each do |x|
         	next unless field_meta[field_name]
