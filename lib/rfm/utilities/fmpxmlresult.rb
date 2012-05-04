@@ -35,7 +35,7 @@ module Rfm
 	    
 	    def timestamp_format
 	    	#Rfm.convert_date_time_format(datasource['timestamp-format'].to_s)
-	    	''
+	    	"#{date_format} #{time_format}"
 	    end
 	
 	    def foundset_count
