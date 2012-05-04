@@ -117,8 +117,8 @@ module Rfm
     
       @layout        = layout_obj
       @resultset     = resultset_obj
-      @record_id     = record.record_id
-      @mod_id        = record.mod_id
+      @record_id     = record.record_id rescue nil
+      @mod_id        = record.mod_id rescue nil
       @mods          = {}
       @portals     ||= Rfm::CaseInsensitiveHash.new
 

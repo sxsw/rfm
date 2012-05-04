@@ -32,6 +32,7 @@ class Object
 	# since XmlMini doesn't know which will be returnd for any particular element.
 	# See Rfm Layout & Record where this is used.
 	def rfm_force_array
+		return [] if self.nil?
 		self.is_a?(Array) ? self : [self]
 	end
 	
@@ -80,14 +81,16 @@ class Array
     		alias_method 'old_reader', '[]'
     		def [](*args)
     			member = old_reader(*args)
-          rfm_extend_member(member, @member_extension)
+          rfm_extend_member(member, @member_extension, args[0]) if args[0].is_a? Integer
     			member
     		end
 		
     		alias_method 'old_each', 'each'
     		def each
+    			i = -1
     			old_each do |member|
-    				rfm_extend_member(member, @member_extension)
+    				i = i + 1
+    				rfm_extend_member(member, @member_extension, i)
     				yield(member)
     			end
     		end
@@ -96,13 +99,15 @@ class Array
   	self
   end
   
-  def rfm_extend_member(member, extension)
+  def rfm_extend_member(member, extension, i=nil)
   	if member and extension
 	    unless member.instance_variable_get(:@root)
 			  member.instance_variable_set(:@root, @root)
 			  member.instance_variable_set(:@parent, self)
+			  member.instance_variable_set(:@index, i)
 	  		member.instance_eval(){def root; @root; end}
 	  		member.instance_eval(){def parent; @parent; end}
+	  		member.instance_eval(){def get_index; @index; end}
 	  	end
 			member.extend(extension)
 		end  

@@ -38,7 +38,7 @@ module Rfm
   class Resultset < Array
   	include Config
     
-    attr_reader :layout, :database, :server, :caller
+    attr_reader :layout, :database, :server, :caller, :doc
     attr_reader :field_meta, :portal_meta, :include_portals, :datasource
     attr_reader :date_format, :time_format, :timestamp_format
     attr_reader :total_count, :foundset_count, :table
@@ -83,6 +83,7 @@ module Rfm
       error = doc.error
       check_for_errors(error, (server.state[:raise_on_401] rescue nil))
       
+      @doc							= doc
 			@caller						= args[1] || options[:caller]
       @layout           = (@caller.class.ancestors.include? Rfm::Layout::LayoutModule) ? @caller : options[:layout_object]
       @database					= (@layout.database rescue nil) || (@caller.class == Rfm::Database ? @caller : options[:database_object])

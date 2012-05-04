@@ -126,8 +126,8 @@ module Rfm
 			
 		module Column
 			def name
-				n = parent.index self
-				root.fields[n].name				
+				#n = parent.index {|i| i === self}
+				root.fields[get_index].name				
 			end
 			
 			def data

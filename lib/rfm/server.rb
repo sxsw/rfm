@@ -281,7 +281,8 @@ module Rfm
     #   )
     def connect(account_name, password, action, args, options = {})
       post = args.merge(expand_options(options)).merge({action => ''})
-      http_fetch(host_name, port, "/fmi/xml/fmresultset.xml", account_name, password, post)
+      scheme = post.keys.find(){|k| %w(-find -findall -dbnames -layoutnames -scriptnames).include? k.to_s} ? "/fmi/xml/FMPXMLRESULT.xml" : "/fmi/xml/fmresultset.xml"
+      http_fetch(host_name, port, scheme, account_name, password, post)
     end
     
     def load_layout(layout)
