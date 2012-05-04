@@ -97,7 +97,7 @@ module Rfm
 
       @date_format      = doc.date_format
       @time_format      = doc.time_format
-      @timestamp_format = doc.timestamp_format || (doc.date_format + ' ' + doc.time_format)
+      @timestamp_format = doc.timestamp_format
 
       @foundset_count   = doc.foundset_count
       @total_count      = doc.total_count

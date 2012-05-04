@@ -48,7 +48,7 @@ module Rfm
 	    	
 	    def table
 	    	#datasource['table'].to_s
-	    	''
+	    	'not-defined'
 			end
 	    
 	    def records
@@ -62,7 +62,7 @@ module Rfm
 	    
 	    def portals
 		    #meta['relatedset-definition'].rfm_force_array.rfm_extend_members(RelatedsetDefinition)
-		    []
+		    [].rfm_extend_members(RelatedsetDefinition)
 	    end
 	
 		end
@@ -78,7 +78,7 @@ module Rfm
 	    
 	    def type
 	    	#self['type']
-	    	''
+	    	'not-defined'
 	    end
 	    
 	    def max_repeats
@@ -87,17 +87,19 @@ module Rfm
 	    
 	    def global
 	    	#self['global']
-	    	''
+	    	'not-defined'
 	    end
 		end
 		
 		module RelatedsetDefinition
 			def table
-				self['table']
+				#self['table']
+				'not-defined'
 			end
 			
 			def fields
-				self['field-definition'].rfm_force_array.rfm_extend_members(Field)
+				#self['field-definition'].rfm_force_array.rfm_extend_members(Field)
+				[].rfm_extend_members(Field)
 			end
 		end
 		
@@ -118,7 +120,7 @@ module Rfm
 			
 			def portals
 				#self['relatedset'].rfm_force_array.rfm_extend_members(Relatedset)
-				[]
+				[].rfm_extend_members(Relatedset)
 			end
 		end
 			
@@ -135,15 +137,18 @@ module Rfm
 		
 		module Relatedset
 			def table
-				self['table']
+				#self['table']
+				'not-defined'
 			end
 			
 			def count
-				self['count']
+				#self['count']
+				0
 			end
 			
 			def records
-				self['record'].rfm_force_array.rfm_extend_members(Record)
+				#self['record'].rfm_force_array.rfm_extend_members(Record)
+				[].rfm_extend_members(Record)
 			end
 		end
 	
