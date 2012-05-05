@@ -161,10 +161,11 @@ module Rfm
     
     def name; state[:layout].to_s; end
     
-		def state
-			get_config
+		def state(*args)
+			get_config(*args)
 		end
 		
+		# This method may be obsolete, since the option can now be set with #config.
     def ignore_bad_data(val = nil)
     	(config :ignore_bad_data => val) unless val.nil?
     	state[:ignore_bad_data]
@@ -268,6 +269,9 @@ module Rfm
 	    end
 	    
 	    def get_records(action, extra_params = {}, options = {})
+	    	# The grammar stuff here won't work properly until you handle config between models/sublayouts/layout/server.
+	    	grammar_option = state.merge(options)[:grammar]
+	    	options.merge!(:grammar=>grammar_option) if grammar_option
 	      include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
 	      xml_response = server.connect(state[:account_name], state[:password], action, params.merge(extra_params), options).body
 	      #Rfm::Resultset.new(db.server, xml_response, self, include_portals)

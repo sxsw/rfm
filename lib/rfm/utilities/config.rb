@@ -31,6 +31,7 @@ module Rfm
 			log_parser
 			use
 			parent
+			grammar
 		)
 
     extend self

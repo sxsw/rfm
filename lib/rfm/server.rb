@@ -248,8 +248,8 @@ module Rfm
     # Legacy Rfm method to get/create databases from server object
     alias_method :db, :databases
     
-    def state
-    	@defaults.merge(get_config)
+    def state(*args)
+    	@defaults.merge(get_config(args))
     end
     
     # Performs a raw FileMaker action. You will generally not call this method directly, but it
@@ -280,15 +280,25 @@ module Rfm
     #     { :max_records => 20 }
     #   )
     def connect(account_name, password, action, args, options = {})
+    	grammar_option = options.delete(:grammar)
       post = args.merge(expand_options(options)).merge({action => ''})
-      scheme = post.keys.find(){|k| %w(-find -findall -dbnames -layoutnames -scriptnames).include? k.to_s} ? "/fmi/xml/FMPXMLRESULT.xml" : "/fmi/xml/fmresultset.xml"
-      http_fetch(host_name, port, scheme, account_name, password, post)
+      grammar = select_grammar(post, :grammar=>grammar_option)
+      http_fetch(host_name, port, "/fmi/xml/#{grammar}.xml", account_name, password, post)
     end
     
     def load_layout(layout)
       post = {'-db' => layout.db.name, '-lay' => layout.name, '-view' => ''}
       resp = http_fetch(host_name, port, "/fmi/xml/FMPXMLLAYOUT.xml", layout.db.account_name, layout.db.password, post)
       #remove_namespace(resp.body)
+    end
+    
+    def select_grammar(post, options={})
+			grammar = state(options)[:grammar] || 'fmresultset'
+			if grammar.to_s.downcase == 'auto'
+				post.keys.find(){|k| %w(-find -findall -dbnames -layoutnames -scriptnames).include? k.to_s} ? "FMPXMLRESULT" : "fmresultset"   
+    	else
+    		grammar
+    	end
     end
     
     # Removes namespace from fmpxmllayout, so xpath will work
