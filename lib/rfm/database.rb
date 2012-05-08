@@ -70,7 +70,7 @@ module Rfm
     	options = args.rfm_extract_options!
     	
     	config :parent=> 'server'
-    	config sanitize_config(options, true)
+    	config sanitize_config(options, {}, true)
     	config :database=>args[0] if args[0]
     	config :account_name=>args[2] if args[2]
     	config :password=>args[3] if args[3]

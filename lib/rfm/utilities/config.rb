@@ -1,13 +1,6 @@
 module Rfm
 
-	# Top level config hash accepts any defined config parameters,
-	# or group-name keys pointing to config subsets.
-	# The subsets can be any grouping of defined config parameters, as a hash.
-	# See CONFIG_KEYS for defined config parameters.
-	#
-  module Config
-  	require 'yaml'
-  	
+  	# Should these go in Rfm module?
   	CONFIG_KEYS = %w(
 			file_name
 			file_path
@@ -34,8 +27,16 @@ module Rfm
 			grammar
 		)
 
-    extend self
-    @config = {}		
+	# Top level config hash accepts any defined config parameters,
+	# or group-name keys pointing to config subsets.
+	# The subsets can be any grouping of defined config parameters, as a hash.
+	# See CONFIG_KEYS for defined config parameters.
+	#
+  module Config
+  	require 'yaml'
+  	
+    @config = {}
+    extend self	
 	  	  
 	  # Set @config with args & options hash.
 	  # Args should be symbols representing configuration groups,
@@ -140,8 +141,8 @@ module Rfm
 			filters = (@config[:use].rfm_force_array | filters.rfm_force_array).compact
 			rslt = config_filter(remote, filters).merge(config_filter(@config, filters))
 			
-			rslt[:using] << filters
-			rslt[:parents] << @config[:parent]
+			rslt[:using] << (@config[:use].rfm_force_array | filters).compact.join
+			rslt[:parents] << @config[:parent].to_s
 			
 			#rslt[:using] = (rslt[:using].rfm_force_array << @config[:use].to_s).uniq.compact  #(conf[:use].rfm_force_array | filters).compact
 			#rslt[:parents] = (rslt[:parents].rfm_force_array << @config[:parent].to_s).uniq.compact

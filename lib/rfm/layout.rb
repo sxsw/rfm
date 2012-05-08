@@ -137,7 +137,7 @@ module Rfm
     def initialize(*args) #name, db_obj
     	options = args.rfm_extract_options!
     	
-    	config sanitize_config(options, true)
+    	config sanitize_config(options, {}, true)
     	config :layout => args[0] if args[0]
     	config :parent=> 'db'
     

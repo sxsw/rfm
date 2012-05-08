@@ -75,7 +75,7 @@ module Rfm
     	
     	options = args.rfm_extract_options!      
       config :parent=>'caller'
-      config sanitize_config(options, true)
+      config sanitize_config(options, {}, true)
       
       xml_response			= args[0] || options[:xml_response]
       doc = XmlParser.parse(xml_response, :namespace=>false, :parser=>(state[:parser] rescue nil))

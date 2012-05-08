@@ -107,7 +107,7 @@ module Rfm
   # * *name* is the name of this database
   # * *state* is a hash of all server options used to initialize this server
   class Server
-    extend Config
+    #extend Config
     include Config
     config :parent => 'Rfm::Config'
   
