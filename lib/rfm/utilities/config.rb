@@ -86,15 +86,14 @@ module Rfm
   		while args[0].is_a?(String) do; strings << args.shift; end
 
 			rslt = config_merge_with_parent(args).merge(opt)
-			using = rslt[:using].rfm_force_array
-			#rslt.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v) }
-			sanitize_config(rslt)
-			rslt.merge(:strings=>strings, :using=>using)
+			#using = rslt[:using].rfm_force_array
+			sanitize_config(rslt, [:strings, :using, :parents], false)
+			rslt.merge(:strings=>strings)
   	end
   	
-  	def sanitize_config(conf={}, dupe=false)
-  		(conf = conf.dup) if dupe
-  		conf.reject!{|k,v| !CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v) }
+  	def sanitize_config(conf={}, keep=[], dupe=false)
+  		(conf = conf.clone) if dupe
+  		conf.reject!{|k,v| (!CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v)) and !keep.include? k }
   		conf
   	end
   		  
@@ -133,19 +132,31 @@ module Rfm
       	eval(@config[:parent] || 'Rfm::Config').config_merge_with_parent rescue {}
       else
       	get_config_file.merge((defined?(RFM_CONFIG) and RFM_CONFIG.is_a?(Hash)) ? RFM_CONFIG : {})
-      end
+      end.clone
+      
+      remote[:using] ||= []
+      remote[:parents] ||= []
 
 			filters = (@config[:use].rfm_force_array | filters.rfm_force_array).compact
-			config_filter(remote, filters).merge(config_filter(@config, filters))
+			rslt = config_filter(remote, filters).merge(config_filter(@config, filters))
+			
+			rslt[:using] << filters
+			rslt[:parents] << @config[:parent]
+			
+			#rslt[:using] = (rslt[:using].rfm_force_array << @config[:use].to_s).uniq.compact  #(conf[:use].rfm_force_array | filters).compact
+			#rslt[:parents] = (rslt[:parents].rfm_force_array << @config[:parent].to_s).uniq.compact
+			
+			rslt
     end
      
 		# Returns a configuration hash overwritten by :use filters in the hash
 		# that match passed-in filter names or any filter names contained within the hash's :use key.
 		def config_filter(conf, filters=nil)
-			conf = conf.dup
+			conf = conf.clone
 			filters = (conf[:use].rfm_force_array | filters.rfm_force_array).compact
 			filters.each{|f| next unless conf[f]; conf.merge!(conf[f] || {})} if !filters.blank?
-			conf[:using] = (conf[:use].rfm_force_array | filters).compact
+			# 	conf[:parents] = (conf[:parents].rfm_force_array << @config[:parent].to_s)
+			# 	conf[:using] = (conf[:use].rfm_force_array | filters).compact
 			conf.delete(:use)
 			conf
 		end

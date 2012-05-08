@@ -43,6 +43,9 @@ module Rfm
   class Layout
 
   	class SubLayout < DelegateClass(Layout)
+  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
+			include Config  	
+  	
   		include Layout::LayoutModule
    		attr_accessor :model, :parent_layout
 
@@ -79,6 +82,10 @@ module Rfm
 	    		@layout = layout_obj
 	    	end
 	    	@model = model_class
+	    	
+	  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
+	  		model.config :parent=>'@layout.parent_layout'
+	    	config :parent=>'model'
 	    end
 	    sub.model.to_s.constantize
     rescue StandardError, SyntaxError
@@ -220,8 +227,18 @@ module Rfm
 	  		cnf = get_config
 	  		return unless cnf[:layout]
 	  		@layout = Rfm::Factory.layout(get_config).sublayout
+	  		
+	  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
+	  		config :parent=>'parent_layout'
+	  		@layout.config :parent=>'model'
+	  		
 				@layout.model = self
 				@layout
+	  	end
+	  	
+	  	# Access the parent layout of this model
+	  	def parent_layout
+	  		layout.parent_layout
 	  	end
 		  			
 			# Just like Layout#find, but searching by record_id will return a record, not a resultset.
