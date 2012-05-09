@@ -158,12 +158,6 @@ module Rfm
     attr_writer :field_names, :portal_meta, :table
     def_delegator :db, :server
     alias_method :database, :db
-    
-    def name; state[:layout].to_s; end
-    
-		def state(*args)
-			get_config(*args)
-		end
 		
 		# This method may be obsolete, since the option can now be set with #config.
     def ignore_bad_data(val = nil)
@@ -177,6 +171,7 @@ module Rfm
     # variables & objects of the correct self.
     # Do not get or set instance variables in Layout from other objects directly,
     # always use getter & setter methods.
+    # This all means that any chain of methods that want to refer ultimately to Sublayout, must all be defined or included in Sublayout
     module LayoutModule
     
 	    # Returns a ResultSet object containing _every record_ in the table associated with this layout.
@@ -270,7 +265,7 @@ module Rfm
 	    
 	    def get_records(action, extra_params = {}, options = {})
 	    	# The grammar stuff here won't work properly until you handle config between models/sublayouts/layout/server.
-	    	grammar_option = state.merge(options)[:grammar]
+	    	grammar_option = state(*options)[:grammar]
 	    	options.merge!(:grammar=>grammar_option) if grammar_option
 	      include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
 	      xml_response = server.connect(state[:account_name], state[:password], action, params.merge(extra_params), options).body
@@ -303,7 +298,13 @@ module Rfm
 				end
 				hash
 			end
+
+	    def name; state[:layout].to_s; end
 	    
+			def state(*args)
+				get_config(*args)
+			end
+
 	  end # LayoutModule
 	  include LayoutModule
     

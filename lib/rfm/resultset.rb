@@ -133,8 +133,8 @@ module Rfm
 		#     	self.new(file_or_string, nil)
 		#     end
     
-		def state
-			get_config
+		def state(*args)
+			get_config(*args)
 		end
         
     def field_names

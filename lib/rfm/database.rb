@@ -97,8 +97,8 @@ module Rfm
     def password; state[:password]; end
     def password=(x); config :password=>x; end
     
-		def state
-			get_config
+		def state(*args)
+			get_config(*args)
 		end
 
     # Access the Layout object representing a layout in this database. For example:

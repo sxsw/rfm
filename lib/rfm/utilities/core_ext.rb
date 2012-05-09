@@ -37,7 +37,7 @@ class Object
 	end
 	
 	# Just testing this functionality
-	def local_methods
+	def rfm_local_methods
 		self.methods - self.class.superclass.methods
 	end
   
@@ -112,9 +112,22 @@ class Array
 			member.extend(extension)
 		end  
   end
-	
-	
+
 end # Array
+
+class Hash
+	def rfm_only(*keepers)
+		self.each_key {|k| self.delete(k) if !keepers.include?(k)}
+	end
+	
+	def rfm_filter(*args)
+		options = args.rfm_extract_options!
+		delete = options[:delete]
+		self.each_key do |k|
+			self.delete(k) if (delete ? args.include?(k) : !args.include?(k))
+		end
+	end
+end # Hash
 
 # Allows access to superclass object
 class SuperProxy

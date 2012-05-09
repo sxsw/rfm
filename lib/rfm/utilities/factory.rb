@@ -165,7 +165,7 @@ module Rfm
 	  		raise Rfm::Error::RfmError.new(0, 'A database name is needed to create a database object.') if db_name.blank?
 	  		account_name = options[:strings][1] || options[:account_name]
 	  		password = options[:strings][2] || options[:password]
-				db = server(options)[db_name, account_name, password]
+				db = server(options.rfm_filter(:host, :use))[db_name, account_name, password]
 		  end
 		  
 		  alias_method :database, :db
@@ -175,7 +175,10 @@ module Rfm
 	  		options = get_config(*conf)
 	  		layout_name = options[:strings][0] || options[:layout]
 	  		raise Rfm::Error::RfmError.new(0, 'A layout name is needed to create a layout object.') if layout_name.blank?
-				layout = db(options)[layout_name]
+				layout = db(options.rfm_filter(:database, :account_name, :password, :host, :use))[layout_name]
+				# This doesn't work yet.
+				layout.config options.rfm_filter(:database, :account_name, :password, :host, :delete=>true)
+				layout
 	  	end
 
     end # class << self

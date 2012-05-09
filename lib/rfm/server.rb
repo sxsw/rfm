@@ -109,7 +109,7 @@ module Rfm
   class Server
     #extend Config
     include Config
-    config :parent => 'Rfm::Config'
+    
   
     # To create a Server object, you typically need at least a host name:
     # 
@@ -196,6 +196,7 @@ module Rfm
     #            :root_cert_path => '/usr/cert_file/'
     #            })
     def initialize(*args)
+    	config :parent => 'Rfm::Config'
     	options = args.rfm_extract_options!
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{options[:host]}'.") if options[:host].to_s == ''
       
@@ -214,7 +215,8 @@ module Rfm
         :warn_on_redirect => true,
         :raise_on_401 => false,
         :timeout => 60,
-        :ignore_bad_data => false
+        :ignore_bad_data => false,
+        :grammar => 'fmresultset'
       }   #.merge(options)
     
 			config options
@@ -249,7 +251,7 @@ module Rfm
     alias_method :db, :databases
     
     def state(*args)
-    	@defaults.merge(get_config(args))
+    	@defaults.merge(get_config(*args))
     end
     
     # Performs a raw FileMaker action. You will generally not call this method directly, but it

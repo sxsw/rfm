@@ -26,6 +26,8 @@ module Rfm
 			parent
 			grammar
 		)
+		
+		CONFIG_DONT_STORE = %w(strings using parents)
 
 	# Top level config hash accepts any defined config parameters,
 	# or group-name keys pointing to config subsets.
@@ -35,8 +37,8 @@ module Rfm
   module Config
   	require 'yaml'
   	
+    extend self
     @config = {}
-    extend self	
 	  	  
 	  # Set @config with args & options hash.
 	  # Args should be symbols representing configuration groups,
@@ -88,13 +90,16 @@ module Rfm
 
 			rslt = config_merge_with_parent(args).merge(opt)
 			#using = rslt[:using].rfm_force_array
-			sanitize_config(rslt, [:strings, :using, :parents], false)
+			sanitize_config(rslt, CONFIG_DONT_STORE, false)
+			rslt[:using].delete ""
+			rslt[:parents].delete ""
 			rslt.merge(:strings=>strings)
   	end
   	
+  	# Keep should be a list of strings representing keys to keep.
   	def sanitize_config(conf={}, keep=[], dupe=false)
   		(conf = conf.clone) if dupe
-  		conf.reject!{|k,v| (!CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v)) and !keep.include? k }
+  		conf.reject!{|k,v| (!CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v)) and !keep.include? k.to_s }
   		conf
   	end
   		  
@@ -123,7 +128,7 @@ module Rfm
 	  def config_write(opt, args)
 	  	strings = []; while args[0].is_a?(String) do; strings << args.shift; end
 	  	args.each{|a| @config.merge!(:use=>a.to_sym)}
-	  	@config.merge!(opt)
+	  	@config.merge!(opt).reject! {|k,v| CONFIG_DONT_STORE.include? k.to_s}
 	  	yield(strings) if block_given?
 	  end
 	  	
@@ -136,7 +141,7 @@ module Rfm
       end.clone
       
       remote[:using] ||= []
-      remote[:parents] ||= []
+      remote[:parents] ||= ['file', 'RFM_CONFIG']
 
 			filters = (@config[:use].rfm_force_array | filters.rfm_force_array).compact
 			rslt = config_filter(remote, filters).merge(config_filter(@config, filters))
@@ -144,8 +149,7 @@ module Rfm
 			rslt[:using] << (@config[:use].rfm_force_array | filters).compact.join
 			rslt[:parents] << @config[:parent].to_s
 			
-			#rslt[:using] = (rslt[:using].rfm_force_array << @config[:use].to_s).uniq.compact  #(conf[:use].rfm_force_array | filters).compact
-			#rslt[:parents] = (rslt[:parents].rfm_force_array << @config[:parent].to_s).uniq.compact
+			rslt.delete :parent
 			
 			rslt
     end
@@ -156,8 +160,6 @@ module Rfm
 			conf = conf.clone
 			filters = (conf[:use].rfm_force_array | filters.rfm_force_array).compact
 			filters.each{|f| next unless conf[f]; conf.merge!(conf[f] || {})} if !filters.blank?
-			# 	conf[:parents] = (conf[:parents].rfm_force_array << @config[:parent].to_s)
-			# 	conf[:using] = (conf[:use].rfm_force_array | filters).compact
 			conf.delete(:use)
 			conf
 		end
