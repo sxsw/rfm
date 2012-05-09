@@ -153,7 +153,8 @@ module Rfm
 	  		options = get_config(*conf)
 	  		server_name = options[:strings][0] || options[:host]
 	  		raise Rfm::Error::RfmError.new(0, 'A host name is needed to create a server object.') if server_name.blank?
-				server = servers[server_name, options]
+				#server = servers[server_name, options]
+				Rfm::Server.new(server_name, options)
 		  end
 			# Potential refactor
 			#def_delegator 'Rfm::Factory::ServerFactory', :[], :server  #, :[]
@@ -165,7 +166,8 @@ module Rfm
 	  		raise Rfm::Error::RfmError.new(0, 'A database name is needed to create a database object.') if db_name.blank?
 	  		account_name = options[:strings][1] || options[:account_name]
 	  		password = options[:strings][2] || options[:password]
-				db = server(options.rfm_filter(:host, :use))[db_name, account_name, password]
+				#db = server(options.rfm_filter(:host, :use))[db_name, account_name, password]
+				db = server(options)[db_name, account_name, password]
 		  end
 		  
 		  alias_method :database, :db
@@ -175,10 +177,11 @@ module Rfm
 	  		options = get_config(*conf)
 	  		layout_name = options[:strings][0] || options[:layout]
 	  		raise Rfm::Error::RfmError.new(0, 'A layout name is needed to create a layout object.') if layout_name.blank?
-				layout = db(options.rfm_filter(:database, :account_name, :password, :host, :use))[layout_name]
+				layout = db(options)[layout_name]
 				# This doesn't work yet.
-				layout.config options.rfm_filter(:database, :account_name, :password, :host, :delete=>true)
-				layout
+				# 	layout = db(options.rfm_filter(:database, :account_name, :password, :host, :use))[layout_name]
+				# 	layout.config options.rfm_filter(:database, :account_name, :password, :host, :delete=>true)
+				# 	layout
 	  	end
 
     end # class << self

@@ -219,6 +219,7 @@ module Rfm
         :grammar => 'fmresultset'
       }   #.merge(options)
     
+			config(:host=>args[0]) if args[0]    
 			config options
 			   
       def host_name; state[:host]; end
