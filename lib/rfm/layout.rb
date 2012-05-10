@@ -135,16 +135,16 @@ module Rfm
     #   myServer = Rfm::Server.new(...)
     #   myLayout = myServer["Customers"]["Details"]
     def initialize(*args) #name, db_obj
-    	options = args.rfm_extract_options!
+    	options = get_config(*args)
+    	rfm_metaclass.instance_variable_set :@database, (options[:objects].delete_at(0) || options[:database_object])
+    	options = get_config(*args)
     	
     	config sanitize_config(options, {}, true)
-    	config :layout => args[0] if args[0]
+    	config :layout => options[:strings][0] || options[:layout]
     	config :parent=> 'db'
     
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''
-            
-      rfm_metaclass.instance_variable_set :@db, (args[1] || options[:database_object])
-      
+                  
       @loaded = false
       @field_controls = Rfm::CaseInsensitiveHash.new
       @value_lists = Rfm::CaseInsensitiveHash.new
@@ -265,7 +265,7 @@ module Rfm
 	    
 	    def get_records(action, extra_params = {}, options = {})
 	    	# The grammar stuff here won't work properly until you handle config between models/sublayouts/layout/server.
-	    	grammar_option = state(*options)[:grammar]
+	    	grammar_option = state(options)[:grammar]
 	    	options.merge!(:grammar=>grammar_option) if grammar_option
 	      include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
 	      xml_response = server.connect(state[:account_name], state[:password], action, params.merge(extra_params), options).body

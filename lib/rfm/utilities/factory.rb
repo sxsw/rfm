@@ -14,9 +14,10 @@ module Rfm
   
   	class ServerFactory < Rfm::CaseInsensitiveHash
       
-      def [](host, conf = Factory.get_config) #(Factory.instance_variable_get(:@config) || {}))
-      	conf[:host] = host
-        super(host) or (self[host] = Rfm::Server.new(conf.reject{|k,v| [:account_name, :password].include? k}))
+      def [](*args)
+      	options = Factory.get_config(*args)
+      	host = options[:strings][0] || options[:host]
+        super(host) or (self[host] = Rfm::Server.new(host, options.rfm_filter(:account_name, :password, :delete=>true)))
       end
 			
 			# Potential refactor
@@ -38,13 +39,11 @@ module Rfm
         @loaded = false
       end
       
-      def [](dbname, acnt=nil, pass=nil) #
-        db = (super(dbname) or (self[dbname] = Rfm::Database.new(dbname, @server)))
-        account_name = acnt || db.account_name || @server.state[:account_name]
-        password = pass || db.password || @server.state[:password]
-        db.account_name = account_name if account_name
-        db.password = password if password
-        db
+      def [](*args)
+      	# was: (dbname, acnt=nil, pass=nil)
+      	options = Factory.get_config(*args)
+      	name = options[:strings][0] || options[:database]
+        super(name) or (self[name] = Rfm::Database.new(@server, options))
       end
       
       def all
@@ -75,8 +74,10 @@ module Rfm
         @loaded = false
       end
       
-      def [](layout_name)
-        super or (self[layout_name] = Rfm::Layout.new(layout_name, @database))
+      def [](*args) # was layout_name
+      	options = Factory.get_config(*args)
+      	name = options[:strings][0] || options[:layout]
+        super(name) or (self[name] = Rfm::Layout.new(@database, options))
       end
       
       def all
@@ -151,23 +152,22 @@ module Rfm
 	  	# Returns Rfm::Server instance, given config hash or array
 	  	def server(*conf)
 	  		options = get_config(*conf)
-	  		server_name = options[:strings][0] || options[:host]
-	  		raise Rfm::Error::RfmError.new(0, 'A host name is needed to create a server object.') if server_name.blank?
 				#server = servers[server_name, options]
-				Rfm::Server.new(server_name, options)
+				# These disconnect servers from the ServerFactory hash, but it breaks the ActiveModel spec suite.
+				#Rfm::Server.new(server_name, options.rfm_filter(:account_name, :password, :delete=>true))
+				Rfm::Server.new(options)
 		  end
 			# Potential refactor
 			#def_delegator 'Rfm::Factory::ServerFactory', :[], :server  #, :[]
 	  
 		  # Returns Rfm::Db instance, given config hash or array
 		  def db(*conf)
-	  		options = get_config(*conf)
-	  		db_name = options[:strings][0] || options[:database]
-	  		raise Rfm::Error::RfmError.new(0, 'A database name is needed to create a database object.') if db_name.blank?
-	  		account_name = options[:strings][1] || options[:account_name]
-	  		password = options[:strings][2] || options[:password]
-				#db = server(options.rfm_filter(:host, :use))[db_name, account_name, password]
-				db = server(options)[db_name, account_name, password]
+		  	options = get_config(*conf)
+		  	name = options[:strings].delete_at(0) || options[:database]
+		  	account_name = options[:strings].delete_at(0) || options[:account_name]
+		  	password = options[:strings].delete_at(0) || options[:password]
+				s = server(options)
+				s[name, account_name, password, options]
 		  end
 		  
 		  alias_method :database, :db
@@ -175,13 +175,11 @@ module Rfm
 		  # Returns Rfm::Layout instance, given config hash or array
 	  	def layout(*conf)
 	  		options = get_config(*conf)
-	  		layout_name = options[:strings][0] || options[:layout]
-	  		raise Rfm::Error::RfmError.new(0, 'A layout name is needed to create a layout object.') if layout_name.blank?
-				layout = db(options)[layout_name]
-				# This doesn't work yet.
-				# 	layout = db(options.rfm_filter(:database, :account_name, :password, :host, :use))[layout_name]
-				# 	layout.config options.rfm_filter(:database, :account_name, :password, :host, :delete=>true)
-				# 	layout
+	  		
+	  		name = options[:strings].delete_at(0) || options[:layout]
+				d = db(options)
+				y options[:objects]
+				d[name, options]
 	  	end
 
     end # class << self

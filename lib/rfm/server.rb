@@ -197,8 +197,10 @@ module Rfm
     #            })
     def initialize(*args)
     	config :parent => 'Rfm::Config'
-    	options = args.rfm_extract_options!
-    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{options[:host]}'.") if options[:host].to_s == ''
+    	options = get_config(*args)
+    	config sanitize_config(options, {}, true)
+    	config(:host => (options[:strings][0] || options[:host]) )
+    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{config[:host]}'.") if config[:host].to_s == ''
       
       @defaults = {
         :host => 'localhost',
@@ -218,10 +220,7 @@ module Rfm
         :ignore_bad_data => false,
         :grammar => 'fmresultset'
       }   #.merge(options)
-    
-			config(:host=>args[0]) if args[0]    
-			config options
-			   
+    			   
       def host_name; state[:host]; end
       
       def scheme; state[:ssl] ? "https" : "http"; end

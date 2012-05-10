@@ -36,7 +36,7 @@ RESULTSET_PORTALS_XML = File.read('spec/data/resultset_with_portals.xml')
 Spec::Runner.configure do |config|
 	config.before(:each) do
 		Kernel.silence_warnings do
-			Memo = TestModel = Class.new(Rfm::Base){self.config :base_test}
+			#Memo = TestModel = Class.new(Rfm::Base){self.config :base_test}
 			@Server = Memo.server
 			@Layout = Memo.layout.parent_layout
 	

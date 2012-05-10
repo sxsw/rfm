@@ -27,7 +27,7 @@ module Rfm
 			grammar
 		)
 		
-		CONFIG_DONT_STORE = %w(strings using parents)
+		CONFIG_DONT_STORE = %w(strings using parents symbols objects)
 
 	# Top level config hash accepts any defined config parameters,
 	# or group-name keys pointing to config subsets.
@@ -82,18 +82,27 @@ module Rfm
 		# == Gets top level settings, merged with local and ad-hoc settings.
 		#    get_config :layout => 'my_layout
 		#
-  	def get_config(*args)
+  	def get_config(*arguments)
+  		args = arguments.clone
   		@config ||= {}
   		opt = args.rfm_extract_options!
-  		strings = []
-  		while args[0].is_a?(String) do; strings << args.shift; end
+  		strings = opt[:strings].rfm_force_array || []
+  		symbols = opt[:use].rfm_force_array || []
+  		objects = opt[:objects].rfm_force_array || []
+  		args.each do |arg|
+  			case true
+  			when arg.is_a?(String) : strings << arg
+  			when arg.is_a?(Symbol) : symbols << arg
+  			else objects << arg
+  			end
+  		end
 
-			rslt = config_merge_with_parent(args).merge(opt)
+			rslt = config_merge_with_parent(symbols).merge(opt)
 			#using = rslt[:using].rfm_force_array
 			sanitize_config(rslt, CONFIG_DONT_STORE, false)
 			rslt[:using].delete ""
 			rslt[:parents].delete ""
-			rslt.merge(:strings=>strings)
+			rslt.merge(:strings=>strings, :objects=>objects)
   	end
   	
   	# Keep should be a list of strings representing keys to keep.
@@ -146,7 +155,7 @@ module Rfm
 			filters = (@config[:use].rfm_force_array | filters.rfm_force_array).compact
 			rslt = config_filter(remote, filters).merge(config_filter(@config, filters))
 			
-			rslt[:using] << (@config[:use].rfm_force_array | filters).compact.join
+			rslt[:using].concat((@config[:use].rfm_force_array | filters).compact.flatten)   #.join
 			rslt[:parents] << @config[:parent].to_s
 			
 			rslt.delete :parent

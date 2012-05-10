@@ -226,7 +226,7 @@ module Rfm
 	  		return @layout if @layout
 	  		cnf = get_config
 	  		return unless cnf[:layout]
-	  		@layout = Rfm::Factory.layout(get_config).sublayout
+	  		@layout = Rfm::Factory.layout(cnf).sublayout
 	  		
 	  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
 	  		config :parent=>'parent_layout'

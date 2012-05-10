@@ -40,6 +40,10 @@ class Object
 	def rfm_local_methods
 		self.methods - self.class.superclass.methods
 	end
+	
+	def clone
+		Marshal.load(Marshal.dump(self))
+	end
   
 private
 

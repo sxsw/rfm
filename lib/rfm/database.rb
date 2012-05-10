@@ -67,18 +67,18 @@ module Rfm
     #
     # This sample code gets a database object representing the Customers database on the FileMaker server.
     def initialize(*args) #name, server_obj, acnt=nil, pass=nil
-    	options = args.rfm_extract_options!
+    	options = get_config(*args)
+    	rfm_metaclass.instance_variable_set :@server, (options[:objects].delete_at(0) || options[:server_object])
+    	options = get_config(*args)
     	
-    	config :parent=> 'server'
     	config sanitize_config(options, {}, true)
-    	config :database=>args[0] if args[0]
-    	config :account_name=>args[2] if args[2]
-    	config :password=>args[3] if args[3]
+    	config :parent=> 'server'
+    	config :database=> options[:strings][0] || options[:database]
+    	config :account_name=> options[:strings][1] || options[:account_name]
+    	config :password=> options[:strings][2] || options[:password]
       
       raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Database has no name. Attempted name '#{state[:database]}'.") if state[:database].to_s == ''
-      
-      rfm_metaclass.instance_variable_set :@server, (args[1] || options[:server_object])
-      
+            
       @layouts = Rfm::Factory::LayoutFactory.new(server, self)
       @scripts = Rfm::Factory::ScriptFactory.new(server, self)
     end

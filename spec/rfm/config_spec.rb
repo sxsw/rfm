@@ -26,21 +26,21 @@ describe Rfm::Config do
 		
 		context "with no arguments" do
 			it "returns upstream config" do
-				klass.get_config.should == {:host=>'host1', :strings=>[], :ignore_bad_data => true, :using=>[]}
+				klass.get_config.should == {:host=>'host1', :strings=>[], :ignore_bad_data => true, :using=>[], :parents=>["file", "RFM_CONFIG"]}
 			end
 		end
 		
 		context "with preset filters but no arguments" do
 			it "returns upstream config, merged with filtered groups" do
 				klass.config :group1
-				klass.get_config.should == {:host=>'host1', :strings=>[], :database=>'db1', :using=>[:group1], :ignore_bad_data => true}
+				klass.get_config.should == {:host=>'host1', :strings=>[], :database=>'db1', :using=>[:group1], :ignore_bad_data => true, :parents=>["file", "RFM_CONFIG"]}
 			end
 		end
 		
 		context "with array of symbols and hash of options" do
 			it "returns upstream config, merged with filtered groups, merged with options, merged with preset filters" do
 				klass.config :group1
-				klass.get_config(:group2, :ssl=>true).should == {:host=>'host1', :strings=>[], :database=>'db2', :ssl=>true, :using=>[:group1, :group2], :ignore_bad_data => true}
+				klass.get_config(:group2, :ssl=>true).should == {:host=>'host1', :strings=>[], :database=>'db2', :ssl=>true, :using=>[:group1, :group2], :ignore_bad_data => true, :parents=>["file", "RFM_CONFIG"]}
 			end
 			
 			it "returns config including :strings parameter, if passed array of strings as first n arguments" do

@@ -15,7 +15,7 @@ describe Rfm::Base do
 	describe '.inherited' do
 		it("adds new model class to Rfm::Factory@models"){Rfm::Factory.models.include?(Memo).should be_true}
 		it("sets model @config with :parent and other config options") do
-			Memo.get_config[:parent].should == 'Rfm::Base'
+			Memo.config[:parent].should == 'parent_layout'
 			Memo.get_config[:layout].should == 'testlay1'
 		end
 	end
