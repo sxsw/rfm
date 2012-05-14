@@ -199,7 +199,7 @@ module Rfm
     	config :parent => 'Rfm::Config'
     	options = get_config(*args)
     	config sanitize_config(options, {}, true)
-    	config(:host => (options[:strings][0] || options[:host]) )
+    	config(:host => (options[:strings].delete_at(0) || options[:host]) )
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{config[:host]}'.") if config[:host].to_s == ''
       
       @defaults = {
@@ -220,15 +220,10 @@ module Rfm
         :ignore_bad_data => false,
         :grammar => 'fmresultset'
       }   #.merge(options)
-    			   
-      def host_name; state[:host]; end
-      
-      def scheme; state[:ssl] ? "https" : "http"; end
-      def port; state[:ssl] && state[:port].nil? ? 443 : state[:port]; end
       
       @databases = Rfm::Factory::DbFactory.new(self)
     end
-    
+   	
     # Access the database object representing a database on the server. For example:
     #
     #   myServer['Customers']
@@ -253,6 +248,10 @@ module Rfm
     def state(*args)
     	@defaults.merge(get_config(*args))
     end
+    
+	  def host_name; state[:host]; end
+	  def scheme; state[:ssl] ? "https" : "http"; end
+	  def port; state[:ssl] && state[:port].nil? ? 443 : state[:port]; end
     
     # Performs a raw FileMaker action. You will generally not call this method directly, but it
     # is exposed in case you need to do something "under the hood."

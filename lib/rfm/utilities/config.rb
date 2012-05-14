@@ -93,7 +93,7 @@ module Rfm
   			case true
   			when arg.is_a?(String) : strings << arg
   			when arg.is_a?(Symbol) : symbols << arg
-  			else objects << arg
+  			else objects.unshift arg
   			end
   		end
 

@@ -69,13 +69,13 @@ module Rfm
     def initialize(*args) #name, server_obj, acnt=nil, pass=nil
     	options = get_config(*args)
     	rfm_metaclass.instance_variable_set :@server, (options[:objects].delete_at(0) || options[:server_object])
-    	options = get_config(*args)
+    	options = get_config(options)
     	
     	config sanitize_config(options, {}, true)
     	config :parent=> 'server'
-    	config :database=> options[:strings][0] || options[:database]
-    	config :account_name=> options[:strings][1] || options[:account_name]
-    	config :password=> options[:strings][2] || options[:password]
+    	config :database=> options[:strings].delete_at(0) || options[:database]
+    	config :account_name=> options[:strings].delete_at(0) || options[:account_name]
+    	config :password=> options[:strings].delete_at(0) || options[:password]
       
       raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Database has no name. Attempted name '#{state[:database]}'.") if state[:database].to_s == ''
             

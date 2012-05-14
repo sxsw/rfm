@@ -16,7 +16,7 @@ module Rfm
       
       def [](*args)
       	options = Factory.get_config(*args)
-      	host = options[:strings][0] || options[:host]
+      	host = options[:strings].delete_at(0) || options[:host]
         super(host) or (self[host] = Rfm::Server.new(host, options.rfm_filter(:account_name, :password, :delete=>true)))
       end
 			
@@ -42,8 +42,10 @@ module Rfm
       def [](*args)
       	# was: (dbname, acnt=nil, pass=nil)
       	options = Factory.get_config(*args)
-      	name = options[:strings][0] || options[:database]
-        super(name) or (self[name] = Rfm::Database.new(@server, options))
+      	name = options[:strings].delete_at(0) || options[:database]
+      	account_name = options[:strings].delete_at(0) || options[:account_name]
+      	password = options[:strings].delete_at(0) || options[:password]
+        super(name) or (self[name] = Rfm::Database.new(name, account_name, password, @server, options))
       end
       
       def all
@@ -76,8 +78,8 @@ module Rfm
       
       def [](*args) # was layout_name
       	options = Factory.get_config(*args)
-      	name = options[:strings][0] || options[:layout]
-        super(name) or (self[name] = Rfm::Layout.new(@database, options))
+      	name = options[:strings].delete_at(0) || options[:layout]
+        super(name) or (self[name] = Rfm::Layout.new(name, @database, options))
       end
       
       def all
@@ -175,10 +177,8 @@ module Rfm
 		  # Returns Rfm::Layout instance, given config hash or array
 	  	def layout(*conf)
 	  		options = get_config(*conf)
-	  		
 	  		name = options[:strings].delete_at(0) || options[:layout]
 				d = db(options)
-				y options[:objects]
 				d[name, options]
 	  	end
 

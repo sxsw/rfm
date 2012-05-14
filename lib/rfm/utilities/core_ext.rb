@@ -40,10 +40,6 @@ class Object
 	def rfm_local_methods
 		self.methods - self.class.superclass.methods
 	end
-	
-	def clone
-		Marshal.load(Marshal.dump(self))
-	end
   
 private
 
@@ -120,6 +116,7 @@ class Array
 end # Array
 
 class Hash
+	# TODO: Possibly deprecated, delete if not used.
 	def rfm_only(*keepers)
 		self.each_key {|k| self.delete(k) if !keepers.include?(k)}
 	end

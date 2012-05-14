@@ -136,12 +136,12 @@ module Rfm
     #   myLayout = myServer["Customers"]["Details"]
     def initialize(*args) #name, db_obj
     	options = get_config(*args)
-    	rfm_metaclass.instance_variable_set :@database, (options[:objects].delete_at(0) || options[:database_object])
-    	options = get_config(*args)
+    	rfm_metaclass.instance_variable_set :@db, (options[:objects].delete_at(0) || options[:database_object])
+    	config :parent=> 'db'
+    	options = get_config(options)
     	
     	config sanitize_config(options, {}, true)
-    	config :layout => options[:strings][0] || options[:layout]
-    	config :parent=> 'db'
+    	config :layout => options[:strings].delete_at(0) || options[:layout]
     
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''
                   
