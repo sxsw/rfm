@@ -18,6 +18,9 @@ module Rfm
       	options = Factory.get_config(*args)
       	host = options[:strings].delete_at(0) || options[:host]
         super(host) or (self[host] = Rfm::Server.new(host, options.rfm_filter(:account_name, :password, :delete=>true)))
+        # This part reconfigures the named server, if you pass it new config in the [] method.
+        super(host).config(options) if (options)
+        super(host)
       end
 			
 			# Potential refactor
@@ -45,7 +48,10 @@ module Rfm
       	name = options[:strings].delete_at(0) || options[:database]
       	account_name = options[:strings].delete_at(0) || options[:account_name]
       	password = options[:strings].delete_at(0) || options[:password]
-        super(name) or (self[name] = Rfm::Database.new(name, account_name, password, @server, options))
+        super(name) or (self[name] = Rfm::Database.new(name, account_name, password, @server))
+        # This part reconfigures the named database, if you pass it new config in the [] method.
+        super(name).config({:account_name=>account_name, :password=>password}.merge(options)) if (account_name or password or options)
+        super(name)
       end
       
       def all
@@ -80,6 +86,9 @@ module Rfm
       	options = Factory.get_config(*args)
       	name = options[:strings].delete_at(0) || options[:layout]
         super(name) or (self[name] = Rfm::Layout.new(name, @database, options))
+        # This part reconfigures the named layout, if you pass it new config in the [] method.
+        super(name).config({:layout=>name}.merge(options)) if options
+        super(name)
       end
       
       def all
