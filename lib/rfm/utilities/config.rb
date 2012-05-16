@@ -91,8 +91,8 @@ module Rfm
   		objects = opt[:objects].rfm_force_array || []
   		args.each do |arg|
   			case true
-  			when arg.is_a?(String) : strings << arg
-  			when arg.is_a?(Symbol) : symbols << arg
+  			when arg.is_a?(String) ; strings << arg
+  			when arg.is_a?(Symbol) ; symbols << arg
   			else objects.unshift arg
   			end
   		end
