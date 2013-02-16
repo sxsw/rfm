@@ -263,24 +263,6 @@ module Rfm
 	    	get_records('-view', {}, options)
 	    end
 	    
-	    ###
-			def view_meta
-				@view_meta ||= view
-			end
-			def date_format
-				@date_format ||= view_meta.date_format
-			end
-			def time_format
-				@time_format ||= view_meta.time_format
-			end		
-			def timestamp_format
-				@timestamp_format ||= view_meta.timestamp_format
-			end
-			def field_meta
-				@field_meta ||= view_meta.field_meta
-			end
-			###
-	    
 	    def get_records(action, extra_params = {}, options = {})
 	    	# The grammar stuff here won't work properly until you handle config between models/sublayouts/layout/server.
 	    	grammar_option = state(options)[:grammar]
@@ -326,6 +308,25 @@ module Rfm
 	  end # LayoutModule
 	  
 	  include LayoutModule
+	  
+	  
+    ###
+		def view_meta
+			@view_meta ||= view
+		end
+		def date_format
+			@date_format ||= view_meta.date_format
+		end
+		def time_format
+			@time_format ||= view_meta.time_format
+		end		
+		def timestamp_format
+			@timestamp_format ||= view_meta.timestamp_format
+		end
+		def field_meta
+			@field_meta ||= view_meta.field_meta
+		end
+		###
     
     
     def field_controls

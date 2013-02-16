@@ -222,26 +222,38 @@ module Rfm
       super
     end
     
-		#     def []=(key, value)
-		#       key_string = key.to_s.downcase
-		#       return super unless @loaded # is this needed?
-		#       raise Rfm::ParameterError, "You attempted to modify a field that does not exist in the current Filemaker layout." unless self.key?(key_string)
-		#       @mods[key_string] = value
-		#       super(key, value)
-		#     end
+    def []=(key, value)
+      key_string = key.to_s.downcase
+      return super unless @loaded # is this needed?
+      raise Rfm::ParameterError, "You attempted to modify a field that does not exist in the current Filemaker layout." unless self.key?(key_string)
+      # @mods[key_string] = value
+      # TODO: This needs cleaning up.
+      # TODO: can we get field_type from record instead?
+			@mods[key_string] = if [Date, Time, DateTime].member?(value.class)
+				field_type = layout.field_meta[key_string.to_sym].result
+				case field_type
+					when 'time'; val.strftime(layout.time_format)
+					when 'date'; val.strftime(layout.date_format)
+					when 'timestamp'; val.strftime(layout.timestamp_format)
+				else value
+				end
+			else value
+			end
+      super(key, value)
+    end
 		#
 		# 		alias_method :old_setter, '[]='
-		def []=(key,val)
-			old_setter(key,val)
-			return val unless [Date, Time, DateTime].member? val.class
-			field_type = layout.field_meta[key.to_sym].result
-			@mods[key] = case field_type
-				when 'time'; val.strftime(layout.time_format)
-				when 'date'; val.strftime(layout.date_format)
-				when 'timestamp'; val.strftime(layout.timestamp_format)
-				else val
-			end
-		end  
+		# 		def []=(key,val)
+		# 			old_setter(key,val)
+		# 			return val unless [Date, Time, DateTime].member? val.class
+		# 			field_type = layout.field_meta[key.to_sym].result
+		# 			@mods[key] = case field_type
+		# 				when 'time'; val.strftime(layout.time_format)
+		# 				when 'date'; val.strftime(layout.date_format)
+		# 				when 'timestamp'; val.strftime(layout.timestamp_format)
+		# 				else val
+		# 			end
+		# 		end  
 		  
 	  def field_names
     	resultset.field_names rescue layout.field_names
