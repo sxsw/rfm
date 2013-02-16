@@ -166,7 +166,7 @@ module Rfm
     end
     
     # These methods are to be inclulded in Layout and SubLayout, so that
-    # they have their own descrete 'self' in the master class and the subclass.
+    # they have their own discrete 'self' in the master class and the subclass.
     # This means these methods will not get forwarded, and will talk to the correct
     # variables & objects of the correct self.
     # Do not get or set instance variables in Layout from other objects directly,
@@ -263,6 +263,24 @@ module Rfm
 	    	get_records('-view', {}, options)
 	    end
 	    
+	    ###
+			def view_meta
+				@view_meta ||= view
+			end
+			def date_format
+				@date_format ||= view_meta.date_format
+			end
+			def time_format
+				@time_format ||= view_meta.time_format
+			end		
+			def timestamp_format
+				@timestamp_format ||= view_meta.timestamp_format
+			end
+			def field_meta
+				@field_meta ||= view_meta.field_meta
+			end
+			###
+	    
 	    def get_records(action, extra_params = {}, options = {})
 	    	# The grammar stuff here won't work properly until you handle config between models/sublayouts/layout/server.
 	    	grammar_option = state(options)[:grammar]
@@ -306,6 +324,7 @@ module Rfm
 			end
 
 	  end # LayoutModule
+	  
 	  include LayoutModule
     
     
