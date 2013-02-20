@@ -63,8 +63,8 @@ module Rfm
       
       # Initializes a field object. You'll never need to do this. Instead, get your Field objects from
       # ResultSet::fields
-      def initialize(field)
-        @name        = field.name #['name']
+      def initialize(field, options={})
+        @name        = Rfm.translate(field.name, options[:field_mapping]) #['name']
         @result      = field.result #['result']
         @type        = field.type #['type']
         @max_repeats = field.max_repeats #['max-repeats']

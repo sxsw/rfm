@@ -268,7 +268,14 @@ module Rfm
 	    	grammar_option = state(options)[:grammar]
 	    	options.merge!(:grammar=>grammar_option) if grammar_option
 	      include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
-	      xml_response = server.connect(state[:account_name], state[:password], action, params.merge(extra_params), options).body
+	      
+	      # Apply mapping from :field_mapping, to send correct params in URL.
+	      prms = params.merge(extra_params)
+	      map = get_config[:field_mapping].attributes
+	      # TODO: Make this part handle string AND symbol keys.
+	      map.each{|k,v| prms[k]=prms.delete(v)}
+	      
+	      xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
 	      #Rfm::Resultset.new(db.server, xml_response, self, include_portals)
 	      Rfm::Resultset.new(xml_response, self, include_portals)
 	    end
@@ -399,7 +406,7 @@ module Rfm
 
       # process field controls
       doc['FMPXMLLAYOUT']['LAYOUT']['FIELD'].each {|field|
-        name = field['NAME']
+        name = Rfm.translate(field['NAME'], get_config[:field_mapping])
         style = field['STYLE']
         type = style['TYPE']
         value_list_name = style['VALUELIST']

@@ -126,7 +126,7 @@ module Rfm
       
       record.columns.each do |field|
       	next unless field
-        field_name = field.name
+        field_name = Rfm.translate(field.name, layout.get_config[:field_mapping]) #field.name
         field_name.gsub!(Regexp.new(portal + '::'), '') if portal
         datum = []
         data = field.data #['data']; data = data.is_a?(Hash) ? [data] : data

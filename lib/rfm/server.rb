@@ -311,6 +311,11 @@ module Rfm
     
       def http_fetch(host_name, port, path, account_name, password, post_data, limit=10)
         raise Rfm::CommunicationError.new("While trying to reach the Web Publishing Engine, RFM was redirected too many times.") if limit == 0
+    		
+    		# Prototype field-name translator. Moved to Layout.
+				# 	if post_data.has_key? :email
+				# 		post_data.merge!('Emaillocal' => post_data.delete(:email))
+				# 	end 
     
         if state[:log_actions] == true
           #qs = post_data.collect{|key,val| "#{CGI::escape(key.to_s)}=#{CGI::escape(val.to_s)}"}.join("&")

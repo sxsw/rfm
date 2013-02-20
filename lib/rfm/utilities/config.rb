@@ -25,6 +25,7 @@ module Rfm
 			use
 			parent
 			grammar
+			field_mapping
 		)
 		
 		CONFIG_DONT_STORE = %w(strings using parents symbols objects)

@@ -37,7 +37,22 @@ module Rfm
 	require 'rfm/record'
 	require 'rfm/utilities/factory'
 	require 'delegate'
+	
+	
+	class Mapping
+		attr_accessor :attributes
+		def initialize(input={})
+			self.attributes = input
+		end
+		def_delegators :attributes, '[]', '[]='
+	end
+	
 
+	# Translates field names.
+	def self.translate(name, mapping = nil)
+		mapping ||= Mapping.new
+		mapping[name] || name
+	end
   
   
   class Layout
