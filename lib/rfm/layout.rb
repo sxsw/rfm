@@ -271,9 +271,10 @@ module Rfm
 	      
 	      # Apply mapping from :field_mapping, to send correct params in URL.
 	      prms = params.merge(extra_params)
-	      map = get_config[:field_mapping].attributes
+	      map = get_config[:field_mapping].attributes.invert
 	      # TODO: Make this part handle string AND symbol keys.
-	      map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
+	      #map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
+	      prms.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
 	      
 	      xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
 	      #Rfm::Resultset.new(db.server, xml_response, self, include_portals)
