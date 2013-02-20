@@ -273,7 +273,7 @@ module Rfm
 	      prms = params.merge(extra_params)
 	      map = get_config[:field_mapping].attributes
 	      # TODO: Make this part handle string AND symbol keys.
-	      map.each{|k,v| prms[k]=prms.delete(v)}
+	      map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
 	      
 	      xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
 	      #Rfm::Resultset.new(db.server, xml_response, self, include_portals)

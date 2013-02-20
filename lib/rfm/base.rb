@@ -40,6 +40,11 @@ module Rfm
 	
 	
 	class Mapping
+	  # TODO: Make field_mapping hash of hashes...
+	  # Each field in fmp can have any hash of prefs/options,
+	  # such as :translation=>'email' for Emaillocal field,
+	  # or date/time type specifications (like pull request).
+	  #
 		attr_accessor :attributes
 		def initialize(input={})
 			self.attributes = input
