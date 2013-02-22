@@ -271,7 +271,7 @@ module Rfm
 	      
 	      # Apply mapping from :field_mapping, to send correct params in URL.
 	      prms = params.merge(extra_params)
-	      map = get_config[:field_mapping].attributes.invert
+	      map = get_config[:field_mapping].attributes.invert rescue {}
 	      # TODO: Make this part handle string AND symbol keys.
 	      #map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
 	      prms.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}

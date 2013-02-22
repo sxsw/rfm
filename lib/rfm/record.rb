@@ -225,7 +225,7 @@ module Rfm
     def []=(key, value)
       key_string = key.to_s.downcase
       return super unless @loaded # is this needed?
-      raise Rfm::ParameterError, "You attempted to modify a field that does not exist in the current Filemaker layout." unless self.key?(key_string)
+      raise Rfm::ParameterError, "You attempted to modify a field (#{key_string}) that does not exist in the current Filemaker layout." unless self.key?(key_string)
       # @mods[key_string] = value
       # TODO: This needs cleaning up.
       # TODO: can we get field_type from record instead?
