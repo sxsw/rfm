@@ -209,6 +209,7 @@ module Rfm
 	    #   myLayout.find 54321
 	    #
 	    def find(find_criteria, options = {})
+	    	options.merge!({:field_mapping => get_config[:field_mapping]}) if get_config[:field_mapping]
 				get_records(*Rfm::CompoundQuery.new(find_criteria, options))
 	    end
 	    

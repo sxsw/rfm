@@ -8,7 +8,7 @@ module Rfm
 	# Also allow find requests to be :omit.
   class CompoundQuery < Array
   
-  	attr_accessor :original_input, :query_type, :key_values, :key_arrays, :key_map, :key_map_string, :key_counter
+  	attr_accessor :original_input, :query_type, :key_values, :key_arrays, :key_map, :key_map_string, :key_counter, :field_mapping
   	
   	def self.build_test
   		new([{:field1=>['val1a','val1b','val1c'], :field2=>'val2'},{:omit=>true, :field3=>'val3', :field4=>'val4'}, {:omit=>true, :field5=>['val5a','val5b'], :field6=>['val6a','val6b']}], {})
@@ -22,6 +22,7 @@ module Rfm
   	# Returns self as ['-fmpaction', {:hash=>'of', :key=>'values'}, {:options=>'hash'}]
   	def initialize(query, options={})
   		@options = options
+  		@field_mapping = options.delete(:field_mapping)
   		@original_input = query
 			@key_values = {}
 			@key_arrays = []
@@ -76,7 +77,7 @@ module Rfm
 				query_tag = []
 				val = val.rfm_force_array
 				val.each do |v|
-					@key_values["-q#{key_counter}"] = key
+					@key_values["-q#{key_counter}"] = Rfm.translate(key.to_s, field_mapping.attributes.invert)
 					@key_values["-q#{key_counter}.value"] = v
 					query_tag << "q#{key_counter}"
 					@key_counter += 1
