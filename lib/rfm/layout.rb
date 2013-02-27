@@ -154,7 +154,7 @@ module Rfm
     end
     
     meta_attr_reader :db
-    #attr_reader :name #, :db
+    attr_reader :field_mapping
     attr_writer :field_names, :portal_meta, :table
     def_delegator :db, :server
     alias_method :database, :db
@@ -209,7 +209,7 @@ module Rfm
 	    #   myLayout.find 54321
 	    #
 	    def find(find_criteria, options = {})
-	    	options.merge!({:field_mapping => get_config[:field_mapping]}) if get_config[:field_mapping]
+	    	options.merge!({:field_mapping => field_mapping}) if field_mapping
 				get_records(*Rfm::CompoundQuery.new(find_criteria, options))
 	    end
 	    
@@ -272,7 +272,7 @@ module Rfm
 	      
 	      # Apply mapping from :field_mapping, to send correct params in URL.
 	      prms = params.merge(extra_params)
-	      map = get_config[:field_mapping].attributes.invert rescue {}
+	      map = field_mapping.invert
 	      # TODO: Make this part handle string AND symbol keys.
 	      #map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
 	      prms.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
@@ -408,7 +408,7 @@ module Rfm
 
       # process field controls
       doc['FMPXMLLAYOUT']['LAYOUT']['FIELD'].each {|field|
-        name = Rfm.translate(field['NAME'], get_config[:field_mapping])
+        name = field_mapping[field['NAME']] || field['NAME']
         style = field['STYLE']
         type = style['TYPE']
         value_list_name = style['VALUELIST']
@@ -428,6 +428,21 @@ module Rfm
       @field_names ||= @field_controls.collect{|k,v| v.name rescue v[0].name}
       @field_controls.freeze
     end
+    
+		def field_mapping
+			@field_mapping ||= load_field_mapping(get_config[:field_mapping])
+		end
+		
+		def load_field_mapping(mapping={})
+			mapping = (mapping || {}).to_cih
+			# 			def mapping.translate(name)
+			# 				self[name.to_s] || name
+			# 			end
+			def mapping.invert
+				super.to_cih
+			end
+			mapping
+		end
     
   	private :load, :get_records, :params
       

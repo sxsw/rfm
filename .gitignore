@@ -11,3 +11,4 @@ pkg
 *.md.html
 Gemfile
 Gemfile.lock
+*.diff

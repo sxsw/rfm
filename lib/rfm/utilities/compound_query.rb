@@ -77,7 +77,7 @@ module Rfm
 				query_tag = []
 				val = val.rfm_force_array
 				val.each do |v|
-					@key_values["-q#{key_counter}"] = Rfm.translate(key.to_s, field_mapping.attributes.invert)
+					@key_values["-q#{key_counter}"] = field_mapping.invert[key] || key
 					@key_values["-q#{key_counter}.value"] = v
 					query_tag << "q#{key_counter}"
 					@key_counter += 1

@@ -155,7 +155,7 @@ module Rfm
       	return if doc.fields.blank?
 
         doc.fields.each do |field|
-        	name = Rfm.translate(field.name, layout.get_config[:field_mapping]) #layout.get_config[:field_mapping]
+        	name = layout.field_mapping[field.name] || field.name rescue field.name
           @field_meta[name] = Rfm::Metadata::Field.new(field)
         end
         (layout.field_names = field_names) if layout and layout.field_names_no_load.blank?

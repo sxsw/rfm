@@ -36,29 +36,7 @@ module Rfm
 	require 'rfm/layout'
 	require 'rfm/record'
 	require 'rfm/utilities/factory'
-	require 'delegate'
-	
-	
-	class Mapping
-	  # TODO: Make field_mapping hash of hashes...
-	  # Each field in fmp can have any hash of prefs/options,
-	  # such as :translation=>'email' for Emaillocal field,
-	  # or date/time type specifications (like pull request).
-	  #
-		attr_accessor :attributes
-		def initialize(input={})
-			self.attributes = input
-		end
-		def_delegators :attributes, '[]', '[]='
-	end
-	
-
-	# Translates field names.
-	def self.translate(name, mapping = nil)
-		mapping ||= Mapping.new
-		mapping[name] || name
-	end
-  
+	require 'delegate' 
   
   class Layout
 

@@ -128,6 +128,13 @@ class Hash
 			self.delete(k) if (delete ? args.include?(k) : !args.include?(k))
 		end
 	end
+	
+	# Convert hash to Rfm::CaseInsensitiveHash
+	def to_cih
+		new = Rfm::CaseInsensitiveHash.new
+		self.each{|k,v| new[k] = v}
+		new
+	end
 end # Hash
 
 # Allows access to superclass object

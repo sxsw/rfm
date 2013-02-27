@@ -119,7 +119,7 @@ describe Rfm::Record do
 
       ex = rescue_from { record['tester2'] = 'error' }
       ex.class.should eql(Rfm::ParameterError)
-      ex.message.should eql('You attempted to modify a field that does not exist in the current Filemaker layout.')
+      ex.message.should match(/You attempted to modify a field.*that does not exist in the current Filemaker layout/)
     end
   end #[]=
   
