@@ -265,10 +265,12 @@ module Rfm
 	    end
 	    
 	    def get_records(action, extra_params = {}, options = {})
-	    	# The grammar stuff here won't work properly until you handle config between models/sublayouts/layout/server.
+	    	# TODO: The grammar stuff here won't work properly until you handle config between models/sublayouts/layout/server.
+	    	# Is this done now?
 	    	grammar_option = state(options)[:grammar]
 	    	options.merge!(:grammar=>grammar_option) if grammar_option
-	      include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
+	      #include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
+	      include_portals = options[:ignore_portals] ? nil : options.delete(:include_portals)
 	      
 	      # Apply mapping from :field_mapping, to send correct params in URL.
 	      prms = params.merge(extra_params)

@@ -368,6 +368,8 @@ module Rfm
         result = {}
         options.each do |key,value|
           case key
+          when :max_portal_rows
+          	result['-relatedsets.max'] = value
           when :max_records
             result['-max'] = value
           when :skip_records
