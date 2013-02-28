@@ -38,7 +38,7 @@ describe Rfm::Layout do
 			Rfm::Resultset.should_receive(:new) do |xml, slf, incprt|
 				xml[0..4].should == '<?xml'
 				slf.should == layout
-				incprt.should == nil
+				incprt.should == true
 			end
 			layout.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'})
 		end

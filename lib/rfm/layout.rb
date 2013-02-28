@@ -270,7 +270,7 @@ module Rfm
 	    	grammar_option = state(options)[:grammar]
 	    	options.merge!(:grammar=>grammar_option) if grammar_option
 	      #include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
-	      include_portals = options[:ignore_portals] ? nil : options.delete(:include_portals)
+	      include_portals = !options[:ignore_portals]
 	      
 	      # Apply mapping from :field_mapping, to send correct params in URL.
 	      prms = params.merge(extra_params)
@@ -280,7 +280,6 @@ module Rfm
 	      prms.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
 	      
 	      xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
-	      #Rfm::Resultset.new(db.server, xml_response, self, include_portals)
 	      Rfm::Resultset.new(xml_response, self, include_portals)
 	    end
 	    
