@@ -1,5 +1,29 @@
 # Changelog
 
+## Ginjo-Rfm 2.1.0
+
+* Added ox version constraint (~> 1.4.6) in gemspec-development, since anything beyond 1.4.6 breaks on some machines.
+
+* Removed `:include_portals` query option in favor of `:ignore_portals`.
+
+* Added `:max_portal_rows` query option.
+
+* Added field-remapping framework to allow model fields with different names than Filemaker fields.
+
+* Fix date/time/timestamp translations when writing data to Filemaker.
+
+* Detached new Server objects from Factory.servers hash, so wont reuse or stack-up servers.
+
+* Added grammar translation layer between xml parser and Rfm, allowing all supported xml grammars to be used with Rfm.
+	This can provide better performance and will streamline changes/additions to Filemaker's xml grammar(s).
+	
+* Added ability to manually import fmprestulset and fmpxmlresult data (from file, variable, etc.).
+
+* Fixed case statement for ruby 1.9
+ 
+* Configuration `:use` option is now processed wherever it is in the code.
+
+
 ## Ginjo-Rfm 2.0.2
 
 * Added configuration parameter ignore_bad_data to silence data mismatch errors when loading resultset into records.
