@@ -46,6 +46,17 @@ describe Rfm::Layout do
 		it "returns instance of Resultset" do
 			layout.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'}).class.should == Rfm::Resultset
 		end
+		
+		it "translates field names, given field-translation map" do
+			layout.instance_variable_set :@field_mapping, {'userName' => 'login'}
+			server.should_receive(:connect) do |acnt, pass, actn, prms, opts|
+				layout.field_mapping['userName'].should == 'login'
+				prms.has_key?('login').should be_false
+				prms.has_key?('userName').should be_true
+				prms['userName'].should == 'bill'
+			end
+			layout.send(:get_records, '-find', {'login'=>'bill'})
+		end
 	end #get_records
 	
 	describe "#load" do
