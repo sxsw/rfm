@@ -118,13 +118,13 @@ end # Array
 class Hash
 	# TODO: Possibly deprecated, delete if not used.
 	def rfm_only(*keepers)
-		self.each_key {|k| self.delete(k) if !keepers.include?(k)}
+		self.dup.each_key {|k| self.delete(k) if !keepers.include?(k)}
 	end
 	
 	def rfm_filter(*args)
 		options = args.rfm_extract_options!
 		delete = options[:delete]
-		self.each_key do |k|
+		self.dup.each_key do |k|
 			self.delete(k) if (delete ? args.include?(k) : !args.include?(k))
 		end
 	end

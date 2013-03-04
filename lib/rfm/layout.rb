@@ -265,8 +265,8 @@ module Rfm
 	    end
 	    
 	    def get_records(action, extra_params = {}, options = {})
-	    	# TODO: The grammar stuff here won't work properly until you handle config between models/sublayouts/layout/server.
-	    	# Is this done now?
+	    	# TODO: The grammar stuff here won't work properly until you handle config between
+	    	# models/sublayouts/layout/server (Is this done now?).
 	    	grammar_option = state(options)[:grammar]
 	    	options.merge!(:grammar=>grammar_option) if grammar_option
 	      #include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
@@ -277,7 +277,7 @@ module Rfm
 	      map = field_mapping.invert
 	      # TODO: Make this part handle string AND symbol keys.
 	      #map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
-	      prms.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
+	      prms.dup.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
 	      
 	      xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
 	      Rfm::Resultset.new(xml_response, self, include_portals)
@@ -436,9 +436,6 @@ module Rfm
 		
 		def load_field_mapping(mapping={})
 			mapping = (mapping || {}).to_cih
-			# 			def mapping.translate(name)
-			# 				self[name.to_s] || name
-			# 			end
 			def mapping.invert
 				super.to_cih
 			end
