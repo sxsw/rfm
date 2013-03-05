@@ -76,6 +76,7 @@ module Rfm
       # access field data through the Record object.
       def coerce(value, resultset)
         return nil if (value.nil? or value.empty?)
+        value = value.to_s
         case self.result.downcase
         when "text"      then value
         when "number"    then BigDecimal.new(value)
