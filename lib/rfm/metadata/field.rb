@@ -76,10 +76,9 @@ module Rfm
       # access field data through the Record object.
       def coerce(value, resultset)
         return nil if (value.nil? or value.empty?)
-        value = value.to_s
         case self.result.downcase
         when "text"      then value
-        when "number"    then BigDecimal.new(value)
+        when "number"    then BigDecimal.new(value.to_s)
         when "date"      then Date.strptime(value, resultset.date_format)
         when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{resultset.time_format}")
         when "timestamp" then DateTime.strptime(value, resultset.timestamp_format)
