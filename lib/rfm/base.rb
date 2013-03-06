@@ -236,7 +236,7 @@ module Rfm
 	  	def layout
 	  		return @layout if @layout
 	  		cnf = get_config
-	  		return unless cnf[:layout]
+	  		raise "Could not get :layout from get_config in Base.layout method" unless cnf[:layout] #return unless cnf[:layout]
 	  		@layout = Rfm::Factory.layout(cnf).sublayout
 	  		
 	  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
@@ -254,6 +254,7 @@ module Rfm
 		  			
 			# Just like Layout#find, but searching by record_id will return a record, not a resultset.
 	  	def find(find_criteria, options={})
+	  		#puts "base.find-#{layout}"
 	  	  r = layout.find(find_criteria, options)
 	  	  if ![Hash,Array].include?(find_criteria.class) and r.size == 1
 	  	    r[0]
