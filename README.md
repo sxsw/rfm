@@ -13,6 +13,28 @@ Rfm is a Ruby-Filemaker adapter, a Ruby gem that allows scripts and applications
 * Lardawge at github  <https://github.com/lardawge/rfm>
 
 
+## New in version  2.1
+
+ginjo-rfm 2.1 is a combination of new features, bug fixes, and a lot of code refactoring.
+Most api calls remain the same, but a good deal of underlying code has been transformed
+to support, and take advantage of, the progress of technologies surrounding Ruby.
+
+* Portals are now included by default.
+	Removed `:include_portals` query option in favor of `:ignore_portals`.
+	Added `:max_portal_rows` query option.
+* Added field-remapping framework to allow model fields with different names than Filemaker fields.
+* Fixed date/time/timestamp translations when writing data to Filemaker.
+* Detached new Server objects from Factory.servers hash, so wont reuse or stack-up servers.
+* Added grammar translation layer between xml parser and Rfm, allowing all supported xml grammars to be used with Rfm.
+  This will also streamline changes/additions to Filemaker's xml grammar(s).
+* Added ability to manually import fmpresultset and fmpxmlresult data (from file, variable, etc.).
+* Compatibility fixes for ruby 1.9.
+* Configuration `:use` option now works for all Rfm objects that respond to `config`.
+
+Some issues still to be addressed (some longstanding and some more recent) are repeating field writes, some of the
+object management & introspection calls, pull requests, more coverage of Filemaker's query syntax, more error classes, more specs, and more documentation.
+
+
 ## New in version 2.0
 
 Ginjo-rfm 2.0 brings new features to Rfm, making it easier than ever to work with Filemaker data from your Ruby scripts.
