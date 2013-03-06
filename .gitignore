@@ -14,3 +14,4 @@ Gemfile.lock
 *.diff
 .bundle/***
 vendor/***
+.ruby-version
