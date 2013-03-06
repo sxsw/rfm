@@ -2,35 +2,7 @@ require 'rubygems'
 require 'rake'
 require './lib/rfm'
 
-# begin
-#   require 'jeweler'
-#   Jeweler::Tasks.new do |gem|
-#     gem.name = "ginjo-rfm"
-#     gem.summary = "Ruby to Filemaker adapter"
-#     gem.description = "Rfm brings your FileMaker data to Ruby. Now your Ruby scripts and Rails applications can talk directly to your FileMaker server."
-#     gem.email = "http://groups.google.com/group/rfmcommunity"
-#     gem.homepage = "http://sixfriedrice.com/wp/products/rfm/"
-#     gem.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
-#     gem.files = FileList['lib/**/*']
-#     gem.add_dependency('activesupport', '>= 2.3.5')
-#     gem.add_development_dependency('jeweler')
-#     gem.add_development_dependency('rake')
-#     gem.add_development_dependency('rdoc')
-#     gem.add_development_dependency('rspec', '~>1.3.0')
-#			gem.add_development_dependency('diff-lcs', '>= 0')
-#     gem.add_development_dependency('yard')
-#     gem.add_development_dependency('hpricot')
-#     gem.add_development_dependency('libxml-ruby')
-#     gem.add_development_dependency('nokogiri')
-#     gem.add_development_dependency('ox')
-#     gem.add_development_dependency('activemodel')
-#     gem.rdoc_options = [ "--line-numbers", "--main", "README.md" ]
-#     gem.version = Rfm::VERSION
-#   end
-#   Jeweler::RubygemsDotOrgTasks.new
-# rescue LoadError
-#   puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"
-# end
+task :default => :spec
 
 require 'spec/rake/spectask'
 Spec::Rake::SpecTask.new(:spec) do |spec|
@@ -61,9 +33,6 @@ YARD::Rake::YardocTask.new do |t|
   t.files   = ['lib/**/*.rb', 'README.md', 'LICENSE', 'VERSION', 'CHANGELOG.md']   # optional
   t.options = ['-oydoc', '--no-cache', '-mrdoc', '--no-private'] # optional
 end
-
-
-task :default => :spec
 
 desc "Print the version of Rfm"
 task :version do
