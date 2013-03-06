@@ -194,6 +194,19 @@ module Rfm
       end
 		end
 		
+    def to_partial_path(object = self) #@object)
+    	return 'some/partial/path'
+    	##### DISABLED HERE - ActiveModel Lint only needs a string #####
+    	##### TODO: implement to_partial_path to return meaningful string.
+      @partial_names[object.class.name] ||= begin
+        object = object.to_model if object.respond_to?(:to_model)
+
+        object.class.model_name.partial_path.dup.tap do |partial|
+          path = @view.controller_path
+          partial.insert(0, "#{File.dirname(path)}/") if partial.include?(?/) && path.include?(?/)
+        end
+      end
+    end
 		
 		class << self
 		
