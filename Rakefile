@@ -93,20 +93,20 @@ task :release do
 	shell = <<-EEOOFF
 		echo "--- Pre-committing ---"
 			git add .; git commit -m'Committing any lingering changes in prep for release of version #{Rfm::VERSION}'
-		echo "--- Building Gem ---" &&
+		echo "--- Building gem ---" &&
 			mkdir -p pkg &&
 			output=`gem build #{gem_name}.gemspec` &&
 			gemfile=`echo "$output" | awk '{ field = $NF }; END{ print field }'` &&
 			echo $gemfile &&
 			mv -f $gemfile pkg/ &&
-		echo "--- Tagging With Git ---" &&
+		echo "--- Tagging with git ---" &&
 			git tag -m'Releasing version #{Rfm::VERSION}' v#{Rfm::VERSION} &&
-		echo "--- Pushing to Git ---" &&
+		echo "--- Pushing to git origin ---" &&
 			git push origin &&
 			git push origin --tags &&
-		echo "--- Pushing to Rubygems.org ---" &&
+		echo "--- Pushing to rubygems.org ---" &&
 			gem push pkg/$gemfile
 	EEOOFF
-	puts shell
+	#puts shell
 	print exec(shell)
 end
