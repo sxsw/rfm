@@ -27,13 +27,19 @@ describe Rfm::Base do
 	
 	# This works in ruby 1.8.7 but fails in ruby 1.9.2.
 	# Dunno why, maybe something to do with DelegateClass?
+	# I've checked over & over, and the Memo.layout object
+	# is indeed receiving the :find message.
+	# See base.rb and layout.rb for find methods & debugging code.
+	#
 	describe '.find' do
 		it("passes parameters & options to Layout object") do
+			#puts "Memo.layout-#{Memo.layout}"
 			Memo.layout.should_receive(:find) do |*args|
 				args[0].should == {:field_one=>'test'}
 				args[1].should == {:max_records=>5}
 			end
-			Memo.find({:field_one=>'test'}, :max_records=>5)			
+			Memo.find({:field_one=>'test'}, :max_records=>5)
+			#puts "Memo.layout-#{Memo.layout}"
 		end
 	end
 	
