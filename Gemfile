@@ -1,4 +1,4 @@
-# Bundler/Gemfile is not necessary to use gem.
+# Bundler/Gemfile is not necessary to use ginjo-rfm gem.
 # It is only here for development & testing.
 
 source 'https://rubygems.org'
