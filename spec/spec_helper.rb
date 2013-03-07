@@ -37,6 +37,7 @@ Spec::Runner.configure do |config|
 	config.before(:each) do
 		Kernel.silence_warnings do
 			#Memo = TestModel = Class.new(Rfm::Base){self.config :base_test}
+			# Note the capitalization of these instance variables.
 			@Server = Memo.server
 			@Layout = Memo.layout.parent_layout
 	
