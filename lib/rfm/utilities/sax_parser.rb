@@ -13,12 +13,12 @@ module Saxable
   
   # Default callbacks for Saxable objects.
 	def parent;	@parent || self end
-  def start_el(name); self end
+  def start_el(name, attributes); self end
   def attribute(name,value); (self[name]=value) rescue nil end
   def end_el(value); true end
   
   def self.included(base) 
-    attr_accessor :parent, :_new_element, :_new_element_name
+    attr_accessor :parent, :_new_element, :_new_element_name, :_new_element_attributes
     
     class << base
       
@@ -36,6 +36,7 @@ module Saxable
           if (name.match(el) if el.is_a? Regexp) || name == el
             sub = Object.const_get(kls.to_s).new rescue kls.new
             sub.parent = slf
+            sub.merge!(slf._new_element_attributes) rescue nil
             slf._new_element = sub
             yield(slf) if block_given?
             return slf._new_element
@@ -48,9 +49,10 @@ module Saxable
         # This is the actual instance-level start_el method.
         # The lambda version will call multiple lambdas,
         # whereas the single version will only call once.
-        define_method :start_el do |name|
+        define_method :start_el do |name, attributes|
           # This is for the lambda version.
           self._new_element_name = name
+          self._new_element_attributes = attributes
         #
         # This is the non-lambda one-shot only version.
         #
@@ -70,10 +72,10 @@ module Saxable
           begin
           result = (self.class.instance_variable_get(:@_start_el_lambdas).compact.each{|e| @sub = e.call(self); break if @sub}; @sub || self)
           #self.class.instance_variable_get(:@_start_el).last.call(self, parent, name) rescue nil || self
-          puts "Successfully processed lambdas"
+          #puts "Successfully processed lambdas"
           result
           rescue
-          puts "Errors processing lambdas: #{$!}"
+          #puts "Errors processing lambdas: #{$!}"
           self
           end
         #
@@ -88,6 +90,17 @@ module Saxable
             return true
           end
         end
+      end
+      
+      def element(*args)
+      	options = args.last.is_a?(Hash) ? args.pop : {}
+      	start_el args[0].to_s, options[:class] do |slf|
+      		slf.is_a? Hash
+      			slf[slf._new_element_name] = slf._new_element
+      		elsif slf.is_a? Array
+      			slf << slf._new_element
+      		end
+      	end
       end
       
     end
@@ -114,6 +127,7 @@ module SaxHandler
   end
   
   def initialize(initial_object)
+  	init_element_buffer
     initial_object.parent = set_cursor initial_object
   end
 	
@@ -124,25 +138,52 @@ module SaxHandler
 	def set_cursor(obj)
 		@cursor = obj
 	end
+	
+  def init_element_buffer
+  	@element_buffer = {:name=>nil, :attr=>{}}
+  end
+  
+  def send_element_buffer
+  	if element_buffer?
+	  	set_cursor cursor.start_el(@element_buffer[:name], @element_buffer[:attr])
+	  	init_element_buffer
+	  end
+	end
+	
+	def element_buffer?
+		@element_buffer[:name] && !@element_buffer[:name].empty?
+	end
 
   # Add a node to an existing element.
-	def _start_element(name)
-    set_cursor cursor.start_el(name)
+	def _start_element(name, attributes=nil)
+		send_element_buffer
+		if attributes.nil?
+			@element_buffer = {:name=>name, :attr=>{}}
+		else
+			set_cursor cursor.start_el(name, attributes)
+		end
 	end
 	
 	# Add attribute to existing element.
 	def _attribute(name, value)
-    cursor.attribute(name,value)
+		@element_buffer[:attr].merge!({name=>value})
+    #cursor.attribute(name,value)
 	end
 	
 	# Add 'content' attribute to existing element.
 	def _text(value)
-		cursor.attribute('content', value)
+		if !element_buffer?
+			cursor.attribute('content', value)
+		else
+			@element_buffer[:attr].merge!({'content'=>value})
+			send_element_buffer
+		end
 	end
 	
 	# Close out an existing element.
 	def _end_element(value)
-	  cursor.end_el(value) and set_cursor cursor.parent
+		send_element_buffer
+		cursor.end_el(value) and set_cursor cursor.parent
 	end
   
 end # SaxHandler
