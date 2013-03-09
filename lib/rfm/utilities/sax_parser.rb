@@ -6,6 +6,10 @@ require 'delegate'
 require 'yaml'
 require 'rfm'
 
+# TODO: Find a way to eliminate the slf._new_element, since it leaves unnecessary baggage.
+#       Pass it thru the parameters if you have to. Same with _new_element_attributes & _new_element_name
+#       Create an object "new_element" with all these variables that you can use to pass thru the wormholes.
+
 
 #####  CORE PATCHES  #####
 
@@ -94,8 +98,8 @@ module Saxable
       
       def element(*args)
       	options = args.last.is_a?(Hash) ? args.pop : {}
-      	start_el args[0].to_s, options[:class] do |slf|
-      		slf.is_a? Hash
+      	start_el args[0], options[:class] do |slf|
+      		if slf.is_a? Hash
       			slf[slf._new_element_name] = slf._new_element
       		elsif slf.is_a? Array
       			slf << slf._new_element
@@ -209,45 +213,35 @@ class OxFmpSax < ::Ox::Sax
 end # OxFmpSax
 
 
+
+#####  USER MODELS  #####
+
 class FmResultset < Hash
-  start_el 'datasource', :Datasource do |slf|
-    slf[slf._new_element_name] = slf._new_element
-  end
-  start_el 'resultset', :Resultset do |slf|
-    slf[slf._new_element_name] = slf._new_element
-  end
-  start_el 'metadata', :Metadata do |slf|
-    slf[slf._new_element_name] = slf._new_element
-  end
+	element 'datasource', :class=>:Datasource
+	element 'resultset', :class=>:Resultset
+	element 'metadata', :class=>:Metadata
 end
 
 class Datasource < Hash
+	# These both work.
+	#element /.*/i, :class=>:Hash
   start_el /.*/i, :Hash
 end
 
 class Metadata < Array
-  start_el 'field-definition', :Hash do |slf|
-    slf << slf._new_element
-  end
+	element 'field-definition', :class=>:Hash
 end
 
 class Resultset < Array
-  start_el 'record', :Record do |slf|
-    slf << slf._new_element
-  end
-  # Enable this to kill attribute parsing for this object.
-  #def attribute(*args); end
+	element 'record', :class=>:Record
 end
 
 class Record < Hash
-  start_el 'field', :Field
+	start_el 'field', :Hash do |slf|
+		slf.merge!(slf._new_element['name'] => slf._new_element['content'])
+	end
 end
 
-class Field < Hash    
-  end_el 'field' do |slf|
-    slf.parent[slf['name']] = slf['content']
-  end
-end
 
 # This gives a generic tree structure.
 class Hash
