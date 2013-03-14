@@ -15,7 +15,7 @@ class Cursor
     attr_accessor :model, :obj
     
     def self.constantize(klass)
-	  	Object.const_get(klass.to_s)
+	  	Object.const_get(klass.to_s) rescue Hash
 	  end
     
     def initialize(model, obj)
@@ -30,22 +30,33 @@ class Cursor
     
 		def get_submodel(name)
 			#puts "Cursor#get_submodel: #{name}"
-			model['elements'][name] rescue model #{'elements' => model['elements']}
+			model['elements'][name] || default_submodel rescue default_submodel
+		end
+		
+		def default_submodel
+			{'elements' => model['elements']}
 		end
     
     def attribute(name,value); (obj[name]=value) rescue nil end
         
     def start_el(name, attributes)
     	#puts "Cursor#start_el: #{name}"
-      submodel = get_submodel(name) || model
+      submodel = get_submodel(name)
       new_element = constantize(submodel['class'].to_s).new
+      new_element.merge!(attributes) rescue nil
+      
   		if obj.is_a? Hash
-  			obj[name] = new_element
+  			if obj.has_key? name
+  				obj[name] = [obj[name]].flatten << new_element
+		    else			
+  				obj[name] = new_element
+  			end
   		elsif obj.is_a? Array
   			obj << new_element
   		else
   			obj.instance_variable_set "@#{name}", new_element
   		end
+  		
       #yield(self) if block_given?
       return submodel, new_element
     end
@@ -100,7 +111,7 @@ module SaxHandler
 	def set_cursor(*args) # cursor-object OR model, obj
 		args = *args
 		#puts "SET_CURSOR: #{args.class}"
-		y args
+		#y args
 		stack.push(args.is_a?(Cursor) ? args : Cursor.new(args[0], args[1]))# if !args.empty?
 		cursor
 	end
@@ -171,10 +182,10 @@ class OxFmpSax < ::Ox::Sax
 		File.open(io){|f| Ox.sax_parse self, f}
 	end
 	
-  def start_element(name); _start_element(name.to_s.downcase);        end
-  def end_element(name);   _end_element(name.to_s.downcase);          end
-  def attr(name, value);   _attribute(name.to_s.downcase, value);     end
-  def text(value);         _text(value);                              end
+  def start_element(name); _start_element(name.to_s.gsub(/\-/, '_'));        	end
+  def end_element(name);   _end_element(name.to_s.gsub(/\-/, '_'));          end
+  def attr(name, value);   _attribute(name.to_s.gsub(/\-/, '_'), value);     end
+  def text(value);         _text(value);                              				end
   
 end # OxFmpSax
 
