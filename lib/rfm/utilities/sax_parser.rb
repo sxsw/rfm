@@ -1,4 +1,7 @@
 # From https://github.com/ohler55/ox
+# Do: irb -rubygems -r  lib/rfm/utilities/sax_parser.rb
+# Do: y rslt = OxFmpSax.build(FM, FmResultset.new)
+
 #gem 'ox', '1.8.5'
 require 'stringio'
 require 'ox'
@@ -11,7 +14,6 @@ require 'rfm'
 #       Create an object "new_element" with all these variables that you can use to pass thru the wormholes.
 
 
-#####  CORE PATCHES  #####
 
 module Saxable
   
@@ -194,7 +196,7 @@ end # SaxHandler
 
 
 
-#####  XML PARSERS - SAX HANDLERS  #####
+#####  SAX PARSER BACKENDS  #####
 
 class OxFmpSax < ::Ox::Sax
 
