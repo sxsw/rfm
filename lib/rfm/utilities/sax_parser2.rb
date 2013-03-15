@@ -1,6 +1,6 @@
 # From https://github.com/ohler55/ox
 # Do: irb -rubygems -r  lib/rfm/utilities/sax_parser.rb
-# Do: y rslt = OxFmpSax.build(FM, FmResultset.new)
+# Do: r = OxFmpSax.build(FM, 'local_testing/sax_parser.yml')
 
 #gem 'ox', '1.8.5'
 require 'stringio'
@@ -15,12 +15,12 @@ class Cursor
     attr_accessor :model, :obj
     
     def self.constantize(klass)
-	  	Object.const_get(klass.to_s) rescue Hash
+	  	Object.const_get(klass.to_s) rescue nil
 	  end
     
     def initialize(model, obj)
-    	self.model = model
-    	self.obj   = obj.is_a?(String) ? constantize(obj).new : obj
+    	@model = model
+    	@obj   = obj.is_a?(String) ? constantize(obj).new : obj
     	self
     end
     
@@ -30,37 +30,73 @@ class Cursor
     
 		def get_submodel(name)
 			#puts "Cursor#get_submodel: #{name}"
-			model['elements'][name] || default_submodel rescue default_submodel
+			model['elements'][name] rescue nil #|| default_submodel rescue default_submodel
 		end
 		
 		def default_submodel
-			{'elements' => model['elements']}
+			if model['depth'].to_i > 0
+				{'elements' => model['elements'], 'depth'=>(model['depth'].to_i - 1)}
+			else
+				{}
+			end
 		end
     
     def attribute(name,value); (obj[name]=value) rescue nil end
         
-    def start_el(name, attributes)
-    	#puts "Cursor#start_el: #{name}"
-      submodel = get_submodel(name)
-      new_element = constantize(submodel['class'].to_s).new
-      new_element.merge!(attributes) rescue nil
+    def start_el(tag, attributes)
+    	#puts "Cursor#start_el: #{tag}"
+    	
+    	return if (model['ignore_unknown']  && !model['elements'][tag])
+    	
+    	# Acquire submodel grammar
+      submodel = get_submodel(tag) || default_submodel
       
-  		if obj.is_a? Hash
-  			if obj.has_key? name
-  				obj[name] = [obj[name]].flatten << new_element
+      # Create new element
+      new_element = (constantize(submodel['class'].to_s) || Hash).new 
+      
+      # Assign attributes to new element
+      if !attributes.empty?
+	      new_element.is_a?(Hash) ? new_element.merge!(attributes) : new_element.instance_variable_set(:@attributes, attributes)
+      end
+      
+      # Store new object in current object
+      #puts "Submodel: #{submodel['class']}"
+  		if obj.is_a?(Hash) && !submodel['hidden']
+  			if obj.has_key? tag
+  				obj[tag] = [obj[tag]].flatten << new_element
 		    else			
-  				obj[name] = new_element
+  				obj[tag] = new_element
   			end
   		elsif obj.is_a? Array
-  			obj << new_element
+  			if submodel['hidden'] == false
+	  			set_element_accessor(tag, new_element)
+  			else
+	  			obj << new_element
+  			end
   		else
-  			obj.instance_variable_set "@#{name}", new_element
+				set_element_accessor(tag, new_element)
   		end
   		
       #yield(self) if block_given?
       return submodel, new_element
     end
     
+    def set_element_accessor(tag, new_element)
+			#obj.instance_variable_set "@#{tag}", new_element
+			if obj.respond_to? tag
+				obj.send "#{tag}=",   ([obj.send "#{tag}"].flatten << new_element)
+			else
+				create_accessor tag
+				obj.send "#{tag}=", new_element
+			end
+		end
+		
+		def create_accessor(tag)
+			obj.class.class_eval do
+				attr_accessor "#{tag}"
+			end
+		end
+		
     def end_el(name)
     	#puts "Cursor#end_el: #{name}" 
       if true #(name.match(el) if el.is_a? Regexp) || name == el
@@ -95,13 +131,13 @@ module SaxHandler
   
   def initialize(grammar)
   	@stack = []
-  	@grammar = grammar
+  	@grammar = YAML.load_file(grammar)
   	# Not necessary - for testing only
   		self.class.instance_variable_set :@handler, self
   	init_element_buffer
     #initial_object.parent = set_cursor initial_object
     #set_cursor grammar, grammar['class']
-    set_cursor grammar, Hash.new
+    set_cursor @grammar, Hash.new
   end
   
 	def cursor
@@ -110,8 +146,11 @@ module SaxHandler
 	
 	def set_cursor(*args) # cursor-object OR model, obj
 		args = *args
-		#puts "SET_CURSOR: #{args.class}"
-		#y args
+		# 		puts "SET_CURSOR: #{args.class}"
+		# 		y args
+		
+		args = [{},{}] if args.nil? or args.empty? or args[0].nil? or args[1].nil?
+
 		stack.push(args.is_a?(Cursor) ? args : Cursor.new(args[0], args[1]))# if !args.empty?
 		cursor
 	end
