@@ -12,7 +12,7 @@ require 'rfm'
 
 class Cursor
 
-    attr_accessor :model, :obj
+    attr_accessor :model, :obj, :parent
     
     def self.constantize(klass)
 	  	Object.const_get(klass.to_s) rescue nil
@@ -99,8 +99,17 @@ class Cursor
 		
     def end_el(name)
     	#puts "Cursor#end_el: #{name}" 
+    	# TODO: filter-out untracked cursors
       if true #(name.match(el) if el.is_a? Regexp) || name == el
-        #yield(self) if block_given?
+      	begin
+      		#puts "RUNNING: end_el - eval for element - #{name}:#{model['before_close']}"
+	      	# This is for arrays
+	      	obj.send(model['before_close'].to_s, self) if model['before_close']
+	      	# This is for hashes with array as value. It may be ilogical in this context. Is it needed?
+	      	obj.each{|o| o.send(model['each_before_close'].to_s, obj)} if obj.respond_to?('each') && model['each_before_close']
+	      rescue
+	      	puts "Error: #{$!}"
+	      end
         return true
       end
     end
@@ -152,6 +161,7 @@ module SaxHandler
 		args = [{},{}] if args.nil? or args.empty? or args[0].nil? or args[1].nil?
 
 		stack.push(args.is_a?(Cursor) ? args : Cursor.new(args[0], args[1]))# if !args.empty?
+		cursor.parent = stack[-2]
 		cursor
 	end
 	
@@ -236,7 +246,6 @@ class FmResultset < Hash
 end
 
 class Datasource < Hash
-	#   start_el /.*/i, :Hash
 end
 
 class Metadata < Array
@@ -246,9 +255,13 @@ class Resultset < Array
 end
 
 class Record < Hash
-	# 	start_el 'field', :Hash do |slf|
-	# 		slf.merge!(slf._new_element['name'] => slf._new_element['content'])
-	# 	end
+end
+
+class Field < Hash
+	def build_record_data(cursor)
+		#puts "RUNNING Field#build_field_data on record_id:#{cursor.obj['name']}"
+		cursor.parent.obj.merge!(cursor.obj['name'] => (cursor.obj['data']['content'] rescue ''))
+	end
 end
 
 
