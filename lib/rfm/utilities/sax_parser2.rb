@@ -12,7 +12,7 @@ require 'rfm'
 
 class Cursor
 
-    attr_accessor :model, :obj, :parent
+    attr_accessor :model, :obj, :parent, :top, :stack
     
     def self.constantize(klass)
 	  	Object.const_get(klass.to_s) rescue nil
@@ -55,6 +55,7 @@ class Cursor
       new_element = (constantize(submodel['class'].to_s) || Hash).new 
       
       # Assign attributes to new element
+      # TODO: create accessors for all attributes
       if !attributes.empty?
 	      new_element.is_a?(Hash) ? new_element.merge!(attributes) : new_element.instance_variable_set(:@attributes, attributes)
       end
@@ -82,11 +83,11 @@ class Cursor
     end
     
     def set_element_accessor(tag, new_element)
-			#obj.instance_variable_set "@#{tag}", new_element
-			if obj.respond_to? tag
-				obj.send "#{tag}=",   ([obj.send "#{tag}"].flatten << new_element)
+			create_accessor(tag)
+			if obj.send(tag) #obj.respond_to? tag
+				#puts "setting elmt accssr: #{tag}"
+				obj.send "#{tag}=",   ([obj.send "#{tag}"].flatten.compact << new_element)
 			else
-				create_accessor tag
 				obj.send "#{tag}=", new_element
 			end
 		end
@@ -162,6 +163,8 @@ module SaxHandler
 
 		stack.push(args.is_a?(Cursor) ? args : Cursor.new(args[0], args[1]))# if !args.empty?
 		cursor.parent = stack[-2]
+		cursor.top = stack[0]
+		cursor.stack = stack
 		cursor
 	end
 	
@@ -243,6 +246,9 @@ end # OxFmpSax
 #####  USER MODELS  #####
 
 class FmResultset < Hash
+	# 	def return_resulset(cursor)
+	# 		cursor.first.replace(cursor)
+	# 	end
 end
 
 class Datasource < Hash
@@ -252,6 +258,19 @@ class Metadata < Array
 end
 
 class Resultset < Array
+	def attach_parent_objects(cursor)
+		elements = cursor.parent.obj
+		#elements.each_key{|k| puts "element: #{k}"; cursor.create_accessor(k); cursor.set_element_accessor(k, cursor.parent.obj[k]) unless k == 'resultset'}
+		elements.each{|k, v| cursor.set_element_accessor(k, v) unless k == 'resultset'}
+		cursor.stack[0] = cursor
+	end
+	
+	# TODO: This attr_accessor call should be handled in Cursor#start_el
+	attr_accessor :attributes
+	def attach_relatedset_to_main_record(cursor)
+		puts cursor.obj.attributes['table']
+		cursor.parent.obj[cursor.obj.attributes['table']] = cursor.obj
+	end
 end
 
 class Record < Hash
@@ -263,6 +282,7 @@ class Field < Hash
 		cursor.parent.obj.merge!(cursor.obj['name'] => (cursor.obj['data']['content'] rescue ''))
 	end
 end
+
 
 
 
