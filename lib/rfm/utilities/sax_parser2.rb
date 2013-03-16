@@ -52,47 +52,100 @@ class Cursor
       submodel = get_submodel(tag) || default_submodel
       
       # Create new element
-      new_element = (constantize(submodel['class'].to_s) || Hash).new 
+      new_element = (constantize((submodel['of'] || submodel['class']).to_s) || Hash).new
+      
       
       # Assign attributes to new element
-      # TODO: create accessors for all attributes
+      # TODO: clean this up.
       if !attributes.empty?
-	      new_element.is_a?(Hash) ? new_element.merge!(attributes) : new_element.instance_variable_set(:@attributes, attributes)
+      	if submodel['individual_attributes']
+      		# TODO: This doesn't work. Need to set attr_accessor on new_element, not on current obj.
+	      	new_element.is_a?(Hash) ? new_element.merge!(attributes) : attributes.each{|k, v| set_element_accessor(k, v)}
+	      else
+		      #new_element.is_a?(Hash) ? new_element.merge!(attributes) : new_element.instance_variable_set(:@att, attributes)
+		      create_accessor('att', new_element)
+		      new_element.att = attributes
+	      end
       end
       
       # Store new object in current object
-      #puts "Submodel: #{submodel['class']}"
-  		if obj.is_a?(Hash) && !submodel['hidden']
-  			if obj.has_key? tag
-  				obj[tag] = [obj[tag]].flatten << new_element
-		    else			
-  				obj[tag] = new_element
-  			end
-  		elsif obj.is_a? Array
-  			if submodel['hidden'] == false
-	  			set_element_accessor(tag, new_element)
-  			else
-	  			obj << new_element
-  			end
-  		else
-				set_element_accessor(tag, new_element)
+      unless false #submodel['hide']
+      	as_att = submodel['as_attribute']
+  			if as_att
+	  			obj_element = obj.instance_variable_get("@#{as_att}")
+					obj.instance_variable_set("@#{as_att}", merge_element(obj_element, new_element, submodel, tag))
+    		elsif obj.is_a?(Hash)
+    			if obj.has_key? tag
+  					obj[tag] = merge_element(obj[tag], new_element, submodel, tag)
+  			  else			
+  	  			obj[tag] = new_element
+    			end
+    		elsif obj.is_a? Array
+					if obj.size > 0
+						obj.replace merge_element(obj, new_element, submodel, tag)
+					else
+  	  			obj << new_element
+	  			end
+    		else
+  	  		obj_element = obj.instance_variable_get("@#{tag}")
+  				obj.instance_variable_set("@#{tag}", merge_element(obj_element, new_element, submodel, tag))
+    		end
   		end
   		
-      #yield(self) if block_given?
       return submodel, new_element
     end
     
-    def set_element_accessor(tag, new_element)
-			create_accessor(tag)
-			if obj.send(tag) #obj.respond_to? tag
-				#puts "setting elmt accssr: #{tag}"
-				obj.send "#{tag}=",   ([obj.send "#{tag}"].flatten.compact << new_element)
-			else
-				obj.send "#{tag}=", new_element
-			end
+		# TODO: I don't think this method is necessary. Move this method into start_el.
+    def merge_element(obj_element, new_element, submodel, tag)
+    	delin_on = submodel['delineate_on']
+    	delin_with = submodel['delineate_with'] || Hash
+    	as  = submodel['as']
+    	as_att = submodel['as_attribute']
+    	case
+    		when as_att; merge_with_attributes(as_att, new_element, delin_on, delin_with)
+	    	when obj.is_a?(Hash); merge_with_hash(tag, new_element, delin_on, delin_with)
+	    	when obj.is_a?(Array); merge_with_array(tag, new_element, delin_on, delin_with)
+	    	else merge_with_attributes(tag, new_element, delin_on, delin_with)
+  		end
+    end
+    
+    def merge_like_elements(cur, new, on=nil, with=Hash)
+    	case
+    		#when !cur; {}
+    		when !on; Array[cur].flatten << new
+    		when with.is_a?(Hash); with[cur || {}].merge!(new.send(on).to_s => new)    			
+    		when with.is_a?(Array); with[cur].flatten.find{|c| c.send(on) == new.send(on)} << new
+    		else new
+    	end
+    end
+    
+    def merge_with_attributes(name, element, on, with)
+    	set_element_accessor(name, merge_like_elements((obj.send(name) rescue nil), element, on, with))
+    end
+    
+    def merge_with_hash(name, element, on, with)
+    	obj[name] = merge_like_elements(obj[name], element, on, with)
+    end
+    
+    def merge_with_array(name, element, on, with)
+    	obj.replace merge_like_elements(obj, element, on, with)
+    end
+    
+    def set_element_accessor(tag, new_element, obj=obj)
+			create_accessor(tag, obj)
+			obj.send "#{tag}=", new_element
 		end
+		#     def set_element_accessor(tag, new_element, obj=obj)
+		# 			create_accessor(tag, obj)
+		# 			if obj.send(tag) #obj.respond_to? tag
+		# 				#puts "setting elmt accssr: #{tag}"
+		# 				obj.send "#{tag}=",   ([obj.send "#{tag}"].flatten.compact << new_element)
+		# 			else
+		# 				obj.send "#{tag}=", new_element
+		# 			end
+		# 		end
 		
-		def create_accessor(tag)
+		def create_accessor(tag, obj=obj)
 			obj.class.class_eval do
 				attr_accessor "#{tag}"
 			end
@@ -266,10 +319,10 @@ class Resultset < Array
 	end
 	
 	# TODO: This attr_accessor call should be handled in Cursor#start_el
-	attr_accessor :attributes
+	#attr_accessor :att
 	def attach_relatedset_to_main_record(cursor)
-		puts cursor.obj.attributes['table']
-		cursor.parent.obj[cursor.obj.attributes['table']] = cursor.obj
+		puts cursor.obj.att['table']
+		cursor.parent.obj[cursor.obj.att['table']] = cursor.obj
 	end
 end
 
@@ -280,6 +333,11 @@ class Field < Hash
 	def build_record_data(cursor)
 		#puts "RUNNING Field#build_field_data on record_id:#{cursor.obj['name']}"
 		cursor.parent.obj.merge!(cursor.obj['name'] => (cursor.obj['data']['content'] rescue ''))
+	end
+end
+
+class RelatedSet < Array
+	def translate_to_hash
 	end
 end
 
