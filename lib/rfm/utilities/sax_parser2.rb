@@ -1,6 +1,7 @@
 # From https://github.com/ohler55/ox
 # Do: irb -rubygems -r  lib/rfm/utilities/sax_parser.rb
 # Do: r = OxFmpSax.build(FM, 'local_testing/sax_parser.yml')
+# Do: r = SaxHandler.build(XMP, 'local_testing/sax_parse.yml', OxFmpSax)
 
 #gem 'ox', '1.8.5'
 require 'stringio'
@@ -12,7 +13,7 @@ require 'rfm'
 
 class Cursor
 
-    attr_accessor :model, :obj, :parent, :top, :stack
+    attr_accessor :model, :obj, :parent, :top, :stack, :current_tag
     
     def self.constantize(klass)
 	  	Object.const_get(klass.to_s) rescue nil
@@ -24,13 +25,92 @@ class Cursor
     	self
     end
     
+    
+    
+    #####  SAX METHODS  #####
+    
+    def attribute(name,value); (obj[name]=value) rescue nil end
+        
+    def start_el(tag, attributes)
+    	return if (model['ignore_unknown']  && !model['elements'][tag])
+    	
+    	# Acquire submodel grammar.
+      sub = submodel(tag)
+      
+      # Create new element.
+      new_element = (constantize((sub['class']).to_s) || Hash).new
+      
+      # Assign attributes to new element.
+      if !attributes.empty?
+        if new_element.is_a?(Hash) and !hide_attributes
+          new_element.merge!(attributes)
+	      elsif individual_attributes
+	        attributes.each{|k, v| set_element_accessor(k, v, new_element)}
+        else
+	        set_element_accessor 'att', attributes, new_element
+	      end
+      end
+      
+      # Attach new object to current object.
+      unless sub['hide']
+  			if as_attribute
+  			  if ivg(as_attribute)
+					  merge_with_attributes(as_attribute, new_element, delineate_on, delineate_with)
+					else
+					  set_element_accessor(as_attribute, new_element)
+				  end
+    		elsif obj.is_a?(Hash)
+    			if obj.has_key? tag
+  					merge_with_hash(tag, new_element, delineate_on, delineate_with)
+  			  else			
+  	  			obj[tag] = new_element
+    			end
+    		elsif obj.is_a? Array
+					if obj.size > 0
+						merge_with_array(tag, new_element, delineate_on, delineate_with)
+					else
+  	  			obj << new_element
+	  			end
+    		else
+  				merge_with_attributes(tag, new_element, delineate_on, delineate_with)
+    		end
+      end
+  		
+      return sub, new_element
+    end
+
+    def end_el(name)
+    	# TODO: filter-out untracked cursors
+      if true #(name.match(el) if el.is_a? Regexp) || name == el
+      	begin
+      		#puts "RUNNING: end_el - eval for element - #{name}:#{model['before_close']}"
+	      	# This is for arrays
+	      	obj.send(model['before_close'].to_s, self) if model['before_close']
+	      	# This is for hashes with array as value. It may be ilogical in this context. Is it needed?
+	      	if obj.respond_to?('each') && model['each_before_close']
+	      	  obj.each{|o| o.send(model['each_before_close'].to_s, obj)}
+      	  end
+	      rescue
+	      	puts "Error: #{$!}"
+	      end
+        return true
+      end
+    end
+    
+    
+    
+    
+    #####  UTILITY  #####
+
 	  def constantize(klass)
 	  	self.class.constantize(klass)
 	  end
+	  
+	  def ivg(name, object=obj); object.instance_variable_get "@#{name}" end
+	  def ivs(name, value, object=obj); object.instance_variable_set "@#{name}", data end
     
 		def get_submodel(name)
-			#puts "Cursor#get_submodel: #{name}"
-			model['elements'][name] rescue nil #|| default_submodel rescue default_submodel
+			model['elements'][name] rescue nil
 		end
 		
 		def default_submodel
@@ -40,140 +120,81 @@ class Cursor
 				{}
 			end
 		end
+		
+		def submodel(tag=current_tag); self.current_tag = tag; get_submodel(tag) || default_submodel end
+	  def individual_attributes; submodel['individual_attributes'] end    
+	  def hide_attributes; submodel['hide_attributes'] end
+    def as_attribute; submodel['as_attribute'] end
+  	def delineate_on; submodel['delineate_on'] end
+  	def delineate_with; submodel['delineate_with'] || Array end
+  	def as; submodel['as']; end
     
-    def attribute(name,value); (obj[name]=value) rescue nil end
-        
-    def start_el(tag, attributes)
-    	#puts "Cursor#start_el: #{tag}"
-    	
-    	return if (model['ignore_unknown']  && !model['elements'][tag])
-    	
-    	# Acquire submodel grammar
-      submodel = get_submodel(tag) || default_submodel
-      
-      # Create new element
-      new_element = (constantize((submodel['of'] || submodel['class']).to_s) || Hash).new
-      
-      
-      # Assign attributes to new element
-      # TODO: clean this up.
-      if !attributes.empty?
-      	if submodel['individual_attributes']
-      		# TODO: This doesn't work. Need to set attr_accessor on new_element, not on current obj.
-	      	new_element.is_a?(Hash) ? new_element.merge!(attributes) : attributes.each{|k, v| set_element_accessor(k, v)}
-	      else
-		      #new_element.is_a?(Hash) ? new_element.merge!(attributes) : new_element.instance_variable_set(:@att, attributes)
-		      create_accessor('att', new_element)
-		      new_element.att = attributes
-	      end
-      end
-      
-      # Store new object in current object
-      unless false #submodel['hide']
-      	as_att = submodel['as_attribute']
-  			if as_att
-	  			obj_element = obj.instance_variable_get("@#{as_att}")
-					obj.instance_variable_set("@#{as_att}", merge_element(obj_element, new_element, submodel, tag))
-    		elsif obj.is_a?(Hash)
-    			if obj.has_key? tag
-  					obj[tag] = merge_element(obj[tag], new_element, submodel, tag)
-  			  else			
-  	  			obj[tag] = new_element
-    			end
-    		elsif obj.is_a? Array
-					if obj.size > 0
-						obj.replace merge_element(obj, new_element, submodel, tag)
-					else
-  	  			obj << new_element
-	  			end
-    		else
-  	  		obj_element = obj.instance_variable_get("@#{tag}")
-  				obj.instance_variable_set("@#{tag}", merge_element(obj_element, new_element, submodel, tag))
-    		end
-  		end
-  		
-      return submodel, new_element
-    end
     
-		# TODO: I don't think this method is necessary. Move this method into start_el.
-    def merge_element(obj_element, new_element, submodel, tag)
-    	delin_on = submodel['delineate_on']
-    	delin_with = submodel['delineate_with'] || Hash
-    	as  = submodel['as']
-    	as_att = submodel['as_attribute']
-    	case
-    		when as_att; merge_with_attributes(as_att, new_element, delin_on, delin_with)
-	    	when obj.is_a?(Hash); merge_with_hash(tag, new_element, delin_on, delin_with)
-	    	when obj.is_a?(Array); merge_with_array(tag, new_element, delin_on, delin_with)
-	    	else merge_with_attributes(tag, new_element, delin_on, delin_with)
-  		end
-    end
-    
-    def merge_like_elements(cur, new, on=nil, with=Hash)
+    def merge_like_elements(cur, new_element, on=nil, with=Hash)
     	case
     		#when !cur; {}
-    		when !on; Array[cur].flatten << new
-    		when with.is_a?(Hash); with[cur || {}].merge!(new.send(on).to_s => new)    			
-    		when with.is_a?(Array); with[cur].flatten.find{|c| c.send(on) == new.send(on)} << new
-    		else new
+    		when !on; Array[cur].flatten.compact << new_element
+    		when with.is_a?(Hash); with[(cur || {})].merge!((ivg(on, new_element) || new_element[on]).to_s => new_element)    			
+    		when with.is_a?(Array); with[cur].flatten.compact.find{|c| ivg(on, c) == ivg(on, new_element)} << new_element
+    		else new_element
     	end
     end
     
+    # TODO: Fix the Hash - it's going deeper each round. See #end_el for filtering untracked cursors.
+    # TODO: Add delineate_on capability to the Array (is this even practical?).
+    def resolve_conflicts(cur, new_element, on=nil, with=Array)
+      with = !with.is_a?(String) ? with : eval(with)
+    	case
+  	  when with.new.is_a?(Array); with[cur].flatten.compact << new_element
+  	  when with.new.is_a?(Hash);
+  	    current_key = get_attribute(on, cur)
+  	    new_key = get_attribute(on, new_element)
+  	    with[current_key => cur].merge(new_key => new_element)
+    	end
+    end
+    
+    def get_attribute(name, obj=obj)
+      return obj.att[name] rescue nil
+      return ivg(name, obj) rescue nil
+      return obj[name] rescue nil
+    end
+    
     def merge_with_attributes(name, element, on, with)
-    	set_element_accessor(name, merge_like_elements((obj.send(name) rescue nil), element, on, with))
+    	set_element_accessor(name, resolve_conflicts(ivg(name), element, on, with))
     end
     
     def merge_with_hash(name, element, on, with)
-    	obj[name] = merge_like_elements(obj[name], element, on, with)
+    	obj[name] = resolve_conflicts(obj[name], element, on, with)
     end
     
     def merge_with_array(name, element, on, with)
-    	obj.replace merge_like_elements(obj, element, on, with)
+    	obj.replace resolve_conflicts(obj, element, on, with)
     end
     
-    def set_element_accessor(tag, new_element, obj=obj)
-			create_accessor(tag, obj)
-			obj.send "#{tag}=", new_element
+    def set_element_accessor(name, element, obj=obj)
+			create_accessor(name, obj)
+			obj.send "#{name}=", element
 		end
-		#     def set_element_accessor(tag, new_element, obj=obj)
-		# 			create_accessor(tag, obj)
-		# 			if obj.send(tag) #obj.respond_to? tag
-		# 				#puts "setting elmt accssr: #{tag}"
-		# 				obj.send "#{tag}=",   ([obj.send "#{tag}"].flatten.compact << new_element)
-		# 			else
-		# 				obj.send "#{tag}=", new_element
-		# 			end
-		# 		end
 		
 		def create_accessor(tag, obj=obj)
 			obj.class.class_eval do
 				attr_accessor "#{tag}"
 			end
 		end
-		
-    def end_el(name)
-    	#puts "Cursor#end_el: #{name}" 
-    	# TODO: filter-out untracked cursors
-      if true #(name.match(el) if el.is_a? Regexp) || name == el
-      	begin
-      		#puts "RUNNING: end_el - eval for element - #{name}:#{model['before_close']}"
-	      	# This is for arrays
-	      	obj.send(model['before_close'].to_s, self) if model['before_close']
-	      	# This is for hashes with array as value. It may be ilogical in this context. Is it needed?
-	      	obj.each{|o| o.send(model['each_before_close'].to_s, obj)} if obj.respond_to?('each') && model['each_before_close']
-	      rescue
-	      	puts "Error: #{$!}"
-	      end
-        return true
-      end
-    end
 
 end # Cursor
 
 
+
+#####  SAX HANDLER(S)  #####
+
 module SaxHandler
 
 	attr_accessor :stack, :grammar
+	
+	def self.build(io, grammar, parser)
+	  (eval(parser.to_s)).build(io, grammar)
+  end
   
   def self.included(base)
   
@@ -296,12 +317,10 @@ end # OxFmpSax
 
 
 
+
 #####  USER MODELS  #####
 
 class FmResultset < Hash
-	# 	def return_resulset(cursor)
-	# 		cursor.first.replace(cursor)
-	# 	end
 end
 
 class Datasource < Hash
@@ -313,16 +332,8 @@ end
 class Resultset < Array
 	def attach_parent_objects(cursor)
 		elements = cursor.parent.obj
-		#elements.each_key{|k| puts "element: #{k}"; cursor.create_accessor(k); cursor.set_element_accessor(k, cursor.parent.obj[k]) unless k == 'resultset'}
 		elements.each{|k, v| cursor.set_element_accessor(k, v) unless k == 'resultset'}
 		cursor.stack[0] = cursor
-	end
-	
-	# TODO: This attr_accessor call should be handled in Cursor#start_el
-	#attr_accessor :att
-	def attach_relatedset_to_main_record(cursor)
-		puts cursor.obj.att['table']
-		cursor.parent.obj[cursor.obj.att['table']] = cursor.obj
 	end
 end
 
@@ -337,8 +348,6 @@ class Field < Hash
 end
 
 class RelatedSet < Array
-	def translate_to_hash
-	end
 end
 
 
