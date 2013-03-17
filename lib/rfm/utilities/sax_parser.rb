@@ -63,25 +63,13 @@ module Rfm
 		      # Attach new object to current object.
 		      unless sub['hide']
 		  			if as_attribute
-		  			  if ivg(as_attribute)
-							  merge_with_attributes(as_attribute, new_element, delineate_with_hash)
-							else
-							  set_element_accessor(as_attribute, new_element)
-						  end
+							merge_with_attributes(as_attribute, new_element)
 		    		elsif obj.is_a?(Hash)
-		    			if obj.has_key? tag
-		  					merge_with_hash(tag, new_element, delineate_with_hash)
-		  			  else			
-		  	  			obj[tag] = new_element
-		    			end
+	  					merge_with_hash(tag, new_element)
 		    		elsif obj.is_a? Array
-							if obj.size > 0
-								merge_with_array(tag, new_element, delineate_with_hash)
-							else
-		  	  			obj << new_element
-			  			end
+							merge_with_array(tag, new_element)
 		    		else
-		  				merge_with_attributes(tag, new_element, delineate_with_hash)
+		  				merge_with_attributes(tag, new_element)
 		    		end
 		      end
 		  		
@@ -139,10 +127,10 @@ module Rfm
 		  	def as; submodel['as']; end
 		    
 		    
-		    def resolve_conflicts(cur, new_element, delin=nil)
-		  	  if delin
-		  	    current_key = get_attribute(delin, cur)
-		  	    new_key = get_attribute(delin, new_element)
+		    def resolve_conflicts(cur, new_element)
+		  	  if delineate_with_hash
+		  	    current_key = get_attribute(delineate_with_hash, cur)
+		  	    new_key = get_attribute(delineate_with_hash, new_element)
 		  	    #puts "Current-key '#{current_key}', New-key '#{new_key}'"
 		  	    if !current_key.to_s.empty? and !new_key.to_s.empty?
 		  	    	Hash[current_key => cur].merge(new_key => new_element)
@@ -160,16 +148,28 @@ module Rfm
 		      return obj[name] rescue nil
 		    end
 		    
-		    def merge_with_attributes(name, element, delin)
-		    	set_element_accessor(name, resolve_conflicts(ivg(name), element, delin))
+		    def merge_with_attributes(name, element)
+  			  if ivg(as_attribute)
+					  set_element_accessor(name, resolve_conflicts(ivg(name), element))
+					else
+					  set_element_accessor(as_attribute, element)
+				  end
 		    end
 		    
-		    def merge_with_hash(name, element, delin)
-		    	obj[name] = resolve_conflicts(obj[name], element, delin)
+		    def merge_with_hash(name, element)
+    			if obj.has_key? name
+  					obj[name] = resolve_conflicts(obj[name], element)
+  			  else			
+  	  			obj[name] = element
+    			end
 		    end
 		    
-		    def merge_with_array(name, element, delin)
-		    	obj.replace resolve_conflicts(obj, element, delin)
+		    def merge_with_array(name, element)
+					if obj.size > 0
+						obj.replace resolve_conflicts(obj, element)
+					else
+  	  			obj << element
+	  			end
 		    end
 		    
 		    def set_element_accessor(name, element, obj=obj)
