@@ -1,14 +1,24 @@
-# A declarative SAX parser, written by William Richardson
+#####  A declarative SAX parser, written by William Richardson  #####
+#
 # Use:
-#   irb -rubygems -rubygems 'lib/rfm/utilities/sax_parser' -I./
-#   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fmp], 'local_testing/sax_parse.yml', Rfm::SaxParser::OxFmpSax)
+#   irb -rubygems -I./  -r  lib/rfm/utilities/sax_parser.rb
+#   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fmp], 'lib/rfm/sax/fmresultset.yml', Rfm::SaxParser::OxFmpSax)
 #   r = OxFmpSax.build(Rfm::SaxParser::DAT[:fmp], 'local_testing/sax_parser.yml')
+#   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fm], 'lib/rfm/sax/fmresultset.yml', Rfm::SaxParser::RexmlFmpStream)
+#
+#####
 
 #gem 'ox', '1.8.5'
 require 'stringio'
 require 'ox'
 require 'yaml'
-#require 'rfm'
+require 'rexml/parsers/streamparser'
+require 'rexml/streamlistener'
+require 'rexml/document'
+
+# TODO: Move test data & user models to spec filder and local_testing.
+# TODO: Add option to 'compact' unnecessary elements - maybe NOT - this should be handled at Model level.
+# TODO: Add nokogiri, libxml-ruby, rexml interfaces.
 
 
 module Rfm
@@ -273,9 +283,10 @@ module Rfm
 			# Add 'content' attribute to existing element.
 			def _text(value)
 				if !element_buffer?
-					cursor.attribute('content', value)
+					cursor.attribute('text', value)
 				else
-					@element_buffer[:attr].merge!({'content'=>value})
+					# Disabling this should prevent text in parents with children, but it doesn't seem to work with REXML streaming.
+					@element_buffer[:attr].merge!({'text'=>value})
 					send_element_buffer
 				end
 			end
@@ -310,7 +321,28 @@ module Rfm
 		  def text(value);         _text(value);                              				end
 		  
 		end # OxFmpSax
+
+
+		class RexmlFmpStream
 		
+			include REXML::StreamListener
+		
+		  include Handler
+		
+		  def run_parser(io)
+		  	parser = REXML::Document
+				case
+				when (io.is_a?(File) or io.is_a?(StringIO)); parser.parse_stream(io, self)
+				when io[/^</]; StringIO.open(io){|f| parser.parse_stream(f, self)}
+				else File.open(io){|f| parser.parse_stream(f, self)}
+				end
+			end
+			
+		  def tag_start(name, attributes); _start_element(name.to_s.gsub(/\-/, '_'), attributes);        	end
+		  def tag_end(name);   _end_element(name.to_s.gsub(/\-/, '_'));          end
+		  def text(value);         _text(value);                              				end
+		  
+		end # RexmlFmpStream		
 		
 		
 		
@@ -339,7 +371,7 @@ module Rfm
 		class Field < Hash
 			def build_record_data(cursor)
 				#puts "RUNNING Field#build_field_data on record_id:#{cursor.obj['name']}"
-				cursor.parent.obj.merge!(cursor.obj['name'] => (cursor.obj['data']['content'] rescue ''))
+				cursor.parent.obj.merge!(cursor.obj['name'] => (cursor.obj['data']['text'] rescue ''))
 			end
 		end
 		
