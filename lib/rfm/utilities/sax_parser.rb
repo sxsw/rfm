@@ -4,7 +4,7 @@
 #   irb -rubygems -I./  -r  lib/rfm/utilities/sax_parser.rb
 #   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fmp], 'lib/rfm/sax/fmresultset.yml', Rfm::SaxParser::OxFmpSax)
 #   r = OxFmpSax.build(Rfm::SaxParser::DAT[:fmp], 'local_testing/sax_parser.yml')
-#   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fm], 'lib/rfm/sax/fmresultset.yml', Rfm::SaxParser::RexmlFmpStream)
+#   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fm], 'lib/rfm/sax/fmresultset.yml', Rfm::SaxParser::RexmlStream)
 #
 #####
 
@@ -15,10 +15,15 @@ require 'yaml'
 require 'rexml/parsers/streamparser'
 require 'rexml/streamlistener'
 require 'rexml/document'
+require 'libxml'
 
 # TODO: Move test data & user models to spec filder and local_testing.
-# TODO: Add option to 'compact' unnecessary elements - maybe NOT - this should be handled at Model level.
+# TODO: Add option to 'compact' unnecessary or empty elements/attributes - maybe - should this should be handled at Model level?
 # TODO: Add nokogiri, libxml-ruby, rexml interfaces.
+# TODO: Separate all attribute options into attributes: hash, similar to elements: hash.
+# TODO: Handle multiple 'text' callbacks for a single element.
+# TODO: Add options for text handling (what to name, where to put).
+# TODO: Allow nil as yml document - parsing will be generic. But throw error if given yml doc can't open.
 
 
 module Rfm
@@ -323,7 +328,7 @@ module Rfm
 		end # OxFmpSax
 
 
-		class RexmlFmpStream
+		class RexmlStream
 		
 			include REXML::StreamListener
 		
@@ -342,7 +347,33 @@ module Rfm
 		  def tag_end(name);   _end_element(name.to_s.gsub(/\-/, '_'));          end
 		  def text(value);         _text(value);                              				end
 		  
-		end # RexmlFmpStream		
+		end # RexmlStream
+		
+		
+		class LibXmlSax
+			include LibXML
+			include XML::SaxParser::Callbacks
+		  include Handler
+		
+		  def run_parser(io)
+				# 				parser = XML::SaxParser.io(io)
+				# 				parser.callbacks = self
+				# 				parser.parse		  
+		  
+				parser = case
+					when (io.is_a?(File) or io.is_a?(StringIO)); XML::SaxParser.io(io)
+					when io[/^</]; XML::SaxParser.io(StringIO.new(io))
+					else XML::SaxParser.io(File.new(io))
+				end
+				parser.callbacks = self
+				parser.parse	
+			end
+			
+		  def on_start_element_ns(name, attributes, prefix, uri, namespaces); _start_element(name.to_s.gsub(/\-/, '_'), attributes);        	end
+		  def on_end_element_ns(name, prefix, uri);   _end_element(name.to_s.gsub(/\-/, '_'));          end
+		  def on_characters(value);         _text(value);                              				end
+		  
+		end # LibxmlSax	
 		
 		
 		
