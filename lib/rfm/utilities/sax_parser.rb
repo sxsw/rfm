@@ -17,7 +17,9 @@ require 'rexml/streamlistener'
 require 'rexml/document'
 require 'libxml'
 
-# TODO: Move test data & user models to spec filder and local_testing.
+# TODO: Move test data & user models to spec folder and local_testing.
+# TODO: Move attribute/text buffer from sax handler to cursor.
+# TODO: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
 # TODO: Add option to 'compact' unnecessary or empty elements/attributes - maybe - should this should be handled at Model level?
 # TODO: Add nokogiri, libxml-ruby, rexml interfaces.
 # TODO: Separate all attribute options into attributes: hash, similar to elements: hash.
