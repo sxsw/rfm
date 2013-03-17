@@ -21,6 +21,7 @@ ignore_unknown: true
 elements:
   relatedset:
     class: RelatedSet
+    as: portals
     delineate_with_hash: table
     elements:
       record:

@@ -38,12 +38,14 @@ module Rfm
 		    
 		    def attribute(name,value); (obj[name]=value) rescue nil end
 		        
-		    def start_el(tag, attributes)
-		
+		    def start_el(tag, attributes)		
 		    	return if (model['ignore_unknown'] && !model['elements'][tag])
 		
 		    	# Acquire submodel definition.
 		      sub = submodel(tag)
+		      
+		      original_tag = tag
+		      (tag = element_as) if element_as		      
 		      
 		      # Create new element.
 		      new_element = (constantize((sub['class']).to_s) || Hash).new
@@ -73,7 +75,7 @@ module Rfm
 		    		end
 		      end
 		  		
-		      return Cursor.new(sub, new_element, tag)
+		      return Cursor.new(sub, new_element, original_tag)
 		    end
 		
 		    def end_el(name)
@@ -124,7 +126,7 @@ module Rfm
 			  def hide_attributes; submodel['hide_attributes']; end
 		    def as_attribute; submodel['as_attribute']; end
 		  	def delineate_with_hash; submodel['delineate_with_hash']; end
-		  	def as; submodel['as']; end
+		  	def element_as; submodel['as']; end
 		    
 		    
 		    def resolve_conflicts(cur, new_element)
