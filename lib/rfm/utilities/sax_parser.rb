@@ -16,13 +16,14 @@ require 'rexml/parsers/streamparser'
 require 'rexml/streamlistener'
 require 'rexml/document'
 require 'libxml'
+require 'nokogiri'
 
 # TODO: Move test data & user models to spec folder and local_testing.
-# TODO: Move attribute/text buffer from sax handler to cursor.
 # TODO: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
+# done: Move attribute/text buffer from sax handler to cursor.
 # TODO: Add option to 'compact' unnecessary or empty elements/attributes - maybe - should this should be handled at Model level?
-# TODO: Add nokogiri, libxml-ruby, rexml interfaces.
-# TODO: Separate all attribute options into attributes: hash, similar to elements: hash.
+# done: Add nokogiri, libxml-ruby, rexml interfaces.
+# TODO: Separate all attribute options in yml into attributes: hash, similar to elements: hash.
 # TODO: Handle multiple 'text' callbacks for a single element.
 # TODO: Add options for text handling (what to name, where to put).
 # TODO: Allow nil as yml document - parsing will be generic. But throw error if given yml doc can't open.
@@ -53,7 +54,12 @@ module Rfm
 		    
 		    #####  SAX METHODS  #####
 		    
-		    def attribute(name,value); (obj[name]=value) rescue nil end
+		    def attribute(name,value)
+		    	(obj[name]=value)
+		    	assign_attributes({name=>value})
+		    rescue
+		    	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}'"
+		    end
 		        
 		    def start_el(tag, attributes)		
 		    	return if (model['ignore_unknown'] && !model['elements'][tag])
@@ -69,15 +75,17 @@ module Rfm
 		      #puts "Created new element of class '#{new_element.class}' for tag '#{tag}'."
 		      
 		      # Assign attributes to new element.
-		      if !attributes.empty?
-		        if new_element.is_a?(Hash) and !hide_attributes
-		          new_element.merge!(attributes)
-			      elsif individual_attributes
-			        attributes.each{|k, v| set_element_accessor(k, v, new_element)}
-		        else
-			        set_element_accessor 'att', attributes, new_element
-			      end
-		      end
+		      assign_attributes attributes, new_element, sub
+		      # OBSOLETE
+					#   if attributes && !attributes.empty?
+					#     if new_element.is_a?(Hash) and !hide_attributes
+					#       new_element.merge!(attributes)
+					#     elsif individual_attributes
+					#       attributes.each{|k, v| set_element_accessor(k, v, new_element)}
+					#     else
+					#       set_element_accessor 'att', attributes, new_element
+					#     end
+					#   end
 		      
 		      # Attach new object to current object.
 		      unless sub['hide']
@@ -139,12 +147,24 @@ module Rfm
 				end
 				
 				def submodel(tag=current_tag); self.current_tag = tag; get_submodel(tag) || default_submodel; end
-			  def individual_attributes; submodel['individual_attributes']; end    
-			  def hide_attributes; submodel['hide_attributes']; end
+			  def individual_attributes(options=submodel); options['individual_attributes']; end    
+			  def hide_attributes(options=submodel); options['hide_attributes']; end
 		    def as_attribute; submodel['as_attribute']; end
 		  	def delineate_with_hash; submodel['delineate_with_hash']; end
 		  	def element_as; submodel['as']; end
-		    
+		  	
+		  	# Assign attributes to element.
+				def assign_attributes(attributes=nil, element=obj, _model=model)
+		      if attributes && !attributes.empty?
+		        if element.is_a?(Hash) and !hide_attributes(_model)
+		          element.merge!(attributes)
+			      elsif individual_attributes(_model)
+			        attributes.each{|k, v| set_element_accessor(k, v, element)}
+		        else
+			        set_element_accessor 'att', attributes, element
+			      end
+		      end
+				end
 		    
 		    def resolve_conflicts(cur, new_element)
 		  	  if delineate_with_hash
@@ -234,7 +254,7 @@ module Rfm
 		  	@grammar = YAML.load_file(grammar)
 		  	# Not necessary - for testing only
 		  		self.class.instance_variable_set :@handler, self
-		  	init_element_buffer
+		  	#init_element_buffer
 		    set_cursor Cursor.new(@grammar, initial_object, 'TOP')
 		  end
 		  
@@ -256,53 +276,97 @@ module Rfm
 				stack.pop
 			end
 			
-		  def init_element_buffer
-		  	@element_buffer = {:name=>nil, :attr=>{}}
-		  end
-		  
-		  def send_element_buffer
-		  	if element_buffer?
-			  	set_cursor cursor.start_el(@element_buffer[:name], @element_buffer[:attr])
-			  	init_element_buffer
-			  end
-			end
+			# OBSOLETE
+			#   def init_element_buffer
+			#   	@element_buffer = {:name=>nil, :attr=>{}}
+			#   end
+			#   
+			#   def send_element_buffer
+			#   	if element_buffer?
+			# 	  	set_cursor cursor.start_el(@element_buffer[:name], @element_buffer[:attr])
+			# 	  	init_element_buffer
+			# 	  end
+			# 	end
+			# 	
+			# 	def element_buffer?
+			# 		@element_buffer[:name] && !@element_buffer[:name].empty?
+			# 	end
 			
-			def element_buffer?
-				@element_buffer[:name] && !@element_buffer[:name].empty?
+			def transform(name)
+				name.to_s.gsub(/\-/, '_')
 			end
 		
 		  # Add a node to an existing element.
-			def _start_element(name, attributes=nil)
-				send_element_buffer
-				if attributes.nil?
-					@element_buffer = {:name=>name, :attr=>{}}
-				else
-					set_cursor cursor.start_el(name, attributes)
-				end
+			def _start_element(tag, attributes=nil, *args)
+				#puts "Receiving element '#{tag}' with attributes '#{attributes}'"
+				tag = transform tag
+				(attributes = Hash[attributes]) if attributes.is_a? Array # For nokogiri attributes-as-array
+				set_cursor cursor.start_el(tag, attributes)
 			end
 			
 			# Add attribute to existing element.
-			def _attribute(name, value)
-				@element_buffer[:attr].merge!({name=>value})
-		    #cursor.attribute(name,value)
+			def _attribute(name, value, *args)
+				#puts "Receiving attribute '#{name}' with value '#{value}'"
+				name = transform name
+		    cursor.attribute(name,value)
 			end
 			
 			# Add 'content' attribute to existing element.
-			def _text(value)
-				if !element_buffer?
-					cursor.attribute('text', value)
-				else
-					# Disabling this should prevent text in parents with children, but it doesn't seem to work with REXML streaming.
-					@element_buffer[:attr].merge!({'text'=>value})
-					send_element_buffer
-				end
+			def _text(value, *args)
+				#puts "Receiving text '#{value}'"
+				cursor.attribute('text', value) if value[/[^\s]/]
 			end
 			
 			# Close out an existing element.
-			def _end_element(value)
-				send_element_buffer
-				cursor.end_el(value) and dump_cursor
+			def _end_element(tag, *args)
+				#puts "Receiving end_element '#{tag}'"
+				tag = transform tag
+				cursor.end_el(tag) and dump_cursor
 			end
+
+			# OBSOLETE
+			#   # Add a node to an existing element.
+			# 	def _start_element(tag, attributes=nil, *args)
+			# 		puts "Receiving element '#{tag}' with attributes '#{attributes}'"
+			# 		tag = transform tag
+			# 		send_element_buffer
+			# 		if attributes.nil?
+			# 			@element_buffer = {:tag=>tag, :attr=>{}}
+			# 		else
+			# 			(attributes = Hash[attributes]) if attributes.is_a? Array # For nokogiri attributes-as-array
+			# 			set_cursor cursor.start_el(tag, attributes)
+			# 		end
+			# 	end
+			# 	
+			# 	# Add attribute to existing element.
+			# 	def _attribute(name, value, *args)
+			# 		puts "Receiving attribute '#{name}' with value '#{value}'"
+			# 		name = transform name
+			# 		#@element_buffer[:attr].merge!({name=>value})
+			#     cursor.attribute(name,value)
+			# 	end
+			# 	
+			# 	# Add 'content' attribute to existing element.
+			# 	def _text(value, *args)
+			# 		puts "Receiving text '#{value}'"
+			# 		if !element_buffer?
+			# 			cursor.attribute('text', value)
+			# 		else
+			# 			# Disabling this should prevent text in parents with children, but it doesn't seem to work with REXML streaming.
+			# 			@element_buffer[:attr].merge!({'text'=>value})
+			# 			send_element_buffer
+			# 		end
+			# 	end
+			# 	
+			# 	# Close out an existing element.
+			# 	def _end_element(tag, *args)
+			# 		puts "Receiving end_element '#{tag}'"
+			# 		tag = transform tag
+			# 		send_element_buffer
+			# 		cursor.end_el(tag) and dump_cursor
+			# 	end
+
+
 		  
 		end # Handler
 		
@@ -311,7 +375,6 @@ module Rfm
 		#####  SAX PARSER BACKENDS  #####
 		
 		class OxFmpSax < ::Ox::Sax
-		
 		  include Handler
 		
 		  def run_parser(io)
@@ -322,18 +385,15 @@ module Rfm
 				end
 			end
 			
-		  def start_element(name); _start_element(name.to_s.gsub(/\-/, '_'));        	end
-		  def end_element(name);   _end_element(name.to_s.gsub(/\-/, '_'));          end
-		  def attr(name, value);   _attribute(name.to_s.gsub(/\-/, '_'), value);     end
-		  def text(value);         _text(value);                              				end
-		  
+			alias_method :start_element, :_start_element
+			alias_method :end_element, :_end_element
+			alias_method :attr, :_attribute
+			alias_method :text, :_text		  
 		end # OxFmpSax
 
 
 		class RexmlStream
-		
 			include REXML::StreamListener
-		
 		  include Handler
 		
 		  def run_parser(io)
@@ -345,10 +405,9 @@ module Rfm
 				end
 			end
 			
-		  def tag_start(name, attributes); _start_element(name.to_s.gsub(/\-/, '_'), attributes);        	end
-		  def tag_end(name);   _end_element(name.to_s.gsub(/\-/, '_'));          end
-		  def text(value);         _text(value);                              				end
-		  
+			alias_method :tag_start, :_start_element
+			alias_method :tag_end, :_end_element
+			alias_method :text, :_text
 		end # RexmlStream
 		
 		
@@ -358,10 +417,6 @@ module Rfm
 		  include Handler
 		
 		  def run_parser(io)
-				# 				parser = XML::SaxParser.io(io)
-				# 				parser.callbacks = self
-				# 				parser.parse		  
-		  
 				parser = case
 					when (io.is_a?(File) or io.is_a?(StringIO)); XML::SaxParser.io(io)
 					when io[/^</]; XML::SaxParser.io(StringIO.new(io))
@@ -371,11 +426,27 @@ module Rfm
 				parser.parse	
 			end
 			
-		  def on_start_element_ns(name, attributes, prefix, uri, namespaces); _start_element(name.to_s.gsub(/\-/, '_'), attributes);        	end
-		  def on_end_element_ns(name, prefix, uri);   _end_element(name.to_s.gsub(/\-/, '_'));          end
-		  def on_characters(value);         _text(value);                              				end
-		  
+			alias_method :on_start_element_ns, :_start_element
+			alias_method :on_end_element_ns, :_end_element
+			alias_method :on_characters, :_text
 		end # LibxmlSax	
+		
+		class NokogiriSax < Nokogiri::XML::SAX::Document
+		  include Handler
+		
+		  def run_parser(io)
+				parser = Nokogiri::XML::SAX::Parser.new(self)	  
+				parser.parse(case
+					when (io.is_a?(File) or io.is_a?(StringIO)); io
+					when io[/^</]; StringIO.new(io)
+					else File.new(io)
+				end)
+			end
+
+			alias_method :start_element, :_start_element
+			alias_method :end_element, :_end_element
+			alias_method :characters, :_text
+		end # NokogiriSax	
 		
 		
 		
