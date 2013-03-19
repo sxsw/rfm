@@ -3,7 +3,7 @@
 # Use:
 #   irb -rubygems -I./  -r  lib/rfm/utilities/sax_parser.rb
 #   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fmp], Rfm::SaxParser::OxFmpSax, 'lib/rfm/sax/fmresultset.yml')
-#   r = OxFmpSax.build(Rfm::SaxParser::DAT[:fmp], 'local_testing/sax_parser.yml')
+#   r = Rfm::SaxParser::OxFmpSax.build(Rfm::SaxParser::DAT[:fmp], 'local_testing/sax_parser.yml')
 #   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fm], Rfm::SaxParser::RexmlStream, 'lib/rfm/sax/fmresultset.yml')
 #
 #####
@@ -31,6 +31,7 @@ require 'nokogiri'
 # TODO: Put the attribute sending back in the handler, and only send it at once - we need to be able to filter/sort on attributes when element comes in and object is created.
 #				Store a lambda of each attachment call in a "silo". The call them out one by one when the parent closes, causing child to attach to parent.
 #				... and now doing that, but doesn't seem to be working. See methods with attachment_procs for more info.
+#       Currently, the attachment proces aren't triggering "merge_elements"
 
 
 module Rfm
@@ -84,9 +85,14 @@ module Rfm
 		      assign_attributes attributes, new_element, sub
 
 					# Attach new element to cursor object
-					#attach_new_object_master(submodel, new_element) unless attributes{}
-					@attachment_procs << lambda { puts "attachment lambda"; attach_new_object_master(submodel, new_element) unless attributes{} }
-					#@attachment_procs.each{|p| p.call}
+# 					attach_new_object_master(sub, new_element) #unless attributes and !attributes.empty?
+					#puts "Attachment lambda for tags #{_tag}:#{_new_tag}";
+					cursor = self #.dup
+					new_tag = _new_tag
+					@attachment_procs << lambda do
+						cursor._new_tag = new_tag; cursor.instance_eval {attach_new_object_master(sub, new_element) } #unless attributes and !attributes.empty? }
+					end
+# 					@attachment_procs.shift(@attachment_procs.size).each{|p| p.call}
 		  		
 		  		return_tag = _new_tag
 		  		self._new_tag = nil
@@ -95,8 +101,7 @@ module Rfm
 		
 		    def end_el(name)
 		      if name == self._tag
-		      	#attach_new_object_master(submodel, new_element) if 
-		      	@attachment_procs.each{|p| p.call}
+		      	@attachment_procs.shift(@attachment_procs.size).each{|p| p.call}
 		      	begin
 			      	# This is for arrays
 			      	_obj.send(_model['before_close'].to_s, self) if _model['before_close']
@@ -131,6 +136,7 @@ module Rfm
 		  	
 	      # Attach new object to current object.
 	      def attach_new_object_master(sub, new_element)
+	      	puts "Attaching new object '#{_new_tag}:#{new_element.class}' to '#{_tag}:#{sub.class}'"
 		      unless sub['hide']
 		  			if as_attribute
 							merge_with_attributes(as_attribute, new_element)
@@ -176,6 +182,7 @@ module Rfm
 		    
 		    def merge_elements(current_element, new_element)
 		    	#puts "merge_elements with tags '#{self._tag}/#{label_or_tag}' current_el '#{current_element.class}' and new_el '#{new_element.class}'."
+		  	  # TODO: Get rid of this next conditional - may be reason this method isn't working. Sometimes we want a hash, even if there are no delineating fields specified.
 		  	  if delineate_with_hash
 		  	  	begin
 			  	    current_key = get_attribute(delineate_with_hash, current_element)
