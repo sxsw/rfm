@@ -131,7 +131,7 @@ module Rfm
 		    def as_attribute(model=submodel); model['as_attribute']; end
 		  	def delineate_with_hash(model=submodel); model['delineate_with_hash']; end
 		  	def as_label(model=submodel); model['as_label']; end
-		  	def label_or_tag; as_label(submodel) || _tag; end
+		  	def label_or_tag; as_label(submodel) || _new_tag; end
 		  	
 		  	
 	      # Attach new object to current object.
@@ -181,28 +181,41 @@ module Rfm
 				end
 		    
 		    def merge_elements(current_element, new_element)
+		    	# delineate_with_hash is the attribute name to match on.
+		    	# current_key/new_key is the actual value of the match element.
+		    	# current_key/new_key is then used as a hash key to contain elements that match on the delineate_with_hash attribute.
 		    	#puts "merge_elements with tags '#{self._tag}/#{label_or_tag}' current_el '#{current_element.class}' and new_el '#{new_element.class}'."
 		  	  # TODO: Get rid of this next conditional - may be reason this method isn't working. Sometimes we want a hash, even if there are no delineating fields specified.
-		  	  if delineate_with_hash
-		  	  	begin
-			  	    current_key = get_attribute(delineate_with_hash, current_element)
-			  	    new_key = get_attribute(delineate_with_hash, new_element)
-			  	    #puts "Current-key '#{current_key}', New-key '#{new_key}'"
-			  	    unless current_key.to_s.empty? || new_key.to_s.empty?
-			  	    	#puts "Merge old-hash-current-element with new-hash"
-			  	    	Hash[current_key => current_element].merge(new_key => new_element)
-			  	    else
-		  	    		current_element.merge(new_key => new_element)
-			  	    end
-		  	    rescue
-		  	    	puts "Error: could not merge with hash: #{$!}" #{[current_key, current_element.class, new_key, new_element.class].join(',')}."
-		  	    	([*current_element] << new_element) if current_element.is_a?(Array)
+	  	  	begin
+		  	    current_key = get_attribute(delineate_with_hash, current_element)
+		  	    new_key = get_attribute(delineate_with_hash, new_element)
+		  	    #puts "Current-key '#{current_key}', New-key '#{new_key}'"
+		  	    
+		  	    key_state = case
+		  	    	when !current_key.to_s.empty? && current_key == new_key; 5
+		  	    	when !current_key.to_s.empty? && !new_key.to_s.empty?; 4
+		  	    	when current_key.to_s.empty? && new_key.to_s.empty?; 3
+		  	    	when !current_key.to_s.empty?; 2
+		  	    	when !new_key.to_s.empty?; 1
+		  	    	else 0
 		  	    end
-		  	  else
-		  	  	[*current_element] << new_element
-		    	end
-		    end
+		  	  
+		  	  	case key_state
+			  	  	when 5; {current_key => [current_element, new_element]}
+			  	  	when 4; {current_key => current_element, new_key => new_element}
+			  	  	when 3; [current_element, new_element].flatten
+			  	  	when 2; {current_key => ([*current_element] << new_element)}
+			  	  	when 1; current_element.merge(new_key=>new_element)
+			  	  	else    [current_element, new_element].flatten
+		  	  	end
+		  	  	
+	  	    rescue
+	  	    	puts "Error: could not merge with hash: #{$!}"
+	  	    	([*current_element] << new_element) if current_element.is_a?(Array)
+	  	    end
+		    end # merge_elements
 		    
+		    # TODO: This might be broken.
 		    def get_attribute(name, obj=_obj)
 		      return obj.att[name] rescue nil
 		      return ivg(name, obj) rescue nil
@@ -225,6 +238,7 @@ module Rfm
     			end
 		    end
 		    
+		    # TODO: Does this really need to use merge_elements?
 		    def merge_with_array(name, element)
 					if _obj.size > 0
 						_obj.replace merge_elements(_obj, element)
