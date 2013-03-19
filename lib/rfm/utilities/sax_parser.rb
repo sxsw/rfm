@@ -2,9 +2,9 @@
 #
 # Use:
 #   irb -rubygems -I./  -r  lib/rfm/utilities/sax_parser.rb
-#   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fmp], 'lib/rfm/sax/fmresultset.yml', Rfm::SaxParser::OxFmpSax)
+#   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fmp], Rfm::SaxParser::OxFmpSax, 'lib/rfm/sax/fmresultset.yml')
 #   r = OxFmpSax.build(Rfm::SaxParser::DAT[:fmp], 'local_testing/sax_parser.yml')
-#   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fm], 'lib/rfm/sax/fmresultset.yml', Rfm::SaxParser::RexmlStream)
+#   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fm], Rfm::SaxParser::RexmlStream, 'lib/rfm/sax/fmresultset.yml')
 #
 #####
 
@@ -18,6 +18,7 @@ require 'rexml/document'
 require 'libxml'
 require 'nokogiri'
 
+# FIXME: Text values are not showingi up. 
 # TODO: Move test data & user models to spec folder and local_testing.
 # TODO: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
 # done: Move attribute/text buffer from sax handler to cursor.
@@ -34,19 +35,19 @@ module Rfm
 	
 		class Cursor
 		
-		    attr_accessor :model, :obj, :tag, :parent, :top, :stack, :current_tag
+		    attr_accessor :_model, :_obj, :_tag, :_parent, :_top, :_stack, :_new_tag
 		    
 		    def self.constantize(klass)
 			  	SaxParser.const_get(klass.to_s)
 		  	rescue
-		  		#puts "Error: cound not constantize '#{klass.to_s}'" unless klass.to_s == ''
+		  		#puts "Error: cound not constantize '#{klass.to_s}': #{$!}" unless klass.to_s == ''
 			  	nil
 			  end
 		    
 		    def initialize(model, obj, tag)
-		    	@tag   = tag
-		    	@model = model
-		    	@obj   = obj.is_a?(String) ? constantize(obj).new : obj
+		    	@_tag   = tag
+		    	@_model = model
+		    	@_obj   = obj.is_a?(String) ? constantize(obj).new : obj
 		    	self
 		    end
 		    
@@ -54,134 +55,135 @@ module Rfm
 		    
 		    #####  SAX METHODS  #####
 		    
-		    def attribute(name,value)
-		    	(obj[name]=value)
+		    def attribute(name, value)
+		    	#return if (_model['ignore_unknown'] && !(_model['attributes'][name] rescue false))
+		    	#(_obj[name]=value)
 		    	assign_attributes({name=>value})
 		    rescue
-		    	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}'"
+		    	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self._tag.to_s}': #{$!}"
 		    end
 		        
 		    def start_el(tag, attributes)		
-		    	return if (model['ignore_unknown'] && !model['elements'][tag])
+		    	return if (_model['ignore_unknown'] && !_model['elements'][tag])
+		    	
+		    	# Set _new_tag for other methods to use during the start_el run.
+		    	self._new_tag = tag
 		
 		    	# Acquire submodel definition.
-		      sub = submodel(tag)
-		      
-		      original_tag = tag
-		      (tag = element_as) if element_as		      
+		      sub = submodel      
 		      
 		      # Create new element.
 		      new_element = (constantize((sub['class']).to_s) || Hash).new
-		      #puts "Created new element of class '#{new_element.class}' for tag '#{tag}'."
+		      #puts "Created new element of class '#{new_element.class}' for tag '#{_tag}'."
 		      
 		      # Assign attributes to new element.
 		      assign_attributes attributes, new_element, sub
-		      # OBSOLETE
-					#   if attributes && !attributes.empty?
-					#     if new_element.is_a?(Hash) and !hide_attributes
-					#       new_element.merge!(attributes)
-					#     elsif individual_attributes
-					#       attributes.each{|k, v| set_element_accessor(k, v, new_element)}
-					#     else
-					#       set_element_accessor 'att', attributes, new_element
-					#     end
-					#   end
 		      
 		      # Attach new object to current object.
 		      unless sub['hide']
 		  			if as_attribute
 							merge_with_attributes(as_attribute, new_element)
-		    		elsif obj.is_a?(Hash)
-	  					merge_with_hash(tag, new_element)
-		    		elsif obj.is_a? Array
-							merge_with_array(tag, new_element)
+		    		elsif _obj.is_a?(Hash)
+	  					merge_with_hash(label_or_tag, new_element)
+		    		elsif _obj.is_a? Array
+							merge_with_array(label_or_tag, new_element)
 		    		else
-		  				merge_with_attributes(tag, new_element)
+		  				merge_with_attributes(label_or_tag, new_element)
 		    		end
 		      end
 		  		
-		      return Cursor.new(sub, new_element, original_tag)
-		    end
+		  		return_tag = _new_tag
+		  		self._new_tag = nil
+		      return Cursor.new(sub, new_element, return_tag)
+		    end # start_el
 		
 		    def end_el(name)
-		    	# DONE: filter-out untracked cursors
-		    	#puts self.tag
-		      if name == self.tag
+		      if name == self._tag
 		      	begin
-		      		#puts "RUNNING: end_el - eval for element - #{name}:#{model['before_close']}"
 			      	# This is for arrays
-			      	obj.send(model['before_close'].to_s, self) if model['before_close']
+			      	_obj.send(_model['before_close'].to_s, self) if _model['before_close']
 			      	# This is for hashes with array as value. It may be ilogical in this context. Is it needed?
-			      	if obj.respond_to?('each') && model['each_before_close']
-			      	  obj.each{|o| o.send(model['each_before_close'].to_s, obj)}
+			      	if _obj.respond_to?('each') && _model['each_before_close']
+			      	  _obj.each{|o| o.send(_model['each_before_close'].to_s, _obj)}
 		      	  end
 			      rescue
-			      	puts "Error: #{$!}"
+			      	puts "Error ending element: #{$!}"
 			      end
 		        return true
 		      end
 		    end
 		    
-		    
-		    
-		    
+
 		    #####  UTILITY  #####
 		
 			  def constantize(klass)
 			  	self.class.constantize(klass)
 			  end
 			  
-			  def ivg(name, object=obj); object.instance_variable_get "@#{name}" end
-			  def ivs(name, value, object=obj); object.instance_variable_set "@#{name}", data end
+			  def ivg(name, object=_obj); object.instance_variable_get "@#{name}" end
+			  def ivs(name, value, object=_obj); object.instance_variable_set "@#{name}", data end
 		    
 				def get_submodel(name)
-					model['elements'][name] rescue nil
+					_model['elements'][name] rescue nil
 				end
 				
 				def default_submodel
-					if model['depth'].to_i > 0
-						{'elements' => model['elements'], 'depth'=>(model['depth'].to_i - 1)}
+					if _model['depth'].to_i > 0
+						{'elements' => _model['elements'], 'depth'=>(_model['depth'].to_i - 1)}
 					else
 						{}
 					end
 				end
 				
-				def submodel(tag=current_tag); self.current_tag = tag; get_submodel(tag) || default_submodel; end
-			  def individual_attributes(options=submodel); options['individual_attributes']; end    
-			  def hide_attributes(options=submodel); options['hide_attributes']; end
-		    def as_attribute; submodel['as_attribute']; end
-		  	def delineate_with_hash; submodel['delineate_with_hash']; end
-		  	def element_as; submodel['as']; end
+				def submodel(tag=_new_tag); get_submodel(tag) || default_submodel; end
+			  def individual_attributes(model=submodel); model['individual_attributes']; end    
+			  def hide_attributes(model=submodel); model['hide_attributes']; end
+		    def as_attribute(model=submodel); model['as_attribute']; end
+		  	def delineate_with_hash(model=submodel); model['delineate_with_hash']; end
+		  	def as_label(model=submodel); model['as_label']; end
+		  	def label_or_tag; as_label(submodel) || _tag; end
 		  	
 		  	# Assign attributes to element.
-				def assign_attributes(attributes=nil, element=obj, _model=model)
+				def assign_attributes(attributes=nil, element=_obj, model=_model)
 		      if attributes && !attributes.empty?
-		        if element.is_a?(Hash) and !hide_attributes(_model)
+		      	(attributes = Hash[attributes]) if attributes.is_a? Array # For nokogiri attributes-as-array
+		      	#puts "Assigning attributes: #{attributes.to_a.join(':')}" if attributes.has_key?('text')
+		        if element.is_a?(Hash) and !hide_attributes(model)
+		        	#puts "Assigning element attributes for '#{element.class}' #{attributes.to_a.join(':')}"
 		          element.merge!(attributes)
-			      elsif individual_attributes(_model)
-			        attributes.each{|k, v| set_element_accessor(k, v, element)}
+			      elsif individual_attributes(model)
+			      	#puts "Assigning individual attributes for '#{element.class}' #{attributes.to_a.join(':')}"
+			        attributes.each{|k, v| set_attr_accessor(k, v, element)}
 		        else
-			        set_element_accessor 'att', attributes, element
+		        	#puts "Assigning @att attributes for '#{element.class}' #{attributes.to_a.join(':')}"
+			        set_attr_accessor 'att', attributes, element
 			      end
 		      end
 				end
 		    
-		    def resolve_conflicts(cur, new_element)
+		    def resolve_conflicts(current_element, new_element)
+		    	#puts "resolve_conflicts with tags '#{self._tag}/#{label_or_tag}' current_el '#{current_element.class}' and new_el '#{new_element.class}'."
 		  	  if delineate_with_hash
-		  	    current_key = get_attribute(delineate_with_hash, cur)
-		  	    new_key = get_attribute(delineate_with_hash, new_element)
-		  	    #puts "Current-key '#{current_key}', New-key '#{new_key}'"
-		  	    if !current_key.to_s.empty? and !new_key.to_s.empty?
-		  	    	Hash[current_key => cur].merge(new_key => new_element)
-		  	    else
-		  	    	cur.merge(new_key => new_element)
-		  	    end	  
+		  	  	begin
+			  	    current_key = get_attribute(delineate_with_hash, current_element)
+			  	    new_key = get_attribute(delineate_with_hash, new_element)
+			  	    #puts "Current-key '#{current_key}', New-key '#{new_key}'"
+			  	    unless current_key.to_s.empty? || new_key.to_s.empty?
+			  	    	#puts "Merge old-hash-current-element with new-hash"
+			  	    	Hash[current_key => current_element].merge(new_key => new_element)
+			  	    else
+		  	    		current_element.merge(new_key => new_element)
+			  	    end
+		  	    rescue
+		  	    	puts "Could not merge with hash #{[current_key, current_element.class, new_key, new_element.class].join(',')}."
+		  	    	[*current_element] << new_element
+		  	    end
 		  	  else
-		  	  	[*cur] << new_element #Array[cur].flatten.compact << new_element
+		  	  	[*current_element] << new_element
 		    	end
 		    end
 		    
-		    def get_attribute(name, obj=obj)
+		    def get_attribute(name, obj=_obj)
 		      return obj.att[name] rescue nil
 		      return ivg(name, obj) rescue nil
 		      return obj[name] rescue nil
@@ -189,37 +191,53 @@ module Rfm
 		    
 		    def merge_with_attributes(name, element)
   			  if ivg(as_attribute)
-					  set_element_accessor(name, resolve_conflicts(ivg(name), element))
+					  set_attr_accessor(name, resolve_conflicts(ivg(name), element))
 					else
-					  set_element_accessor(as_attribute, element)
+					  set_attr_accessor(as_attribute, element)
 				  end
 		    end
 		    
 		    def merge_with_hash(name, element)
-    			if obj.has_key? name
-  					obj[name] = resolve_conflicts(obj[name], element)
+    			if _obj[name] #_obj.has_key? name
+  					_obj[name] = resolve_conflicts(_obj[name], element)
   			  else			
-  	  			obj[name] = element
+  	  			_obj[name] = element
     			end
 		    end
 		    
 		    def merge_with_array(name, element)
-					if obj.size > 0
-						obj.replace resolve_conflicts(obj, element)
+					if _obj.size > 0
+						_obj.replace resolve_conflicts(_obj, element)
 					else
-  	  			obj << element
+  	  			_obj << element
 	  			end
 		    end
 		    
-		    def set_element_accessor(name, element, obj=obj)
+		    def set_attr_accessor(name, data, obj=_obj)
 					create_accessor(name, obj)
-					obj.send "#{name}=", element
+					obj.instance_eval do
+						var = instance_variable_get("@#{name}")
+						#puts "Assigning @att attributes for '#{obj.class}' #{data.to_a.join(':')}"
+						case
+						when data.is_a?(Hash) && var.is_a?(Hash); var.merge!(data)
+						when data.is_a?(String) && var.is_a?(String); var << data
+						when var.is_a?(Array); [var, data].flatten!
+						else instance_variable_set("@#{name}", data)
+						end
+						#puts "Set element accessor #{name}:#{var.to_a.join(',')}"
+						#puts "Element accessor for #{name}:#{self.send(name).to_a.join(',')}"
+					end
 				end
-				
-				def create_accessor(tag, obj=obj)
+				#   def set_attr_accessor(name, element, obj=_obj)
+				# 		create_accessor(name, obj)
+				# 		obj.send "#{name}=", element
+				# 	end
+								
+				def create_accessor(tag, obj=_obj)
+					#return unless tag && obj
 					obj.class.class_eval do
 						attr_accessor "#{tag}"
-					end
+					end unless obj.instance_variables.include?(":@#{tag}")
 				end
 		
 		end # Cursor
@@ -232,16 +250,16 @@ module Rfm
 		
 			attr_accessor :stack, :grammar
 			
-			def self.build(io, grammar, parser)
-			  (eval(parser.to_s)).build(io, grammar)
+			def self.build(io, parser, grammar=nil, initial_object={})
+			  (eval(parser.to_s)).build(io, grammar, initial_object)
 		  end
 		  
 		  def self.included(base)
 		
-		    def base.build(io, grammar, initial_object=Hash.new)
+		    def base.build(io, grammar=nil, initial_object={})
 		  		handler = new(grammar, initial_object)
 		  		handler.run_parser(io)
-		  		handler.stack[0].obj
+		  		handler.stack[0]._obj
 		  	end
 		  	
 		  	def base.handler
@@ -249,12 +267,11 @@ module Rfm
 		  	end
 		  end
 		  
-		  def initialize(grammar, initial_object=Hash.new)
+		  def initialize(grammar=nil, initial_object={})
 		  	@stack = []
-		  	@grammar = YAML.load_file(grammar)
+		  	@grammar = (YAML.load_file(grammar) rescue {})
 		  	# Not necessary - for testing only
 		  		self.class.instance_variable_set :@handler, self
-		  	#init_element_buffer
 		    set_cursor Cursor.new(@grammar, initial_object, 'TOP')
 		  end
 		  
@@ -265,9 +282,9 @@ module Rfm
 			def set_cursor(args) # cursor-object
 				if args.is_a? Cursor
 					stack.push(args)
-					cursor.parent = stack[-2]
-					cursor.top = stack[0]
-					cursor.stack = stack
+					cursor._parent = stack[-2]
+					cursor._top = stack[0]
+					cursor._stack = stack
 				end
 				cursor
 			end
@@ -275,22 +292,6 @@ module Rfm
 			def dump_cursor
 				stack.pop
 			end
-			
-			# OBSOLETE
-			#   def init_element_buffer
-			#   	@element_buffer = {:name=>nil, :attr=>{}}
-			#   end
-			#   
-			#   def send_element_buffer
-			#   	if element_buffer?
-			# 	  	set_cursor cursor.start_el(@element_buffer[:name], @element_buffer[:attr])
-			# 	  	init_element_buffer
-			# 	  end
-			# 	end
-			# 	
-			# 	def element_buffer?
-			# 		@element_buffer[:name] && !@element_buffer[:name].empty?
-			# 	end
 			
 			def transform(name)
 				name.to_s.gsub(/\-/, '_')
@@ -300,7 +301,6 @@ module Rfm
 			def _start_element(tag, attributes=nil, *args)
 				#puts "Receiving element '#{tag}' with attributes '#{attributes}'"
 				tag = transform tag
-				(attributes = Hash[attributes]) if attributes.is_a? Array # For nokogiri attributes-as-array
 				set_cursor cursor.start_el(tag, attributes)
 			end
 			
@@ -319,54 +319,10 @@ module Rfm
 			
 			# Close out an existing element.
 			def _end_element(tag, *args)
-				#puts "Receiving end_element '#{tag}'"
 				tag = transform tag
+				#puts "Receiving end_element '#{tag}'"
 				cursor.end_el(tag) and dump_cursor
 			end
-
-			# OBSOLETE
-			#   # Add a node to an existing element.
-			# 	def _start_element(tag, attributes=nil, *args)
-			# 		puts "Receiving element '#{tag}' with attributes '#{attributes}'"
-			# 		tag = transform tag
-			# 		send_element_buffer
-			# 		if attributes.nil?
-			# 			@element_buffer = {:tag=>tag, :attr=>{}}
-			# 		else
-			# 			(attributes = Hash[attributes]) if attributes.is_a? Array # For nokogiri attributes-as-array
-			# 			set_cursor cursor.start_el(tag, attributes)
-			# 		end
-			# 	end
-			# 	
-			# 	# Add attribute to existing element.
-			# 	def _attribute(name, value, *args)
-			# 		puts "Receiving attribute '#{name}' with value '#{value}'"
-			# 		name = transform name
-			# 		#@element_buffer[:attr].merge!({name=>value})
-			#     cursor.attribute(name,value)
-			# 	end
-			# 	
-			# 	# Add 'content' attribute to existing element.
-			# 	def _text(value, *args)
-			# 		puts "Receiving text '#{value}'"
-			# 		if !element_buffer?
-			# 			cursor.attribute('text', value)
-			# 		else
-			# 			# Disabling this should prevent text in parents with children, but it doesn't seem to work with REXML streaming.
-			# 			@element_buffer[:attr].merge!({'text'=>value})
-			# 			send_element_buffer
-			# 		end
-			# 	end
-			# 	
-			# 	# Close out an existing element.
-			# 	def _end_element(tag, *args)
-			# 		puts "Receiving end_element '#{tag}'"
-			# 		tag = transform tag
-			# 		send_element_buffer
-			# 		cursor.end_el(tag) and dump_cursor
-			# 	end
-
-
 		  
 		end # Handler
 		
@@ -463,9 +419,9 @@ module Rfm
 		
 		class Resultset < Array
 			def attach_parent_objects(cursor)
-				elements = cursor.parent.obj
-				elements.each{|k, v| cursor.set_element_accessor(k, v) unless k == 'resultset'}
-				cursor.stack[0] = cursor
+				elements = cursor._parent._obj
+				elements.each{|k, v| cursor.set_attr_accessor(k, v) unless k == 'resultset'}
+				cursor._stack[0] = cursor
 			end
 		end
 		
@@ -474,8 +430,8 @@ module Rfm
 		
 		class Field < Hash
 			def build_record_data(cursor)
-				#puts "RUNNING Field#build_field_data on record_id:#{cursor.obj['name']}"
-				cursor.parent.obj.merge!(cursor.obj['name'] => (cursor.obj['data']['text'] rescue ''))
+				#puts "RUNNING Field#build_field_data on record_id:#{cursor._obj['name']}"
+				cursor._parent._obj.merge!(cursor._obj['name'] => (cursor._obj['data']['text'] rescue ''))
 			end
 		end
 		

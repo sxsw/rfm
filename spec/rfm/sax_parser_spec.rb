@@ -9,7 +9,7 @@ describe Rfm::SaxParser::Handler do
 		end
 		
 		it 'sends a cursor object to the stack' do
-			subject.set_cursor(input).obj.should == input.obj
+			subject.set_cursor(input)._obj.should == input._obj
 			#subject.new(File.new('spec/data/resultset.xml'))['fmresultset']['datasource']['table'].should == 'Memo_'
 		end
 		
@@ -19,8 +19,8 @@ describe Rfm::SaxParser::Handler do
 	describe "Functional Parse" do
 		it 'converts duplicate tags into appropriate hash or array' do
 			r = Rfm::SaxParser::OxFmpSax.build('spec/data/resultset_with_portals.xml', 'spec/data/sax_portals.yml')
+			y r
 			r['portals']['ProjectLineItemsSubItems_PLI'][2]['ProjectLineItemsSubItems_PLI::producetotal'].should == "1"
-			#y r
 		end
 	end
 	
