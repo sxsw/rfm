@@ -28,6 +28,9 @@ require 'nokogiri'
 # TODO: Handle multiple 'text' callbacks for a single element.
 # TODO: Add options for text handling (what to name, where to put).
 # TODO: Allow nil as yml document - parsing will be generic. But throw error if given yml doc can't open.
+# TODO: Put the attribute sending back in the handler, and only send it at once - we need to be able to filter/sort on attributes when element comes in and object is created.
+#				Store a lambda of each attachment call in a "silo". The call them out one by one when the parent closes, causing child to attach to parent.
+#				... and now doing that, but doesn't seem to be working. See methods with attachment_procs for more info.
 
 
 module Rfm
@@ -48,6 +51,7 @@ module Rfm
 		    	@_tag   = tag
 		    	@_model = model
 		    	@_obj   = obj.is_a?(String) ? constantize(obj).new : obj
+		    	@attachment_procs = []
 		    	self
 		    end
 		    
@@ -56,7 +60,7 @@ module Rfm
 		    #####  SAX METHODS  #####
 		    
 		    def attribute(name, value)
-		    	#return if (_model['ignore_unknown'] && !(_model['attributes'][name] rescue false))
+		    	return if (_model['ignore_unknown'] && !(_model['attributes'][name] rescue false))
 		    	#(_obj[name]=value)
 		    	assign_attributes({name=>value})
 		    rescue
@@ -78,19 +82,11 @@ module Rfm
 		      
 		      # Assign attributes to new element.
 		      assign_attributes attributes, new_element, sub
-		      
-		      # Attach new object to current object.
-		      unless sub['hide']
-		  			if as_attribute
-							merge_with_attributes(as_attribute, new_element)
-		    		elsif _obj.is_a?(Hash)
-	  					merge_with_hash(label_or_tag, new_element)
-		    		elsif _obj.is_a? Array
-							merge_with_array(label_or_tag, new_element)
-		    		else
-		  				merge_with_attributes(label_or_tag, new_element)
-		    		end
-		      end
+
+					# Attach new element to cursor object
+					#attach_new_object_master(submodel, new_element) unless attributes{}
+					@attachment_procs << lambda { puts "attachment lambda"; attach_new_object_master(submodel, new_element) unless attributes{} }
+					#@attachment_procs.each{|p| p.call}
 		  		
 		  		return_tag = _new_tag
 		  		self._new_tag = nil
@@ -99,6 +95,8 @@ module Rfm
 		
 		    def end_el(name)
 		      if name == self._tag
+		      	#attach_new_object_master(submodel, new_element) if 
+		      	@attachment_procs.each{|p| p.call}
 		      	begin
 			      	# This is for arrays
 			      	_obj.send(_model['before_close'].to_s, self) if _model['before_close']
@@ -122,7 +120,30 @@ module Rfm
 			  
 			  def ivg(name, object=_obj); object.instance_variable_get "@#{name}" end
 			  def ivs(name, value, object=_obj); object.instance_variable_set "@#{name}", data end
-		    
+				def submodel(tag=_new_tag); get_submodel(tag) || default_submodel; end
+			  def individual_attributes(model=submodel); model['individual_attributes']; end    
+			  def hide_attributes(model=submodel); model['hide_attributes']; end
+		    def as_attribute(model=submodel); model['as_attribute']; end
+		  	def delineate_with_hash(model=submodel); model['delineate_with_hash']; end
+		  	def as_label(model=submodel); model['as_label']; end
+		  	def label_or_tag; as_label(submodel) || _tag; end
+		  	
+		  	
+	      # Attach new object to current object.
+	      def attach_new_object_master(sub, new_element)
+		      unless sub['hide']
+		  			if as_attribute
+							merge_with_attributes(as_attribute, new_element)
+		    		elsif _obj.is_a?(Hash)
+	  					merge_with_hash(label_or_tag, new_element)
+		    		elsif _obj.is_a? Array
+							merge_with_array(label_or_tag, new_element)
+		    		else
+		  				merge_with_attributes(label_or_tag, new_element)
+		    		end
+		      end
+		    end
+		  	
 				def get_submodel(name)
 					_model['elements'][name] rescue nil
 				end
@@ -134,14 +155,6 @@ module Rfm
 						{}
 					end
 				end
-				
-				def submodel(tag=_new_tag); get_submodel(tag) || default_submodel; end
-			  def individual_attributes(model=submodel); model['individual_attributes']; end    
-			  def hide_attributes(model=submodel); model['hide_attributes']; end
-		    def as_attribute(model=submodel); model['as_attribute']; end
-		  	def delineate_with_hash(model=submodel); model['delineate_with_hash']; end
-		  	def as_label(model=submodel); model['as_label']; end
-		  	def label_or_tag; as_label(submodel) || _tag; end
 		  	
 		  	# Assign attributes to element.
 				def assign_attributes(attributes=nil, element=_obj, model=_model)
@@ -161,13 +174,13 @@ module Rfm
 		      end
 				end
 		    
-		    def resolve_conflicts(current_element, new_element)
-		    	#puts "resolve_conflicts with tags '#{self._tag}/#{label_or_tag}' current_el '#{current_element.class}' and new_el '#{new_element.class}'."
+		    def merge_elements(current_element, new_element)
+		    	#puts "merge_elements with tags '#{self._tag}/#{label_or_tag}' current_el '#{current_element.class}' and new_el '#{new_element.class}'."
 		  	  if delineate_with_hash
 		  	  	begin
 			  	    current_key = get_attribute(delineate_with_hash, current_element)
 			  	    new_key = get_attribute(delineate_with_hash, new_element)
-			  	    #puts "Current-key '#{current_key}', New-key '#{new_key}'"
+			  	    puts "Current-key '#{current_key}', New-key '#{new_key}'"
 			  	    unless current_key.to_s.empty? || new_key.to_s.empty?
 			  	    	#puts "Merge old-hash-current-element with new-hash"
 			  	    	Hash[current_key => current_element].merge(new_key => new_element)
@@ -175,8 +188,8 @@ module Rfm
 		  	    		current_element.merge(new_key => new_element)
 			  	    end
 		  	    rescue
-		  	    	puts "Could not merge with hash #{[current_key, current_element.class, new_key, new_element.class].join(',')}."
-		  	    	[*current_element] << new_element
+		  	    	puts "Error: could not merge with hash: #{$!}" #{[current_key, current_element.class, new_key, new_element.class].join(',')}."
+		  	    	([*current_element] << new_element) if current_element.is_a?(Array)
 		  	    end
 		  	  else
 		  	  	[*current_element] << new_element
@@ -191,7 +204,7 @@ module Rfm
 		    
 		    def merge_with_attributes(name, element)
   			  if ivg(as_attribute)
-					  set_attr_accessor(name, resolve_conflicts(ivg(name), element))
+					  set_attr_accessor(name, merge_elements(ivg(name), element))
 					else
 					  set_attr_accessor(as_attribute, element)
 				  end
@@ -199,7 +212,7 @@ module Rfm
 		    
 		    def merge_with_hash(name, element)
     			if _obj[name] #_obj.has_key? name
-  					_obj[name] = resolve_conflicts(_obj[name], element)
+  					_obj[name] = merge_elements(_obj[name], element)
   			  else			
   	  			_obj[name] = element
     			end
@@ -207,7 +220,7 @@ module Rfm
 		    
 		    def merge_with_array(name, element)
 					if _obj.size > 0
-						_obj.replace resolve_conflicts(_obj, element)
+						_obj.replace merge_elements(_obj, element)
 					else
   	  			_obj << element
 	  			end
