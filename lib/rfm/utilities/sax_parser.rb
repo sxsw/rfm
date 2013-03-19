@@ -85,14 +85,14 @@ module Rfm
 		      assign_attributes attributes, new_element, sub
 
 					# Attach new element to cursor object
-# 					attach_new_object_master(sub, new_element) #unless attributes and !attributes.empty?
-					#puts "Attachment lambda for tags #{_tag}:#{_new_tag}";
-					cursor = self #.dup
-					new_tag = _new_tag
-					@attachment_procs << lambda do
-						cursor._new_tag = new_tag; cursor.instance_eval {attach_new_object_master(sub, new_element) } #unless attributes and !attributes.empty? }
-					end
-# 					@attachment_procs.shift(@attachment_procs.size).each{|p| p.call}
+					attach_new_object_master(sub, new_element)
+					##puts "Attachment lambda for tags #{_tag}:#{_new_tag}";
+					# cursor = self #.dup
+					# new_tag = _new_tag
+					# @attachment_procs << lambda do
+					# 	cursor._new_tag = new_tag; cursor.instance_eval {attach_new_object_master(sub, new_element) } #unless attributes and !attributes.empty? }
+					# end
+					# @attachment_procs.shift(@attachment_procs.size).each{|p| p.call}
 		  		
 		  		return_tag = _new_tag
 		  		self._new_tag = nil
@@ -101,7 +101,7 @@ module Rfm
 		
 		    def end_el(name)
 		      if name == self._tag
-		      	@attachment_procs.shift(@attachment_procs.size).each{|p| p.call}
+		      	#@attachment_procs.shift(@attachment_procs.size).each{|p| p.call}
 		      	begin
 			      	# This is for arrays
 			      	_obj.send(_model['before_close'].to_s, self) if _model['before_close']
@@ -136,7 +136,7 @@ module Rfm
 		  	
 	      # Attach new object to current object.
 	      def attach_new_object_master(sub, new_element)
-	      	puts "Attaching new object '#{_new_tag}:#{new_element.class}' to '#{_tag}:#{sub.class}'"
+	      	#puts "Attaching new object '#{_new_tag}:#{new_element.class}' to '#{_tag}:#{sub.class}'"
 		      unless sub['hide']
 		  			if as_attribute
 							merge_with_attributes(as_attribute, new_element)
@@ -187,7 +187,7 @@ module Rfm
 		  	  	begin
 			  	    current_key = get_attribute(delineate_with_hash, current_element)
 			  	    new_key = get_attribute(delineate_with_hash, new_element)
-			  	    puts "Current-key '#{current_key}', New-key '#{new_key}'"
+			  	    #puts "Current-key '#{current_key}', New-key '#{new_key}'"
 			  	    unless current_key.to_s.empty? || new_key.to_s.empty?
 			  	    	#puts "Merge old-hash-current-element with new-hash"
 			  	    	Hash[current_key => current_element].merge(new_key => new_element)
@@ -290,6 +290,7 @@ module Rfm
 		  def initialize(grammar=nil, initial_object={})
 		  	@stack = []
 		  	@grammar = (YAML.load_file(grammar) rescue {})
+		  	init_element_buffer
 		  	# Not necessary - for testing only
 		  		self.class.instance_variable_set :@handler, self
 		    set_cursor Cursor.new(@grammar, initial_object, 'TOP')
@@ -316,36 +317,107 @@ module Rfm
 			def transform(name)
 				name.to_s.gsub(/\-/, '_')
 			end
+			
+			def init_element_buffer
+		    @element_buffer = {:tag=>nil, :attr=>{}}
+			end
+			
+			def send_element_buffer
+		    if element_buffer?
+          set_cursor cursor.start_el(@element_buffer[:tag], @element_buffer[:attr])
+          init_element_buffer
+	      end
+	    end
+	    
+	    def element_buffer?
+	      @element_buffer[:tag] && !@element_buffer[:tag].empty?
+	    end
 		
 		  # Add a node to an existing element.
 			def _start_element(tag, attributes=nil, *args)
 				#puts "Receiving element '#{tag}' with attributes '#{attributes}'"
 				tag = transform tag
-				set_cursor cursor.start_el(tag, attributes)
+				send_element_buffer
+				
+				if attributes
+					set_cursor cursor.start_el(tag, attributes)
+				else
+				  @element_buffer = {:tag=>tag, :attr=>{}}
+				end
 			end
 			
 			# Add attribute to existing element.
 			def _attribute(name, value, *args)
 				#puts "Receiving attribute '#{name}' with value '#{value}'"
 				name = transform name
-		    cursor.attribute(name,value)
+		    #cursor.attribute(name,value)
+				@element_buffer[:attr].merge!({name=>value})
 			end
 			
 			# Add 'content' attribute to existing element.
 			def _text(value, *args)
 				#puts "Receiving text '#{value}'"
-				cursor.attribute('text', value) if value[/[^\s]/]
+				return unless value[/[^\s]/]
+				if element_buffer?
+				  @element_buffer[:attr].merge!({'text'=>value})
+				  send_element_buffer
+				else
+					cursor.attribute('text', value)
+				end
 			end
 			
 			# Close out an existing element.
 			def _end_element(tag, *args)
 				tag = transform tag
 				#puts "Receiving end_element '#{tag}'"
-				cursor.end_el(tag) and dump_cursor
+				
+	      send_element_buffer
+	      cursor.end_el(tag) and dump_cursor
 			end
 		  
 		end # Handler
 		
+#                        
+#   # Add a node to an existing element.
+#       def _start_element(tag, attributes=nil, *args)
+#               puts "Receiving element '#{tag}' with attributes '#{attributes}'"
+#               tag = transform tag
+#               send_element_buffer
+#               if attributes.nil?
+#                       @element_buffer = {:tag=>tag, :attr=>{}}
+#               else
+#                       (attributes = Hash[attributes]) if attributes.is_a? Array # For nokogiri attribu
+#                       set_cursor cursor.start_el(tag, attributes)
+#               end
+#       end
+#       
+#       # Add attribute to existing element.
+#       def _attribute(name, value, *args)
+#               puts "Receiving attribute '#{name}' with value '#{value}'"
+#               name = transform name
+#               #@element_buffer[:attr].merge!({name=>value})
+#     cursor.attribute(name,value)
+#       end
+#       
+#       # Add 'content' attribute to existing element.
+#       def _text(value, *args)
+#               puts "Receiving text '#{value}'"
+#               if !element_buffer?
+#                       cursor.attribute('text', value)
+#               else
+#                       # Disabling this should prevent text in parents with children, but it doesn't se
+#                       @element_buffer[:attr].merge!({'text'=>value})
+#                       send_element_buffer
+#               end
+#       end
+#       
+#       # Close out an existing element.
+#       def _end_element(tag, *args)
+#               puts "Receiving end_element '#{tag}'"
+#               tag = transform tag
+#               send_element_buffer
+#               cursor.end_el(tag) and dump_cursor
+#       end
 		
 		
 		#####  SAX PARSER BACKENDS  #####
