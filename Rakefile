@@ -64,6 +64,40 @@ task :benchmark do
 	end
 end
 
+desc "benchmark SaxParser engine"	
+task :benchmark_sax do
+	require 'benchmark'
+	require 'yaml'
+	@records = 'spec/data/resultset.xml'
+	@layout = 'spec/data/layout.xml'
+	Benchmark.bm do |b|
+		[:OxFmpSax, :LibXmlSax, :NokogiriSax, :RexmlStream].each do |backend|
+			b.report("#{backend}\n") do
+				50.times do
+					Rfm::SaxParser::Handler.build(@records, backend.to_s)
+					Rfm::SaxParser::Handler.build(@layout, backend.to_s)
+				end
+			end
+		end
+	end
+end
+
+desc "Profile the sax parser"
+task :sax_profile do
+	require 'ruby-prof'
+	# Profile the code
+	result = RubyProf.profile do
+		@records = 'spec/data/resultset.xml'
+		Rfm::SaxParser::LibXmlSax.build(@records)
+	end
+	# Print a flat profile to text
+	printer = RubyProf::FlatPrinter.new(result)
+	printer.print(STDOUT, {})
+	# Print a graph profile to text
+	printer = RubyProf::GraphPrinter.new(result)
+	printer.print(STDOUT, {})
+end	
+
 desc "run specs with all parsers"	
 task :spec_multi do
 	require 'benchmark'

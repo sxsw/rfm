@@ -92,19 +92,12 @@ module Rfm
 		    def end_el(tag)
 		      if tag == self._tag
 		      	begin
-		      	
 		      		# Data cleaup
-		      		# TODO: This should be optional, with out without a yml file.
-							clean_members {|v| clean_members(v){|v| clean_members(v)}} if _top._model && _top._model[:compact] == true
-
-		      		
-
-			      	#(_parent._obj[tag] = nil) if (_obj.size == 0) # rescue nil
-			      	#(_parent._obj[tag] = _obj.values[0]) if _obj.size == 1 && _parent._obj[tag].size < 2 # rescue nil
+							clean_members {|v| clean_members(v){|v| clean_members(v)}} if _top._model && _top._model[:compact]
 			      	# This is for arrays
 			      	_obj.send(_model['before_close'].to_s, self) if _model['before_close']
 			      	# TODO: This is for hashes with array as value. It may be ilogical in this context. Is it needed?
-			      	if _obj.respond_to?('each') && _model['each_before_close']
+			      	if _model['each_before_close'] && _obj.respond_to?('each')
 			      	  _obj.each{|o| o.send(_model['each_before_close'].to_s, _obj)}
 		      	  end
 			      rescue
@@ -113,24 +106,6 @@ module Rfm
 		        return true
 		      end
 		    end
-		    
-		    def clean_members(obj=_obj)
-	    		if obj.is_a?(Hash)
-	    			obj.dup.each do |k,v|
-	    				obj[k] = nil if v && v.empty?
-	    				(obj[k] = v.values[0]) if v && v.respond_to?(:values) && v.size == 1
-	    				yield(v) if block_given?
-	    			end
-	    		elsif obj.is_a?(Array)
-	    			obj.dup.each_with_index do |v,i|
-	    				obj[i] = nil if v && v.empty?
-	    				(obj[i] = v.values[0]) if v && v.respond_to?(:values) && v.size == 1
-	    				yield(v) if block_given?
-	    			end
-	    		end
-	    	end
-
-
 
 
 		    #####  UTILITY  #####
@@ -149,6 +124,17 @@ module Rfm
 		  	def as_label(model=submodel); model['as_label']; end
 		  	def label_or_tag; as_label(submodel) || _new_tag; end
 		  	
+				def get_submodel(name)
+					_model['elements'] && _model['elements'][name] #rescue nil
+				end
+				
+				def default_submodel
+					if _model['depth'].to_i > 0
+						{'elements' => _model['elements'], 'depth'=>(_model['depth'].to_i - 1)}
+					else
+						{}
+					end
+				end
 		  	
 	      # Attach new object to current object.
 	      def attach_new_object_master(sub, new_element)
@@ -165,18 +151,6 @@ module Rfm
 		    		end
 		      end
 		    end
-		  	
-				def get_submodel(name)
-					_model['elements'][name] rescue nil
-				end
-				
-				def default_submodel
-					if _model['depth'].to_i > 0
-						{'elements' => _model['elements'], 'depth'=>(_model['depth'].to_i - 1)}
-					else
-						{}
-					end
-				end
 		  	
 		  	# Assign attributes to element.
 				def assign_attributes(attributes=nil, element=_obj, model=_model)
@@ -274,7 +248,6 @@ module Rfm
 						end
 					end
 				end
-
 								
 				def create_accessor(tag, obj=_obj)
 					#return unless tag && obj
@@ -282,6 +255,22 @@ module Rfm
 						attr_accessor "#{tag}"
 					end unless obj.instance_variables.include?(":@#{tag}")
 				end
+				
+		    def clean_members(obj=_obj)
+	    		if obj.is_a?(Hash)
+	    			obj.dup.each do |k,v|
+	    				obj[k] = nil if v && v.empty?
+	    				(obj[k] = v.values[0]) if v && v.respond_to?(:values) && v.size == 1
+	    				yield(v) if block_given?
+	    			end
+	    		elsif obj.is_a?(Array)
+	    			obj.dup.each_with_index do |v,i|
+	    				obj[i] = nil if v && v.empty?
+	    				(obj[i] = v.values[0]) if v && v.respond_to?(:values) && v.size == 1
+	    				yield(v) if block_given?
+	    			end
+	    		end
+	    	end
 		
 		end # Cursor
 		
