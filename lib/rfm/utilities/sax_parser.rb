@@ -33,6 +33,10 @@ require 'nokogiri'
 # TODO: Add options for text handling (what to name, where to put).
 # done: Allow nil as yml document - parsing will be generic. But throw error if given yml doc can't open.
 # done: Put the attribute sending back in the handler, and only send it at once - we need to be able to filter/sort on attributes when element comes in and object is created.
+# TODO: Portals arent working - set_attr_accessor() is broken when merging relatedset into existing attribute.
+#       This might be a problem with merge_elements
+#       If 'as_label' is used instead of 'as_attribute' for relatedset, then hash-stored portals work.
+#       Does set_attr_accessor even needs it's complex logic, or can it just use merge_elements to do that work?
 
 
 
@@ -43,11 +47,25 @@ module Rfm
 		
 		    attr_accessor :_model, :_obj, :_tag, :_parent, :_top, :_stack, :_new_tag
 		    
+		    def self.test_class
+		    	Record
+		    end
+		    def test_class
+		    	Record
+		    end
+		    
 		    # Main get-constant method
 		    def self.constantize(klass)
 		    	# OPTIMIZE: Store the constant and return it, instead of creating a new one every time.
 		    	# @"#{klass}" ||=  eval("SaxParser.const_get(klass.to_s)")
-			  	SaxParser.const_get(klass.to_s)
+		    	case
+		    	when self.const_defined?(klass.to_s); self.const_get(klass.to_s)
+		    	when self.ancestors[0].const_defined?(klass.to_s); self.ancestors[0].const_get(klass.to_s)
+		    	when SaxParser.const_defined?(klass.to_s); SaxParser.const_get(klass.to_s)
+		    	when Object.const_defined?(klass.to_s); Object.const_get(klass.to_s)
+			  	when Module.const_defined?(klass.to_s); Module.const_get(klass.to_s)
+			  	else puts "Could not find constant '#{klass.to_s}'"
+			  	end
 		  	rescue
 		  		puts "Error: cound not constantize '#{klass.to_s}': #{$!}" unless klass.to_s == ''
 			  	nil
@@ -79,21 +97,21 @@ module Rfm
 		    	self._new_tag = tag
 		
 		    	# Acquire submodel definition.
-		      sub = submodel      
+		      subm = submodel      
 		      
 		      # Create new element.
-		      new_element = (constantize((sub['class']).to_s) || Hash).new
+		      new_element = (constantize((subm['class']).to_s) || Hash).new
 		      #puts "Created new element of class '#{new_element.class}' for tag '#{_tag}'."
 		      
 		      # Assign attributes to new element.
-		      assign_attributes attributes, new_element, sub
+		      assign_attributes attributes, new_element, subm
 
 					# Attach new element to cursor object
-					attach_new_object_master(sub, new_element)
+					attach_new_object_master(subm, new_element)
 		  		
 		  		return_tag = _new_tag
 		  		self._new_tag = nil
-		      return Cursor.new(sub, new_element, return_tag)
+		      return Cursor.new(subm, new_element, return_tag)
 		    end # start_el
 		
 		    def end_el(tag)
@@ -107,8 +125,8 @@ module Rfm
 			      	if _model['each_before_close'] && _obj.respond_to?('each')
 			      	  _obj.each{|o| o.send(_model['each_before_close'].to_s, _obj)}
 		      	  end
-			      rescue
-			      	puts "Error ending element: #{$!}"
+# 			      rescue
+# 			      	puts "Error ending element tagged '#{tag}': #{$!}"
 			      end
 		        return true
 		      end
@@ -123,6 +141,7 @@ module Rfm
 			  
 			  def ivg(name, object=_obj); object.instance_variable_get "@#{name}" end
 			  def ivs(name, value, object=_obj); object.instance_variable_set "@#{name}", data end
+			  
 				def submodel(tag=_new_tag); get_submodel(tag) || default_submodel; end
 			  def individual_attributes(model=submodel); model['individual_attributes']; end    
 			  def hide_attributes(model=submodel); model['hide_attributes']; end
@@ -136,6 +155,7 @@ module Rfm
 				end
 				
 				def default_submodel
+					#puts "Using default submodel"
 					if _model['depth'].to_i > 0
 						{'elements' => _model['elements'], 'depth'=>(_model['depth'].to_i - 1)}
 					else
@@ -144,9 +164,9 @@ module Rfm
 				end
 		  	
 	      # Attach new object to current object.
-	      def attach_new_object_master(sub, new_element)
-	      	#puts "Attaching new object '#{_new_tag}:#{new_element.class}' to '#{_tag}:#{sub.class}'"
-		      unless sub['hide']
+	      def attach_new_object_master(subm, new_element)
+	      	#puts "Attaching new object '#{_new_tag}:#{new_element.class}' to '#{_tag}:#{subm.class}'"
+		      unless subm['hide']
 		  			if as_attribute
 							merge_with_attributes(as_attribute, new_element)
 		    		elsif _obj.is_a?(Hash)
@@ -220,10 +240,10 @@ module Rfm
 		    end
 		    
 		    def merge_with_attributes(name, element)
-  			  if ivg(as_attribute)
+  			  if ivg(name)
 					  set_attr_accessor(name, merge_elements(ivg(name), element))
 					else
-					  set_attr_accessor(as_attribute, element)
+					  set_attr_accessor(name, element)
 				  end
 		    end
 		    
