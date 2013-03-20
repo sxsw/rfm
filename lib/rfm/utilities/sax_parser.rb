@@ -6,6 +6,10 @@
 #   r = Rfm::SaxParser::OxFmpSax.build(Rfm::SaxParser::DAT[:fmp], 'local_testing/sax_parser.yml')
 #   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fm], Rfm::SaxParser::RexmlStream, 'lib/rfm/sax/fmresultset.yml')
 #
+# Sandbox:
+#   irb -rubygems -I./  -r  local_testing/sax_parser_sandbox.rb
+#   > Sandbox.parse
+#
 #####
 
 #gem 'ox', '1.8.5'
@@ -310,6 +314,7 @@ module Rfm
 		  	@grammar = case
 		  		when grammar.to_s[/\.y.?ml$/i]; (YAML.load_file(grammar))
 		  		when grammar.to_s[/^<.*>/]; "Convert from xml to Hash - under construction"
+		  		when grammar.is_a?(String); YAML.load grammar
 		  		when grammar.is_a?(Hash); grammar
 		  		else {}
 		  	end
@@ -476,63 +481,8 @@ module Rfm
 		end # NokogiriSax	
 		
 		
-		
-		#####  USER MODELS  #####
-		
-		class FmResultset < Hash
-		end
-		
-		class Datasource < Hash
-		end
-		
-		class Metadata < Array
-		end
-		
-		class Resultset < Array
-			def attach_parent_objects(cursor)
-				elements = cursor._parent._obj
-				elements.each{|k, v| cursor.set_attr_accessor(k, v) unless k == 'resultset'}
-				cursor._stack[0] = cursor
-			end
-		end
-		
-		class Record < Hash
-		end
-		
-		class Field < Hash
-			def build_record_data(cursor)
-				#puts "RUNNING Field#build_field_data on record_id:#{cursor._obj['name']}"
-				cursor._parent._obj.merge!(cursor._obj['name'] => (cursor._obj['data']['text'] rescue ''))
-			end
-		end
-		
-		class RelatedSet < Array
-		end
-		
-		
-		
-		
-		#####  DATA  #####
-		DAT = {
-			:fm => 'local_testing/resultset.xml',
-			:fmp => 'local_testing/resultset_with_portals.xml',
-			:xml => 'local_testing/data_fmpxmlresult.xml',
-			:xmp => 'local_testing/data_with_portals_fmpxmlresult.xml',
-			:lay => 'local_testing/layout.xml',
-			:xmd => 'local_testing/db_fmpxmlresult.xml',
-			:fmb => 'local_testing/resultset_with_bad_data.xml',
-			:sp => 'local_testing/SplashLayout.xml',
-			
-			:str => StringIO.new(%{
-			<top name="top01">
-				<middle name="middle01" />
-			  <middle name="middle02">
-			    <bottom name="bottom01">bottom-text</bottom>
-			  </middle>
-			  <middle name="middle03">middle03-text</middle>
-			</top>
-			})
-		}
+
 
 	end # SaxParser
 end # Rfm
+

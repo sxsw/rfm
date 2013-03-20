@@ -1,3 +1,6 @@
+require 'data/sax_models'
+
+
 describe Rfm::SaxParser::Handler do
 	#subject {Rfm::SaxParser::Handler}
 
