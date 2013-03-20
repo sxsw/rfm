@@ -18,20 +18,18 @@ require 'rexml/document'
 require 'libxml'
 require 'nokogiri'
 
-# FIXME: Text values are not showingi up. 
+# done: Text values are not showingi up. 
 # TODO: Move test data & user models to spec folder and local_testing.
 # TODO: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
 # done: Move attribute/text buffer from sax handler to cursor.
 # TODO: Add option to 'compact' unnecessary or empty elements/attributes - maybe - should this should be handled at Model level?
 # done: Add nokogiri, libxml-ruby, rexml interfaces.
-# TODO: Separate all attribute options in yml into attributes: hash, similar to elements: hash.
+# TODO: Separate all attribute options in yml into 'attributes:' hash, similar to 'elements:' hash.
 # TODO: Handle multiple 'text' callbacks for a single element.
 # TODO: Add options for text handling (what to name, where to put).
-# TODO: Allow nil as yml document - parsing will be generic. But throw error if given yml doc can't open.
-# TODO: Put the attribute sending back in the handler, and only send it at once - we need to be able to filter/sort on attributes when element comes in and object is created.
-#				Store a lambda of each attachment call in a "silo". The call them out one by one when the parent closes, causing child to attach to parent.
-#				... and now doing that, but doesn't seem to be working. See methods with attachment_procs for more info.
-#       Currently, the attachment proces aren't triggering "merge_elements"
+# done: Allow nil as yml document - parsing will be generic. But throw error if given yml doc can't open.
+# done: Put the attribute sending back in the handler, and only send it at once - we need to be able to filter/sort on attributes when element comes in and object is created.
+
 
 
 module Rfm
@@ -62,7 +60,6 @@ module Rfm
 		    
 		    def attribute(name, value)
 		    	return if (_model['ignore_unknown'] && !(_model['attributes'][name] rescue false))
-		    	#(_obj[name]=value)
 		    	assign_attributes({name=>value})
 		    rescue
 		    	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self._tag.to_s}': #{$!}"
@@ -86,26 +83,27 @@ module Rfm
 
 					# Attach new element to cursor object
 					attach_new_object_master(sub, new_element)
-					##puts "Attachment lambda for tags #{_tag}:#{_new_tag}";
-					# cursor = self #.dup
-					# new_tag = _new_tag
-					# @attachment_procs << lambda do
-					# 	cursor._new_tag = new_tag; cursor.instance_eval {attach_new_object_master(sub, new_element) } #unless attributes and !attributes.empty? }
-					# end
-					# @attachment_procs.shift(@attachment_procs.size).each{|p| p.call}
 		  		
 		  		return_tag = _new_tag
 		  		self._new_tag = nil
 		      return Cursor.new(sub, new_element, return_tag)
 		    end # start_el
 		
-		    def end_el(name)
-		      if name == self._tag
-		      	#@attachment_procs.shift(@attachment_procs.size).each{|p| p.call}
+		    def end_el(tag)
+		      if tag == self._tag
 		      	begin
+		      	
+		      		# Data cleaup
+		      		# TODO: This should be optional, with out without a yml file.
+							clean_members {|v| clean_members(v){|v| clean_members(v)}} if _top._model && _top._model[:compact] == true
+
+		      		
+
+			      	#(_parent._obj[tag] = nil) if (_obj.size == 0) # rescue nil
+			      	#(_parent._obj[tag] = _obj.values[0]) if _obj.size == 1 && _parent._obj[tag].size < 2 # rescue nil
 			      	# This is for arrays
 			      	_obj.send(_model['before_close'].to_s, self) if _model['before_close']
-			      	# This is for hashes with array as value. It may be ilogical in this context. Is it needed?
+			      	# TODO: This is for hashes with array as value. It may be ilogical in this context. Is it needed?
 			      	if _obj.respond_to?('each') && _model['each_before_close']
 			      	  _obj.each{|o| o.send(_model['each_before_close'].to_s, _obj)}
 		      	  end
@@ -116,6 +114,24 @@ module Rfm
 		      end
 		    end
 		    
+		    def clean_members(obj=_obj)
+	    		if obj.is_a?(Hash)
+	    			obj.dup.each do |k,v|
+	    				obj[k] = nil if v && v.empty?
+	    				(obj[k] = v.values[0]) if v && v.respond_to?(:values) && v.size == 1
+	    				yield(v) if block_given?
+	    			end
+	    		elsif obj.is_a?(Array)
+	    			obj.dup.each_with_index do |v,i|
+	    				obj[i] = nil if v && v.empty?
+	    				(obj[i] = v.values[0]) if v && v.respond_to?(:values) && v.size == 1
+	    				yield(v) if block_given?
+	    			end
+	    		end
+	    	end
+
+
+
 
 		    #####  UTILITY  #####
 		
@@ -185,7 +201,6 @@ module Rfm
 		    	# current_key/new_key is the actual value of the match element.
 		    	# current_key/new_key is then used as a hash key to contain elements that match on the delineate_with_hash attribute.
 		    	#puts "merge_elements with tags '#{self._tag}/#{label_or_tag}' current_el '#{current_element.class}' and new_el '#{new_element.class}'."
-		  	  # TODO: Get rid of this next conditional - may be reason this method isn't working. Sometimes we want a hash, even if there are no delineating fields specified.
 	  	  	begin
 		  	    current_key = get_attribute(delineate_with_hash, current_element)
 		  	    new_key = get_attribute(delineate_with_hash, new_element)
@@ -215,7 +230,6 @@ module Rfm
 	  	    end
 		    end # merge_elements
 		    
-		    # TODO: This might be broken.
 		    def get_attribute(name, obj=_obj)
 		      return obj.att[name] rescue nil
 		      return ivg(name, obj) rescue nil
@@ -258,14 +272,9 @@ module Rfm
 						when var.is_a?(Array); [var, data].flatten!
 						else instance_variable_set("@#{name}", data)
 						end
-						#puts "Set element accessor #{name}:#{var.to_a.join(',')}"
-						#puts "Element accessor for #{name}:#{self.send(name).to_a.join(',')}"
 					end
 				end
-				#   def set_attr_accessor(name, element, obj=_obj)
-				# 		create_accessor(name, obj)
-				# 		obj.send "#{name}=", element
-				# 	end
+
 								
 				def create_accessor(tag, obj=_obj)
 					#return unless tag && obj
@@ -299,11 +308,17 @@ module Rfm
 		  	def base.handler
 		  		@handler
 		  	end
-		  end
+		  	
+		  end # self.included()
 		  
 		  def initialize(grammar=nil, initial_object={})
 		  	@stack = []
-		  	@grammar = (YAML.load_file(grammar) rescue {})
+		  	@grammar = case
+		  		when grammar.to_s[/\.y.+ml$/i]; (YAML.load_file(grammar))
+		  		when grammar.to_s[/^<.*>/]; "Convert from xml to Hash - under construction"
+		  		when grammar.is_a?(Hash); grammar
+		  		else {}
+		  	end
 		  	init_element_buffer
 		  	# Not necessary - for testing only
 		  		self.class.instance_variable_set :@handler, self
@@ -352,7 +367,6 @@ module Rfm
 				#puts "Receiving element '#{tag}' with attributes '#{attributes}'"
 				tag = transform tag
 				send_element_buffer
-				
 				if attributes
 					set_cursor cursor.start_el(tag, attributes)
 				else
@@ -384,54 +398,11 @@ module Rfm
 			def _end_element(tag, *args)
 				tag = transform tag
 				#puts "Receiving end_element '#{tag}'"
-				
 	      send_element_buffer
 	      cursor.end_el(tag) and dump_cursor
 			end
 		  
 		end # Handler
-		
-#                        
-#   # Add a node to an existing element.
-#       def _start_element(tag, attributes=nil, *args)
-#               puts "Receiving element '#{tag}' with attributes '#{attributes}'"
-#               tag = transform tag
-#               send_element_buffer
-#               if attributes.nil?
-#                       @element_buffer = {:tag=>tag, :attr=>{}}
-#               else
-#                       (attributes = Hash[attributes]) if attributes.is_a? Array # For nokogiri attribu
-#                       set_cursor cursor.start_el(tag, attributes)
-#               end
-#       end
-#       
-#       # Add attribute to existing element.
-#       def _attribute(name, value, *args)
-#               puts "Receiving attribute '#{name}' with value '#{value}'"
-#               name = transform name
-#               #@element_buffer[:attr].merge!({name=>value})
-#     cursor.attribute(name,value)
-#       end
-#       
-#       # Add 'content' attribute to existing element.
-#       def _text(value, *args)
-#               puts "Receiving text '#{value}'"
-#               if !element_buffer?
-#                       cursor.attribute('text', value)
-#               else
-#                       # Disabling this should prevent text in parents with children, but it doesn't se
-#                       @element_buffer[:attr].merge!({'text'=>value})
-#                       send_element_buffer
-#               end
-#       end
-#       
-#       # Close out an existing element.
-#       def _end_element(tag, *args)
-#               puts "Receiving end_element '#{tag}'"
-#               tag = transform tag
-#               send_element_buffer
-#               cursor.end_el(tag) and dump_cursor
-#       end
 		
 		
 		#####  SAX PARSER BACKENDS  #####
