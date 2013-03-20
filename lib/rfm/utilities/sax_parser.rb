@@ -39,7 +39,10 @@ module Rfm
 		
 		    attr_accessor :_model, :_obj, :_tag, :_parent, :_top, :_stack, :_new_tag
 		    
+		    # Main get-constant method
 		    def self.constantize(klass)
+		    	# OPTIMIZE: Store the constant and return it, instead of creating a new one every time.
+		    	# @"#{klass}" ||=  eval("SaxParser.const_get(klass.to_s)")
 			  	SaxParser.const_get(klass.to_s)
 		  	rescue
 		  		#puts "Error: cound not constantize '#{klass.to_s}': #{$!}" unless klass.to_s == ''
@@ -205,9 +208,11 @@ module Rfm
 		    end # merge_elements
 		    
 		    def get_attribute(name, obj=_obj)
-		      return obj.att[name] rescue nil
-		      return ivg(name, obj) rescue nil
-		      return obj[name] rescue nil
+		      return obj.att[name] if (obj.respond_to?(:att) && obj.att)
+		      (r= ivg(name, obj)) and return r
+		      return obj[name]
+		    rescue
+		    	nil
 		    end
 		    
 		    def merge_with_attributes(name, element)

@@ -83,12 +83,12 @@ task :benchmark_sax do
 end
 
 desc "Profile the sax parser"
-task :sax_profile do
+task :profile_sax do
 	require 'ruby-prof'
 	# Profile the code
 	result = RubyProf.profile do
 		@records = 'spec/data/resultset.xml'
-		Rfm::SaxParser::LibXmlSax.build(@records)
+		Rfm::SaxParser::RexmlStream.build(@records)
 	end
 	# Print a flat profile to text
 	printer = RubyProf::FlatPrinter.new(result)
