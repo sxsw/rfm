@@ -100,7 +100,7 @@ module Rfm
 		      if tag == self._tag
 		      	begin
 		      		# Data cleaup
-							clean_members {|v| clean_members(v){|v| clean_members(v)}} if _top._model && _top._model[:compact]
+							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if _top._model && _top._model[:compact]
 			      	# This is for arrays
 			      	_obj.send(_model['before_close'].to_s, self) if _model['before_close']
 			      	# TODO: This is for hashes with array as value. It may be ilogical in this context. Is it needed?
