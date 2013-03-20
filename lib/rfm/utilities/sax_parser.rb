@@ -49,7 +49,7 @@ module Rfm
 		    	# @"#{klass}" ||=  eval("SaxParser.const_get(klass.to_s)")
 			  	SaxParser.const_get(klass.to_s)
 		  	rescue
-		  		#puts "Error: cound not constantize '#{klass.to_s}': #{$!}" unless klass.to_s == ''
+		  		puts "Error: cound not constantize '#{klass.to_s}': #{$!}" unless klass.to_s == ''
 			  	nil
 			  end
 		    
