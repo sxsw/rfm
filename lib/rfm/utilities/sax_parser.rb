@@ -314,7 +314,7 @@ module Rfm
 		  def initialize(grammar=nil, initial_object={})
 		  	@stack = []
 		  	@grammar = case
-		  		when grammar.to_s[/\.y.+ml$/i]; (YAML.load_file(grammar))
+		  		when grammar.to_s[/\.y.?ml$/i]; (YAML.load_file(grammar))
 		  		when grammar.to_s[/^<.*>/]; "Convert from xml to Hash - under construction"
 		  		when grammar.is_a?(Hash); grammar
 		  		else {}

@@ -19,7 +19,7 @@ describe Rfm::SaxParser::Handler do
 	describe "Functional Parse" do
 		it 'converts duplicate tags into appropriate hash or array' do
 			r = Rfm::SaxParser::OxFmpSax.build('spec/data/resultset_with_portals.xml', 'spec/data/sax_portals.yml')
-			y r
+			#y r
 			r['portals']['ProjectLineItemsSubItems_PLI'][2]['ProjectLineItemsSubItems_PLI::producetotal'].should == "1"
 		end
 	end
