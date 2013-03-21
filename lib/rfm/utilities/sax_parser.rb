@@ -317,7 +317,8 @@ module Rfm
 		    def base.build(io, grammar=nil, initial_object= DEFAULT_CLASS.new)
 		  		handler = new(grammar, initial_object)
 		  		handler.run_parser(io)
-		  		handler.stack[0]._obj
+		  		#handler.stack[0]._obj
+		  		handler
 		  	end
 		  	
 				# 	# Was for testing only. Don't keep.
@@ -340,6 +341,10 @@ module Rfm
 		  	# Not necessary - for testing only
 		  	#	self.class.instance_variable_set :@handler, self
 		    set_cursor Cursor.new(@grammar, initial_object, 'TOP')
+		  end
+		  
+		  def result
+		  	stack[0]._obj if stack[0].is_a? Cursor
 		  end
 		  
 			def cursor
