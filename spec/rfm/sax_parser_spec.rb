@@ -3,9 +3,10 @@ require 'data/sax_models'
 
 describe Rfm::SaxParser::Handler do
 	#subject {Rfm::SaxParser::Handler}
+	HANDLER = Rfm::SaxParser::OxHandler
 
 	describe '#set_cursor' do
-		subject {Rfm::SaxParser::OxFmpSax.allocate} #new('local_testing/sax_parse.yml')}
+		subject {HANDLER.allocate} #new('local_testing/sax_parse.yml')}
 		let(:input) { Rfm::SaxParser::Cursor.new({'elements'=>{'test'=>'True'}}, {:attribute=>'data'}, 'TEST') }
 		before(:each) do
 			subject.stack = []
@@ -21,7 +22,7 @@ describe Rfm::SaxParser::Handler do
 	
 	describe "Functional Parse" do
 		it 'converts duplicate tags into appropriate hash or array' do
-			r = Rfm::SaxParser::OxFmpSax.build('spec/data/resultset_with_portals.xml', 'spec/data/sax_portals.yml')
+			r = HANDLER.build('spec/data/resultset_with_portals.xml', 'spec/data/sax_portals.yml')
 			#y r
 			r['portals']['ProjectLineItemsSubItems_PLI'][2]['ProjectLineItemsSubItems_PLI::producetotal'].should == "1"
 		end

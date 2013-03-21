@@ -22,22 +22,19 @@ require 'rexml/document'
 require 'libxml'
 require 'nokogiri'
 
-# TODO: Move test data & user models to spec folder and local_testing.
-# TODO: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
-# TODO: Add option to 'compact' unnecessary or empty elements/attributes - maybe - should this should be handled at Model level?
+# done: Move test data & user models to spec folder and local_testing.
+# done: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
+# done: Add option to 'compact' unnecessary or empty elements/attributes - maybe - should this should be handled at Model level?
 # TODO: Separate all attribute options in yml into 'attributes:' hash, similar to 'elements:' hash.
 # TODO: Handle multiple 'text' callbacks for a single element.
 # TODO: Add options for text handling (what to name, where to put).
-# TODO: Portals arent working - set_attr_accessor() is broken when merging relatedset into existing attribute.
-#       This might be a problem with merge_elements
-#       If 'as_label' is used instead of 'as_attribute' for relatedset, then hash-stored portals work.
-#       Does set_attr_accessor even needs it's complex logic, or can it just use merge_elements to do that work?
-
+# TODO: Fill in other configuration options in yml
 
 
 module Rfm
 	module SaxParser
-	
+		(DEFAULT_CLASS = Hash) unless defined? DEFAULT_CLASS
+		
 		class Cursor
 		
 		    attr_accessor :_model, :_obj, :_tag, :_parent, :_top, :_stack, :_new_tag
@@ -50,26 +47,25 @@ module Rfm
 		    end
 		    
 		    # Main get-constant method
-		    def self.constantize(klass)
-		    	# OPTIMIZE: Store the constant and return it, instead of creating a new one every time.
-		    	# @"#{klass}" ||=  eval("SaxParser.const_get(klass.to_s)")
+		    def self.get_constant(klass)
+		    	return DEFAULT_CLASS if klass.to_s == ''
+		    	return klass unless klass.is_a?(String) || klass.is_a?(Symbol)
+		    	
+		    	klass = klass.to_s
 		    	case
-		    	when self.const_defined?(klass.to_s); self.const_get(klass.to_s)
-		    	when self.ancestors[0].const_defined?(klass.to_s); self.ancestors[0].const_get(klass.to_s)
-		    	when SaxParser.const_defined?(klass.to_s); SaxParser.const_get(klass.to_s)
-		    	when Object.const_defined?(klass.to_s); Object.const_get(klass.to_s)
-			  	when Module.const_defined?(klass.to_s); Module.const_get(klass.to_s)
-			  	else puts "Could not find constant '#{klass.to_s}'"
+			    	when const_defined?(klass); const_get(klass)
+			    	when self.ancestors[0].const_defined?(klass); self.ancestors[0].const_get(klass)
+			    	when SaxParser.const_defined?(klass); SaxParser.const_get(klass)
+			    	when Object.const_defined?(klass); Object.const_get(klass)
+				  	when Module.const_defined?(klass); Module.const_get(klass)
+				  	else puts "Could not find constant '#{klass.to_s}'"; DEFAULT_CLASS
 			  	end
-		  	rescue
-		  		puts "Error: cound not constantize '#{klass.to_s}': #{$!}" unless klass.to_s == ''
-			  	nil
 			  end
 		    
 		    def initialize(model, obj, tag)
 		    	@_tag   = tag
 		    	@_model = model
-		    	@_obj   = obj.is_a?(String) ? constantize(obj).new : obj
+		    	@_obj   = obj.is_a?(String) ? get_constant(obj).new : obj
 		    	@attachment_procs = []
 		    	self
 		    end
@@ -79,7 +75,7 @@ module Rfm
 		    #####  SAX METHODS  #####
 		    
 		    def attribute(name, value)
-		    	return if (_model['ignore_unknown'] && !(_model['attributes'][name] rescue false))
+		    	return if (_model['ignore_unknown'] && !(_model['attributes'] && _model['attributes'][name]))
 		    	assign_attributes({name=>value})
 		    rescue
 		    	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self._tag.to_s}': #{$!}"
@@ -95,7 +91,8 @@ module Rfm
 		      subm = submodel      
 		      
 		      # Create new element.
-		      new_element = (constantize((subm['class']).to_s) || Hash).new
+		      #new_element = (get_constant((subm['class']).to_s) || Hash).new
+		      new_element = get_constant(subm['class']).new
 		      #puts "Created new element of class '#{new_element.class}' for tag '#{_tag}'."
 		      
 		      # Assign attributes to new element.
@@ -120,8 +117,8 @@ module Rfm
 			      	if _model['each_before_close'] && _obj.respond_to?('each')
 			      	  _obj.each{|o| o.send(_model['each_before_close'].to_s, _obj)}
 		      	  end
-# 			      rescue
-# 			      	puts "Error ending element tagged '#{tag}': #{$!}"
+			      rescue
+			      	puts "Error ending element tagged '#{tag}': #{$!}"
 			      end
 		        return true
 		      end
@@ -130,8 +127,8 @@ module Rfm
 
 		    #####  UTILITY  #####
 		
-			  def constantize(klass)
-			  	self.class.constantize(klass)
+			  def get_constant(klass)
+			  	self.class.get_constant(klass)
 			  end
 			  
 			  def ivg(name, object=_obj); object.instance_variable_get "@#{name}" end
@@ -146,7 +143,7 @@ module Rfm
 		  	def label_or_tag; as_label(submodel) || _new_tag; end
 		  	
 				def get_submodel(name)
-					_model['elements'] && _model['elements'][name] #rescue nil
+					_model['elements'] && _model['elements'][name]
 				end
 				
 				def default_submodel
@@ -154,7 +151,7 @@ module Rfm
 					if _model['depth'].to_i > 0
 						{'elements' => _model['elements'], 'depth'=>(_model['depth'].to_i - 1)}
 					else
-						{}
+						DEFAULT_CLASS.new
 					end
 				end
 		  	
@@ -177,7 +174,7 @@ module Rfm
 		  	# Assign attributes to element.
 				def assign_attributes(attributes=nil, element=_obj, model=_model)
 		      if attributes && !attributes.empty?
-		      	(attributes = Hash[attributes]) if attributes.is_a? Array # For nokogiri attributes-as-array
+		      	(attributes = DEFAULT_CLASS[attributes]) if attributes.is_a? Array # For nokogiri attributes-as-array
 		      	#puts "Assigning attributes: #{attributes.to_a.join(':')}" if attributes.has_key?('text')
 		        if element.is_a?(Hash) and !hide_attributes(model)
 		        	#puts "Assigning element attributes for '#{element.class}' #{attributes.to_a.join(':')}"
@@ -227,11 +224,12 @@ module Rfm
 		    end # merge_elements
 		    
 		    def get_attribute(name, obj=_obj)
-		      return obj.att[name] if (obj.respond_to?(:att) && obj.att)
-		      (r= ivg(name, obj)) and return r
-		      return obj[name]
-		    rescue
-		    	nil
+		    	return unless name
+		    	case
+		    		when (obj.respond_to?(:att) && obj.att); obj.att[name]
+		    		when (r= ivg(name, obj)); r
+		    		else obj[name]
+		    	end
 		    end
 		    
 		    def merge_with_attributes(name, element)
@@ -277,9 +275,10 @@ module Rfm
 								
 				def create_accessor(tag, obj=_obj)
 					#return unless tag && obj
-					obj.class.class_eval do
-						attr_accessor "#{tag}"
-					end unless obj.instance_variables.include?(":@#{tag}")
+					# 	obj.class.class_eval do
+					# 		attr_accessor "#{tag}"
+					# 	end unless obj.instance_variables.include?(":@#{tag}")
+					obj.class.send :attr_accessor, tag unless obj.instance_variables.include?(":@#{tag}")
 				end
 				
 		    def clean_members(obj=_obj)
@@ -308,13 +307,14 @@ module Rfm
 		
 			attr_accessor :stack, :grammar
 			
-			def self.build(io, parser, grammar=nil, initial_object={})
-			  (eval(parser.to_s)).build(io, grammar, initial_object)
+			def self.build(io, parser, grammar=nil, initial_object= DEFAULT_CLASS.new)
+				parser = (parser.is_a?(String) || parser.is_a?(Symbol)) ? SaxParser.const_get(parser.to_s.capitalize + "Handler") : parser
+			  parser.build(io, grammar, initial_object)
 		  end
 		  
 		  def self.included(base)
 		
-		    def base.build(io, grammar=nil, initial_object={})
+		    def base.build(io, grammar=nil, initial_object= DEFAULT_CLASS.new)
 		  		handler = new(grammar, initial_object)
 		  		handler.run_parser(io)
 		  		handler.stack[0]._obj
@@ -326,14 +326,14 @@ module Rfm
 		  	
 		  end # self.included()
 		  
-		  def initialize(grammar=nil, initial_object={})
+		  def initialize(grammar=nil, initial_object= DEFAULT_CLASS.new)
 		  	@stack = []
 		  	@grammar = case
 		  		when grammar.to_s[/\.y.?ml$/i]; (YAML.load_file(grammar))
 		  		when grammar.to_s[/^<.*>/]; "Convert from xml to Hash - under construction"
 		  		when grammar.is_a?(String); YAML.load grammar
 		  		when grammar.is_a?(Hash); grammar
-		  		else {}
+		  		else DEFAULT_CLASS.new
 		  	end
 		  	init_element_buffer
 		  	# Not necessary - for testing only
@@ -364,7 +364,7 @@ module Rfm
 			end
 			
 			def init_element_buffer
-		    @element_buffer = {:tag=>nil, :attr=>{}}
+		    @element_buffer = {:tag=>nil, :attr=>DEFAULT_CLASS.new}
 			end
 			
 			def send_element_buffer
@@ -384,9 +384,11 @@ module Rfm
 				tag = transform tag
 				send_element_buffer
 				if attributes
+					# This crazy thing transforms attribute keys to underscore (or whatever).
+					attributes = DEFAULT_CLASS[*attributes.collect{|k,v| [transform(k),v] }.flatten]
 					set_cursor cursor.start_el(tag, attributes)
 				else
-				  @element_buffer = {:tag=>tag, :attr=>{}}
+				  @element_buffer = {:tag=>tag, :attr => DEFAULT_CLASS.new}
 				end
 			end
 			
@@ -423,7 +425,7 @@ module Rfm
 		
 		#####  SAX PARSER BACKENDS  #####
 		
-		class OxFmpSax < ::Ox::Sax
+		class OxHandler < ::Ox::Sax
 		  include Handler
 		
 		  def run_parser(io)
@@ -441,7 +443,7 @@ module Rfm
 		end # OxFmpSax
 
 
-		class RexmlStream
+		class RexmlHandler
 			include REXML::StreamListener
 		  include Handler
 		
@@ -449,7 +451,7 @@ module Rfm
 		  	parser = REXML::Document
 				case
 				when (io.is_a?(File) or io.is_a?(StringIO)); parser.parse_stream(io, self)
-				when io[/^</]; StringIO.open(io){|f| parser.parse_stream(f, self)}
+				when io && io[/^</]; StringIO.open(io){|f| parser.parse_stream(f, self)}
 				else File.open(io){|f| parser.parse_stream(f, self)}
 				end
 			end
@@ -460,7 +462,7 @@ module Rfm
 		end # RexmlStream
 		
 		
-		class LibXmlSax
+		class LibxmlHandler
 			include LibXML
 			include XML::SaxParser::Callbacks
 		  include Handler
@@ -480,7 +482,7 @@ module Rfm
 			alias_method :on_characters, :_text
 		end # LibxmlSax	
 		
-		class NokogiriSax < Nokogiri::XML::SAX::Document
+		class NokogiriHandler < Nokogiri::XML::SAX::Document
 		  include Handler
 		
 		  def run_parser(io)
