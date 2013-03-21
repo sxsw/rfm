@@ -56,8 +56,10 @@ task :benchmark do
 			Rfm.backend = backend
 			b.report("#{Rfm::XmlParser.backend}\n") do
 				50.times do
-					Rfm::XmlParser.new(@records)
-					Rfm::XmlParser.new(@layout)
+				# Rfm::XmlParser.new(@records)
+				# Rfm::XmlParser.new(@layout)
+					Rfm.load_data(@records)
+				#	Rfm.load_data(@layout)
 				end
 			end
 		end
@@ -75,7 +77,7 @@ task :benchmark_sax do
 			b.report("#{backend}\n") do
 				50.times do
 					Rfm::SaxParser::Handler.build(@records, backend.to_s)
-					Rfm::SaxParser::Handler.build(@layout, backend.to_s)
+					#Rfm::SaxParser::Handler.build(@layout, backend.to_s)
 				end
 			end
 		end

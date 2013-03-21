@@ -22,17 +22,12 @@ require 'rexml/document'
 require 'libxml'
 require 'nokogiri'
 
-# done: Text values are not showingi up. 
 # TODO: Move test data & user models to spec folder and local_testing.
 # TODO: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
-# done: Move attribute/text buffer from sax handler to cursor.
 # TODO: Add option to 'compact' unnecessary or empty elements/attributes - maybe - should this should be handled at Model level?
-# done: Add nokogiri, libxml-ruby, rexml interfaces.
 # TODO: Separate all attribute options in yml into 'attributes:' hash, similar to 'elements:' hash.
 # TODO: Handle multiple 'text' callbacks for a single element.
 # TODO: Add options for text handling (what to name, where to put).
-# done: Allow nil as yml document - parsing will be generic. But throw error if given yml doc can't open.
-# done: Put the attribute sending back in the handler, and only send it at once - we need to be able to filter/sort on attributes when element comes in and object is created.
 # TODO: Portals arent working - set_attr_accessor() is broken when merging relatedset into existing attribute.
 #       This might be a problem with merge_elements
 #       If 'as_label' is used instead of 'as_attribute' for relatedset, then hash-stored portals work.
@@ -140,7 +135,7 @@ module Rfm
 			  end
 			  
 			  def ivg(name, object=_obj); object.instance_variable_get "@#{name}" end
-			  def ivs(name, value, object=_obj); object.instance_variable_set "@#{name}", data end
+			  def ivs(name, value, object=_obj); object.instance_variable_set "@#{name}", value end
 			  
 				def submodel(tag=_new_tag); get_submodel(tag) || default_submodel; end
 			  def individual_attributes(model=submodel); model['individual_attributes']; end    
@@ -241,7 +236,9 @@ module Rfm
 		    
 		    def merge_with_attributes(name, element)
   			  if ivg(name)
-					  set_attr_accessor(name, merge_elements(ivg(name), element))
+  			  #if get_attribute(name)
+					  #set_attr_accessor(name, merge_elements(ivg(name), element))
+					  ivs(name, merge_elements(ivg(name), element))
 					else
 					  set_attr_accessor(name, element)
 				  end
