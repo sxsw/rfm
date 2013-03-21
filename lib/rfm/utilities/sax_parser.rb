@@ -2,13 +2,21 @@
 #
 # Use:
 #   irb -rubygems -I./  -r  lib/rfm/utilities/sax_parser.rb
-#   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fmp], Rfm::SaxParser::OxFmpSax, 'lib/rfm/sax/fmresultset.yml')
-#   r = Rfm::SaxParser::OxFmpSax.build(Rfm::SaxParser::DAT[:fmp], 'local_testing/sax_parser.yml')
-#   r = Rfm::SaxParser::Handler.build(Rfm::SaxParser::DAT[:fm], Rfm::SaxParser::RexmlStream, 'lib/rfm/sax/fmresultset.yml')
+#   Handler.build(
+#     <xml-string or xml-file-path or file-io or string-io>,
+#     <optional: parsing-backend-lable or custom-backend-handler>,
+#     <optional: configuration-yml-file or yml-string or config-hash>
+#   )
+#   
+# Examples:
+#   r = Rfm::SaxParser::Handler.build('some/file.xml')  # => defaults to best xml backend with no parsing configuration.
+#   r = Rfm::SaxParser::Handler.build('some/file.xml', :ox)  # => uses ox backend or throws error.
+#   r = Rfm::SaxParser::Handler.build('some/file.xml', :rexml, {:compact=>true})  # => uses inline configuration.
+#   r = Rfm::SaxParser::Handler.build('some/file.xml', :nokogiri, 'path/to/config.yml')  # => loads config from yml file.
 #
 # Sandbox:
 #   irb -rubygems -I./  -r  local_testing/sax_parser_sandbox.rb
-#   > Sandbox.parse
+#   > r = Sandbox.parse(:fm <optional: , :rexml, {:compact=>true} >)
 #
 #####
 
@@ -37,7 +45,12 @@ module Rfm
 		
 		# Use :libxml, or anything else, if you want it to always default
 		# to something other than the fastest backend found.
+		# Nil will let the user or the gem decide. Specifying a label here will force or throw error.
 		DEFAULT_BACKEND = nil
+		
+		DEFAULT_TEXT_LABEL = 'text'  # or '__content__'
+		
+		DEFAULT_TAG_TRANSLATION = [/\-/, '_']  # or nil
 		
 		BACKENDS = [[:ox, 'ox'], [:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:rexml, 'rexml/document']]
 
@@ -370,7 +383,8 @@ module Rfm
 			end
 			
 			def transform(name)
-				name.to_s.gsub(/\-/, '_')
+				return name unless DEFAULT_TAG_TRANSLATION.is_a?(Array)
+				name.to_s.gsub(*DEFAULT_TAG_TRANSLATION)
 			end
 			
 			def init_element_buffer
@@ -415,10 +429,10 @@ module Rfm
 				#puts "Receiving text '#{value}'"
 				return unless value[/[^\s]/]
 				if element_buffer?
-				  @element_buffer[:attr].merge!({'text'=>value})
+				  @element_buffer[:attr].merge!({DEFAULT_TEXT_LABEL=>value})
 				  send_element_buffer
 				else
-					cursor.attribute('text', value)
+					cursor.attribute(DEFAULT_TEXT_LABEL, value)
 				end
 			end
 			
