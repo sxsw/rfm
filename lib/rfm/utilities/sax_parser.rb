@@ -16,7 +16,6 @@
 require 'stringio'
 require 'ox'
 require 'yaml'
-require 'rexml/parsers/streamparser'
 require 'rexml/streamlistener'
 require 'rexml/document'
 require 'libxml'
@@ -74,7 +73,6 @@ module Rfm
 		    	@_tag   = tag
 		    	@_model = model
 		    	@_obj   = obj.is_a?(String) ? get_constant(obj).new : obj
-		    	@attachment_procs = []
 		    	self
 		    end
 		    
@@ -309,7 +307,7 @@ module Rfm
 		
 		
 		
-		#####  SAX HANDLER(S)  #####
+		#####  SAX HANDLER  #####
 		
 		module Handler
 		
@@ -333,7 +331,7 @@ module Rfm
 		  def self.decide_backend
 		  	BACKENDS.find{|b| !Gem::Specification::find_all_by_name(b[1]).empty?}[0]
 		  rescue
-		  	raise "The xml parser could not find a loadable backend: #{$!}"
+		  	raise "The xml parser could not find a loadable backend gem: #{$!}"
 		  end
 		  
 		  def initialize(grammar=nil, initial_object= DEFAULT_CLASS.new)
@@ -435,7 +433,7 @@ module Rfm
 		end # Handler
 		
 		
-		#####  SAX PARSER BACKENDS  #####
+		#####  SAX PARSER BACKEND HANDLERS  #####
 		
 		class OxHandler < ::Ox::Sax
 		  include Handler
@@ -456,6 +454,10 @@ module Rfm
 
 
 		class RexmlHandler
+			# Both of these are needed to use rexml streaming parser,
+			# but don't put them here... put them at the top.
+			#require 'rexml/streamlistener'
+			#require 'rexml/document'
 			include REXML::StreamListener
 		  include Handler
 		
