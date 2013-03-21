@@ -33,7 +33,15 @@ require 'nokogiri'
 
 module Rfm
 	module SaxParser
+	
 		(DEFAULT_CLASS = Hash) unless defined? DEFAULT_CLASS
+		
+		# Use :libxml, or anything else, if you want it to always default
+		# to something other than the fastest backend found.
+		DEFAULT_BACKEND = nil
+		
+		BACKENDS = [[:ox, 'ox'], [:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:rexml, 'rexml/document']]
+
 		
 		class Cursor
 		
@@ -307,26 +315,26 @@ module Rfm
 		
 			attr_accessor :stack, :grammar
 			
-			def self.build(io, parser, grammar=nil, initial_object= DEFAULT_CLASS.new)
-				parser = (parser.is_a?(String) || parser.is_a?(Symbol)) ? SaxParser.const_get(parser.to_s.capitalize + "Handler") : parser
-			  parser.build(io, grammar, initial_object)
+			def self.build(io, backend=DEFAULT_BACKEND, grammar=nil, initial_object=DEFAULT_CLASS.new)
+				backend = decide_backend unless backend
+				backend = (backend.is_a?(String) || backend.is_a?(Symbol)) ? SaxParser.const_get(backend.to_s.capitalize + "Handler") : backend
+			  backend.build(io, grammar, initial_object)
 		  end
 		  
 		  def self.included(base)
-		
 		    def base.build(io, grammar=nil, initial_object= DEFAULT_CLASS.new)
 		  		handler = new(grammar, initial_object)
 		  		handler.run_parser(io)
 		  		#handler.stack[0]._obj
 		  		handler
 		  	end
-		  	
-				# 	# Was for testing only. Don't keep.
-				# 	def base.handler
-				# 		@handler
-				# 	end
-		  	
 		  end # self.included()
+		  
+		  def self.decide_backend
+		  	BACKENDS.find{|b| !Gem::Specification::find_all_by_name(b[1]).empty?}[0]
+		  rescue
+		  	raise "The xml parser could not find a loadable backend: #{$!}"
+		  end
 		  
 		  def initialize(grammar=nil, initial_object= DEFAULT_CLASS.new)
 		  	@stack = []
@@ -338,8 +346,6 @@ module Rfm
 		  		else DEFAULT_CLASS.new
 		  	end
 		  	init_element_buffer
-		  	# Not necessary - for testing only
-		  	#	self.class.instance_variable_set :@handler, self
 		    set_cursor Cursor.new(@grammar, initial_object, 'TOP')
 		  end
 		  
@@ -504,7 +510,6 @@ module Rfm
 			alias_method :end_element, :_end_element
 			alias_method :characters, :_text
 		end # NokogiriSax	
-		
 		
 
 

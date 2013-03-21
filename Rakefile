@@ -55,7 +55,7 @@ task :benchmark do
 		[:oxsax, :libxml, :libxmlsax, :nokogirisax, :nokogiri, :hpricot, :rexml, :rexmlsax].each do |backend|
 			Rfm.backend = backend
 			b.report("#{Rfm::XmlParser.backend}\n") do
-				50.times do
+				150.times do
 				# Rfm::XmlParser.new(@records)
 				# Rfm::XmlParser.new(@layout)
 					Rfm.load_data(@records)
@@ -73,11 +73,11 @@ task :benchmark_sax do
 	@records = 'spec/data/resultset.xml'
 	@layout = 'spec/data/layout.xml'
 	Benchmark.bm do |b|
-		[:ox, :libxml, :nokogiri, :rexml].each do |backend|
+		[:rexml, :nokogiri, :libxml, :ox].each do |backend|
 			b.report("#{backend}\n") do
-				50.times do
-					Rfm::SaxParser::Handler.build(@records, backend.to_s, 'spec/data/sax_resultset.yml')
-					#Rfm::SaxParser::Handler.build(@layout, backend.to_s)
+				150.times do
+					Rfm::SaxParser::Handler.build(@records, backend, 'spec/data/sax_resultset.yml')
+					#Rfm::SaxParser::Handler.build(@layout, backend)
 				end
 			end
 		end
@@ -90,7 +90,8 @@ task :profile_sax do
 	# Profile the code
 	result = RubyProf.profile do
 		@records = 'spec/data/resultset.xml'
-		Rfm::SaxParser::RexmlStream.build(@records)
+		# The parser will choose the best available backend.
+		Rfm::SaxParser::Handler.build(@records)
 	end
 	# Print a flat profile to text
 	printer = RubyProf::FlatPrinter.new(result)
@@ -100,7 +101,7 @@ task :profile_sax do
 	printer.print(STDOUT, {})
 end	
 
-desc "run specs with all parsers"	
+desc "run specs with all parser backends"	
 task :spec_multi do
 	require 'benchmark'
 	require 'yaml'
