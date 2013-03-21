@@ -73,10 +73,10 @@ task :benchmark_sax do
 	@records = 'spec/data/resultset.xml'
 	@layout = 'spec/data/layout.xml'
 	Benchmark.bm do |b|
-		[:OxFmpSax, :LibXmlSax, :NokogiriSax, :RexmlStream].each do |backend|
+		[:ox, :libxml, :nokogiri, :rexml].each do |backend|
 			b.report("#{backend}\n") do
 				50.times do
-					Rfm::SaxParser::Handler.build(@records, backend.to_s)
+					Rfm::SaxParser::Handler.build(@records, backend.to_s, 'spec/data/sax_resultset.yml')
 					#Rfm::SaxParser::Handler.build(@layout, backend.to_s)
 				end
 			end

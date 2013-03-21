@@ -320,9 +320,10 @@ module Rfm
 		  		handler.stack[0]._obj
 		  	end
 		  	
-		  	def base.handler
-		  		@handler
-		  	end
+				# 	# Was for testing only. Don't keep.
+				# 	def base.handler
+				# 		@handler
+				# 	end
 		  	
 		  end # self.included()
 		  
@@ -337,7 +338,7 @@ module Rfm
 		  	end
 		  	init_element_buffer
 		  	# Not necessary - for testing only
-		  		self.class.instance_variable_set :@handler, self
+		  	#	self.class.instance_variable_set :@handler, self
 		    set_cursor Cursor.new(@grammar, initial_object, 'TOP')
 		  end
 		  
