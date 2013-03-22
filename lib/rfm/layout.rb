@@ -280,8 +280,10 @@ module Rfm
 	      #map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
 	      prms.dup.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
 	      
-	      xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
-	      Rfm::Resultset.new(xml_response, self, include_portals)
+				#   xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
+				#   Rfm::Resultset.new(xml_response, self, include_portals)
+				
+				SaxParser::Handler.build(Connection.new.connect(state[:account_name], state[:password], action, prms, options).body).result
 	    end
 	    
 	    def params
