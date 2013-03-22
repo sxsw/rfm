@@ -1,4 +1,4 @@
-#####  A declarative SAX parser, written by William Richardson  #####
+# ####  A declarative SAX parser, written by William Richardson  #####
 #
 # Use:
 #   irb -rubygems -I./  -r  lib/rfm/utilities/sax_parser.rb
@@ -18,8 +18,28 @@
 #   irb -rubygems -I./  -r  local_testing/sax_parser_sandbox.rb
 #   > r = Sandbox.parse(:fm <optional: , :rexml, {:compact=>true} >)
 #
-#####
-
+# ####  CONFIGURATION  #####
+#
+# YAML structure defining a SAX xml parsing scheme/fmp-grammar.
+# Options:
+#   allocate:						<tru/fals: initialize new objects with allocate instead of new>
+#   elements:						<hash of tag names as keys>
+#   attributes:					<hash of attribute names as keys UC>
+#   class:							<string-or-class: class name for new element>
+#   depth:							<integer: depth-of-default-class UC>
+#   ignore_unknown_elements: <true/false: ignore unknown elements>
+#   ignore_unknown_attributes: <true/false: ignore unknown attributes>
+#   hide:								<true/false: hide element from attachement>
+#   before_close:				<method-name-as-symbol: run a model method before closing tag>
+#   each_before_close:	<method-name-as-symbol>
+#   as_label:						<string: store element keyed as specified>
+#   as_attribute:   		<string: store element in @att, keyed as specified>
+#   delineate_with_hash:<string: attribute/hash key to delineate objects with identical tags>
+#   initialize_with:		<string: code to evaluate while passing to new() method of element class>
+#   individual_attributes: <true/false: give each attribute it's own instance variable>
+#   hide_attributes:		<force attributes into @att, instead of using hash keys>
+#
+#
 #gem 'ox', '1.8.5'
 require 'stringio'
 require 'ox'
@@ -46,11 +66,11 @@ module Rfm
 		# Use :libxml, or anything else, if you want it to always default
 		# to something other than the fastest backend found.
 		# Nil will let the user or the gem decide. Specifying a label here will force or throw error.
-		DEFAULT_BACKEND = nil
+		(DEFAULT_BACKEND = nil) unless defined? DEFAULT_BACKEND
 		
-		DEFAULT_TEXT_LABEL = 'text'  # or '__content__'
+		(DEFAULT_TEXT_LABEL = 'text') unless defined? DEFAULT_TEXT_LABEL
 		
-		DEFAULT_TAG_TRANSLATION = [/\-/, '_']  # or nil
+		(DEFAULT_TAG_TRANSLATION = [/\-/, '_']) unless defined? DEFAULT_TAG_TRANSLATION
 		
 		BACKENDS = [[:ox, 'ox'], [:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:rexml, 'rexml/document']]
 
@@ -94,14 +114,14 @@ module Rfm
 		    #####  SAX METHODS  #####
 		    
 		    def attribute(name, value)
-		    	return if (_model['ignore_unknown'] && !(_model['attributes'] && _model['attributes'][name]))
+		    	return if (ignore_unknown_attributes && !(attributes && attributes[name]))
 		    	assign_attributes({name=>value})
 		    rescue
 		    	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self._tag.to_s}': #{$!}"
 		    end
 		        
 		    def start_el(tag, attributes)		
-		    	return if (_model['ignore_unknown'] && !_model['elements'][tag])
+		    	return if (ignore_unknown_elements && !elements[tag])
 		    	
 		    	# Set _new_tag for other methods to use during the start_el run.
 		    	self._new_tag = tag
@@ -111,7 +131,7 @@ module Rfm
 		      
 		      # Create new element.
 		      #new_element = (get_constant((subm['class']).to_s) || Hash).new
-		      new_element = get_constant(subm['class']).new
+		      new_element = get_constant(subm['class']).send(*[(allocate(subm) ? :allocate : :new), (initialize_with(subm) ? eval(initialize_with(subm)) : nil)].compact)
 		      #puts "Created new element of class '#{new_element.class}' for tag '#{_tag}'."
 		      
 		      # Assign attributes to new element.
@@ -131,10 +151,10 @@ module Rfm
 		      		# Data cleaup
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if _top._model && _top._model[:compact]
 			      	# This is for arrays
-			      	_obj.send(_model['before_close'].to_s, self) if _model['before_close']
+			      	_obj.send(before_close.to_s, self) if before_close
 			      	# TODO: This is for hashes with array as value. It may be ilogical in this context. Is it needed?
-			      	if _model['each_before_close'] && _obj.respond_to?('each')
-			      	  _obj.each{|o| o.send(_model['each_before_close'].to_s, _obj)}
+			      	if each_before_close && _obj.respond_to?('each')
+			      	  _obj.each{|o| o.send(each_before_close.to_s, _obj)}
 		      	  end
 			      rescue
 			      	puts "Error ending element tagged '#{tag}': #{$!}"
@@ -150,25 +170,37 @@ module Rfm
 			  	self.class.get_constant(klass)
 			  end
 			  
+			  # Methods for current model
 			  def ivg(name, object=_obj); object.instance_variable_get "@#{name}" end
 			  def ivs(name, value, object=_obj); object.instance_variable_set "@#{name}", value end
+			  def ignore_unknown_elements(model=_model); model['ignore_unknown_elements']; end
+			  def ignore_unknown_attributes(model=_model); model['ignore_unknown_attributes']; end
+			  def elements(model=_model); model['elements']; end
+			  def attributes(model=_model); model['attributes']; end
+			  def depth(model=_model); model['depth']; end
+			  def before_close(model=_model); model['before_close']; end
+			  def each_before_close(model=_model); model['each_before_close']; end
 			  
+			  # Methods for submodel
 				def submodel(tag=_new_tag); get_submodel(tag) || default_submodel; end
-			  def individual_attributes(model=submodel); model['individual_attributes']; end    
+			  def individual_attributes(model=submodel); model['individual_attributes']; end
+			  def hide(model=submodel); model['hide']; end
 			  def hide_attributes(model=submodel); model['hide_attributes']; end
 		    def as_attribute(model=submodel); model['as_attribute']; end
 		  	def delineate_with_hash(model=submodel); model['delineate_with_hash']; end
 		  	def as_label(model=submodel); model['as_label']; end
 		  	def label_or_tag; as_label(submodel) || _new_tag; end
+		  	def allocate(model=submodel); model['allocate']; end
+		  	def initialize_with(model=submodel); model['initialize_with']; end
 		  	
 				def get_submodel(name)
-					_model['elements'] && _model['elements'][name]
+					elements && elements[name]
 				end
 				
 				def default_submodel
 					#puts "Using default submodel"
-					if _model['depth'].to_i > 0
-						{'elements' => _model['elements'], 'depth'=>(_model['depth'].to_i - 1)}
+					if depth.to_i > 0
+						{'elements' => elements, 'depth'=>(depth.to_i - 1)}
 					else
 						DEFAULT_CLASS.new
 					end
@@ -177,7 +209,7 @@ module Rfm
 	      # Attach new object to current object.
 	      def attach_new_object_master(subm, new_element)
 	      	#puts "Attaching new object '#{_new_tag}:#{new_element.class}' to '#{_tag}:#{subm.class}'"
-		      unless subm['hide']
+		      unless hide(subm)
 		  			if as_attribute
 							merge_with_attributes(as_attribute, new_element)
 		    		elsif _obj.is_a?(Hash)

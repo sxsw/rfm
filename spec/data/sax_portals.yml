@@ -1,23 +1,9 @@
 # YAML structure defining a SAX xml parsing scheme/fmp-grammar.
-# Options:
-#   elements:       <list of tag names as hash keys>
-#   class:          <class name for new element>
-#   depth:          <integer>
-#   ignore_unknown: <true/false>
-#   hide:           <true/false>
-#   before_close:   <method-name-as-symbol>
-#   each_before_close: <method-name-as-symbol>
-#   as:             <label>
-#   as_attribute:   <label>
-#   delineate_with_hash: <element attribute to use as hash key>
-#   initialize_with: <code to evaluate while passing to new() method of element class>
-#   individual_attributes: <give each attribute it's own instance variable - not used yet>
-#   hide_attributes: <force attributes into @att, instead of using hash keys>
-
-
 
 ###################################################################
-ignore_unknown: true
+---
+ignore_unknown_attributes: true
+ignore_unknown_elements: true
 elements:
   relatedset:
     class: RelatedSet
@@ -32,5 +18,5 @@ elements:
             class: Field
             hide: true
             before_close: :build_record_data
-
+...
 ###################################################################

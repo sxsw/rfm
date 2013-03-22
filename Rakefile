@@ -70,6 +70,7 @@ desc "benchmark SaxParser engine"
 task :benchmark_sax do
 	require 'benchmark'
 	require 'yaml'
+	load "spec/data/sax_models.rb"
 	@records = 'spec/data/resultset.xml'
 	@layout = 'spec/data/layout.xml'
 	Benchmark.bm do |b|
