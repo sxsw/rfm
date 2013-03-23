@@ -1,184 +1,49 @@
+#!/usr/bin/env ruby
 # YAML structure defining a SAX xml parsing scheme/fmp-grammar.
-
+---
+compact: true
 elements:
   fmresultset:
-    class: FmResultset
+    class: Rfm::FmResultset
     hide: true
     elements:
       datasource:
-        class: Datasource
+        class: Rfm::Datasource
       metadata:
-        class: Metadata
+        class: Rfm::Meta
         elements:
           field_definition:
       resultset:
         allocate: true
-        class: Resultset
+        class: Rfm::Resultset
         before_close: :attach_parent_objects
         elements:
           record:
             allocate: true
-            class: Record
+            class: Rfm::Record
             hide_attributes: true
             elements:
               field:
                 allocate: true
-                class: Field
-                #hide: true
-                #before_close: :build_record_data
+                class: Rfm::Metadata::Field
+                compact: true
+                hide: true
+                before_close: :build_record_data
               relatedset:
                 allocate: true
-                class: RelatedSet
+                class: Rfm::RelatedSet
                 as_attribute: portals
                 delineate_with_hash: table
                 elements:
                   record:
                     allocate: true
-                    class: Record
+                    class: Rfm::Record
                     hide_attributes: true
                     elements:
                       field:
+                        compact: true
                         allocate: true
-                        class: Field
-                        #hide: true
-                        #before_close: :build_record_data
-###################################################################
-
-
-
-# elements:
-#   fmresultset:
-#     class: FmResultset
-#     hidden: true
-#     elements:
-#       datasource:
-#         class: Datasource
-#       resultset:
-#         class: Resultset
-#         before_close: :attach_parent_objects
-#         elements:
-#           record:
-#             class: Record
-#             elements:
-#               field:
-#                 class: Field
-#                 hidden: true
-#                 before_close: :build_record_data
-#               relatedset:
-#                 class: Hash
-#                 as: portals
-#                 of: RelatedSet
-#                 key: table
-#                 hidden: true
-#                 #before_close: attach_relatedset_to_portals_hash
-#                 elements:
-#                   record:
-#                     class: Record
-#                     elements:
-#                       field:
-#                         class: Field
-#                         hidden: true
-#                         before_close: :build_record_data
-#       metadata:
-#         class: Metadata
-#         elements:
-#           field_definition:
-
-
-# elements:
-#   fmresultset:
-#     class: FmResultset
-#     hidden: true
-#     elements:
-#       datasource:
-#         class: Datasource
-#       resultset:
-#         class: Resultset
-#         before_close: :attach_parent_objects
-#         elements:
-#           record:
-#             class: Record
-#             elements:
-#               field:
-#                 class: Field
-#                 hidden: true
-#                 before_close: :build_record_data
-#               relatedset:
-#                 class: Hash
-#                 #hidden: true
-#                 #before_close: attach_relatedset_to_portals_hash
-#                 elements:
-#                   record:
-#                     class: Record
-#                     hidden: true
-#                     elements:
-#                       field:
-#                         class: Field
-#                         hidden: true
-#                         before_close: :build_record_data
-#       metadata:
-#         class: Metadata
-#         elements:
-#           field_definition:
-
-
-
-
-# elements:
-#   fmresultset:
-#     class: FmResultset
-#     hidden: true
-#     elements:
-#       datasource:
-#         class: Datasource
-#       resultset:
-#         class: Resultset
-#         before_close: :attach_parent_objects
-#         elements:
-#           record:
-#             class: Record
-#             elements:
-#               field:
-#                 class: Field
-#                 hidden: true
-#                 before_close: :build_record_data
-#               relatedset:
-#                 class: Resultset
-#                 hidden: true
-#                 before_close: attach_relatedset_to_main_record
-#                 elements:
-#                   record:
-#                     class: Record
-#                     elements:
-#                       field:
-#                         class: Field
-#                         hidden: true
-#                         before_close: :build_record_data
-#       metadata:
-#         class: Metadata
-#         elements:
-#           field_definition:
-
-          
-# elements:
-#   fmresultset:
-#     class: FmResultset
-#     ignore_unknown: true
-#     elements:
-#       datasource:
-#         class: Datasource
-#       resultset:
-#         class: Resultset
-#         elements:
-#           record:
-#             class: Record
-#             #before_close: build_field_data
-#             elements:
-#               field:
-#                 class: Field
-#                 hidden: true
-#                 before_close: :build_record_data
-#       metadata:
-#         class: Metadata
-#         elements:
-#           field_definition:          
+                        class: Rfm::Metadata::Field
+                        hide: true
+                        before_close: :build_record_data
+...

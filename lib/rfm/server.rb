@@ -287,11 +287,11 @@ module Rfm
 #       http_fetch(host_name, port, "/fmi/xml/#{grammar}.xml", account_name, password, post)
 #     end
     
-    def load_layout(layout)
-      post = {'-db' => layout.db.name, '-lay' => layout.name, '-view' => ''}
-      resp = http_fetch(host_name, port, "/fmi/xml/FMPXMLLAYOUT.xml", layout.db.account_name, layout.db.password, post)
-      #remove_namespace(resp.body)
-    end
+#     def load_layout(layout)
+#       post = {'-db' => layout.db.name, '-lay' => layout.name, '-view' => ''}
+#       resp = http_fetch(host_name, port, "/fmi/xml/FMPXMLLAYOUT.xml", layout.db.account_name, layout.db.password, post)
+#       #remove_namespace(resp.body)
+#     end
     
 #     def select_grammar(post, options={})
 # 			grammar = state(options)[:grammar] || 'fmresultset'

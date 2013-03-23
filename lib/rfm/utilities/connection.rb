@@ -1,15 +1,22 @@
 require 'net/https'
 require 'cgi'
 module Rfm
+	DEFAULT_CLASS = CaseInsensitiveHash
+	
   class Connection
   	include Config
+  	
   
-		def initialize(*args)
-    	config :parent => 'Rfm::Config'
+		def initialize(action, prms, request_options={}, *args)
+    	#config :parent => 'Rfm::Config'
     	options = get_config(*args)
     	config sanitize_config(options, {}, true)
     	#config(:host => (options[:strings].delete_at(0) || options[:host]) )
     	#raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Connection has no host name. Attempted name '#{config[:host]}'.") if config[:host].to_s == ''
+      
+      @action = action
+      @prms = prms
+      @request_options = request_options
       
       @defaults = {
         :host => 'localhost',
@@ -39,13 +46,12 @@ module Rfm
 	  def scheme; state[:ssl] ? "https" : "http"; end
 	  def port; state[:ssl] && state[:port].nil? ? 443 : state[:port]; end
 
-    def connect(account_name, password, action, args, options = {})
+    def connect(action=@action, args=@prms, options = @request_options, account_name=state[:account_name], password=state[:password])
     	grammar_option = options.delete(:grammar)
       post = args.merge(expand_options(options)).merge({action => ''})
       grammar = select_grammar(post, :grammar=>grammar_option)
       http_fetch(host_name, port, "/fmi/xml/#{grammar}.xml", account_name, password, post)
     end
-
 
     def select_grammar(post, options={})
 			grammar = state(options)[:grammar] || 'fmresultset'
@@ -54,7 +60,12 @@ module Rfm
     	else
     		grammar
     	end
-    end  
+    end
+    
+    def parse
+    	sax_config = File.join(File.dirname(__FILE__), "../sax/fmresultset.yml")
+    	Rfm::SaxParser::Handler.build(connect.body, nil, sax_config).result
+    end
 
   private
   
@@ -173,4 +184,56 @@ module Rfm
     end  
   
   end # Connection
+  
+	#####  USER MODELS  #####
+			
+	class FmResultset < Hash
+	end
+	
+	class Datasource < Hash
+	end
+	
+	class Meta < Array
+	end
+	
+	class Resultset# < Array
+		def attach_parent_objects(cursor)
+			elements = cursor._parent._obj
+			elements.each{|k, v| cursor.set_attr_accessor(k, v) unless k == 'resultset'}
+			# Why is this here? Seems to need it... how does it work?
+			cursor._stack.unshift cursor
+		end
+	end
+	
+	class Record# < Hash
+		def [](*args)
+			super
+		end
+		def []=(*args)
+			super
+		end
+	end
+	
+	class Metadata::Field# < Hash
+		# This easy way requires the 'compact' parsing option to be true.
+		def build_record_data(cursor)
+			cursor._parent._obj.merge!(att => data )
+		end
+		# This is the harder way - when not using the 'compact' parsing option.
+		# 		def build_record_data(cursor)
+		# 			dat = data
+		# 			dat = case
+		# 				when dat.is_a?(Array); dat.collect{|d| d['text'] if d.is_a? Hash}.compact.join(', ')
+		# 				when data.is_a?(Hash); dat['text']
+		# 			end
+		# 			cursor._parent._obj.merge!(self.att['name'] => dat )
+		# 		end
+	end
+	
+	class RelatedSet < Array
+	end
+  
+  
+  
+  
 end # Rfm

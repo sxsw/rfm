@@ -283,7 +283,7 @@ module Rfm
 				#   xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
 				#   Rfm::Resultset.new(xml_response, self, include_portals)
 				
-				SaxParser::Handler.build(Connection.new.connect(state[:account_name], state[:password], action, prms, options).body).result
+				Connection.new(action, prms, options, state).parse
 	    end
 	    
 	    def params

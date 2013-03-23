@@ -56,6 +56,9 @@ require 'nokogiri'
 # TODO: Handle multiple 'text' callbacks for a single element.
 # TODO: Add options for text handling (what to name, where to put).
 # TODO: Fill in other configuration options in yml
+# done: Clean_elements doesn't work if elements are non-hash/array objects. Make clean_elements work with object attributes.
+# TODO: Clean_elements may not work for non-hash/array objecs with multiple instance-variables.
+
 
 
 module Rfm
@@ -90,8 +93,11 @@ module Rfm
 		    def self.get_constant(klass)
 		    	return DEFAULT_CLASS if klass.to_s == ''
 		    	return klass unless klass.is_a?(String) || klass.is_a?(Symbol)
-		    	
 		    	klass = klass.to_s
+		    	
+		    	# Added to evaluate fully-qualified class names
+		    	return eval(klass) if klass[/::/]
+		    	
 		    	case
 			    	when const_defined?(klass); const_get(klass)
 			    	when self.ancestors[0].const_defined?(klass); self.ancestors[0].const_get(klass)
@@ -149,7 +155,7 @@ module Rfm
 		      if tag == self._tag
 		      	begin
 		      		# Data cleaup
-							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if _top._model && _top._model[:compact]
+							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #_top._model && _top._model['compact']
 			      	# This is for arrays
 			      	_obj.send(before_close.to_s, self) if before_close
 			      	# TODO: This is for hashes with array as value. It may be ilogical in this context. Is it needed?
@@ -180,6 +186,7 @@ module Rfm
 			  def depth(model=_model); model['depth']; end
 			  def before_close(model=_model); model['before_close']; end
 			  def each_before_close(model=_model); model['each_before_close']; end
+			  def compact?(model=_model); model['compact'] || _top._model['compact']; end
 			  
 			  # Methods for submodel
 				def submodel(tag=_new_tag); get_submodel(tag) || default_submodel; end
@@ -335,17 +342,41 @@ module Rfm
 		    def clean_members(obj=_obj)
 	    		if obj.is_a?(Hash)
 	    			obj.dup.each do |k,v|
-	    				obj[k] = nil if v && v.empty?
-	    				(obj[k] = v.values[0]) if v && v.respond_to?(:values) && v.size == 1
+	    				obj[k] = clean_member(v)
 	    				yield(v) if block_given?
 	    			end
 	    		elsif obj.is_a?(Array)
 	    			obj.dup.each_with_index do |v,i|
-	    				obj[i] = nil if v && v.empty?
-	    				(obj[i] = v.values[0]) if v && v.respond_to?(:values) && v.size == 1
+	    				obj[i] = clean_member(v)
+	    				yield(v) if block_given?
+	    			end
+	    		else	
+	    			obj.instance_variables.each do |var|
+	    				v = obj.instance_variable_get(var)
+	    				obj.instance_variable_set(var, clean_member(v))
 	    				yield(v) if block_given?
 	    			end
 	    		end
+	    	end
+	    	
+	    	def clean_member(val)
+	    		if val.is_a?(Hash) || val.is_a?(Array); 
+						if val && val.empty?
+							nil
+						elsif val && val.respond_to?(:values) && val.size == 1
+							val.values[0]
+						else
+							val
+						end
+					else
+						if val.instance_variables.size < 1
+							nil
+						elsif val.instance_variables.size == 1
+							val.instance_variable_get(val.instance_variables[0])
+						else
+							val
+						end
+					end
 	    	end
 		
 		end # Cursor
