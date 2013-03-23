@@ -8,7 +8,7 @@ module Rfm
   	
   
 		def initialize(action, prms, request_options={}, *args)
-    	#config :parent => 'Rfm::Config'
+    	config :parent => 'Rfm::Config'
     	options = get_config(*args)
     	config sanitize_config(options, {}, true)
     	#config(:host => (options[:strings].delete_at(0) || options[:host]) )

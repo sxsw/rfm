@@ -58,6 +58,7 @@ require 'nokogiri'
 # TODO: Fill in other configuration options in yml
 # done: Clean_elements doesn't work if elements are non-hash/array objects. Make clean_elements work with object attributes.
 # TODO: Clean_elements may not work for non-hash/array objecs with multiple instance-variables.
+# TODO: Clean_elements may no longer work with a globally defined 'compact'.
 
 
 

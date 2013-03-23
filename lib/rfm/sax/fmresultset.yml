@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 # YAML structure defining a SAX xml parsing scheme/fmp-grammar.
 ---
-compact: true
 elements:
   fmresultset:
     class: Rfm::FmResultset
