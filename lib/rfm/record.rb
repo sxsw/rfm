@@ -112,6 +112,29 @@ module Rfm
     attr_reader :record_id, :mod_id, :portals
     def_delegators :resultset, :field_meta, :portal_names
     def_delegators :layout, :db, :database, :server
+    
+    
+    # This was moved here from base.rb.
+		def self.new(*args) # resultset
+			#puts "Creating new record from RECORD. Layout: #{args[3].class} #{args[3].object_id}"
+			if args[0].is_a?(ResultSet) && args[0].layout && args[0].layout.model
+				args[0].layout.model.new(*args)
+			elsif args[0].is_a?(ResultSet) && args[0].datasource['table']
+				klass = if self.class.const_defined?(args[0].datasource['table'])
+					self.class.const_get(args[0].datasource['table'])
+				else
+					self.class.const_set(args[0].datasource['table'], Class.new(Record)).class_eval do
+						# Created attr-accessors for field names
+					end
+				end
+				klass.allocate.initialize(*args)
+			end
+		rescue
+			puts "Record.new threw error and is defaulting to Class.new. Error: #{$!}"
+			super
+			#allocate.send(:initialize, *args)
+		end
+
 
     # def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
     def initialize(resultset_obj)

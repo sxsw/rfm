@@ -100,18 +100,18 @@ module Rfm
 
 
         
-  class Record
-  	class << self
-			def new(*args)
-				#puts "Creating new record from RECORD. Layout: #{args[3].class} #{args[3].object_id}"
-				args[3].model.new(*args)
-			rescue
-				#puts "RECORD failed to send 'new' to MODEL"
-				super
-				#allocate.send(:initialize, *args)
-			end
-    end # class << self
-  end # class Record
+#   class Record
+#   	class << self
+# 			def new(*args)
+# 				#puts "Creating new record from RECORD. Layout: #{args[3].class} #{args[3].object_id}"
+# 				args[3].model.new(*args)
+# 			rescue
+# 				#puts "RECORD failed to send 'new' to MODEL"
+# 				super
+# 				#allocate.send(:initialize, *args)
+# 			end
+#     end # class << self
+#   end # class Record
 
 
 
