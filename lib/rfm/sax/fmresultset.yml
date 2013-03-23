@@ -13,14 +13,20 @@ elements:
         elements:
           field_definition:
       resultset:
-        allocate: true
+        #allocate: true
+        # This is evaluated from the cursor point of view.
+        # It gives the top object, which should be the Rfm::Connection instance.
+        initialize_with: _top._obj
         class: Rfm::Resultset
+        individual_attributes: true
         before_close: :attach_parent_objects
         elements:
           record:
             allocate: true
             class: Rfm::Record
             hide_attributes: true
+            individual_attributes: true
+            #initialize_with: _obj
             elements:
               field:
                 allocate: true
@@ -45,4 +51,3 @@ elements:
                         class: Rfm::Metadata::Field
                         hide: true
                         before_close: :build_record_data
-...

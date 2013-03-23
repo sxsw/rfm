@@ -38,7 +38,7 @@ module Rfm
   class Resultset < Array
   	include Config
     
-    attr_reader :layout, :database, :server, :caller, :doc
+    attr_reader :layout, :database, :server, :calling_object, :doc
     attr_reader :field_meta, :portal_meta, :include_portals, :datasource
     attr_reader :date_format, :time_format, :timestamp_format
     attr_reader :total_count, :foundset_count, :table
@@ -70,63 +70,68 @@ module Rfm
     # * *portals* is a hash (with table occurrence names for keys and Field objects for values). If your
     #   layout contains portals, you can find out what fields they contain here. Again, if it's the data you're
     #   after, you want to look at the Record object.
-    def initialize(*args) # xml_response, caller, portals
+    def initialize(*args) # connection or calling_object or hash
+    	#Was xml_response, calling_object, portals
     	#Was (server_obj, xml_response, layout_obj, portals=nil)
-    	
+
     	options = args.rfm_extract_options!      
-      config :parent=>'caller'
+      config :parent=>'calling_object'
       config sanitize_config(options, {}, true)
       
-      xml_response			= args[0] || options[:xml_response]
-      doc = XmlParser.parse(xml_response, :namespace=>false, :parser=>(state[:parser] rescue nil))
+#       xml_response			= args[0] || options[:xml_response]
+#       doc = XmlParser.parse(xml_response, :namespace=>false, :parser=>(state[:parser] rescue nil))
       
-      error = doc.error
+      error = 0 #doc.error
       check_for_errors(error, (server.state[:raise_on_401] rescue nil))
       
-      @doc							= doc
-			@caller						= args[1] || options[:caller]
-      @layout           = (@caller.class.ancestors.include? Rfm::Layout::LayoutModule) ? @caller : options[:layout_object]
-      @database					= (@layout.database rescue nil) || (@caller.class == Rfm::Database ? @caller : options[:database_object])
-      @server           = (@database.server rescue nil) || (@caller.class == Rfm::Server ? @caller : options[:server_object])
-      @field_meta     ||= Rfm::CaseInsensitiveHash.new
-      @portal_meta    ||= Rfm::CaseInsensitiveHash.new
-      @include_portals  = args[2] || options[:include_portals]            
+#       @doc							= doc
+# 			@calling_object		= args[1] || options[:calling_object]
 
-      @datasource       = doc.datasource
-      meta              = doc.meta
-      resultset         = doc.resultset
+			@connection				= options[:connection] || (args[0] if args[0].is_a? Rfm::Connection)
+			@calling_object		= options[:calling_object] || (@connection.config[:parent] if @connection)
+      @layout           = (@calling_object.class.ancestors.include? Rfm::Layout::LayoutModule) ? @calling_object : options[:layout_object]
+      
+#       @database					= (@layout.database rescue nil) || (@calling_object.class == Rfm::Database ? @calling_object : options[:database_object])
+#       @server           = (@database.server rescue nil) || (@calling_object.class == Rfm::Server ? @calling_object : options[:server_object])
+#       @field_meta     ||= Rfm::CaseInsensitiveHash.new
+#       @portal_meta    ||= Rfm::CaseInsensitiveHash.new
+#       @include_portals  = args[2] || options[:include_portals]            
 
-      @date_format      = doc.date_format
-      @time_format      = doc.time_format
-      @timestamp_format = doc.timestamp_format
-
-      @foundset_count   = doc.foundset_count
-      @total_count      = doc.total_count
-      @table            = doc.table
+#       @datasource       = doc.datasource
+#       meta              = doc.meta
+#       resultset         = doc.resultset
+# 
+#       @date_format      = doc.date_format
+#       @time_format      = doc.time_format
+#       @timestamp_format = doc.timestamp_format
+# 
+#       @foundset_count   = doc.foundset_count
+#       @total_count      = doc.total_count
+#       @table            = doc.table
             
-      (layout.table = @table) if layout and layout.table_no_load.blank?
-      
-      parse_fields(doc)
-      
-      # This will always load portal meta, even if :include_portals was not specified.
-      # See Record for control of portal data loading.
-      parse_portals(doc)
-      
-      # These were added for loading resultset from file
-      # Kind of a hack. This should ideally condense down to just another option on the main @layout = ...
-			#       unless @layout
-			#       	@layout = @datasource['layout']
-			#       	@layout.instance_variable_set '@database', @datasource['database']
-			#       	@layout.instance_eval do
-			#       		def database
-			#       			@database
-			#       		end
-			#       	end
-			#       end			
-      
-      return if doc.records.blank?
-      Rfm::Record.build_records(doc.records, self, @field_meta, @layout)
-    end
+#       (layout.table = @table) if layout and layout.table_no_load.blank?
+#       
+#       parse_fields(doc)
+#       
+#       # This will always load portal meta, even if :include_portals was not specified.
+#       # See Record for control of portal data loading.
+#       parse_portals(doc)
+#       
+#       # These were added for loading resultset from file
+#       # Kind of a hack. This should ideally condense down to just another option on the main @layout = ...
+# 			#       unless @layout
+# 			#       	@layout = @datasource['layout']
+# 			#       	@layout.instance_variable_set '@database', @datasource['database']
+# 			#       	@layout.instance_eval do
+# 			#       		def database
+# 			#       			@database
+# 			#       		end
+# 			#       	end
+# 			#       end			
+#       
+#       return if doc.records.blank?
+#       Rfm::Record.build_records(doc.records, self, @field_meta, @layout)
+    end # initialize
     
     # Load Resultset data from file-spec or string
 		#     def self.load_data(file_or_string)
@@ -151,31 +156,31 @@ module Rfm
         raise Rfm::Error.getError(code) if code != 0 && (code != 401 || raise_401)
       end
     
-      def parse_fields(doc)
-      	return if doc.fields.blank?
+#       def parse_fields(doc)
+#       	return if doc.fields.blank?
+# 
+#         doc.fields.each do |field|
+#         	name = layout.field_mapping[field.name] || field.name rescue field.name
+#           @field_meta[name] = Rfm::Metadata::Field.new(field)
+#         end
+#         (layout.field_names = field_names) if layout and layout.field_names_no_load.blank?
+#       end
 
-        doc.fields.each do |field|
-        	name = layout.field_mapping[field.name] || field.name rescue field.name
-          @field_meta[name] = Rfm::Metadata::Field.new(field)
-        end
-        (layout.field_names = field_names) if layout and layout.field_names_no_load.blank?
-      end
-
-      def parse_portals(doc)
-      	return if doc.portals.blank?
-        doc.portals.each do |relatedset|
-        	next if relatedset.blank?
-          table, fields = relatedset.table, {}
-
-          relatedset.fields.each do |field|
-            name = field.name.to_s.gsub(Regexp.new(table + '::'), '')
-            fields[name] = Rfm::Metadata::Field.new(field)
-          end
-
-          @portal_meta[table] = fields
-        end
-        (layout.portal_meta = @portal_meta) if layout and layout.portal_meta_no_load.blank?
-      end
+#       def parse_portals(doc)
+#       	return if doc.portals.blank?
+#         doc.portals.each do |relatedset|
+#         	next if relatedset.blank?
+#           table, fields = relatedset.table, {}
+# 
+#           relatedset.fields.each do |field|
+#             name = field.name.to_s.gsub(Regexp.new(table + '::'), '')
+#             fields[name] = Rfm::Metadata::Field.new(field)
+#           end
+# 
+#           @portal_meta[table] = fields
+#         end
+#         (layout.portal_meta = @portal_meta) if layout and layout.portal_meta_no_load.blank?
+#       end
     
 			#   def convert_date_time_format(fm_format)
 			#     fm_format.gsub!('MM', '%m')

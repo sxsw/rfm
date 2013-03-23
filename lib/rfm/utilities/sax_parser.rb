@@ -59,7 +59,7 @@ require 'nokogiri'
 # done: Clean_elements doesn't work if elements are non-hash/array objects. Make clean_elements work with object attributes.
 # TODO: Clean_elements may not work for non-hash/array objecs with multiple instance-variables.
 # TODO: Clean_elements may no longer work with a globally defined 'compact'.
-
+# TODO: Do we really need Cursor#_top and Cursor#_stack ? Can't we get both from _stack?
 
 
 module Rfm

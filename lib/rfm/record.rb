@@ -113,64 +113,65 @@ module Rfm
     def_delegators :resultset, :field_meta, :portal_names
     def_delegators :layout, :db, :database, :server
 
-    def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
+    # def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
+    def initialize(resultset_obj)
     
-      @layout        = layout_obj
+#       @layout        = layout_obj
       @resultset     = resultset_obj
-      @record_id     = record.record_id rescue nil
-      @mod_id        = record.mod_id rescue nil
+#       @record_id     = record.record_id rescue nil
+#       @mod_id        = record.mod_id rescue nil
       @mods          = {}
-      @portals     ||= Rfm::CaseInsensitiveHash.new
+#       @portals     ||= Rfm::CaseInsensitiveHash.new
 
-      relatedsets = !portal && resultset_obj.instance_variable_get(:@include_portals) ? record.portals : []
+#       relatedsets = !portal && resultset_obj.instance_variable_get(:@include_portals) ? record.portals : []
       
-      record.columns.each do |field|
-      	next unless field
-        field_name = @layout.field_mapping[field.name] || field.name rescue field.name
-        field_name.gsub!(Regexp.new(portal + '::'), '') if portal
-        datum = []
-        data = field.data #['data']; data = data.is_a?(Hash) ? [data] : data
-        data.each do |x|
-        	next unless field_meta[field_name]
-        	begin
-	          datum.push(field_meta[field_name].coerce(x, resultset_obj)) #(x['__content__'], resultset_obj))
-        	rescue StandardError => error
-        		self.errors.add(field_name, error) if self.respond_to? :errors
-        		raise error unless @layout.ignore_bad_data
-        	end
-        end if data
+#       record.columns.each do |field|
+#       	next unless field
+#         field_name = @layout.field_mapping[field.name] || field.name rescue field.name
+#         field_name.gsub!(Regexp.new(portal + '::'), '') if portal
+#         datum = []
+#         data = field.data #['data']; data = data.is_a?(Hash) ? [data] : data
+#         data.each do |x|
+#         	next unless field_meta[field_name]
+#         	begin
+# 	          datum.push(field_meta[field_name].coerce(x, resultset_obj)) #(x['__content__'], resultset_obj))
+#         	rescue StandardError => error
+#         		self.errors.add(field_name, error) if self.respond_to? :errors
+#         		raise error unless @layout.ignore_bad_data
+#         	end
+#         end if data
+#       
+#         if datum.length == 1
+#           rfm_super[field_name] = datum[0]
+#         elsif datum.length == 0
+#           rfm_super[field_name] = nil
+#         else
+#           rfm_super[field_name] = datum
+#         end
+#       end
       
-        if datum.length == 1
-          rfm_super[field_name] = datum[0]
-        elsif datum.length == 0
-          rfm_super[field_name] = nil
-        else
-          rfm_super[field_name] = datum
-        end
-      end
-      
-      unless relatedsets.empty?
-        relatedsets.each do |relatedset|
-        	next if relatedset.blank?
-          tablename, records = relatedset.table, []
-      
-          relatedset.records.each do |record|
-          	next unless record
-            records << self.class.new(record, resultset_obj, resultset_obj.portal_meta[tablename], layout_obj, tablename)
-          end
-      
-          @portals[tablename] = records
-        end
-      end
+#       unless relatedsets.empty?
+#         relatedsets.each do |relatedset|
+#         	next if relatedset.blank?
+#           tablename, records = relatedset.table, []
+#       
+#           relatedset.records.each do |record|
+#           	next unless record
+#             records << self.class.new(record, resultset_obj, resultset_obj.portal_meta[tablename], layout_obj, tablename)
+#           end
+#       
+#           @portals[tablename] = records
+#         end
+#       end
       
       @loaded = true
     end
 
-    def self.build_records(records, resultset_obj, field_meta, layout_obj, portal=nil)
-      records.each do |record|
-        resultset_obj << self.new(record, resultset_obj, field_meta, layout_obj, portal)
-      end
-    end
+#     def self.build_records(records, resultset_obj, field_meta, layout_obj, portal=nil)
+#       records.each do |record|
+#         resultset_obj << self.new(record, resultset_obj, field_meta, layout_obj, portal)
+#       end
+#     end
 
     # Saves local changes to the Record object back to Filemaker. For example:
     #

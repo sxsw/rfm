@@ -282,8 +282,8 @@ module Rfm
 	      
 				#   xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
 				#   Rfm::Resultset.new(xml_response, self, include_portals)
-				
-				Connection.new(action, prms, options, state).parse
+
+				Connection.new(action, prms, options, state.merge(:parent=>self)).parse
 	    end
 	    
 	    def params

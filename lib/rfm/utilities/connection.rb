@@ -4,15 +4,12 @@ module Rfm
 	DEFAULT_CLASS = CaseInsensitiveHash
 	
   class Connection
-  	include Config
-  	
+  	include Config  	
   
 		def initialize(action, prms, request_options={}, *args)
-    	config :parent => 'Rfm::Config'
+    	#config :parent => 'Rfm::Config'
     	options = get_config(*args)
     	config sanitize_config(options, {}, true)
-    	#config(:host => (options[:strings].delete_at(0) || options[:host]) )
-    	#raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Connection has no host name. Attempted name '#{config[:host]}'.") if config[:host].to_s == ''
       
       @action = action
       @prms = prms
@@ -64,7 +61,7 @@ module Rfm
     
     def parse
     	sax_config = File.join(File.dirname(__FILE__), "../sax/fmresultset.yml")
-    	Rfm::SaxParser::Handler.build(connect.body, nil, sax_config).result
+    	Rfm::SaxParser::Handler.build(connect.body, nil, sax_config, self).result
     end
 
   private
