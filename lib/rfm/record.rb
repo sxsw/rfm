@@ -116,7 +116,7 @@ module Rfm
     
     # This was moved here from base.rb.
 		def self.new(*args) # resultset
-			#puts "Creating new record from RECORD. Layout: #{args[3].class} #{args[3].object_id}"
+			puts "Creating new record from Record. args: #{args.to_yaml}"
 			if args[0].is_a?(ResultSet) && args[0].layout && args[0].layout.model
 				args[0].layout.model.new(*args)
 			elsif args[0].is_a?(ResultSet) && args[0].datasource['table']

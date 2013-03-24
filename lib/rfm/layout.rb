@@ -283,7 +283,10 @@ module Rfm
 				#   xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
 				#   Rfm::Resultset.new(xml_response, self, include_portals)
 
-				Connection.new(action, prms, options, state.merge(:parent=>self)).parse
+				c = Connection.new(action, prms, options, state.merge(:parent=>self))
+				# Need to specify the connection object as the initial_object of the parsing stack,
+				# so that Fmresultset can get the layout from it.
+				c.parse(nil,nil,c)
 	    end
 	    
 	    def params
@@ -343,12 +346,12 @@ module Rfm
     
     
     def field_controls
-      load unless @loaded
+      load_layout unless @loaded
       @field_controls
     end
     
   	def field_names
-  		load unless @field_names
+  		load_layout unless @field_names
   		@field_names
   	end
   	
@@ -357,7 +360,7 @@ module Rfm
   	end
     
     def value_lists
-      load unless @loaded
+      load_layout unless @loaded
       @value_lists
     end
     
@@ -388,14 +391,22 @@ module Rfm
   	def table_no_load
   		@table
   	end
+  	
+    # From Rfm::Server
+    def load_lay
+      Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse
+    end
     
-    def load
+    def load_layout
       @loaded = true
-      fmpxmllayout = db.server.load_layout(self)
-      doc = XmlParser.new(fmpxmllayout.body, :namespace=>false, :parser=>server.state[:parser])
+      #fmpxmllayout = db.server.load_layout(self)
+      doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse
+      puts "Layout load result: #{doc.class}"
+      return
+      #doc = XmlParser.new(fmpxmllayout.body, :namespace=>false, :parser=>server.state[:parser])
       
       # check for errors
-      error = doc['FMPXMLLAYOUT']['ERRORCODE'].to_s.to_i
+      error = doc['FMPXMLLAYOUT']['ERRORCODE']['text'].to_s.to_i
       raise Rfm::Error::FileMakerError.getError(error) if error != 0
       
       # process valuelists
@@ -404,7 +415,7 @@ module Rfm
         vlists.each {|valuelist|
           name = valuelist['NAME']
           @value_lists[name] = valuelist['VALUE'].collect{|value|
-          	Rfm::Metadata::ValueListItem.new(value['__content__'], value['DISPLAY'], name)
+          	Rfm::Metadata::ValueListItem.new(value['text'], value['DISPLAY'], name)
           } rescue []
         }
         @value_lists.freeze
@@ -445,7 +456,7 @@ module Rfm
 			mapping
 		end
     
-  	private :load, :get_records, :params
+  	private :load_layout, :get_records, :params
       
       
   end # Layout

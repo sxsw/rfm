@@ -1,3 +1,8 @@
+# Connection object takes over the communication functionality that was previously in Rfm::Server.
+# TODO: Clean up the way :grammar is sent in to the initializing method.
+#       Currently, the actual connection instance config doesn't get set with the correct grammar,
+#       even if the http_fetch is using the correct grammar.
+
 require 'net/https'
 require 'cgi'
 module Rfm
@@ -43,9 +48,9 @@ module Rfm
 	  def scheme; state[:ssl] ? "https" : "http"; end
 	  def port; state[:ssl] && state[:port].nil? ? 443 : state[:port]; end
 
-    def connect(action=@action, args=@prms, options = @request_options, account_name=state[:account_name], password=state[:password])
-    	grammar_option = options.delete(:grammar)
-      post = args.merge(expand_options(options)).merge({action => ''})
+    def connect(action=@action, prms=@prms, request_options = @request_options, account_name=state[:account_name], password=state[:password])
+    	grammar_option = request_options.delete(:grammar)
+      post = prms.merge(expand_options(request_options)).merge({action => ''})
       grammar = select_grammar(post, :grammar=>grammar_option)
       http_fetch(host_name, port, "/fmi/xml/#{grammar}.xml", account_name, password, post)
     end
@@ -59,9 +64,9 @@ module Rfm
     	end
     end
     
-    def parse
-    	sax_config = File.join(File.dirname(__FILE__), "../sax/fmresultset.yml")
-    	Rfm::SaxParser::Handler.build(connect.body, nil, sax_config, self).result
+    def parse(backend=nil, sax_config=nil, initial_object=DEFAULT_CLASS.new)
+    	(sax_config = File.join(File.dirname(__FILE__), '../sax/fmresultset.yml')) unless sax_config
+    	Rfm::SaxParser::Handler.build(connect.body, backend, sax_config, initial_object).result
     end
 
   private
@@ -190,7 +195,10 @@ module Rfm
 	class Datasource < Hash
 	end
 	
-	class Meta < Array
+	class Meta < Hash
+	# 		def attach_meta_objects_to_resultset(cursor)
+	# 			self.each{|k, v| cursor._parent._obj.set_attr_accessor(k, v)}
+	# 		end
 	end
 	
 	class Resultset# < Array

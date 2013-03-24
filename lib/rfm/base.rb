@@ -222,7 +222,7 @@ module Rfm
 			# Build a new record without saving
 		  def new(*args)
 		  	# Without this method, infinite recursion will happen from Record.new
-		  	#puts "Creating new record from BASE"
+		  	puts "Creating new record from BASE. args: #{args.to_yaml}"
 		    rec = self.allocate
 		    rec.send(:initialize, *args)
 		    rec

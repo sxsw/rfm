@@ -10,8 +10,13 @@ elements:
         class: Rfm::Datasource
       metadata:
         class: Rfm::Meta
+        #hide: true
+        #before_close: attach_meta_objects_to_resultset
         elements:
           field_definition:
+            as_label: field_meta
+          portal_definition:
+            as_label: portal_meta
       resultset:
         #allocate: true
         # This is evaluated from the cursor point of view.

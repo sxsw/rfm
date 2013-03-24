@@ -60,6 +60,10 @@ require 'nokogiri'
 # TODO: Clean_elements may not work for non-hash/array objecs with multiple instance-variables.
 # TODO: Clean_elements may no longer work with a globally defined 'compact'.
 # TODO: Do we really need Cursor#_top and Cursor#_stack ? Can't we get both from _stack?
+# TODO: When using a non-hash/array object as the initial object, things get kinda srambled.
+#       See Rfm::Connection, when sending self (the connection object) as the initial_object.
+# TODO: 'compact' breaks badly with fmpxmllayout data.
+
 
 
 module Rfm
