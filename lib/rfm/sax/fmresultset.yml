@@ -1,10 +1,12 @@
 #!/usr/bin/env ruby
 # YAML structure defining a SAX xml parsing scheme/fmp-grammar.
 ---
+individual_attributes:
 elements:
   fmresultset:
     class: Rfm::FmResultset
-    hide: true
+    #hide: true
+    ignore: true
     elements:
       datasource:
         class: Rfm::Datasource
@@ -21,10 +23,11 @@ elements:
         #allocate: true
         # This is evaluated from the cursor point of view.
         # It gives the top object, which should be the Rfm::Connection instance.
-        initialize_with: _top._obj
-        class: Rfm::Resultset
+        #initialize_with: _top._obj
+        ignore: true
+        #class: Rfm::Resultset
         individual_attributes: true
-        before_close: :attach_parent_objects
+        #before_close: :attach_parent_objects
         elements:
           record:
             allocate: true

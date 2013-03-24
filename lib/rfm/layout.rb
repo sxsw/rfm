@@ -286,7 +286,7 @@ module Rfm
 				c = Connection.new(action, prms, options, state.merge(:parent=>self))
 				# Need to specify the connection object as the initial_object of the parsing stack,
 				# so that Fmresultset can get the layout from it.
-				c.parse(nil,nil,c)
+				c.parse(nil,nil,Rfm::Resultset.new(self))
 	    end
 	    
 	    def params

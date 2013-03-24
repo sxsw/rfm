@@ -22,22 +22,24 @@
 #
 # YAML structure defining a SAX xml parsing scheme/fmp-grammar.
 # Options:
-#   allocate:						<tru/fals: initialize new objects with allocate instead of new>
-#   elements:						<hash of tag names as keys>
-#   attributes:					<hash of attribute names as keys UC>
-#   class:							<string-or-class: class name for new element>
-#   depth:							<integer: depth-of-default-class UC>
-#   ignore_unknown_elements: <true/false: ignore unknown elements>
-#   ignore_unknown_attributes: <true/false: ignore unknown attributes>
-#   hide:								<true/false: hide element from attachement>
-#   before_close:				<method-name-as-symbol: run a model method before closing tag>
-#   each_before_close:	<method-name-as-symbol>
-#   as_label:						<string: store element keyed as specified>
-#   as_attribute:   		<string: store element in @att, keyed as specified>
-#   delineate_with_hash:<string: attribute/hash key to delineate objects with identical tags>
-#   initialize_with:		<string: code to evaluate while passing to new() method of element class>
-#   individual_attributes: <true/false: give each attribute it's own instance variable>
-#   hide_attributes:		<force attributes into @att, instead of using hash keys>
+#   initialize:									initialize new objects with this method(params) instead of 'allocate'
+#   elements:										hash of tag names as keys <maybe this should be an array, so each element carries it's name with it's model description>
+#   attributes:									hash of attribute names as keys UC <maybe array instead of hash?>
+#   class:											string-or-class: class name for new element
+#   depth:											integer: depth-of-default-class UC
+#   ignore:											true/false: ignore this element.
+#   ignore_elements:						true/false: ignore unknown subelements unless they appear in elements:
+#   ignore_attributes:					true/false: ignore unknown attributes unless they appear in attributes:
+#   #hide:											true/false: hide element from attachement
+#		attach:											none, instance, attributes <or maybe a specific object
+#   before_close:								method-name-as-symbol: run a model method before closing tag
+#   each_before_close:					method-name-as-symbol
+#   as_label:										string: store element keyed as specified
+#   as_attribute:   						string: store element in @att, keyed as specified
+#   delineate_with_hash:				string: attribute/hash key to delineate objects with identical tags
+#   #initialize_with:						string: code to evaluate while passing to new() method of element class
+#   individual_attributes:			true/false: give each attribute it's own instance variable
+#   hide_attributes:						force attributes into @att, instead of using hash keys
 #
 #
 #gem 'ox', '1.8.5'
@@ -132,7 +134,8 @@ module Rfm
 		    end
 		        
 		    def start_el(tag, attributes)		
-		    	return if (ignore_unknown_elements && !elements[tag])
+		    	puts "Start_el: tag '#{tag}', cursor_obj '#{_obj.class}', cursor_submodel '#{submodel.to_yaml}'."
+		    	return if ((ignore_unknown_elements || ignore) && !elements[tag])
 		    	
 		    	# Set _new_tag for other methods to use during the start_el run.
 		    	self._new_tag = tag
@@ -204,6 +207,7 @@ module Rfm
 		  	def label_or_tag; as_label(submodel) || _new_tag; end
 		  	def allocate(model=submodel); model['allocate']; end
 		  	def initialize_with(model=submodel); model['initialize_with']; end
+		  	def ignore(model=submodel); model['ignore']; end
 		  	
 				def get_submodel(name)
 					elements && elements[name]
