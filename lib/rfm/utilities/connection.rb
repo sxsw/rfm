@@ -222,7 +222,7 @@ module Rfm
 	class Metadata::Field# < Hash
 		# This easy way requires the 'compact' parsing option to be true.
 		def build_record_data(cursor)
-			cursor._parent._obj.merge!(att => data )
+			cursor._parent._obj.merge!(name => data )
 		end
 		# This is the harder way - when not using the 'compact' parsing option.
 		# 		def build_record_data(cursor)

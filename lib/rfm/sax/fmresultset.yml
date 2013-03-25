@@ -1,61 +1,115 @@
 #!/usr/bin/env ruby
 # YAML structure defining a SAX xml parsing scheme/fmp-grammar.
+
 ---
-individual_attributes:
+compact: true
 elements:
-  fmresultset:
-    class: Rfm::FmResultset
-    #hide: true
-    ignore: true
+- name: fmresultset
+  class: Rfm::FmResultset
+  #attach: none
+  #ignore: [self]
+  elements:
+  - name: datasource
+    class: Rfm::Datasource
+  - name:  metadata
+    class: Rfm::Meta
+    #attach: none
+    #before_close: attach_meta_objects_to_resultset
     elements:
-      datasource:
-        class: Rfm::Datasource
-      metadata:
-        class: Rfm::Meta
-        #hide: true
-        #before_close: attach_meta_objects_to_resultset
+    - name: field_definition
+      as_name: field_meta
+    - name: portal_definition
+      as_name: portal_meta
+  - name: resultset
+    initialize: [new, _top._obj]
+    #ignore: [self]
+    class: Rfm::Resultset
+    attach_attributes: individual
+    #before_close: :attach_parent_objects
+    elements:
+    - name: record
+      class: Rfm::Record
+      attach_attributes: individual
+      #initialize: [new, _obj]
+      elements:
+      - name: field
+        class: Rfm::Metadata::Field
+        attach_attributes: individual
+        compact: true
+        attach: none
+        before_close: :build_record_data
+      - name: relatedset
+        class: Rfm::RelatedSet
+        attach: individual
+        as_name: portals
+        delineate_with_hash: table
         elements:
-          field_definition:
-            as_label: field_meta
-          portal_definition:
-            as_label: portal_meta
-      resultset:
-        #allocate: true
-        # This is evaluated from the cursor point of view.
-        # It gives the top object, which should be the Rfm::Connection instance.
-        #initialize_with: _top._obj
-        ignore: true
-        #class: Rfm::Resultset
-        individual_attributes: true
-        #before_close: :attach_parent_objects
-        elements:
-          record:
-            allocate: true
-            class: Rfm::Record
-            hide_attributes: true
-            individual_attributes: true
-            #initialize_with: _obj
-            elements:
-              field:
-                allocate: true
-                class: Rfm::Metadata::Field
-                compact: true
-                hide: true
-                before_close: :build_record_data
-              relatedset:
-                allocate: true
-                class: Rfm::RelatedSet
-                as_attribute: portals
-                delineate_with_hash: table
-                elements:
-                  record:
-                    allocate: true
-                    class: Rfm::Record
-                    hide_attributes: true
-                    elements:
-                      field:
-                        compact: true
-                        allocate: true
-                        class: Rfm::Metadata::Field
-                        hide: true
-                        before_close: :build_record_data
+        - name: record
+          class: Rfm::Record
+          attach_attributes: individual
+          elements:
+          - name: field
+            compact: true
+            class: Rfm::Metadata::Field
+            attach: none
+            before_close: :build_record_data
+
+# ---
+# individual_attributes:
+# elements:
+#   fmresultset:
+#     class: Rfm::FmResultset
+#     #hide: true
+#     ignore: true
+#     elements:
+#       datasource:
+#         class: Rfm::Datasource
+#       metadata:
+#         class: Rfm::Meta
+#         #hide: true
+#         #before_close: attach_meta_objects_to_resultset
+#         elements:
+#           field_definition:
+#             as_label: field_meta
+#           portal_definition:
+#             as_label: portal_meta
+#       resultset:
+#         #allocate: true
+#         # This is evaluated from the cursor point of view.
+#         # It gives the top object, which should be the Rfm::Connection instance.
+#         #initialize_with: _top._obj
+#         ignore: true
+#         #class: Rfm::Resultset
+#         individual_attributes: true
+#         #before_close: :attach_parent_objects
+#         elements:
+#           record:
+#             allocate: true
+#             class: Rfm::Record
+#             hide_attributes: true
+#             individual_attributes: true
+#             #initialize_with: _obj
+#             elements:
+#               field:
+#                 allocate: true
+#                 class: Rfm::Metadata::Field
+#                 compact: true
+#                 hide: true
+#                 before_close: :build_record_data
+#               relatedset:
+#                 allocate: true
+#                 class: Rfm::RelatedSet
+#                 as_attribute: portals
+#                 delineate_with_hash: table
+#                 elements:
+#                   record:
+#                     allocate: true
+#                     class: Rfm::Record
+#                     hide_attributes: true
+#                     elements:
+#                       field:
+#                         compact: true
+#                         allocate: true
+#                         class: Rfm::Metadata::Field
+#                         hide: true
+#                         before_close: :build_record_data
