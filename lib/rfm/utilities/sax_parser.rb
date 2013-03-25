@@ -69,6 +69,10 @@ require 'nokogiri'
 # TODO: Double-check that you're pointing to the correct model/submodel, since you changed all helper-methods to look at curent-model by default.
 # TODO: Make sure all method calls are passing the model given by the calling-method.
 # TODO: Give most of the config options a global possibility.
+# TODO: Block attachment methods from seeing parent if parent isn't the current objects true parent (how?).
+# TODO: Handle attach: hash better (it's not specifically handled, but declaring it will block a parents influence).
+# TODO: CaseInsensitiveHash/IndifferentAccess is not working for sax parser.
+
 
 
 module Rfm
@@ -144,14 +148,14 @@ module Rfm
 		    	
 		    	# Set _new_tag for other methods to use during the start_el run.
 		    	self._new_tag = tag
-		    	
-		    	if ignore_element?
-		    		assign_attributes(attributes)
-		    		return
-		    	end
 		
 		    	# Acquire submodel definition.
-		      subm = submodel      
+		      subm = submodel
+		      
+		    	if ignore_element?(subm)
+		    		assign_attributes(attributes, _obj, subm)
+		    		return
+		    	end		      
 		      
 		      # Create new element.
 		      #new_element = (get_constant((subm['class']).to_s) || Hash).new
@@ -350,7 +354,7 @@ module Rfm
 		      	(attributes = DEFAULT_CLASS[attributes]) if attributes.is_a? Array # For nokogiri attributes-as-array
 		      	return if [*ignore?(model)].include?('attributes') && [*model_attributes?(model)].size = 0
 		      	#puts "Assigning attributes: #{attributes.to_a.join(':')}" if attributes.has_key?('text')
-		        if element.is_a?(Hash) and !attach?(model)     #!hide_attributes(model)
+		        if element.is_a?(Hash) and !attach_attributes?(model)     #!hide_attributes(model)
 		        	#puts "Assigning element attributes for '#{element.class}' #{attributes.to_a.join(':')}"
 		          element.merge!(attributes)
 			      elsif attach_attributes?(model).to_s[/individual/]   #individual_attributes(model)
