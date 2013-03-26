@@ -80,7 +80,8 @@ require 'nokogiri'
 # done: Change "grammar" to "template" in all code
 # done: Change 'cursor._' methods to something more readable, since they will be used in Rfm and possibly user models.
 # TODO: Split off template loading into load_templates and/or get_templates methods.
-
+# TODO: Something is downcasing somewhere - see the fmpxmllayout response. Looks like 'compact' might have something to do with it.
+# TODO: Make attribute attachment default to individual.
 
 
 
@@ -150,12 +151,11 @@ module Rfm
 		    
 		    #####  SAX METHODS  #####
 		    
-		    # This is not currently used. Only Ox passes individual attributes, but we're caching them in the handler.
-				#   def attribute(name, value)
-				#   	assign_attributes({name=>value})
-				#   rescue
-				#   	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
-				#   end
+			  def attribute(name, value)
+			  	assign_attributes({name=>value})
+			  rescue
+			  	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
+			  end
 		        
 		    def start_el(_tag, _attributes)		
 		    	#puts "Start_el: _tag '#{_tag}', cursorobject '#{object.class}', cursor_submodel '#{submodel.to_yaml}'."
@@ -323,9 +323,9 @@ module Rfm
 		    	# current_key/new_key is then used as a hash key to contain elements that match on the delineate_with_hash attribute.
 		    	#puts "merge_elements with tags '#{self.tag}/#{label_or_tag}' current_el '#{current_element.class}' and new_el '#{new_element.class}'."
 	  	  	begin
-		  	    current_key = get_attribute(delineate_with_hash?, current_element)
-		  	    new_key = get_attribute(delineate_with_hash?, new_element)
-		  	    #puts "Current-key '#{current_key}', New-key '#{new_key}'"
+		  	    current_key = get_attribute(delineate_with_hash?(submodel), current_element)
+		  	    new_key = get_attribute(delineate_with_hash?(submodel), new_element)
+		  	    puts "merge_elements: tag '#{tag}', new '#{newtag}', delineate-with-hash '#{delineate_with_hash?(submodel)}', current-key '#{current_key}', new-key '#{new_key}'"
 		  	    
 		  	    key_state = case
 		  	    	when !current_key.to_s.empty? && current_key == new_key; 5

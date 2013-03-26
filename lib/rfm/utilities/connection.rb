@@ -73,7 +73,7 @@ module Rfm
 			#     	(template = File.join(File.dirname(__FILE__), '../sax/fmresultset.yml')) unless template
 			#     	Rfm::SaxParser.parse(connect.body, template, initial_object, backend).result
     	(template =  'fmresultset.yml') unless template
-    	template = File.join(File.dirname(__FILE__), '../sax/', template)
+    	(template = File.join(File.dirname(__FILE__), '../sax/', template)) if template.is_a? String
     	Rfm::SaxParser.parse(connect.body, template, initial_object, backend).result
     end
 
