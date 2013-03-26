@@ -63,10 +63,15 @@ module Rfm
     		grammar
     	end
     end
+
+		#     def parse(backend=nil, sax_config=nil, initial_object=DEFAULT_CLASS.new)
+		#     	(sax_config = File.join(File.dirname(__FILE__), '../sax/fmresultset.yml')) unless sax_config
+		#     	Rfm::SaxParser::Handler.build(connect.body, backend, sax_config, initial_object).result
+		#     end
     
-    def parse(backend=nil, sax_config=nil, initial_object=DEFAULT_CLASS.new)
-    	(sax_config = File.join(File.dirname(__FILE__), '../sax/fmresultset.yml')) unless sax_config
-    	Rfm::SaxParser::Handler.build(connect.body, backend, sax_config, initial_object).result
+    def parse(template=nil, initial_object=DEFAULT_CLASS.new, backend=nil)
+    	(template = File.join(File.dirname(__FILE__), '../sax/fmresultset.yml')) unless template
+    	Rfm::SaxParser.build(connect.body, template, initial_object, backend).result
     end
 
   private

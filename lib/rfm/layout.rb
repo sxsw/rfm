@@ -393,7 +393,7 @@ module Rfm
   	end
   	
     # From Rfm::Server
-    def load_lay
+    def load_layout_test
       Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse
     end
     

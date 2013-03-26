@@ -20,7 +20,7 @@
 #
 # ####  CONFIGURATION  #####
 #
-# YAML structure defining a SAX xml parsing scheme/fmp-grammar.
+# YAML structure defining a SAX xml parsing template.
 # Options:
 #   initialize:									array: initialize new objects with this code [:method, params] instead of defaulting to 'allocate'
 #   elements:										array of element hashes {'name'=>'element-tag'}
@@ -75,11 +75,13 @@ require 'nokogiri'
 # TODO: Give the yml (and xml) doc a top-level hash like "fmresultset" or "fmresultset_yml" or "fmresultset_xml",
 #       then you have a label to refer to it if you load several config docs at once (like into a Rfm::SaxParser::TEMPLATES constant).
 # TODO: Load up all config docs when Rfm loads, or when Rfm::SaxParser loads.
-# TODO: Move SaxParser::Handler class methods to SaxParser, so you can do Rfm::SaxParser.parse(io, backend, template, initial_object)
-# TODO: Switch args order in .build methods to (io, template, initial_object, backend)
-# TODO: Change "grammar" to "template" in all code
-# TODO: Change 'cursor._' methods to something more readable, since they will be used in Rfm and possibly user models.
+# done: Move SaxParser::Handler class methods to SaxParser, so you can do Rfm::SaxParser.parse(io, backend, template, initial_object)
+# done: Switch args order in .build methods to (io, template, initial_object, backend)
+# done: Change "grammar" to "template" in all code
+# done: Change 'cursor._' methods to something more readable, since they will be used in Rfm and possibly user models.
 # TODO: Split off template loading into load_templates and/or get_templates methods.
+
+
 
 
 
@@ -95,16 +97,20 @@ module Rfm
 		
 		(DEFAULT_TEXT_LABEL = 'text') unless defined? DEFAULT_TEXT_LABEL
 		
-		(DEFAULT_TAG_TRANSLATION = [/\-/, '_']) unless defined? DEFAULT_TAG_TRANSLATION
+		(DEFAULTtag_TRANSLATION = [/\-/, '_']) unless defined? DEFAULTtag_TRANSLATION
 		
 		(DEFAULT_SHARED_INSTANCE_VAR = 'attributes') unless defined? DEFAULT_SHARED_INSTANCE_VAR		
 		
 		BACKENDS = [[:ox, 'ox'], [:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:rexml, 'rexml/document']]
+		
+		def self.parse(*args)
+			Handler.build(*args)
+		end
 
 		
 		class Cursor
 		
-		    attr_accessor :_model, :_obj, :_tag, :_parent, :_top, :_stack, :_new_tag
+		    attr_accessor :model, :object, :tag, :parent, :top, :stack, :newtag
 		    
 		    def self.test_class
 		    	Record
@@ -127,16 +133,16 @@ module Rfm
 			    	when const_defined?(klass); const_get(klass)
 			    	when self.ancestors[0].const_defined?(klass); self.ancestors[0].const_get(klass)
 			    	when SaxParser.const_defined?(klass); SaxParser.const_get(klass)
-			    	when Object.const_defined?(klass); Object.const_get(klass)
+			    	when _object.const_defined?(klass); _object.const_get(klass)
 				  	when Module.const_defined?(klass); Module.const_get(klass)
 				  	else puts "Could not find constant '#{klass.to_s}'"; DEFAULT_CLASS
 			  	end
 			  end
 		    
-		    def initialize(model, obj, tag)
-		    	@_tag   = tag
-		    	@_model = model
-		    	@_obj   = obj.is_a?(String) ? get_constant(obj).new : obj
+		    def initialize(_model, _obj, _tag)
+		    	@tag   = _tag
+		    	@model = _model
+		    	@object   = _obj.is_a?(String) ? get_constant(_obj).new : _obj
 		    	self
 		    end
 		    
@@ -148,20 +154,20 @@ module Rfm
 				#   def attribute(name, value)
 				#   	assign_attributes({name=>value})
 				#   rescue
-				#   	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self._tag.to_s}': #{$!}"
+				#   	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 				#   end
 		        
-		    def start_el(tag, attributes)		
-		    	#puts "Start_el: tag '#{tag}', cursor_obj '#{_obj.class}', cursor_submodel '#{submodel.to_yaml}'."
+		    def start_el(_tag, _attributes)		
+		    	#puts "Start_el: _tag '#{_tag}', cursorobject '#{object.class}', cursor_submodel '#{submodel.to_yaml}'."
 		    	
-		    	# Set _new_tag for other methods to use during the start_el run.
-		    	self._new_tag = tag
+		    	# Set newtag for other methods to use during the start_el run.
+		    	self.newtag = _tag
 		
 		    	# Acquire submodel definition.
 		      subm = submodel
 		      
 		    	if ignore_element?(subm)
-		    		assign_attributes(attributes, _obj, subm)
+		    		assign_attributes(_attributes, object, subm)
 		    		return
 		    	end		      
 		      
@@ -174,32 +180,32 @@ module Rfm
 		      init[0] ||= :allocate
 		      init[1] = eval(init[1].to_s)
 		      new_element = const.send(*init.compact)
-		      #puts "Created new element of class '#{new_element.class}' for tag '#{_tag}'."
+		      #puts "Created new element of class '#{new_element.class}' for _tag '#{tag}'."
 		      
 		      # Assign attributes to new element.
 		      assign_attributes attributes, new_element, subm
 
-					# Attach new element to cursor object
-					attach_new_object_master(subm, new_element)
+					# Attach new element to cursor _object
+					attach_newobjectect_master(subm, new_element)
 		  		
-		  		return_tag = _new_tag
-		  		self._new_tag = nil
-		      return Cursor.new(subm, new_element, return_tag)
+		  		returntag = newtag
+		  		self.newtag = nil
+		      return Cursor.new(subm, new_element, returntag)
 		    end # start_el
 		
-		    def end_el(tag)
-		      if tag == self._tag
+		    def end_el(_tag)
+		      if _tag == self.tag
 		      	begin
 		      		# Data cleaup
-							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #_top._model && _top._model['compact']
+							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #top.model && top.model['compact']
 			      	# This is for arrays
-			      	_obj.send(before_close?.to_s, self) if before_close?
+			      	object.send(before_close?.to_s, self) if before_close?
 			      	# TODO: This is for hashes with array as value. It may be ilogical in this context. Is it needed?
-			      	if each_before_close? && _obj.respond_to?('each')
-			      	  _obj.each{|o| o.send(each_before_close?.to_s, _obj)}
+			      	if each_before_close? && object.respond_to?('each')
+			      	  object.each{|o| o.send(each_before_close?.to_s, object)}
 		      	  end
 			      rescue
-			      	puts "Error ending element tagged '#{tag}': #{$!}"
+			      	puts "Error ending element tagged '#{_tag}': #{$!}"
 			      end
 		        return true
 		      end
@@ -212,59 +218,49 @@ module Rfm
 			  	self.class.get_constant(klass)
 			  end
 			  
-			  def attach_element?(model=_model)
-			  	crnt, prnt = attach?(model), attach_elements?(_parent._model)
+			  def attach_element?(_model=model)
+			  	crnt, prnt = attach?(_model), attach_elements?(parent.model)
 					crnt || prnt
 			  end
 			  
-			  def ignore_element?(model=_model)
-			  	crnt, prnt = [*ignore?(model)].include?('self'), [*ignore?(_parent._model)].include?('elements')
-			  	((model['name'] != _new_tag) && prnt) || crnt
+			  def ignore_element?(_model=model)
+			  	crnt, prnt = [*ignore?(_model)].include?('self'), [*ignore?(parent.model)].include?('elements')
+			  	((_model['name'] != newtag) && prnt) || crnt
 			  end
 			  
 			  # TODO: Implement this in attributes methods.
-			  def attach_attribute?(name, model=_model)
-			  	crnt, prnt = model_attributes?(name), attach_attributes?(_parent._model)
+			  def attach_attribute?(name, _model=model)
+			  	crnt, prnt = model_attributes?(name), attach_attributes?(parent.model)
 			  	crnt['attach'] || prnt
 			  end
 				
 				# TODO: Implement this in attributes methods.
-			  def ignore_attribute?(name, model=_model)
-				  crnt, prnt = model_attributes?(name), [*ignore?(_parent._model)].include?('attributes')
-			  	(crnt['name'] != _new_tag && prnt) || (crnt['name'] && [*crnt['name']['ignore']].include?('self'))
+			  def ignore_attribute?(name, _model=model)
+				  crnt, prnt = model_attributes?(name), [*ignore?(parent.model)].include?('attributes')
+			  	(crnt['name'] != newtag && prnt) || (crnt['name'] && [*crnt['name']['ignore']].include?('self'))
 			  end			  	
 
 			  
-			  # Methods for current model
-			  def ivg(name, object=_obj); object.instance_variable_get "@#{name}"; end
-			  def ivs(name, value, object=_obj); object.instance_variable_set "@#{name}", value; end
-			  def ignore?(model=_model); model['ignore']; end
-			  def model_elements?(which=nil, model=_model); (model['elements'] && which ? model['elements'].find{|e| e['name']==which} : model['elements']) ; end
-			  def model_attributes?(which=nil, model=_model); (model['attributes'] && which ? model['attributes'].find{|a| a['name']==which} : model['attributes']) ; end
-			  def depth?(model=_model); model['depth']; end
-			  def before_close?(model=_model); model['before_close']; end
-			  def each_before_close?(model=_model); model['each_before_close']; end
-			  def compact?(model=_model); model['compact'] || _top._model['compact']; end
-			  def attach?(model=_model); model['attach']; end
-			  def attach_elements?(model=_model); model['attach_elements']; end
-			  def attach_attributes?(model=_model); model['attach_attributes']; end
-			  def delineate_with_hash?(model=_model); model['delineate_with_hash']; end
-			  def as_name?(model=_model); model['as_name']; end
-			  def initialize?(model=_model); model['initialize']; end
+			  # Methods for current _model
+			  def ivg(name, _object=object); _object.instance_variable_get "@#{name}"; end
+			  def ivs(name, value, _object=object); _object.instance_variable_set "@#{name}", value; end
+			  def ignore?(_model=model); _model['ignore']; end
+			  def model_elements?(which=nil, _model=model); (_model['elements'] && which ? _model['elements'].find{|e| e['name']==which} : _model['elements']) ; end
+			  def model_attributes?(which=nil, _model=model); (_model['attributes'] && which ? _model['attributes'].find{|a| a['name']==which} : _model['attributes']) ; end
+			  def depth?(_model=model); _model['depth']; end
+			  def before_close?(_model=model); _model['before_close']; end
+			  def each_before_close?(_model=model); _model['each_before_close']; end
+			  def compact?(_model=model); _model['compact'] || top.model['compact']; end
+			  def attach?(_model=model); _model['attach']; end
+			  def attach_elements?(_model=model); _model['attach_elements']; end
+			  def attach_attributes?(_model=model); _model['attach_attributes']; end
+			  def delineate_with_hash?(_model=model); _model['delineate_with_hash']; end
+			  def as_name?(_model=model); _model['as_name']; end
+			  def initialize?(_model=model); _model['initialize']; end
 
 			  # Methods for submodel
-				def submodel(tag=_new_tag); get_submodel(tag) || default_submodel; end
-				def label_or_tag; as_name?(submodel) || _new_tag; end
-			  #def individual_attributes(model=submodel); model['individual_attributes']; end
-			  #def hide(model=submodel); model['hide']; end
-			  #def hide_attributes(model=submodel); model['hide_attributes']; end
-		    #def as_attribute(model=submodel); model['as_attribute']; end
-		  	#def delineate_with_hash(model=submodel); model['delineate_with_hash']; end
-		  	#def as_label(model=submodel); model['as_label']; end
-		  	#def label_or_tag; as_label(submodel) || _new_tag; end
-		  	#def allocate(model=submodel); model['allocate']; end
-		  	#def initialize_with(model=submodel); model['initialize_with']; end
-		  	#def ignore(model=submodel); model['ignore']; end
+				def submodel(_tag=newtag); get_submodel(_tag) || default_submodel; end
+				def label_or_tag; as_name?(submodel) || newtag; end
 		  	
 				def get_submodel(name)
 					model_elements?(name)
@@ -280,15 +276,15 @@ module Rfm
 					end
 				end
 		    
-	      # Attach new object to current object.
-	      def attach_new_object_master(subm, new_element)
-	      	#puts "Attaching new object '#{_new_tag}:#{new_element.class}' to '#{_tag}:#{subm.class}'"
+	      # Attach new _object to current _object.
+	      def attach_newobjectect_master(subm, new_element)
+	      	#puts "Attaching new _object '#{newtag}:#{new_element.class}' to '#{tag}:#{subm.class}'"
 		      unless attach_element?(subm) == 'none'
 		  			if attach_element?(subm).to_s[/indiv|shar/]
 							merge_with_attributes(label_or_tag, new_element)
-		    		elsif _obj.is_a?(Hash)
+		    		elsif object.is_a?(Hash)
 	  					merge_with_hash(label_or_tag, new_element)
-		    		elsif _obj.is_a? Array
+		    		elsif object.is_a? Array
 							merge_with_array(label_or_tag, new_element)
 		    		else
 		  				merge_with_attributes(label_or_tag, new_element)
@@ -305,19 +301,19 @@ module Rfm
 		    end
 		    
 		    def merge_with_hash(name, element)
-    			if _obj[name]
-  					_obj[name] = merge_elements(_obj[name], element)
+    			if object[name]
+  					object[name] = merge_elements(object[name], element)
   			  else			
-  	  			_obj[name] = element
+  	  			object[name] = element
     			end
 		    end
 		    
 		    # TODO: Does this really need to use merge_elements?
 		    def merge_with_array(name, element)
-					if _obj.size > 0
-						_obj.replace merge_elements(_obj, element)
+					if object.size > 0
+						object.replace merge_elements(object, element)
 					else
-  	  			_obj << element
+  	  			object << element
 	  			end
 		    end
 
@@ -325,7 +321,7 @@ module Rfm
 		    	# delineate_with_hash is the attribute name to match on.
 		    	# current_key/new_key is the actual value of the match element.
 		    	# current_key/new_key is then used as a hash key to contain elements that match on the delineate_with_hash attribute.
-		    	#puts "merge_elements with tags '#{self._tag}/#{label_or_tag}' current_el '#{current_element.class}' and new_el '#{new_element.class}'."
+		    	#puts "merge_elements with tags '#{self.tag}/#{label_or_tag}' current_el '#{current_element.class}' and new_el '#{new_element.class}'."
 	  	  	begin
 		  	    current_key = get_attribute(delineate_with_hash?, current_element)
 		  	    new_key = get_attribute(delineate_with_hash?, new_element)
@@ -357,27 +353,27 @@ module Rfm
 		  	
 		  	# Assign attributes to element.
 		  	# TODO: use attach_attribute? method to determine behavior per-attribute
-				def assign_attributes(attributes=nil, element=_obj, model=_model)
-		      if attributes && !attributes.empty?
-		      	(attributes = DEFAULT_CLASS[attributes]) if attributes.is_a? Array # For nokogiri attributes-as-array
-		      	return if [*ignore?(model)].include?('attributes') && [*model_attributes?(model)].size = 0
+				def assign_attributes(_attributes=nil, element=object, _model=model)
+		      if _attributes && !_attributes.empty?
+		      	(_attributes = DEFAULT_CLASS[_attributes]) if _attributes.is_a? Array # For nokogiri attributes-as-array
+		      	return if [*ignore?(_model)].include?('attributes') && [*model_attributes?(_model)].size = 0
 		      	#puts "Assigning attributes: #{attributes.to_a.join(':')}" if attributes.has_key?('text')
-		        if element.is_a?(Hash) and !attach_attributes?(model)     #!hide_attributes(model)
+		        if element.is_a?(Hash) and !attach_attributes?(_model)     #!hide_attributes(_model)
 		        	#puts "Assigning element attributes for '#{element.class}' #{attributes.to_a.join(':')}"
-		          element.merge!(attributes)
-			      elsif attach_attributes?(model).to_s[/individual/]   #individual_attributes(model)
+		          element.merge!(_attributes)
+			      elsif attach_attributes?(_model).to_s[/individual/]   #individual_attributes(_model)
 			      	#puts "Assigning individual attributes for '#{element.class}' #{attributes.to_a.join(':')}"
-			        attributes.each{|k, v| set_attr_accessor(k, v, element)}
-		        elsif attach_attributes?(model).to_s[/shared/] || attach_attributes?(model).nil?
+			        _attributes.each{|k, v| set_attr_accessor(k, v, element)}
+		        elsif attach_attributes?(_model).to_s[/shared/] || attach_attributes?(_model).nil?
 		        	#puts "Assigning @att attributes for '#{element.class}' #{attributes.to_a.join(':')}"
-			        set_attr_accessor DEFAULT_SHARED_INSTANCE_VAR, attributes, element
+			        set_attr_accessor DEFAULT_SHARED_INSTANCE_VAR, _attributes, element
 			       else
 			       	# Do something here if attach_attributes is 'none'
 			      end
 		      end
 				end
 		    
-		    def get_attribute(name, obj=_obj)
+		    def get_attribute(name, obj=object)
 		    	return unless name
 		    	key = DEFAULT_SHARED_INSTANCE_VAR
 		    	case
@@ -387,7 +383,7 @@ module Rfm
 		    	end
 		    end
 		    
-		    def set_attr_accessor(name, data, obj=_obj)
+		    def set_attr_accessor(name, data, obj=object)
 					create_accessor(name, obj)
 					obj.instance_eval do
 						var = instance_variable_get("@#{name}")
@@ -401,11 +397,11 @@ module Rfm
 					end
 				end
 								
-				def create_accessor(tag, obj=_obj)
-					obj.class.send :attr_accessor, tag unless obj.instance_variables.include?(":@#{tag}")
+				def create_accessor(_tag, obj=object)
+					obj.class.send :attr_accessor, _tag unless obj.instance_variables.include?(":@#{_tag}")
 				end
 				
-		    def clean_members(obj=_obj)
+		    def clean_members(obj=object)
 	    		if obj.is_a?(Hash)
 	    			obj.dup.each do |k,v|
 	    				obj[k] = clean_member(v)
@@ -455,19 +451,24 @@ module Rfm
 		
 		module Handler
 		
-			attr_accessor :stack, :grammar
+			attr_accessor :stack, :template
 			
-			def self.build(io, backend=DEFAULT_BACKEND, grammar=nil, initial_object=DEFAULT_CLASS.new)
+			# 			def self.build(io, backend=DEFAULT_BACKEND, template=nil, initialobjectect=DEFAULT_CLASS.new)
+			# 				backend = decide_backend unless backend
+			# 				backend = (backend.is_a?(String) || backend.is_a?(Symbol)) ? SaxParser.const_get(backend.to_s.capitalize + "Handler") : backend
+			# 			  backend.build(io, template, initialobjectect)
+			# 		  end
+			def self.build(io, template=nil, initialobjectect=DEFAULT_CLASS.new, backend=DEFAULT_BACKEND)
 				backend = decide_backend unless backend
 				backend = (backend.is_a?(String) || backend.is_a?(Symbol)) ? SaxParser.const_get(backend.to_s.capitalize + "Handler") : backend
-			  backend.build(io, grammar, initial_object)
+			  backend.build(io, template, initialobjectect)
 		  end
 		  
 		  def self.included(base)
-		    def base.build(io, grammar=nil, initial_object= DEFAULT_CLASS.new)
-		  		handler = new(grammar, initial_object)
+		    def base.build(io, template=nil, initial_object= DEFAULT_CLASS.new)
+		  		handler = new(template, initial_object)
 		  		handler.run_parser(io)
-		  		#handler.stack[0]._obj
+		  		#handler._stack[0].object
 		  		handler
 		  	end
 		  end # self.included()
@@ -478,34 +479,34 @@ module Rfm
 		  	raise "The xml parser could not find a loadable backend gem: #{$!}"
 		  end
 		  
-		  def initialize(grammar=nil, initial_object= DEFAULT_CLASS.new)
-		  	@stack = []
-		  	@grammar = case
-		  		when grammar.to_s[/\.y.?ml$/i]; (YAML.load_file(grammar))
-		  		when grammar.to_s[/\.xml$/i]; self.class.build(grammar, nil, {'compact'=>true})
-		  		when grammar.to_s[/^<.*>/]; "Convert from xml to Hash - under construction"
-		  		when grammar.is_a?(String); YAML.load grammar
-		  		when grammar.is_a?(Hash); grammar
+		  def initialize(template=nil, initial_object = DEFAULT_CLASS.new)
+		  	@_stack = []
+		  	@template = case
+		  		when template.to_s[/\.y.?ml$/i]; (YAML.load_file(template))
+		  		when template.to_s[/\.xml$/i]; self.class.build(template, nil, {'compact'=>true})
+		  		when template.to_s[/^<.*>/]; "Convert from xml to Hash - under construction"
+		  		when template.is_a?(String); YAML.load template
+		  		when template.is_a?(Hash); template
 		  		else DEFAULT_CLASS.new
 		  	end
 		  	init_element_buffer
-		    set_cursor Cursor.new(@grammar, initial_object, 'TOP')
+		    set_cursor Cursor.new(@template, initial_object, 'top')
 		  end
 		  
 		  def result
-		  	stack[0]._obj if stack[0].is_a? Cursor
+		  	stack[0].object if stack[0].is_a? Cursor
 		  end
 		  
 			def cursor
 				stack.last
 			end
 			
-			def set_cursor(args) # cursor-object
+			def set_cursor(args) # cursor-_object
 				if args.is_a? Cursor
 					stack.push(args)
-					cursor._parent = stack[-2] || stack[0] #stack[0] so methods called on _parent won't bomb.
-					cursor._top = stack[0]
-					cursor._stack = stack
+					cursor.parent = stack[-2] || stack[0] #_stack[0] so methods called on parent won't bomb.
+					cursor.top = stack[0]
+					cursor.stack = stack
 				end
 				cursor
 			end
@@ -515,17 +516,17 @@ module Rfm
 			end
 			
 			def transform(name)
-				return name unless DEFAULT_TAG_TRANSLATION.is_a?(Array)
-				name.to_s.gsub(*DEFAULT_TAG_TRANSLATION)
+				return name unless DEFAULTtag_TRANSLATION.is_a?(Array)
+				name.to_s.gsub(*DEFAULTtag_TRANSLATION)
 			end
 			
 			def init_element_buffer
-		    @element_buffer = {:tag=>nil, :attr=>DEFAULT_CLASS.new}
+		    @element_buffer = {:tag=>nil, :attributes=>DEFAULT_CLASS.new}
 			end
 			
 			def send_element_buffer
 		    if element_buffer?
-          set_cursor cursor.start_el(@element_buffer[:tag], @element_buffer[:attr])
+          set_cursor cursor.start_el(@element_buffer[:tag], @element_buffer[:attributes])
           init_element_buffer
 	      end
 	    end
@@ -536,7 +537,7 @@ module Rfm
 		
 		  # Add a node to an existing element.
 			def _start_element(tag, attributes=nil, *args)
-				#puts "Receiving element '#{tag}' with attributes '#{attributes}'"
+				#puts "Receiving element '#{_tag}' with attributes '#{attributes}'"
 				tag = transform tag
 				send_element_buffer
 				if attributes
@@ -544,7 +545,7 @@ module Rfm
 					attributes = DEFAULT_CLASS[*attributes.collect{|k,v| [transform(k),v] }.flatten]
 					set_cursor cursor.start_el(tag, attributes)
 				else
-				  @element_buffer = {:tag=>tag, :attr => DEFAULT_CLASS.new}
+				  @element_buffer = {:tag=>tag, :attributes => DEFAULT_CLASS.new}
 				end
 			end
 			
@@ -553,7 +554,7 @@ module Rfm
 				#puts "Receiving attribute '#{name}' with value '#{value}'"
 				name = transform name
 		    #cursor.attribute(name,value)
-				@element_buffer[:attr].merge!({name=>value})
+				@element_buffer[:attributes].merge!({name=>value})
 			end
 			
 			# Add 'content' attribute to existing element.
@@ -561,7 +562,7 @@ module Rfm
 				#puts "Receiving text '#{value}'"
 				return unless value.to_s[/[^\s]/]
 				if element_buffer?
-				  @element_buffer[:attr].merge!({DEFAULT_TEXT_LABEL=>value})
+				  @element_buffer[:attributes].merge!({DEFAULT_TEXT_LABEL=>value})
 				  send_element_buffer
 				else
 					cursor.attribute(DEFAULT_TEXT_LABEL, value)
@@ -601,7 +602,7 @@ module Rfm
 
 		class RexmlHandler
 			# Both of these are needed to use rexml streaming parser,
-			# but don't put them here... put them at the top.
+			# but don't put them here... put them at the _top.
 			#require 'rexml/streamlistener'
 			#require 'rexml/document'
 			include REXML::StreamListener
