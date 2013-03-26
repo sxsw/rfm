@@ -70,8 +70,11 @@ module Rfm
 		#     end
     
     def parse(template=nil, initial_object=DEFAULT_CLASS.new, backend=nil)
-    	(template = File.join(File.dirname(__FILE__), '../sax/fmresultset.yml')) unless template
-    	Rfm::SaxParser.build(connect.body, template, initial_object, backend).result
+			#     	(template = File.join(File.dirname(__FILE__), '../sax/fmresultset.yml')) unless template
+			#     	Rfm::SaxParser.parse(connect.body, template, initial_object, backend).result
+    	(template =  'fmresultset.yml') unless template
+    	template = File.join(File.dirname(__FILE__), '../sax/', template)
+    	Rfm::SaxParser.parse(connect.body, template, initial_object, backend).result
     end
 
   private
@@ -208,10 +211,10 @@ module Rfm
 	
 	class Resultset# < Array
 		def attach_parent_objects(cursor)
-			elements = cursor._parent._obj
+			elements = cursor.parent.obj
 			elements.each{|k, v| cursor.set_attr_accessor(k, v) unless k == 'resultset'}
 			# Why is this here? Seems to need it... how does it work?
-			cursor._stack.unshift cursor
+			cursor.stack.unshift cursor
 		end
 	end
 	
@@ -227,7 +230,7 @@ module Rfm
 	class Metadata::Field# < Hash
 		# This easy way requires the 'compact' parsing option to be true.
 		def build_record_data(cursor)
-			cursor._parent._obj.merge!(name => data )
+			cursor.parent.object.merge!(name => data )
 		end
 		# This is the harder way - when not using the 'compact' parsing option.
 		# 		def build_record_data(cursor)

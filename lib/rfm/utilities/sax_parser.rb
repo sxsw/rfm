@@ -183,7 +183,7 @@ module Rfm
 		      #puts "Created new element of class '#{new_element.class}' for _tag '#{tag}'."
 		      
 		      # Assign attributes to new element.
-		      assign_attributes attributes, new_element, subm
+		      assign_attributes _attributes, new_element, subm
 
 					# Attach new element to cursor _object
 					attach_newobjectect_master(subm, new_element)
@@ -480,7 +480,7 @@ module Rfm
 		  end
 		  
 		  def initialize(template=nil, initial_object = DEFAULT_CLASS.new)
-		  	@_stack = []
+		  	@stack = []
 		  	@template = case
 		  		when template.to_s[/\.y.?ml$/i]; (YAML.load_file(template))
 		  		when template.to_s[/\.xml$/i]; self.class.build(template, nil, {'compact'=>true})
@@ -489,6 +489,8 @@ module Rfm
 		  		when template.is_a?(Hash); template
 		  		else DEFAULT_CLASS.new
 		  	end
+		  	#(@template = @template.values[0]) if @template.size == 1
+		  	#y @template
 		  	init_element_buffer
 		    set_cursor Cursor.new(@template, initial_object, 'top')
 		  end
