@@ -72,6 +72,14 @@ require 'nokogiri'
 # TODO: Block attachment methods from seeing parent if parent isn't the current objects true parent (how?).
 # TODO: Handle attach: hash better (it's not specifically handled, but declaring it will block a parents influence).
 # TODO: CaseInsensitiveHash/IndifferentAccess is not working for sax parser.
+# TODO: Give the yml (and xml) doc a top-level hash like "fmresultset" or "fmresultset_yml" or "fmresultset_xml",
+#       then you have a label to refer to it if you load several config docs at once (like into a Rfm::SaxParser::TEMPLATES constant).
+# TODO: Load up all config docs when Rfm loads, or when Rfm::SaxParser loads.
+# TODO: Move SaxParser::Handler class methods to SaxParser, so you can do Rfm::SaxParser.parse(io, backend, template, initial_object)
+# TODO: Switch args order in .build methods to (io, template, initial_object, backend)
+# TODO: Change "grammar" to "template" in all code
+# TODO: Change 'cursor._' methods to something more readable, since they will be used in Rfm and possibly user models.
+# TODO: Split off template loading into load_templates and/or get_templates methods.
 
 
 
@@ -474,6 +482,7 @@ module Rfm
 		  	@stack = []
 		  	@grammar = case
 		  		when grammar.to_s[/\.y.?ml$/i]; (YAML.load_file(grammar))
+		  		when grammar.to_s[/\.xml$/i]; self.class.build(grammar, nil, {'compact'=>true})
 		  		when grammar.to_s[/^<.*>/]; "Convert from xml to Hash - under construction"
 		  		when grammar.is_a?(String); YAML.load grammar
 		  		when grammar.is_a?(Hash); grammar
