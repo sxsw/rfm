@@ -85,14 +85,12 @@ require 'nokogiri'
 # done: Change 'cursor._' methods to something more readable, since they will be used in Rfm and possibly user models.
 # TODO: Split off template loading into load_templates and/or get_templates methods.
 # TODO: Something is downcasing somewhere - see the fmpxmllayout response. Looks like 'compact' might have something to do with it.
-# TODO: Make attribute attachment default to individual.
-# TODO: 'attach: shared' doesnt work yet for elements.
+# done: Make attribute attachment default to individual.
+# done: 'attach: shared' doesnt work yet for elements.
 # TODO: Arrays should always get elements attached to their records and attributes attached to their instance variables. 
-# TODO: Merge 'ignore: self, elements, attributes' config into 'attach: ignore, attach_elements: ignore, attach_attributes: ignore'.
-#• TODO: Consider having one single group of methods to attach all objects (elements OR attributes OR text) to any given parent object.
-#
-#• attach: shared, instance, hash, array, cursor<only>, none
-#
+# done: Merge 'ignore: self, elements, attributes' config into 'attach: ignore, attach_elements: ignore, attach_attributes: ignore'.
+# done: Consider having one single group of methods to attach all objects (elements OR attributes OR text) to any given parent object.
+# TODO: May need to store 'ignored' models in new cursor, with the parent object instead of the new object.
 
 =begin
 attach_to_what?(new_object, name, new_model, type<element/attribute>)
@@ -200,7 +198,7 @@ module Rfm
 		      subm = submodel
 		      
 		    	if attachment_prefs(model, subm, 'element')=='none'
-		    		assign_attributes(_attributes, object, model, subm)
+		    		assign_attributes(_attributes, object, subm, subm)
 		    		return
 		    	end		      
 		      
@@ -216,7 +214,7 @@ module Rfm
 		      #puts "Created new element of class '#{new_element.class}' for _tag '#{tag}'."
 		      
 		      # Assign attributes to new element.
-		      assign_attributes(_attributes, new_element, model, subm)
+		      assign_attributes(_attributes, new_element, subm, subm)
 
 					# Attach new element to cursor _object
 					#attach_new_object_master(subm, new_element)
@@ -257,8 +255,8 @@ module Rfm
 				end
 
 				def attach_new_object(base_object, new_object, name, base_model, new_model, type)
-					puts "attach_new_object: BO '#{base_object.class}' NO '#{new_object.class}' N '#{name}' BM '#{base_model['name'] rescue ''}' NM '#{new_model['name'] rescue ''}' T '#{type}'"
 					assignment = attach_to_what?(base_object, new_object, name, base_model, new_model, type)
+					#puts "attach_new_object: BO '#{base_object.class}' BM '#{base_model['name'] rescue ''}' NO '#{new_object.class}' NM '#{new_model['name'] rescue ''}' N '#{name}' T '#{type}' p '#{assignment}'"
 					case assignment;
 						when 'shared'; merge_with_shared(base_object, new_object, name, new_model)
 						when 'instance'; merge_with_instance(base_object, new_object, name, new_model)
@@ -279,8 +277,8 @@ module Rfm
 					
 					case
 						when prefs=='shared'; 'shared'
-						when prefs=='instance' || base_object.is_a?(Array) || (type=='attribute' && base_object.is_a?(Array)); 'instance'
-						when base_object.is_a?(Hash) && prefs.to_s[/hash|^$/]; 'hash'
+						when prefs=='instance' || (type=='attribute' && base_object.is_a?(Array)) || (prefs.nil? && !base_object.is_a?(Hash)); 'instance'
+						when base_object.is_a?(Hash) && (prefs.nil? || prefs.to_s[/hash/]); 'hash'
 						when base_object.is_a?(Array) && (type='element' || prefs=='array'); 'array'
 						when prefs=='cursor'; 'cursor'
 						when prefs=='none' ; 'none'

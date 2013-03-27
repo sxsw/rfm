@@ -7,13 +7,19 @@ elements:
 - name: fmresultset
   attach: none
   attach_attributes: shared
+- name: product
+  attach: shared
+- name: error
+  attach: shared
+  compact: true
 - name: datasource
   attach: none
-  class: Rfm::Datasource
+  #class: Rfm::Datasource
   attach_attributes: shared
 - name:  metadata
   attach: none
 - name: field_definition
+  delineate_on_hash: name
   as_name: field_meta
 - name: portal_definition
   as_name: portal_meta
@@ -27,8 +33,8 @@ elements:
   - name: field
     class: Rfm::Metadata::Field
     compact: true
-    #attach: cursor
-    #before_close: :build_record_data
+    attach: cursor
+    before_close: :build_record_data
   - name: relatedset
     class: Rfm::RelatedSet
     attach: instance
@@ -41,8 +47,8 @@ elements:
       - name: field
         compact: true
         class: Rfm::Metadata::Field
-        #attach: cursor
-        #before_close: :build_record_data
+        attach: cursor
+        before_close: :build_record_data
 
 
 # ---

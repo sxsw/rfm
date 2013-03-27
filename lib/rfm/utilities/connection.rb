@@ -219,6 +219,7 @@ module Rfm
 	end
 	
 	class Record# < Hash
+		# These should just be temporary.
 		def [](*args)
 			super
 		end
