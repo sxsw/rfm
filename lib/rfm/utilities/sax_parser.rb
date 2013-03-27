@@ -89,8 +89,10 @@ require 'nokogiri'
 # TODO: 'attach: shared' doesnt work yet for elements.
 # TODO: Arrays should always get elements attached to their records and attributes attached to their instance variables. 
 # TODO: Merge 'ignore: self, elements, attributes' config into 'attach: ignore, attach_elements: ignore, attach_attributes: ignore'.
-# TODO: Consider having one single group of methods to attach all objects (elements OR attributes OR text) to any given parent object.
-# TODO: Change 'attach: none' to 'attach: hide'
+#• TODO: Consider having one single group of methods to attach all objects (elements OR attributes OR text) to any given parent object.
+#
+#• attach: shared, instance, hash, array, cursor<only>, none
+#
 
 
 
@@ -194,7 +196,8 @@ module Rfm
 		      assign_attributes _attributes, new_element, subm
 
 					# Attach new element to cursor _object
-					attach_new_object_master(subm, new_element)
+					#attach_new_object_master(subm, new_element)
+					attach_new_object(submodel, new_element, newtag, :element)
 		  		
 		  		returntag = newtag
 		  		self.newtag = nil
@@ -220,39 +223,133 @@ module Rfm
 		    end
 
 
+
+				#####  MERGE METHODS  #####
+				
+		  	# Assign attributes to element.
+				def assign_attributes(_attributes=nil)
+		      if _attributes && !_attributes.empty?
+						_attributes.each{|k,v| attach_new_object(attribute_model_if_exist, v, k, :attribute)}
+		      end
+				end
+
+				def attach_new_object(new_model, new_object, name, type)
+					assignment = attach_to_what?(new_object, name, new_model, type)
+					case assignment;
+						when shared; merge_with_shared()
+						when instance; merge_with_instance()
+						when hash; merge_with_hash()
+						when array; merge_with_array()
+					end
+				end
+
+				# =begin
+				# attach_to_what?(new_object, new_tag, new_model, type<element/attribute>)
+				# 	given:
+				# 		new_object attach: shared, instance, hash, array, cursor, none
+				# 		base_object attach_elements: shared, instance, hash, array, cursor, none (if new_object is element)
+				# 		base_object attach_attributes: shared, instance, hash, array, cursor, none (if new_object is attribute)
+				# 		base_object_is_a: hash, array, other
+				# 		new_object_is_a: element, attribute <type>
+				# 		
+				# 	atch_pref = case
+				# 		when new_obj_is_a element; new_obj_atch || base_obj_atch_elm
+				# 		when new_obj_is_a attribute; new_obj_atch || base_obj_atch_elm
+				# 	end
+				# 	case
+				# 		is_shared if		(atch_pref==shared)
+				# 		is_instance_if	(atch_pref==inst || !base_obj_is_a[/hash|array/] || (new_obj_is_a==attribute && base_obj_is_a==array))
+				# 		is_hash_if			(base_obj_is_a==hash && atch_pref[/hash|nil/])
+				# 		is_array_if			(base_obj_is_a==array && (new_obj_is_a==element or atch_pref==array)
+				# 		is_cursor_if		(atch_pref=cursor)
+				# 		is_none_if			(atch_pref=none)
+				# 	end
+				# end
+				# 
+				# =end
+
+		    def merge_with_shared(name, element)
+		    	ivg(DEFAULT_SHARED_INSTANCE_VAR) || set_attr_accessor(DEFAULT_SHARED_INSTANCE_VAR, {})
+  			  if ivg(DEFAULT_SHARED_INSTANCE_VAR)[name]
+					  ivg(DEFAULT_SHARED_INSTANCE_VAR)[name] = merge_objects(ivg(name), element)
+					else
+					  ivg(DEFAULT_SHARED_INSTANCE_VAR)[name] = element
+				  end
+		    end
+		    
+		    def merge_with_instance(name, element)
+  			  if ivg(name)
+					  ivs(name, merge_objects(ivg(name), element))
+					else
+					  set_attr_accessor(name, element)
+				  end
+		    end
+		    
+		    def merge_with_hash(name, element)
+    			if object[name]
+  					object[name] = merge_objects(object[name], element)
+  			  else			
+  	  			object[name] = element
+    			end
+		    end
+		    
+		    # TODO: Does this really need to use merge_elements?
+		    def merge_with_array(name, element)
+					if object.size > 0
+						object.replace merge_objects(object, element)
+					else
+  	  			object << element
+	  			end
+		    end
+
+		    def merge_objects(current_object, new_object)
+		    	# delineate_with_hash is the attribute name to match on.
+		    	# current_key/new_key is the actual value of the match object.
+		    	# current_key/new_key is then used as a hash key to contain objects that match on the delineate_with_hash attribute.
+		    	#puts "merge_objects with tags '#{self.tag}/#{label_or_tag}' current_el '#{current_object.class}' and new_el '#{new_object.class}'."
+	  	  	begin
+		  	    current_key = get_attribute(delineate_with_hash?(submodel), current_object)
+		  	    new_key = get_attribute(delineate_with_hash?(submodel), new_object)
+		  	    #puts "merge_objects: tag '#{tag}', new '#{newtag}', delineate-with-hash '#{delineate_with_hash?(submodel)}', current-key '#{current_key}', new-key '#{new_key}'"
+		  	    
+		  	    key_state = case
+		  	    	when !current_key.to_s.empty? && current_key == new_key; 5
+		  	    	when !current_key.to_s.empty? && !new_key.to_s.empty?; 4
+		  	    	when current_key.to_s.empty? && new_key.to_s.empty?; 3
+		  	    	when !current_key.to_s.empty?; 2
+		  	    	when !new_key.to_s.empty?; 1
+		  	    	else 0
+		  	    end
+		  	  
+		  	  	case key_state
+			  	  	when 5; {current_key => [current_object, new_object]}
+			  	  	when 4; {current_key => current_object, new_key => new_object}
+			  	  	when 3; [current_object, new_object].flatten
+			  	  	when 2; {current_key => ([*current_object] << new_object)}
+			  	  	when 1; current_object.merge(new_key=>new_object)
+			  	  	else    [current_object, new_object].flatten
+		  	  	end
+		  	  	
+	  	    rescue
+	  	    	puts "Error: could not merge with hash: #{$!}"
+	  	    	([*current_object] << new_object) if current_object.is_a?(Array)
+	  	    end
+		    end # merge_objects
+
+
+
+
 		    #####  UTILITY  #####
 		
 			  def get_constant(klass)
 			  	self.class.get_constant(klass)
 			  end
 			  
-			  def attach_element?(_model=model)
-			  	crnt, prnt = attach?(_model), attach_elements?(parent.model)
-					crnt || prnt
-			  end
-			  
-			  def ignore_element?(_model=model)
-			  	crnt, prnt = [*ignore?(_model)].include?('self'), [*ignore?(parent.model)].include?('elements')
-			  	((_model['name'] != newtag) && prnt) || crnt
-			  end
-			  
-			  # TODO: Implement this in attributes methods.
-			  def attach_attribute?(name, _model=model)
-			  	crnt, prnt = model_attributes?(name), attach_attributes?(parent.model)
-			  	crnt['attach'] || prnt
-			  end
-				
-				# TODO: Implement this in attributes methods.
-			  def ignore_attribute?(name, _model=model)
-				  crnt, prnt = model_attributes?(name), [*ignore?(parent.model)].include?('attributes')
-			  	(crnt['name'] != newtag && prnt) || (crnt['name'] && [*crnt['name']['ignore']].include?('self'))
-			  end			  	
-
 			  
 			  # Methods for current _model
 			  def ivg(name, _object=object); _object.instance_variable_get "@#{name}"; end
 			  def ivs(name, value, _object=object); _object.instance_variable_set "@#{name}", value; end
-			  def ignore?(_model=model);  [*_model['ignore']] if _model['ignore']; end
+			  #def ignore?(_model=model);  [*_model['ignore']] if _model['ignore']; end
 			  def model_elements?(which=nil, _model=model); (_model['elements'] && which ? _model['elements'].find{|e| e['name']==which} : _model['elements']) ; end
 			  def model_attributes?(which=nil, _model=model); (_model['attributes'] && which ? _model['attributes'].find{|a| a['name']==which} : _model['attributes']) ; end
 			  def depth?(_model=model); _model['depth']; end
@@ -283,121 +380,7 @@ module Rfm
 						DEFAULT_CLASS.new
 					end
 				end
-		    
-	      # Attach new _object to current _object.
-	      def attach_new_object_master(subm, new_element)
-	      	#puts "Attaching new _object '#{newtag}:#{new_element.class}' to '#{tag}:#{subm.class}'"
-		      unless attach_element?(subm) == 'none'
-		  			if attach_element?(subm).to_s[/indiv|shar/]
-							merge_with_attributes(label_or_tag, new_element)
-		    		elsif object.is_a?(Hash)
-	  					merge_with_hash(label_or_tag, new_element)
-		    		elsif object.is_a? Array
-							merge_with_array(label_or_tag, new_element)
-		    		else
-		  				merge_with_attributes(label_or_tag, new_element)
-		    		end
-		      end
-		    end
-
-		    def merge_with_attributes(name, element)
-  			  if ivg(name)
-					  ivs(name, merge_elements(ivg(name), element))
-					else
-					  set_attr_accessor(name, element)
-				  end
-		    end
-		    
-		    def merge_with_hash(name, element)
-    			if object[name]
-  					object[name] = merge_elements(object[name], element)
-  			  else			
-  	  			object[name] = element
-    			end
-		    end
-		    
-		    # TODO: Does this really need to use merge_elements?
-		    def merge_with_array(name, element)
-					if object.size > 0
-						object.replace merge_elements(object, element)
-					else
-  	  			object << element
-	  			end
-		    end
-
-		    def merge_elements(current_element, new_element)
-		    	# delineate_with_hash is the attribute name to match on.
-		    	# current_key/new_key is the actual value of the match element.
-		    	# current_key/new_key is then used as a hash key to contain elements that match on the delineate_with_hash attribute.
-		    	#puts "merge_elements with tags '#{self.tag}/#{label_or_tag}' current_el '#{current_element.class}' and new_el '#{new_element.class}'."
-	  	  	begin
-		  	    current_key = get_attribute(delineate_with_hash?(submodel), current_element)
-		  	    new_key = get_attribute(delineate_with_hash?(submodel), new_element)
-		  	    #puts "merge_elements: tag '#{tag}', new '#{newtag}', delineate-with-hash '#{delineate_with_hash?(submodel)}', current-key '#{current_key}', new-key '#{new_key}'"
-		  	    
-		  	    key_state = case
-		  	    	when !current_key.to_s.empty? && current_key == new_key; 5
-		  	    	when !current_key.to_s.empty? && !new_key.to_s.empty?; 4
-		  	    	when current_key.to_s.empty? && new_key.to_s.empty?; 3
-		  	    	when !current_key.to_s.empty?; 2
-		  	    	when !new_key.to_s.empty?; 1
-		  	    	else 0
-		  	    end
-		  	  
-		  	  	case key_state
-			  	  	when 5; {current_key => [current_element, new_element]}
-			  	  	when 4; {current_key => current_element, new_key => new_element}
-			  	  	when 3; [current_element, new_element].flatten
-			  	  	when 2; {current_key => ([*current_element] << new_element)}
-			  	  	when 1; current_element.merge(new_key=>new_element)
-			  	  	else    [current_element, new_element].flatten
-		  	  	end
-		  	  	
-	  	    rescue
-	  	    	puts "Error: could not merge with hash: #{$!}"
-	  	    	([*current_element] << new_element) if current_element.is_a?(Array)
-	  	    end
-		    end # merge_elements
-		  	
-# 		  	# Assign attributes to element.
-# 		  	# TODO: use attach_attribute? method to determine behavior per-attribute
-# 				def assign_attributes(_attributes=nil, element=object, _model=model)
-# 		      if _attributes && !_attributes.empty?
-# 		      	(_attributes = DEFAULT_CLASS[_attributes]) if _attributes.is_a? Array # For nokogiri attributes-as-array
-# 		      	return if [*ignore?(_model)].include?('attributes') && [*model_attributes?(_model)].size = 0
-# 		      	#puts "Assigning attributes: #{attributes.to_a.join(':')}" if attributes.has_key?('text')
-# 		        if element.is_a?(Hash) and !attach_attributes?(_model)     #!hide_attributes(_model)
-# 		        	#puts "Assigning element attributes for '#{element.class}' #{attributes.to_a.join(':')}"
-# 		          element.merge!(_attributes)
-# 			      elsif attach_attributes?(_model).to_s[/individual/]   #individual_attributes(_model)
-# 			      	#puts "Assigning individual attributes for '#{element.class}' #{attributes.to_a.join(':')}"
-# 			        _attributes.each{|k, v| set_attr_accessor(k, v, element)}
-# 		        elsif attach_attributes?(_model).to_s[/shared/] || attach_attributes?(_model).nil?
-# 		        	#puts "Assigning @att attributes for '#{element.class}' #{attributes.to_a.join(':')}"
-# 			        set_attr_accessor DEFAULT_SHARED_INSTANCE_VAR, _attributes, element
-# 			       else
-# 			       	# Do something here if attach_attributes is 'none'
-# 			      end
-# 		      end
-# 				end
 				
-		  	# Assign attributes to element.
-		  	# TODO: use attach_attribute? method to determine behavior per-attribute
-				def assign_attributes(_attributes=nil, element=object, _model=model)
-		      if _attributes && !_attributes.empty?
-		      	(_attributes = DEFAULT_CLASS[_attributes]) if _attributes.is_a? Array # For nokogiri attributes-as-array
-		      	return if [*ignore?(_model)].include?('attributes') && [*model_attributes?(_model)].size = 0 || attach_attributes?(_model).to_s[/none/]
-			      if attach_attributes?(_model).to_s[/individual/] || (attach_attributes?(_model).nil? && !element.is_a?(Hash))
-			        _attributes.each{|k, v| set_attr_accessor(k, v, element)}		        
-		        elsif attach_attributes?(_model).to_s[/shared/]
-			        set_attr_accessor DEFAULT_SHARED_INSTANCE_VAR, _attributes, element		        
-		        elsif element.is_a?(Hash)
-		          element.merge!(_attributes)
-			      else
-			       	puts "There may have been an error attaching attributes to '#{element.class}'."
-			      end
-		      end
-				end
 		    
 		    def get_attribute(name, obj=object)
 		    	return unless name
