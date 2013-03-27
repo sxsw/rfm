@@ -88,7 +88,9 @@ require 'nokogiri'
 # TODO: Make attribute attachment default to individual.
 # TODO: 'attach: shared' doesnt work yet for elements.
 # TODO: Arrays should always get elements attached to their records and attributes attached to their instance variables. 
-
+# TODO: Merge 'ignore: self, elements, attributes' config into 'attach: ignore, attach_elements: ignore, attach_attributes: ignore'.
+# TODO: Consider having one single group of methods to attach all objects (elements OR attributes OR text) to any given parent object.
+# TODO: Change 'attach: none' to 'attach: hide'
 
 
 
