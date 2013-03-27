@@ -3,35 +3,30 @@
 
 
 ---
-#compact: true
 attach_elements: individual
 elements:
 - name: fmresultset
-  class: Rfm::FmResultset
-  ignore: ['self']
+  ignore: self
+  attach_attributes: shared
 - name: datasource
+  ignore: self
   class: Rfm::Datasource
+  attach_attributes: shared
 - name:  metadata
-  class: Rfm::Meta
-  elements:
-  - name: field_definition
-    as_name: field_meta
-    attach: hash
-  - name: portal_definition
-    as_name: portal_meta
-    attach: hash
+  ignore: self
+- name: field_definition
+  as_name: field_meta
+- name: portal_definition
+  as_name: portal_meta
 - name: resultset
-  attach_attributes: individual
-  ignore: ['self']
+  ignore: self
+  attach_attributes: shared
 - name: record
   class: Rfm::Record
-  attach_attributes: individual
-  attach: hash
-  #initialize: [new, _obj]
+  attach: array
   elements:
   - name: field
     class: Rfm::Metadata::Field
-    attach_attributes: individual
     compact: true
     attach: none
     before_close: :build_record_data
@@ -43,68 +38,118 @@ elements:
     elements:
     - name: record
       class: Rfm::Record
-      attach_attributes: individual
       elements:
       - name: field
         compact: true
         class: Rfm::Metadata::Field
         attach: none
         before_close: :build_record_data
+
+
+
+# ---
+# #compact: true
+# attach_elements: individual
+# elements:
+# - name: fmresultset
+#   class: Rfm::FmResultset
+#   ignore: ['self']
+# - name: datasource
+#   class: Rfm::Datasource
+# - name:  metadata
+#   class: Rfm::Meta
+#   elements:
+#   - name: field_definition
+#     as_name: field_meta
+#     attach: hash
+#   - name: portal_definition
+#     as_name: portal_meta
+#     attach: hash
+# - name: resultset
+#   attach_attributes: individual
+#   ignore: ['self']
+# - name: record
+#   class: Rfm::Record
+#   attach_attributes: individual
+#   attach: hash
+#   #initialize: [new, _obj]
+#   elements:
+#   - name: field
+#     class: Rfm::Metadata::Field
+#     attach_attributes: individual
+#     compact: true
+#     attach: none
+#     before_close: :build_record_data
+#   - name: relatedset
+#     class: Rfm::RelatedSet
+#     attach: individual
+#     as_name: portals
+#     delineate_with_hash: table
+#     elements:
+#     - name: record
+#       class: Rfm::Record
+#       attach_attributes: individual
+#       elements:
+#       - name: field
+#         compact: true
+#         class: Rfm::Metadata::Field
+#         attach: none
+#         before_close: :build_record_data
 
 
 # This works great!
----
-compact: true
-elements:
-- name: fmresultset
-  class: Rfm::FmResultset
-  attach: none
-  #ignore: [self]
-  elements:
-  - name: datasource
-    class: Rfm::Datasource
-  - name:  metadata
-    class: Rfm::Meta
-    #attach: none
-    #before_close: attach_meta_objects_to_resultset
-    elements:
-    - name: field_definition
-      as_name: field_meta
-    - name: portal_definition
-      as_name: portal_meta
-  - name: resultset
-    initialize: [new, _top._obj]
-    #ignore: [self]
-    class: Rfm::Resultset
-    attach_attributes: individual
-    #before_close: :attach_parent_objects
-    elements:
-    - name: record
-      class: Rfm::Record
-      attach_attributes: individual
-      #initialize: [new, _obj]
-      elements:
-      - name: field
-        class: Rfm::Metadata::Field
-        attach_attributes: individual
-        compact: true
-        attach: none
-        before_close: :build_record_data
-      - name: relatedset
-        class: Rfm::RelatedSet
-        attach: individual
-        as_name: portals
-        delineate_with_hash: table
-        elements:
-        - name: record
-          class: Rfm::Record
-          attach_attributes: individual
-          elements:
-          - name: field
-            compact: true
-            class: Rfm::Metadata::Field
-            attach: none
-            before_close: :build_record_data
+# ---
+# compact: true
+# elements:
+# - name: fmresultset
+#   class: Rfm::FmResultset
+#   attach: none
+#   #ignore: [self]
+#   elements:
+#   - name: datasource
+#     class: Rfm::Datasource
+#   - name:  metadata
+#     class: Rfm::Meta
+#     #attach: none
+#     #before_close: attach_meta_objects_to_resultset
+#     elements:
+#     - name: field_definition
+#       as_name: field_meta
+#     - name: portal_definition
+#       as_name: portal_meta
+#   - name: resultset
+#     initialize: [new, _top._obj]
+#     #ignore: [self]
+#     class: Rfm::Resultset
+#     attach_attributes: individual
+#     #before_close: :attach_parent_objects
+#     elements:
+#     - name: record
+#       class: Rfm::Record
+#       attach_attributes: individual
+#       #initialize: [new, _obj]
+#       elements:
+#       - name: field
+#         class: Rfm::Metadata::Field
+#         attach_attributes: individual
+#         compact: true
+#         attach: none
+#         before_close: :build_record_data
+#       - name: relatedset
+#         class: Rfm::RelatedSet
+#         attach: individual
+#         as_name: portals
+#         delineate_with_hash: table
+#         elements:
+#         - name: record
+#           class: Rfm::Record
+#           attach_attributes: individual
+#           elements:
+#           - name: field
+#             compact: true
+#             class: Rfm::Metadata::Field
+#             attach: none
+#             before_close: :build_record_data
 
 # ---
 # individual_attributes:

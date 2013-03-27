@@ -396,13 +396,13 @@ module Rfm
   	#::DEFAULT_CLASS = Hash
     # From Rfm::Server
     def load_layout_test
-      Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse('fmpxmllayout.yml', self, 'libxml')
+      Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse('fmpxmllayout.yml', self)
     end
     
     def load_layout
       @loaded = true
       #fmpxmllayout = db.server.load_layout(self)
-      doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse
+      doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse('fmpxmllayout.yml', self)
       puts "Layout load result: #{doc.class}"
       return
       #doc = XmlParser.new(fmpxmllayout.body, :namespace=>false, :parser=>server.state[:parser])

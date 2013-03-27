@@ -1,32 +1,30 @@
 #!/usr/bin/env ruby
 
 ---
-attach_elements: individual
 elements:
 - name: FMPXMLLAYOUT
-  ignore: ['self']
+  ignore: self
+  attach_attributes: shared
 - name: ERRORCODE
   as_name: error
+  compact: true
 - name: PRODUCT
-  as_name: product
+  ignore: self
+  attach_attributes: shared
 - name: LAYOUT
-  ignore: [self]
-- name: DATABASE
-  as_name: database
-- name: NAME
-  as_name: name
+  ignore: self
+  attach_attributes: shared
 - name: FIELD
   class: Rfm::Metadata::FieldControl
   as_name: field_controls
   delineate_with_hash: NAME
-  attach: individual
-  attach_attributes: individual
   elements:
   - name: STYLE
-    attach_attributes: individual
-    ignore: [self]
+    ignore: self
 - name: VALUELISTS
-  as_name: valuelists
+  ignore: self
+- name: VALUELIST
+  as_name: value_lists
 
 
 

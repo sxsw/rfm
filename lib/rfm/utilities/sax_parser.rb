@@ -7,6 +7,10 @@
 #     <optional: parsing-backend-lable or custom-backend-handler>,
 #     <optional: configuration-yml-file or yml-string or config-hash>
 #   )
+#
+# Note: 'attach: none' puts the object in the cursor & stack but does not attach it to the parent.
+#       'ignore: self' prevents the object from entering the cursor or stack.
+#				Both of these will still allow processing of attributes and subelements.
 #   
 # Examples:
 #   r = Rfm::SaxParser::Handler.build('some/file.xml')  # => defaults to best xml backend with no parsing configuration.
@@ -82,6 +86,8 @@ require 'nokogiri'
 # TODO: Split off template loading into load_templates and/or get_templates methods.
 # TODO: Something is downcasing somewhere - see the fmpxmllayout response. Looks like 'compact' might have something to do with it.
 # TODO: Make attribute attachment default to individual.
+# TODO: 'attach: shared' doesnt work yet for elements.
+# TODO: Arrays should always get elements attached to their records and attributes attached to their instance variables. 
 
 
 
@@ -186,7 +192,7 @@ module Rfm
 		      assign_attributes _attributes, new_element, subm
 
 					# Attach new element to cursor _object
-					attach_newobjectect_master(subm, new_element)
+					attach_new_object_master(subm, new_element)
 		  		
 		  		returntag = newtag
 		  		self.newtag = nil
@@ -244,7 +250,7 @@ module Rfm
 			  # Methods for current _model
 			  def ivg(name, _object=object); _object.instance_variable_get "@#{name}"; end
 			  def ivs(name, value, _object=object); _object.instance_variable_set "@#{name}", value; end
-			  def ignore?(_model=model); _model['ignore']; end
+			  def ignore?(_model=model);  [*_model['ignore']] if _model['ignore']; end
 			  def model_elements?(which=nil, _model=model); (_model['elements'] && which ? _model['elements'].find{|e| e['name']==which} : _model['elements']) ; end
 			  def model_attributes?(which=nil, _model=model); (_model['attributes'] && which ? _model['attributes'].find{|a| a['name']==which} : _model['attributes']) ; end
 			  def depth?(_model=model); _model['depth']; end
@@ -277,7 +283,7 @@ module Rfm
 				end
 		    
 	      # Attach new _object to current _object.
-	      def attach_newobjectect_master(subm, new_element)
+	      def attach_new_object_master(subm, new_element)
 	      	#puts "Attaching new _object '#{newtag}:#{new_element.class}' to '#{tag}:#{subm.class}'"
 		      unless attach_element?(subm) == 'none'
 		  			if attach_element?(subm).to_s[/indiv|shar/]
@@ -325,7 +331,7 @@ module Rfm
 	  	  	begin
 		  	    current_key = get_attribute(delineate_with_hash?(submodel), current_element)
 		  	    new_key = get_attribute(delineate_with_hash?(submodel), new_element)
-		  	    puts "merge_elements: tag '#{tag}', new '#{newtag}', delineate-with-hash '#{delineate_with_hash?(submodel)}', current-key '#{current_key}', new-key '#{new_key}'"
+		  	    #puts "merge_elements: tag '#{tag}', new '#{newtag}', delineate-with-hash '#{delineate_with_hash?(submodel)}', current-key '#{current_key}', new-key '#{new_key}'"
 		  	    
 		  	    key_state = case
 		  	    	when !current_key.to_s.empty? && current_key == new_key; 5
@@ -351,24 +357,42 @@ module Rfm
 	  	    end
 		    end # merge_elements
 		  	
+# 		  	# Assign attributes to element.
+# 		  	# TODO: use attach_attribute? method to determine behavior per-attribute
+# 				def assign_attributes(_attributes=nil, element=object, _model=model)
+# 		      if _attributes && !_attributes.empty?
+# 		      	(_attributes = DEFAULT_CLASS[_attributes]) if _attributes.is_a? Array # For nokogiri attributes-as-array
+# 		      	return if [*ignore?(_model)].include?('attributes') && [*model_attributes?(_model)].size = 0
+# 		      	#puts "Assigning attributes: #{attributes.to_a.join(':')}" if attributes.has_key?('text')
+# 		        if element.is_a?(Hash) and !attach_attributes?(_model)     #!hide_attributes(_model)
+# 		        	#puts "Assigning element attributes for '#{element.class}' #{attributes.to_a.join(':')}"
+# 		          element.merge!(_attributes)
+# 			      elsif attach_attributes?(_model).to_s[/individual/]   #individual_attributes(_model)
+# 			      	#puts "Assigning individual attributes for '#{element.class}' #{attributes.to_a.join(':')}"
+# 			        _attributes.each{|k, v| set_attr_accessor(k, v, element)}
+# 		        elsif attach_attributes?(_model).to_s[/shared/] || attach_attributes?(_model).nil?
+# 		        	#puts "Assigning @att attributes for '#{element.class}' #{attributes.to_a.join(':')}"
+# 			        set_attr_accessor DEFAULT_SHARED_INSTANCE_VAR, _attributes, element
+# 			       else
+# 			       	# Do something here if attach_attributes is 'none'
+# 			      end
+# 		      end
+# 				end
+				
 		  	# Assign attributes to element.
 		  	# TODO: use attach_attribute? method to determine behavior per-attribute
 				def assign_attributes(_attributes=nil, element=object, _model=model)
 		      if _attributes && !_attributes.empty?
 		      	(_attributes = DEFAULT_CLASS[_attributes]) if _attributes.is_a? Array # For nokogiri attributes-as-array
-		      	return if [*ignore?(_model)].include?('attributes') && [*model_attributes?(_model)].size = 0
-		      	#puts "Assigning attributes: #{attributes.to_a.join(':')}" if attributes.has_key?('text')
-		        if element.is_a?(Hash) and !attach_attributes?(_model)     #!hide_attributes(_model)
-		        	#puts "Assigning element attributes for '#{element.class}' #{attributes.to_a.join(':')}"
+		      	return if [*ignore?(_model)].include?('attributes') && [*model_attributes?(_model)].size = 0 || attach_attributes?(_model).to_s[/none/]
+			      if attach_attributes?(_model).to_s[/individual/] || (attach_attributes?(_model).nil? && !element.is_a?(Hash))
+			        _attributes.each{|k, v| set_attr_accessor(k, v, element)}		        
+		        elsif attach_attributes?(_model).to_s[/shared/]
+			        set_attr_accessor DEFAULT_SHARED_INSTANCE_VAR, _attributes, element		        
+		        elsif element.is_a?(Hash)
 		          element.merge!(_attributes)
-			      elsif attach_attributes?(_model).to_s[/individual/]   #individual_attributes(_model)
-			      	#puts "Assigning individual attributes for '#{element.class}' #{attributes.to_a.join(':')}"
-			        _attributes.each{|k, v| set_attr_accessor(k, v, element)}
-		        elsif attach_attributes?(_model).to_s[/shared/] || attach_attributes?(_model).nil?
-		        	#puts "Assigning @att attributes for '#{element.class}' #{attributes.to_a.join(':')}"
-			        set_attr_accessor DEFAULT_SHARED_INSTANCE_VAR, _attributes, element
-			       else
-			       	# Do something here if attach_attributes is 'none'
+			      else
+			       	puts "There may have been an error attaching attributes to '#{element.class}'."
 			      end
 		      end
 				end
