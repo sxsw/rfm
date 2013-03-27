@@ -3,16 +3,16 @@
 ---
 elements:
 - name: FMPXMLLAYOUT
-  ignore: self
+  attach: none
   attach_attributes: shared
 - name: ERRORCODE
   as_name: error
   compact: true
 - name: PRODUCT
-  ignore: self
+  attach: none
   attach_attributes: shared
 - name: LAYOUT
-  ignore: self
+  attach: none
   attach_attributes: shared
 - name: FIELD
   class: Rfm::Metadata::FieldControl
@@ -20,14 +20,39 @@ elements:
   delineate_with_hash: NAME
   elements:
   - name: STYLE
-    ignore: self
+    attach: none
 - name: VALUELISTS
-  ignore: self
+  attach: none
 - name: VALUELIST
   as_name: value_lists
 
 
 
+# ---
+# elements:
+# - name: FMPXMLLAYOUT
+#   ignore: self
+#   attach_attributes: shared
+# - name: ERRORCODE
+#   as_name: error
+#   compact: true
+# - name: PRODUCT
+#   ignore: self
+#   attach_attributes: shared
+# - name: LAYOUT
+#   ignore: self
+#   attach_attributes: shared
+# - name: FIELD
+#   class: Rfm::Metadata::FieldControl
+#   as_name: field_controls
+#   delineate_with_hash: NAME
+#   elements:
+#   - name: STYLE
+#     ignore: self
+# - name: VALUELISTS
+#   ignore: self
+# - name: VALUELIST
+#   as_name: value_lists
 
 
 # #compact: true

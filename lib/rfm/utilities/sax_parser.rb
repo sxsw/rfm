@@ -94,7 +94,30 @@ require 'nokogiri'
 #• attach: shared, instance, hash, array, cursor<only>, none
 #
 
+=begin
+attach_to_what?(new_object, name, new_model, type<element/attribute>)
+	given:
+		new_object attach: shared, instance, hash, array, cursor, none
+		base_object attach_elements: shared, instance, hash, array, cursor, none (if new_object is element)
+		base_object attach_attributes: shared, instance, hash, array, cursor, none (if new_object is attribute)
+		base_object_is_a: hash, array, other
+		new_object_is_a: element, attribute <type>
+		
+	atch_pref = case
+		when new_obj_is_a element; new_obj_atch || base_obj_atch_elm
+		when new_obj_is_a attribute; new_obj_atch || base_obj_atch_elm
+	end
+	case
+		is_shared if		(atch_pref==shared)
+		is_instance_if	(atch_pref==inst || !base_obj_is_a[/hash|array/] || (new_obj_is_a==attribute && base_obj_is_a==array))
+		is_hash_if			(base_obj_is_a==hash && atch_pref[/hash|nil/])
+		is_array_if			(base_obj_is_a==array && (new_obj_is_a==element or atch_pref==array)
+		is_cursor_if		(atch_pref=cursor)
+		is_none_if			(atch_pref=none)
+	end
+end
 
+=end
 
 module Rfm
 	module SaxParser
@@ -162,7 +185,7 @@ module Rfm
 		    #####  SAX METHODS  #####
 		    
 			  def attribute(name, value)
-			  	assign_attributes({name=>value})
+			  	assign_attributes({name=>value}, object, model, model)
 			  rescue
 			  	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
@@ -176,8 +199,8 @@ module Rfm
 		    	# Acquire submodel definition.
 		      subm = submodel
 		      
-		    	if ignore_element?(subm)
-		    		assign_attributes(_attributes, object, subm)
+		    	if attachment_prefs(model, subm, 'element')=='none'
+		    		assign_attributes(_attributes, object, model, subm)
 		    		return
 		    	end		      
 		      
@@ -193,11 +216,11 @@ module Rfm
 		      #puts "Created new element of class '#{new_element.class}' for _tag '#{tag}'."
 		      
 		      # Assign attributes to new element.
-		      assign_attributes _attributes, new_element, subm
+		      assign_attributes(_attributes, new_element, model, subm)
 
 					# Attach new element to cursor _object
 					#attach_new_object_master(subm, new_element)
-					attach_new_object(submodel, new_element, newtag, :element)
+					attach_new_object(object, new_element, newtag, model, subm, 'element')
 		  		
 		  		returntag = newtag
 		  		self.newtag = nil
@@ -227,89 +250,85 @@ module Rfm
 				#####  MERGE METHODS  #####
 				
 		  	# Assign attributes to element.
-				def assign_attributes(_attributes=nil)
+				def assign_attributes(_attributes, base_object, base_model, new_model)
 		      if _attributes && !_attributes.empty?
-						_attributes.each{|k,v| attach_new_object(attribute_model_if_exist, v, k, :attribute)}
+						_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
 		      end
 				end
 
-				def attach_new_object(new_model, new_object, name, type)
-					assignment = attach_to_what?(new_object, name, new_model, type)
+				def attach_new_object(base_object, new_object, name, base_model, new_model, type)
+					puts "attach_new_object: BO '#{base_object.class}' NO '#{new_object.class}' N '#{name}' BM '#{base_model['name'] rescue ''}' NM '#{new_model['name'] rescue ''}' T '#{type}'"
+					assignment = attach_to_what?(base_object, new_object, name, base_model, new_model, type)
 					case assignment;
-						when shared; merge_with_shared()
-						when instance; merge_with_instance()
-						when hash; merge_with_hash()
-						when array; merge_with_array()
+						when 'shared'; merge_with_shared(base_object, new_object, name, new_model)
+						when 'instance'; merge_with_instance(base_object, new_object, name, new_model)
+						when 'hash'; merge_with_hash(base_object, new_object, name, new_model)
+						when 'array'; merge_with_array(base_object, new_object, name, new_model)
 					end
 				end
+				
+				def attachment_prefs(base_model, new_model, type)
+					case type
+						when 'element'; attach?(new_model) || attach_elements?(base_model)
+						when 'attribute'; attach?(new_model) || attach_attributes?(base_model)
+					end
+				end
+				
+				def attach_to_what?(base_object, new_object, name, base_model, new_model, type)
+					prefs = attachment_prefs(base_model, new_model, type)
+					
+					case
+						when prefs=='shared'; 'shared'
+						when prefs=='instance' || base_object.is_a?(Array) || (type=='attribute' && base_object.is_a?(Array)); 'instance'
+						when base_object.is_a?(Hash) && prefs.to_s[/hash|^$/]; 'hash'
+						when base_object.is_a?(Array) && (type='element' || prefs=='array'); 'array'
+						when prefs=='cursor'; 'cursor'
+						when prefs=='none' ; 'none'
+					end					
+				end
 
-				# =begin
-				# attach_to_what?(new_object, new_tag, new_model, type<element/attribute>)
-				# 	given:
-				# 		new_object attach: shared, instance, hash, array, cursor, none
-				# 		base_object attach_elements: shared, instance, hash, array, cursor, none (if new_object is element)
-				# 		base_object attach_attributes: shared, instance, hash, array, cursor, none (if new_object is attribute)
-				# 		base_object_is_a: hash, array, other
-				# 		new_object_is_a: element, attribute <type>
-				# 		
-				# 	atch_pref = case
-				# 		when new_obj_is_a element; new_obj_atch || base_obj_atch_elm
-				# 		when new_obj_is_a attribute; new_obj_atch || base_obj_atch_elm
-				# 	end
-				# 	case
-				# 		is_shared if		(atch_pref==shared)
-				# 		is_instance_if	(atch_pref==inst || !base_obj_is_a[/hash|array/] || (new_obj_is_a==attribute && base_obj_is_a==array))
-				# 		is_hash_if			(base_obj_is_a==hash && atch_pref[/hash|nil/])
-				# 		is_array_if			(base_obj_is_a==array && (new_obj_is_a==element or atch_pref==array)
-				# 		is_cursor_if		(atch_pref=cursor)
-				# 		is_none_if			(atch_pref=none)
-				# 	end
-				# end
-				# 
-				# =end
-
-		    def merge_with_shared(name, element)
-		    	ivg(DEFAULT_SHARED_INSTANCE_VAR) || set_attr_accessor(DEFAULT_SHARED_INSTANCE_VAR, {})
-  			  if ivg(DEFAULT_SHARED_INSTANCE_VAR)[name]
-					  ivg(DEFAULT_SHARED_INSTANCE_VAR)[name] = merge_objects(ivg(name), element)
+		    def merge_with_shared(base_object, new_object, name, new_model)
+		    	ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object) || set_attr_accessor(DEFAULT_SHARED_INSTANCE_VAR, {}, base_object)
+  			  if ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object)[name]
+					  ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object)[name] = merge_objects(ivg(name), new_object, new_model)
 					else
-					  ivg(DEFAULT_SHARED_INSTANCE_VAR)[name] = element
+					  ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object)[name] = new_object
 				  end
 		    end
 		    
-		    def merge_with_instance(name, element)
-  			  if ivg(name)
-					  ivs(name, merge_objects(ivg(name), element))
+		    def merge_with_instance(base_object, new_object, name, new_model)
+  			  if ivg(name, base_object)
+					  ivs(name, merge_objects(ivg(name, base_object), new_object, new_model), base_object)
 					else
-					  set_attr_accessor(name, element)
+					  set_attr_accessor(name, new_object, base_object)
 				  end
 		    end
 		    
-		    def merge_with_hash(name, element)
-    			if object[name]
-  					object[name] = merge_objects(object[name], element)
+		    def merge_with_hash(base_object, new_object, name, new_model)
+    			if base_object[name]
+  					base_object[name] = merge_objects(base_object[name], new_object, new_model)
   			  else			
-  	  			object[name] = element
+  	  			base_object[name] = new_object
     			end
 		    end
 		    
 		    # TODO: Does this really need to use merge_elements?
-		    def merge_with_array(name, element)
-					if object.size > 0
-						object.replace merge_objects(object, element)
+		    def merge_with_array(base_object, new_object, name, new_model)
+					if base_object.size > 0
+						base_object.replace merge_objects(base_object, new_object, new_model)
 					else
-  	  			object << element
+  	  			base_object << new_object
 	  			end
 		    end
 
-		    def merge_objects(current_object, new_object)
+		    def merge_objects(base_object, new_object, new_model)
 		    	# delineate_with_hash is the attribute name to match on.
 		    	# current_key/new_key is the actual value of the match object.
 		    	# current_key/new_key is then used as a hash key to contain objects that match on the delineate_with_hash attribute.
 		    	#puts "merge_objects with tags '#{self.tag}/#{label_or_tag}' current_el '#{current_object.class}' and new_el '#{new_object.class}'."
 	  	  	begin
-		  	    current_key = get_attribute(delineate_with_hash?(submodel), current_object)
-		  	    new_key = get_attribute(delineate_with_hash?(submodel), new_object)
+		  	    current_key = get_attribute(delineate_with_hash?(new_model), base_object)
+		  	    new_key = get_attribute(delineate_with_hash?(new_model), new_object)
 		  	    #puts "merge_objects: tag '#{tag}', new '#{newtag}', delineate-with-hash '#{delineate_with_hash?(submodel)}', current-key '#{current_key}', new-key '#{new_key}'"
 		  	    
 		  	    key_state = case
@@ -322,17 +341,17 @@ module Rfm
 		  	    end
 		  	  
 		  	  	case key_state
-			  	  	when 5; {current_key => [current_object, new_object]}
-			  	  	when 4; {current_key => current_object, new_key => new_object}
-			  	  	when 3; [current_object, new_object].flatten
-			  	  	when 2; {current_key => ([*current_object] << new_object)}
-			  	  	when 1; current_object.merge(new_key=>new_object)
-			  	  	else    [current_object, new_object].flatten
+			  	  	when 5; {current_key => [base_object, new_object]}
+			  	  	when 4; {current_key => base_object, new_key => new_object}
+			  	  	when 3; [base_object, new_object].flatten
+			  	  	when 2; {current_key => ([*base_object] << new_object)}
+			  	  	when 1; base_object.merge(new_key=>new_object)
+			  	  	else    [base_object, new_object].flatten
 		  	  	end
 		  	  	
 	  	    rescue
 	  	    	puts "Error: could not merge with hash: #{$!}"
-	  	    	([*current_object] << new_object) if current_object.is_a?(Array)
+	  	    	#([*current_object] << new_object) if current_object.is_a?(Array)
 	  	    end
 		    end # merge_objects
 
@@ -356,7 +375,7 @@ module Rfm
 			  def before_close?(_model=model); _model['before_close']; end
 			  def each_before_close?(_model=model); _model['each_before_close']; end
 			  def compact?(_model=model); _model['compact'] || top.model['compact']; end
-			  def attach?(_model=model); _model['attach']; end
+			  def attach?(_model=model); _model && _model['attach']; end
 			  def attach_elements?(_model=model); _model['attach_elements']; end
 			  def attach_attributes?(_model=model); _model['attach_attributes']; end
 			  def delineate_with_hash?(_model=model); _model['delineate_with_hash']; end

@@ -3,23 +3,22 @@
 
 
 ---
-attach_elements: individual
 elements:
 - name: fmresultset
-  ignore: self
+  attach: none
   attach_attributes: shared
 - name: datasource
-  ignore: self
+  attach: none
   class: Rfm::Datasource
   attach_attributes: shared
 - name:  metadata
-  ignore: self
+  attach: none
 - name: field_definition
   as_name: field_meta
 - name: portal_definition
   as_name: portal_meta
 - name: resultset
-  ignore: self
+  attach: none
   attach_attributes: shared
 - name: record
   class: Rfm::Record
@@ -28,11 +27,11 @@ elements:
   - name: field
     class: Rfm::Metadata::Field
     compact: true
-    attach: none
-    before_close: :build_record_data
+    #attach: cursor
+    #before_close: :build_record_data
   - name: relatedset
     class: Rfm::RelatedSet
-    attach: individual
+    attach: instance
     as_name: portals
     delineate_with_hash: table
     elements:
@@ -42,8 +41,52 @@ elements:
       - name: field
         compact: true
         class: Rfm::Metadata::Field
-        attach: none
-        before_close: :build_record_data
+        #attach: cursor
+        #before_close: :build_record_data
+
+
+# ---
+# attach_elements: individual
+# elements:
+# - name: fmresultset
+#   ignore: self
+#   attach_attributes: shared
+# - name: datasource
+#   ignore: self
+#   class: Rfm::Datasource
+#   attach_attributes: shared
+# - name:  metadata
+#   ignore: self
+# - name: field_definition
+#   as_name: field_meta
+# - name: portal_definition
+#   as_name: portal_meta
+# - name: resultset
+#   ignore: self
+#   attach_attributes: shared
+# - name: record
+#   class: Rfm::Record
+#   attach: array
+#   elements:
+#   - name: field
+#     class: Rfm::Metadata::Field
+#     compact: true
+#     attach: none
+#     before_close: :build_record_data
+#   - name: relatedset
+#     class: Rfm::RelatedSet
+#     attach: individual
+#     as_name: portals
+#     delineate_with_hash: table
+#     elements:
+#     - name: record
+#       class: Rfm::Record
+#       elements:
+#       - name: field
+#         compact: true
+#         class: Rfm::Metadata::Field
+#         attach: none
+#         before_close: :build_record_data
 
 
 
