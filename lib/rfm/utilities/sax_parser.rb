@@ -31,19 +31,13 @@
 #   attributes:									array of attribute hashes {'name'=>'attribute-name'} UC
 #   class:											string-or-class: class name for new element
 #   depth:											integer: depth-of-default-class UC
-#   ignore:											array of [self, elements, attributes]: ignore specified objects
-#		attach:											string: <none | individual | shared> attach this element or attribute to parent. 
-#		attach_elements:						string: <none | individual | shared> for all subelements, unless they have their own 'attach' specification
-#		attach_attributes:					string: <none | individual | shared> for all subelements, unless they have their own 'attach' specification
+#		attach:											string: shared, instance, hash, array, cursor, none - attach this element or attribute to parent. 
+#		attach_elements:						string: same as 'attach' - for all subelements, unless they have their own 'attach' specification
+#		attach_attributes:					string: same as 'attach' - for all attributes, unless they have their own 'attach' specification
 #   before_close:								method-name-as-symbol: run a model method before closing tag
 #   each_before_close:					method-name-as-symbol
 #   as_name:										string: store element or attribute keyed as specified
 #   delineate_with_hash:				string: attribute/hash key to delineate objects with identical tags
-#		#hide:											see 'attach'
-#   #as_attribute:   						see attach & as_name.
-#		#initialize_with:						see 'initialize'
-#   #individual_attributes:			see 'attach_attributes'
-#   #hide_attributes:						see 'attach_attributes'
 #
 #
 #gem 'ox', '1.8.5'
@@ -58,27 +52,27 @@ require 'nokogiri'
 # done: Move test data & user models to spec folder and local_testing.
 # done: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
 # done: Add option to 'compact' unnecessary or empty elements/attributes - maybe - should this should be handled at Model level?
-# TODO: Separate all attribute options in yml into 'attributes:' hash, similar to 'elements:' hash.
+# na  : Separate all attribute options in yml into 'attributes:' hash, similar to 'elements:' hash.
 # TODO: Handle multiple 'text' callbacks for a single element.
-# TODO: Add options for text handling (what to name, where to put).
-# TODO: Fill in other configuration options in yml
+# done: Add options for text handling (what to name, where to put).
+# done: Fill in other configuration options in yml
 # done: Clean_elements doesn't work if elements are non-hash/array objects. Make clean_elements work with object attributes.
 # TODO: Clean_elements may not work for non-hash/array objecs with multiple instance-variables.
 # TODO: Clean_elements may no longer work with a globally defined 'compact'.
-# TODO: Do we really need Cursor#_top and Cursor#_stack ? Can't we get both from _stack?
+# TODO: Do we really need Cursor#top and Cursor#stack ? Can't we get both from stack?
 # TODO: When using a non-hash/array object as the initial object, things get kinda srambled.
 #       See Rfm::Connection, when sending self (the connection object) as the initial_object.
-# TODO: 'compact' breaks badly with fmpxmllayout data.
-# TODO: Do the same thing with 'ignore' as you did with 'attach', so you can enable using the 'attributes' array of the yml model.
-# TODO: Double-check that you're pointing to the correct model/submodel, since you changed all helper-methods to look at curent-model by default.
-# TODO: Make sure all method calls are passing the model given by the calling-method.
+# done: 'compact' breaks badly with fmpxmllayout data.
+# na  : Do the same thing with 'ignore' as you did with 'attach', so you can enable using the 'attributes' array of the yml model.
+# done: Double-check that you're pointing to the correct model/submodel, since you changed all helper-methods to look at curent-model by default.
+# done: Make sure all method calls are passing the model given by the calling-method.
 # TODO: Give most of the config options a global possibility.
-# TODO: Block attachment methods from seeing parent if parent isn't the current objects true parent (how?).
-# TODO: Handle attach: hash better (it's not specifically handled, but declaring it will block a parents influence).
+# na  : Block attachment methods from seeing parent if parent isn't the current objects true parent (how?).
+# done: Handle attach: hash better (it's not specifically handled, but declaring it will block a parents influence).
 # TODO: CaseInsensitiveHash/IndifferentAccess is not working for sax parser.
 # TODO: Give the yml (and xml) doc a top-level hash like "fmresultset" or "fmresultset_yml" or "fmresultset_xml",
 #       then you have a label to refer to it if you load several config docs at once (like into a Rfm::SaxParser::TEMPLATES constant).
-# TODO: Load up all config docs when Rfm loads, or when Rfm::SaxParser loads.
+# TODO: Load up all template docs when Rfm loads, or when Rfm::SaxParser loads.
 # done: Move SaxParser::Handler class methods to SaxParser, so you can do Rfm::SaxParser.parse(io, backend, template, initial_object)
 # done: Switch args order in .build methods to (io, template, initial_object, backend)
 # done: Change "grammar" to "template" in all code
@@ -90,32 +84,14 @@ require 'nokogiri'
 # TODO: Arrays should always get elements attached to their records and attributes attached to their instance variables. 
 # done: Merge 'ignore: self, elements, attributes' config into 'attach: ignore, attach_elements: ignore, attach_attributes: ignore'.
 # done: Consider having one single group of methods to attach all objects (elements OR attributes OR text) to any given parent object.
-# TODO: May need to store 'ignored' models in new cursor, with the parent object instead of the new object.
+# TODO: May need to store 'ignored' models in new cursor, with the parent object instead of the new object. Probably not a good idea
+# TODO: Fix label_or_tag for object-attachment.
+# TODO: Fix delineate_with_hash in parsing of resultset field_meta (should be hash of hashes, not array of hashes).
+# TODO: Test new parser with raw data from multiple sources, make sure it works as raw.
+# TODO: Make sure single-attribute (or text) handler has correct objects & models to work with.
+# TODO: Rewrite attach_to_what? logic to start with base_object type, then have sub-case statements for the rest.
 
-=begin
-attach_to_what?(new_object, name, new_model, type<element/attribute>)
-	given:
-		new_object attach: shared, instance, hash, array, cursor, none
-		base_object attach_elements: shared, instance, hash, array, cursor, none (if new_object is element)
-		base_object attach_attributes: shared, instance, hash, array, cursor, none (if new_object is attribute)
-		base_object_is_a: hash, array, other
-		new_object_is_a: element, attribute <type>
-		
-	atch_pref = case
-		when new_obj_is_a element; new_obj_atch || base_obj_atch_elm
-		when new_obj_is_a attribute; new_obj_atch || base_obj_atch_elm
-	end
-	case
-		is_shared if		(atch_pref==shared)
-		is_instance_if	(atch_pref==inst || !base_obj_is_a[/hash|array/] || (new_obj_is_a==attribute && base_obj_is_a==array))
-		is_hash_if			(base_obj_is_a==hash && atch_pref[/hash|nil/])
-		is_array_if			(base_obj_is_a==array && (new_obj_is_a==element or atch_pref==array)
-		is_cursor_if		(atch_pref=cursor)
-		is_none_if			(atch_pref=none)
-	end
-end
 
-=end
 
 module Rfm
 	module SaxParser
@@ -282,6 +258,13 @@ module Rfm
 						when base_object.is_a?(Array) && (type='element' || prefs=='array'); 'array'
 						when prefs=='cursor'; 'cursor'
 						when prefs=='none' ; 'none'
+
+						# 		is_shared if		(atch_pref==shared)
+						# 		is_instance_if	(atch_pref==inst || !base_obj_is_a[/hash|array/] || (new_obj_is_a==attribute && base_obj_is_a==array))
+						# 		is_hash_if			(base_obj_is_a==hash && atch_pref[/hash|nil/])
+						# 		is_array_if			(base_obj_is_a==array && (new_obj_is_a==element or atch_pref==array)
+						# 		is_cursor_if		(atch_pref=cursor)
+						# 		is_none_if			(atch_pref=none)						
 					end					
 				end
 
