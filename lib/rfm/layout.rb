@@ -295,26 +295,26 @@ module Rfm
 	    end
 	    			
 			
-			# Intended to set each repeat individually but doesn't work with FM
-			def expand_repeats(hash)
-				hash.each do |key,val|
-					if val.kind_of? Array
-						val.each_with_index{|v, i| hash["#{key}(#{i+1})"] = v}
-						hash.delete(key)
-					end
-				end
-				hash
-			end
-			
-			# Intended to brute-force repeat setting but doesn't work with FM
-			def join_repeats(hash)
-				hash.each do |key,val|
-					if val.kind_of? Array
-						hash[key] = val.join('\x1D')
-					end
-				end
-				hash
-			end
+			# 	# Intended to set each repeat individually but doesn't work with FM
+			# 	def expand_repeats(hash)
+			# 		hash.each do |key,val|
+			# 			if val.kind_of? Array
+			# 				val.each_with_index{|v, i| hash["#{key}(#{i+1})"] = v}
+			# 				hash.delete(key)
+			# 			end
+			# 		end
+			# 		hash
+			# 	end
+			# 	
+			# 	# Intended to brute-force repeat setting but doesn't work with FM
+			# 	def join_repeats(hash)
+			# 		hash.each do |key,val|
+			# 			if val.kind_of? Array
+			# 				hash[key] = val.join('\x1D')
+			# 			end
+			# 		end
+			# 		hash
+			# 	end
 
 	    def name; state[:layout].to_s; end
 	    

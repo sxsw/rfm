@@ -134,7 +134,7 @@ module Rfm
 		    	klass = klass.to_s
 		    	
 		    	# Added to evaluate fully-qualified class names
-		    	return eval(klass.to_s) if klass.to_s[/::/]
+		    	return eval(klass.to_s) if klass.to_s && klass.to_s[/::/]
 		    	
 		    	# TODO: This can surely be cleaned up.
 		    	case
@@ -462,15 +462,15 @@ module Rfm
 		
 			attr_accessor :stack, :template
 			
-			# 			def self.build(io, backend=DEFAULT_BACKEND, template=nil, initialobjectect=DEFAULT_CLASS.new)
+			# 			def self.build(io, backend=DEFAULT_BACKEND, template=nil, initial_object=DEFAULT_CLASS.new)
 			# 				backend = decide_backend unless backend
 			# 				backend = (backend.is_a?(String) || backend.is_a?(Symbol)) ? SaxParser.const_get(backend.to_s.capitalize + "Handler") : backend
-			# 			  backend.build(io, template, initialobjectect)
+			# 			  backend.build(io, template, initial_object)
 			# 		  end
-			def self.build(io, template=nil, initialobjectect=DEFAULT_CLASS.new, backend=DEFAULT_BACKEND)
+			def self.build(io, template=nil, initial_object=DEFAULT_CLASS.new, backend=DEFAULT_BACKEND)
 				backend = decide_backend unless backend
 				backend = (backend.is_a?(String) || backend.is_a?(Symbol)) ? SaxParser.const_get(backend.to_s.capitalize + "Handler") : backend
-			  backend.build(io, template, initialobjectect)
+			  backend.build(io, template, initial_object)
 		  end
 		  
 		  def self.included(base)
