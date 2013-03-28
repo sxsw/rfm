@@ -219,7 +219,7 @@ module Rfm
 	end
 	
 	class Record# < Hash
-		# These should just be temporary.
+		# These are temporary hack for converting the Rfm::Record class to use sax-parser.
 		def [](*args)
 			super
 		end
@@ -234,6 +234,7 @@ module Rfm
 			cursor.parent.object.merge!(name => data )
 		end
 		# This is the harder way - when not using the 'compact' parsing option.
+		# Also see sax_parser_sandbox for other version of this that works.
 		# 		def build_record_data(cursor)
 		# 			dat = data
 		# 			dat = case

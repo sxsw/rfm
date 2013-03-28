@@ -40,7 +40,7 @@
 #   delineate_with_hash:				string: attribute/hash key to delineate objects with identical tags
 #
 #
-#gem 'ox', '1.8.5'
+gem('ox', '1.8.5') if RUBY_VERSION[2].to_i > 8
 require 'stringio'
 require 'ox'
 require 'yaml'
@@ -141,7 +141,7 @@ module Rfm
 			    	when const_defined?(klass); const_get(klass)
 			    	when self.ancestors[0].const_defined?(klass); self.ancestors[0].const_get(klass)
 			    	when SaxParser.const_defined?(klass); SaxParser.const_get(klass)
-			    	when _object.const_defined?(klass); _object.const_get(klass)
+			    	#when object.const_defined?(klass); _object.const_get(klass)
 				  	when Module.const_defined?(klass); Module.const_get(klass)
 				  	else puts "Could not find constant '#{klass.to_s}'"; DEFAULT_CLASS
 			  	end
