@@ -6,7 +6,14 @@
 require 'net/https'
 require 'cgi'
 module Rfm
-	DEFAULT_CLASS = CaseInsensitiveHash
+	SaxParser::DEFAULT_CLASS = CaseInsensitiveHash
+	SaxParser::TEMPLATE_PREFIX = File.join(File.dirname(__FILE__), '../sax/')
+	SaxParser::TEMPLATES.merge!({
+		:layout => 'fmpxmllayout.yml',
+		:records => 'fmresultset.yml',
+		:alt => 'fmpxmlresult.yml',
+		:none => nil
+	})
 	
   class Connection
   	include Config  	
@@ -70,10 +77,8 @@ module Rfm
 		#     end
     
     def parse(template=nil, initial_object=DEFAULT_CLASS.new, backend=nil)
-			#     	(template = File.join(File.dirname(__FILE__), '../sax/fmresultset.yml')) unless template
-			#     	Rfm::SaxParser.parse(connect.body, template, initial_object, backend).result
     	(template =  'fmresultset.yml') unless template
-    	(template = File.join(File.dirname(__FILE__), '../sax/', template)) if template.is_a? String
+    	#(template = File.join(File.dirname(__FILE__), '../sax/', template)) if template.is_a? String
     	Rfm::SaxParser.parse(connect.body, template, initial_object, backend).result
     end
 

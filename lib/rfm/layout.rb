@@ -287,7 +287,7 @@ module Rfm
 				# Need to specify the connection object as the initial_object of the parsing stack,
 				# so that Fmresultset can get the layout from it.
 				#c.parse('fmresultset.xml', Rfm::Resultset.new(self), nil)
-				c.parse(nil, Rfm::Resultset.new(self), nil)
+				c.parse(:records, Rfm::Resultset.new(self))
 	    end
 	    
 	    def params
@@ -396,13 +396,13 @@ module Rfm
   	#::DEFAULT_CLASS = Hash
     # From Rfm::Server
     def load_layout_test
-      Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse('fmpxmllayout.yml', self)
+      Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:layout, self)
     end
     
     def load_layout
       @loaded = true
       #fmpxmllayout = db.server.load_layout(self)
-      doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse('fmpxmllayout.yml', self)
+      doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:layout, self)
       puts "Layout load result: #{doc.class}"
       return
       #doc = XmlParser.new(fmpxmllayout.body, :namespace=>false, :parser=>server.state[:parser])

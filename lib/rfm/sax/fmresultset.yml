@@ -3,9 +3,6 @@
 
 
 ---
-# attributes:
-# - name: code
-#   as_name: error
 elements:
 - name: fmresultset
   attach: none

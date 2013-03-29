@@ -73,7 +73,7 @@ require 'nokogiri'
 # TODO: Give the yml (and xml) doc a top-level hash like "fmresultset" or "fmresultset_yml" or "fmresultset_xml",
 #       then you have a label to refer to it if you load several config docs at once (like into a Rfm::SaxParser::TEMPLATES constant).
 #       Use an array of accepted model-keys  to filter whether loaded template is a named-model or actual model data.
-# TODO: Load up all template docs when Rfm loads, or when Rfm::SaxParser loads.
+# TODO: Load up all template docs when Rfm loads, or when Rfm::SaxParser loads. For RFM only, not for parser module.
 # done: Move SaxParser::Handler class methods to SaxParser, so you can do Rfm::SaxParser.parse(io, backend, template, initial_object)
 # done: Switch args order in .build methods to (io, template, initial_object, backend)
 # done: Change "grammar" to "template" in all code
@@ -106,11 +106,17 @@ module Rfm
 		
 		(DEFAULT_TEXT_LABEL = 'text') unless defined? DEFAULT_TEXT_LABEL
 		
-		(DEFAULTtag_TRANSLATION = [/\-/, '_']) unless defined? DEFAULTtag_TRANSLATION
+		(DEFAULT_TAG_TRANSLATION = [/\-/, '_']) unless defined? DEFAULT_TAG_TRANSLATION
 		
 		(DEFAULT_SHARED_INSTANCE_VAR = 'attributes') unless defined? DEFAULT_SHARED_INSTANCE_VAR		
 		
-		BACKENDS = [[:ox, 'ox'], [:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:rexml, 'rexml/document']]
+		(BACKENDS = [[:ox, 'ox'], [:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:rexml, 'rexml/document']]) unless defined? BACKENDS
+		
+		OPTIONS = [:name, :elements, :attributes, :attach, :attach_elements, :attach_attributes, :compact,
+							:depth, :before_close, :each_before_close, :delineate_with_hash, :as_name, :initialize
+							]
+							
+		(TEMPLATES = {}) unless defined? TEMPLATES
 		
 		def self.parse(*args)
 			Handler.build(*args)
@@ -259,14 +265,7 @@ module Rfm
 						when base_object.is_a?(Hash) && (prefs.nil? || prefs.to_s[/hash/]); 'hash'
 						when base_object.is_a?(Array) && (type='element' || prefs=='array'); 'array'
 						when prefs=='cursor'; 'cursor'
-						when prefs=='none' ; 'none'
-
-						# 		is_shared if		(atch_pref==shared)
-						# 		is_instance_if	(atch_pref==inst || !base_obj_is_a[/hash|array/] || (new_obj_is_a==attribute && base_obj_is_a==array))
-						# 		is_hash_if			(base_obj_is_a==hash && atch_pref[/hash|nil/])
-						# 		is_array_if			(base_obj_is_a==array && (new_obj_is_a==element or atch_pref==array)
-						# 		is_cursor_if		(atch_pref=cursor)
-						# 		is_none_if			(atch_pref=none)						
+						when prefs=='none' ; 'none'				
 					end					
 				end
 
@@ -347,11 +346,9 @@ module Rfm
 			  	self.class.get_constant(klass)
 			  end
 			  
-			  
 			  # Methods for current _model
 			  def ivg(name, _object=object); _object.instance_variable_get "@#{name}"; end
 			  def ivs(name, value, _object=object); _object.instance_variable_set "@#{name}", value; end
-			  #def ignore?(_model=model);  [*_model['ignore']] if _model['ignore']; end
 			  def model_elements?(which=nil, _model=model); (_model['elements'] && which ? _model['elements'].find{|e| e['name']==which} : _model['elements']) ; end
 			  def model_attributes?(which=nil, _model=model); (_model['attributes'] && which ? _model['attributes'].find{|a| a['name']==which} : _model['attributes']) ; end
 			  def depth?(_model=model); _model['depth']; end
@@ -383,7 +380,6 @@ module Rfm
 					end
 				end
 				
-		    
 		    def get_attribute(name, obj=object)
 		    	return unless name
 		    	key = DEFAULT_SHARED_INSTANCE_VAR
@@ -443,7 +439,7 @@ module Rfm
 						end
 					else
 						val
-						# Probably shouldn't do this on instance-var values.
+						# Probably shouldn't do this on instance-var values. ...Why not?
 						# 	if val.instance_variables.size < 1
 						# 		nil
 						# 	elsif val.instance_variables.size == 1
@@ -463,12 +459,7 @@ module Rfm
 		module Handler
 		
 			attr_accessor :stack, :template
-			
-			# 			def self.build(io, backend=DEFAULT_BACKEND, template=nil, initial_object=DEFAULT_CLASS.new)
-			# 				backend = decide_backend unless backend
-			# 				backend = (backend.is_a?(String) || backend.is_a?(Symbol)) ? SaxParser.const_get(backend.to_s.capitalize + "Handler") : backend
-			# 			  backend.build(io, template, initial_object)
-			# 		  end
+
 			def self.build(io, template=nil, initial_object=DEFAULT_CLASS.new, backend=DEFAULT_BACKEND)
 				backend = decide_backend unless backend
 				backend = (backend.is_a?(String) || backend.is_a?(Symbol)) ? SaxParser.const_get(backend.to_s.capitalize + "Handler") : backend
@@ -482,7 +473,7 @@ module Rfm
 		  		#handler._stack[0].object
 		  		handler
 		  	end
-		  end # self.included()
+		  end # self.included
 		  
 		  def self.decide_backend
 		  	BACKENDS.find{|b| !Gem::Specification::find_all_by_name(b[1]).empty?}[0]
@@ -490,21 +481,37 @@ module Rfm
 		  	raise "The xml parser could not find a loadable backend gem: #{$!}"
 		  end
 		  
-		  def initialize(template=nil, initial_object = DEFAULT_CLASS.new)
+		  def initialize(_template=nil, initial_object = DEFAULT_CLASS.new)
 		  	@stack = []
-		  	@template = case
-		  		when template.to_s[/\.y.?ml$/i]; (YAML.load_file(template))
-		  		when template.to_s[/\.xml$/i]; self.class.build(template, nil, {'compact'=>true})
-		  		when template.to_s[/^<.*>/]; "Convert from xml to Hash - under construction"
-		  		when template.is_a?(String); YAML.load template
-		  		when template.is_a?(Hash); template
-		  		else DEFAULT_CLASS.new
-		  	end
+		  	@template = get_template(_template)
 		  	#(@template = @template.values[0]) if @template.size == 1
 		  	#y @template
 		  	init_element_buffer
 		    set_cursor Cursor.new(@template, initial_object, 'top')
 		  end
+		  
+			def get_template(name)
+				dat = TEMPLATES[name]
+				if dat
+					rslt = load_template(dat)
+				else
+					rslt = load_template(name)
+				end
+				(TEMPLATES[name] = rslt) #unless dat == rslt
+			end
+			
+			def load_template(dat)
+				prefix = defined?(TEMPLATE_PREFIX) ? TEMPLATE_PREFIX : ''
+		  	rslt = case
+		  		when dat.is_a?(Hash); dat
+		  		when dat.to_s[/\.y.?ml$/i]; (YAML.load_file(File.join(prefix, dat)))
+		  		# This line might cause an infinite loop.
+		  		when dat.to_s[/\.xml$/i]; self.class.build(File.join(prefix, dat), nil, {'compact'=>true})
+		  		when dat.to_s[/^<.*>/i]; "Convert from xml to Hash - under construction"
+		  		when dat.is_a?(String); YAML.load dat
+		  		else DEFAULT_CLASS.new
+		  	end
+			end
 		  
 		  def result
 		  	stack[0].object if stack[0].is_a? Cursor
@@ -529,8 +536,8 @@ module Rfm
 			end
 			
 			def transform(name)
-				return name unless DEFAULTtag_TRANSLATION.is_a?(Array)
-				name.to_s.gsub(*DEFAULTtag_TRANSLATION)
+				return name unless DEFAULT_TAG_TRANSLATION.is_a?(Array)
+				name.to_s.gsub(*DEFAULT_TAG_TRANSLATION)
 			end
 			
 			def init_element_buffer
@@ -591,6 +598,7 @@ module Rfm
 			end
 		  
 		end # Handler
+		
 		
 		
 		#####  SAX PARSER BACKEND HANDLERS  #####
@@ -655,6 +663,7 @@ module Rfm
 			alias_method :on_end_element_ns, :_end_element
 			alias_method :on_characters, :_text
 		end # LibxmlSax	
+		
 		
 		class NokogiriHandler < Nokogiri::XML::SAX::Document
 		  include Handler
