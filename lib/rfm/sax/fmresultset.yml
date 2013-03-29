@@ -3,6 +3,9 @@
 
 
 ---
+# attributes:
+# - name: code
+#   as_name: error
 elements:
 - name: fmresultset
   attach: none
@@ -10,8 +13,11 @@ elements:
 - name: product
   attach: shared
 - name: error
-  attach: shared
-  compact: true
+  attach: none
+  attributes:
+  - name: code
+    as_name: error
+    attach: shared
 - name: datasource
   attach: none
   #class: Rfm::Datasource
@@ -19,9 +25,10 @@ elements:
 - name:  metadata
   attach: none
 - name: field_definition
-  delineate_on_hash: name
+  delineate_with_hash: name
   as_name: field_meta
 - name: portal_definition
+  delineate_with_hash: table
   as_name: portal_meta
 - name: resultset
   attach: none

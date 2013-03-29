@@ -40,7 +40,7 @@
 #   delineate_with_hash:				string: attribute/hash key to delineate objects with identical tags
 #
 #
-gem('ox', '1.8.5') if RUBY_VERSION[2].to_i > 8
+#gem('ox', '1.8.5') if RUBY_VERSION[2].to_i > 8
 require 'stringio'
 require 'ox'
 require 'yaml'
@@ -72,6 +72,7 @@ require 'nokogiri'
 # TODO: CaseInsensitiveHash/IndifferentAccess is not working for sax parser.
 # TODO: Give the yml (and xml) doc a top-level hash like "fmresultset" or "fmresultset_yml" or "fmresultset_xml",
 #       then you have a label to refer to it if you load several config docs at once (like into a Rfm::SaxParser::TEMPLATES constant).
+#       Use an array of accepted model-keys  to filter whether loaded template is a named-model or actual model data.
 # TODO: Load up all template docs when Rfm loads, or when Rfm::SaxParser loads.
 # done: Move SaxParser::Handler class methods to SaxParser, so you can do Rfm::SaxParser.parse(io, backend, template, initial_object)
 # done: Switch args order in .build methods to (io, template, initial_object, backend)
@@ -81,12 +82,12 @@ require 'nokogiri'
 # TODO: Something is downcasing somewhere - see the fmpxmllayout response. Looks like 'compact' might have something to do with it.
 # done: Make attribute attachment default to individual.
 # done: 'attach: shared' doesnt work yet for elements.
-# TODO: Arrays should always get elements attached to their records and attributes attached to their instance variables. 
+# na  : Arrays should always get elements attached to their records and attributes attached to their instance variables. 
 # done: Merge 'ignore: self, elements, attributes' config into 'attach: ignore, attach_elements: ignore, attach_attributes: ignore'.
 # done: Consider having one single group of methods to attach all objects (elements OR attributes OR text) to any given parent object.
-# TODO: May need to store 'ignored' models in new cursor, with the parent object instead of the new object. Probably not a good idea
-# TODO: Fix label_or_tag for object-attachment.
-# TODO: Fix delineate_with_hash in parsing of resultset field_meta (should be hash of hashes, not array of hashes).
+# na  : May need to store 'ignored' models in new cursor, with the parent object instead of the new object. Probably not a good idea
+# done: Fix label_or_tag for object-attachment.
+# done: Fix delineate_with_hash in parsing of resultset field_meta (should be hash of hashes, not array of hashes).
 # TODO: Test new parser with raw data from multiple sources, make sure it works as raw.
 # TODO: Make sure single-attribute (or text) handler has correct objects & models to work with.
 # TODO: Rewrite attach_to_what? logic to start with base_object type, then have sub-case statements for the rest.
@@ -231,13 +232,14 @@ module Rfm
 				end
 
 				def attach_new_object(base_object, new_object, name, base_model, new_model, type)
-					assignment = attach_to_what?(base_object, new_object, name, base_model, new_model, type)
+					label = label_or_tag(name, new_model)
+					assignment = attach_to_what?(base_object, new_object, label, base_model, new_model, type)
 					#puts "attach_new_object: BO '#{base_object.class}' BM '#{base_model['name'] rescue ''}' NO '#{new_object.class}' NM '#{new_model['name'] rescue ''}' N '#{name}' T '#{type}' p '#{assignment}'"
 					case assignment;
-						when 'shared'; merge_with_shared(base_object, new_object, name, new_model)
-						when 'instance'; merge_with_instance(base_object, new_object, name, new_model)
-						when 'hash'; merge_with_hash(base_object, new_object, name, new_model)
-						when 'array'; merge_with_array(base_object, new_object, name, new_model)
+						when 'shared'; merge_with_shared(base_object, new_object, label, new_model)
+						when 'instance'; merge_with_instance(base_object, new_object, label, new_model)
+						when 'hash'; merge_with_hash(base_object, new_object, label, new_model)
+						when 'array'; merge_with_array(base_object, new_object, label, new_model)
 					end
 				end
 				
@@ -268,33 +270,33 @@ module Rfm
 					end					
 				end
 
-		    def merge_with_shared(base_object, new_object, name, new_model)
+		    def merge_with_shared(base_object, new_object, label, new_model)
 		    	ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object) || set_attr_accessor(DEFAULT_SHARED_INSTANCE_VAR, {}, base_object)
-  			  if ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object)[name]
-					  ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object)[name] = merge_objects(ivg(name), new_object, new_model)
+  			  if ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object)[label]
+					  ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object)[label] = merge_objects(ivg(label), new_object, new_model)
 					else
-					  ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object)[name] = new_object
+					  ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object)[label] = new_object
 				  end
 		    end
 		    
-		    def merge_with_instance(base_object, new_object, name, new_model)
-  			  if ivg(name, base_object)
-					  ivs(name, merge_objects(ivg(name, base_object), new_object, new_model), base_object)
+		    def merge_with_instance(base_object, new_object, label, new_model)
+  			  if ivg(label, base_object)
+					  ivs(label, merge_objects(ivg(label, base_object), new_object, new_model), base_object)
 					else
-					  set_attr_accessor(name, new_object, base_object)
+					  set_attr_accessor(label, new_object, base_object)
 				  end
 		    end
 		    
-		    def merge_with_hash(base_object, new_object, name, new_model)
-    			if base_object[name]
-  					base_object[name] = merge_objects(base_object[name], new_object, new_model)
+		    def merge_with_hash(base_object, new_object, label, new_model)
+    			if base_object[label]
+  					base_object[label] = merge_objects(base_object[label], new_object, new_model)
   			  else			
-  	  			base_object[name] = new_object
+  	  			base_object[label] = new_object
     			end
 		    end
 		    
 		    # TODO: Does this really need to use merge_elements?
-		    def merge_with_array(base_object, new_object, name, new_model)
+		    def merge_with_array(base_object, new_object, label, new_model)
 					if base_object.size > 0
 						base_object.replace merge_objects(base_object, new_object, new_model)
 					else
@@ -360,12 +362,12 @@ module Rfm
 			  def attach_elements?(_model=model); _model['attach_elements']; end
 			  def attach_attributes?(_model=model); _model['attach_attributes']; end
 			  def delineate_with_hash?(_model=model); _model['delineate_with_hash']; end
-			  def as_name?(_model=model); _model['as_name']; end
+			  def as_name?(_model=model); _model && _model['as_name']; end
 			  def initialize?(_model=model); _model['initialize']; end
 
 			  # Methods for submodel
 				def submodel(_tag=newtag); get_submodel(_tag) || default_submodel; end
-				def label_or_tag; as_name?(submodel) || newtag; end
+				def label_or_tag(_tag=newtag, _model=submodel); as_name?(_model) || _tag; end
 		  	
 				def get_submodel(name)
 					model_elements?(name)
@@ -422,11 +424,11 @@ module Rfm
 	    				yield(v) if block_given?
 	    			end
 	    		else	
-	    			obj.instance_variables.each do |var|
-	    				dat = obj.instance_variable_get(var)
-	    				obj.instance_variable_set(var, clean_member(dat))
-	    				yield(dat) if block_given?
-	    			end
+						obj.instance_variables.each do |var|
+							dat = obj.instance_variable_get(var)
+							obj.instance_variable_set(var, clean_member(dat))
+							yield(dat) if block_given?
+						end
 	    		end
 	    	end
 	    	
