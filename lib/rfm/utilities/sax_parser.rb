@@ -113,9 +113,9 @@ module Rfm
 	
 		(@default_class = Hash) unless defined? @default_class
 		
-		# Use :libxml, or anything else, if you want it to always default
+		# Use :libxml, :nokogiri, :ox, :rexml, or anything else, if you want it to always default
 		# to something other than the fastest backend found.
-		# Nil will let the user or the gem decide. Specifying a label here will force or throw error.
+		# Nil will let the SaxParser decide.
 		(@backend = nil) unless defined? @backend
 		
 		(@text_label = 'text') unless defined? @text_label
@@ -475,8 +475,9 @@ module Rfm
 			
 			SaxParser.install_defaults(self)
 
-			# Main parsing interface (also aliased at SaxParser.build)
-			def self.build(io, template=nil, initial_object=default_class.new, parser=backend)
+			# Main parsing interface (also aliased at SaxParser.parse)
+			def self.build(io, template=nil, initial_object=nil, parser=nil)
+				parser = parser || backend
 				parser = get_backend(parser)
 				puts "Using backend parser: #{parser}"
 			  parser.build(io, template, initial_object)
@@ -484,10 +485,9 @@ module Rfm
 		  
 		  def self.included(base)
 		  	# Add a .build method to the custom handler class, when the generic Handler module is included.
-		    def base.build(io, template=nil, initial_object= default_class.new)
+		    def base.build(io, template=nil, initial_object=nil)
 		  		handler = new(template, initial_object)
 		  		handler.run_parser(io)
-		  		#handler._stack[0].object
 		  		handler
 		  	end
 		  end # self.included
@@ -511,7 +511,8 @@ module Rfm
 		  	raise "The xml parser could not find a loadable backend gem: #{$!}"
 		  end
 		  
-		  def initialize(_template=nil, initial_object = default_class.new)
+		  def initialize(_template=nil, initial_object=nil)
+		  	initial_object = initial_object || default_class.new || {}
 		  	@stack = []
 		  	@template = get_template(_template)
 		  	#(@template = @template.values[0]) if @template.size == 1
