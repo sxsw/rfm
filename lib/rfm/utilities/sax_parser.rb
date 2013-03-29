@@ -70,15 +70,15 @@ require 'nokogiri'
 # na  : Block attachment methods from seeing parent if parent isn't the current objects true parent (how?).
 # done: Handle attach: hash better (it's not specifically handled, but declaring it will block a parents influence).
 # TODO: CaseInsensitiveHash/IndifferentAccess is not working for sax parser.
-# TODO: Give the yml (and xml) doc a top-level hash like "fmresultset" or "fmresultset_yml" or "fmresultset_xml",
+# TODO: Give the yml (and xml) doc the ability to have a top-level hash like "fmresultset" or "fmresultset_yml" or "fmresultset_xml",
 #       then you have a label to refer to it if you load several config docs at once (like into a Rfm::SaxParser::TEMPLATES constant).
 #       Use an array of accepted model-keys  to filter whether loaded template is a named-model or actual model data.
-# TODO: Load up all template docs when Rfm loads, or when Rfm::SaxParser loads. For RFM only, not for parser module.
+# done: Load up all template docs when Rfm loads, or when Rfm::SaxParser loads. For RFM only, not for parser module.
 # done: Move SaxParser::Handler class methods to SaxParser, so you can do Rfm::SaxParser.parse(io, backend, template, initial_object)
 # done: Switch args order in .build methods to (io, template, initial_object, backend)
 # done: Change "grammar" to "template" in all code
 # done: Change 'cursor._' methods to something more readable, since they will be used in Rfm and possibly user models.
-# TODO: Split off template loading into load_templates and/or get_templates methods.
+# done: Split off template loading into load_templates and/or get_templates methods.
 # TODO: Something is downcasing somewhere - see the fmpxmllayout response. Looks like 'compact' might have something to do with it.
 # done: Make attribute attachment default to individual.
 # done: 'attach: shared' doesnt work yet for elements.
@@ -90,7 +90,7 @@ require 'nokogiri'
 # done: Fix delineate_with_hash in parsing of resultset field_meta (should be hash of hashes, not array of hashes).
 # TODO: Test new parser with raw data from multiple sources, make sure it works as raw.
 # TODO: Make sure single-attribute (or text) handler has correct objects & models to work with.
-# TODO: Rewrite attach_to_what? logic to start with base_object type, then have sub-case statements for the rest.
+# na  : Rewrite attach_to_what? logic to start with base_object type, then have sub-case statements for the rest.
 
 
 
