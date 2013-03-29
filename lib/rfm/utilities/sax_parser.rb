@@ -345,7 +345,7 @@ module Rfm
 		  	  	end
 		  	  	
 	  	    rescue
-	  	    	puts "Error: could not merge with hash: #{$!}"
+	  	    	puts "Error: could not merge '#{base_object.class}' with '#{new_object.class}' given model named '#{new_model && new_model['name']}': #{$!}"
 	  	    	#([*current_object] << new_object) if current_object.is_a?(Array)
 	  	    end
 		    end # merge_objects
