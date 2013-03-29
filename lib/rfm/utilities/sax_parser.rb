@@ -41,11 +41,12 @@
 #
 #
 #gem('ox', '1.8.5') if RUBY_VERSION[2].to_i > 8
-require 'stringio'
-require 'ox'
 require 'yaml'
+require 'forwardable'
+require 'stringio'
 require 'rexml/streamlistener'
 require 'rexml/document'
+require 'ox'
 require 'libxml'
 require 'nokogiri'
 
@@ -96,47 +97,59 @@ require 'nokogiri'
 
 module Rfm
 	module SaxParser
-	
-		(DEFAULT_CLASS = Hash) unless defined? DEFAULT_CLASS
-		
-		# Use :libxml, or anything else, if you want it to always default
-		# to something other than the fastest backend found.
-		# Nil will let the user or the gem decide. Specifying a label here will force or throw error.
-		(DEFAULT_BACKEND = nil) unless defined? DEFAULT_BACKEND
-		
-		(DEFAULT_TEXT_LABEL = 'text') unless defined? DEFAULT_TEXT_LABEL
-		
-		(DEFAULT_TAG_TRANSLATION = [/\-/, '_']) unless defined? DEFAULT_TAG_TRANSLATION
-		
-		(DEFAULT_SHARED_INSTANCE_VAR = 'attributes') unless defined? DEFAULT_SHARED_INSTANCE_VAR		
-		
-		(BACKENDS = [[:ox, 'ox'], [:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:rexml, 'rexml/document']]) unless defined? BACKENDS
+		extend Forwardable
+
+		BACKENDS = [[:ox, 'ox'], [:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:rexml, 'rexml/document']]
 		
 		OPTIONS = [:name, :elements, :attributes, :attach, :attach_elements, :attach_attributes, :compact,
 							:depth, :before_close, :each_before_close, :delineate_with_hash, :as_name, :initialize
 							]
-							
-		(TEMPLATES = {}) unless defined? TEMPLATES
+
+		DEFAULTS = [:default_class, :backend, :text_label, :tag_translation, :shared_instance_var, :templates]
+
+		class << self
+			attr_accessor *DEFAULTS
+		end
+	
+		(@default_class = Hash) unless defined? @default_class
+		
+		# Use :libxml, or anything else, if you want it to always default
+		# to something other than the fastest backend found.
+		# Nil will let the user or the gem decide. Specifying a label here will force or throw error.
+		(@backend = nil) unless defined? @backend
+		
+		(@text_label = 'text') unless defined? @text_label
+		
+		(@tag_translation = [/\-/, '_']) unless defined? @tag_translation
+		
+		(@shared_instance_var = 'attributes') unless defined? @shared_instance_var		
+			
+		(@templates = {}) unless defined? @templates
 		
 		def self.parse(*args)
 			Handler.build(*args)
 		end
+
+		def self.install_defaults(klass)
+			klass.extend Forwardable		    
+	    klass.def_delegators SaxParser, *DEFAULTS
+			class << klass
+				extend Forwardable
+				def_delegators SaxParser, *DEFAULTS
+			end		
+		end
+
 
 		
 		class Cursor
 		
 		    attr_accessor :model, :object, :tag, :parent, :top, :stack, :newtag
 		    
-		    def self.test_class
-		    	Record
-		    end
-		    def test_class
-		    	Record
-		    end
+				SaxParser.install_defaults(self)
 		    
 		    # Main get-constant method
 		    def self.get_constant(klass)
-		    	return DEFAULT_CLASS if klass.to_s == ''
+		    	return default_class if klass.to_s == ''
 		    	return klass unless klass.is_a?(String) || klass.is_a?(Symbol)
 		    	klass = klass.to_s
 		    	
@@ -150,7 +163,7 @@ module Rfm
 			    	when SaxParser.const_defined?(klass); SaxParser.const_get(klass)
 			    	#when object.const_defined?(klass); _object.const_get(klass)
 				  	when Module.const_defined?(klass); Module.const_get(klass)
-				  	else puts "Could not find constant '#{klass.to_s}'"; DEFAULT_CLASS
+				  	else puts "Could not find constant '#{klass.to_s}'"; default_class
 			  	end
 			  end
 		    
@@ -270,11 +283,11 @@ module Rfm
 				end
 
 		    def merge_with_shared(base_object, new_object, label, new_model)
-		    	ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object) || set_attr_accessor(DEFAULT_SHARED_INSTANCE_VAR, {}, base_object)
-  			  if ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object)[label]
-					  ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object)[label] = merge_objects(ivg(label), new_object, new_model)
+		    	ivg(shared_instance_var, base_object) || set_attr_accessor(shared_instance_var, {}, base_object)
+  			  if ivg(shared_instance_var, base_object)[label]
+					  ivg(shared_instance_var, base_object)[label] = merge_objects(ivg(label), new_object, new_model)
 					else
-					  ivg(DEFAULT_SHARED_INSTANCE_VAR, base_object)[label] = new_object
+					  ivg(shared_instance_var, base_object)[label] = new_object
 				  end
 		    end
 		    
@@ -376,13 +389,13 @@ module Rfm
 					if depth?.to_i > 0
 						{'elements' => model_elements?, 'depth'=>(depth?.to_i - 1)}
 					else
-						DEFAULT_CLASS.new
+						default_class.new
 					end
 				end
 				
 		    def get_attribute(name, obj=object)
 		    	return unless name
-		    	key = DEFAULT_SHARED_INSTANCE_VAR
+		    	key = shared_instance_var
 		    	case
 		    		when (obj.respond_to?(key) && obj.send(key)); obj.send(key)[name]
 		    		when (r= ivg(name, obj)); r
@@ -459,15 +472,17 @@ module Rfm
 		module Handler
 		
 			attr_accessor :stack, :template
+			
+			SaxParser.install_defaults(self)
 
-			def self.build(io, template=nil, initial_object=DEFAULT_CLASS.new, backend=DEFAULT_BACKEND)
-				backend = decide_backend unless backend
-				backend = (backend.is_a?(String) || backend.is_a?(Symbol)) ? SaxParser.const_get(backend.to_s.capitalize + "Handler") : backend
-			  backend.build(io, template, initial_object)
+			def self.build(io, template=nil, initial_object=default_class.new, _backend=backend)
+				_backend = decide_backend unless _backend
+				_backend = (_backend.is_a?(String) || _backend.is_a?(Symbol)) ? SaxParser.const_get(_backend.to_s.capitalize + "Handler") : _backend
+			  _backend.build(io, template, initial_object)
 		  end
 		  
 		  def self.included(base)
-		    def base.build(io, template=nil, initial_object= DEFAULT_CLASS.new)
+		    def base.build(io, template=nil, initial_object= default_class.new)
 		  		handler = new(template, initial_object)
 		  		handler.run_parser(io)
 		  		#handler._stack[0].object
@@ -481,7 +496,7 @@ module Rfm
 		  	raise "The xml parser could not find a loadable backend gem: #{$!}"
 		  end
 		  
-		  def initialize(_template=nil, initial_object = DEFAULT_CLASS.new)
+		  def initialize(_template=nil, initial_object = default_class.new)
 		  	@stack = []
 		  	@template = get_template(_template)
 		  	#(@template = @template.values[0]) if @template.size == 1
@@ -491,13 +506,13 @@ module Rfm
 		  end
 		  
 			def get_template(name)
-				dat = TEMPLATES[name]
+				dat = templates[name]
 				if dat
 					rslt = load_template(dat)
 				else
 					rslt = load_template(name)
 				end
-				(TEMPLATES[name] = rslt) #unless dat == rslt
+				(templates[name] = rslt) #unless dat == rslt
 			end
 			
 			def load_template(dat)
@@ -509,7 +524,7 @@ module Rfm
 		  		when dat.to_s[/\.xml$/i]; self.class.build(File.join(prefix, dat), nil, {'compact'=>true})
 		  		when dat.to_s[/^<.*>/i]; "Convert from xml to Hash - under construction"
 		  		when dat.is_a?(String); YAML.load dat
-		  		else DEFAULT_CLASS.new
+		  		else default_class.new
 		  	end
 			end
 		  
@@ -536,12 +551,12 @@ module Rfm
 			end
 			
 			def transform(name)
-				return name unless DEFAULT_TAG_TRANSLATION.is_a?(Array)
-				name.to_s.gsub(*DEFAULT_TAG_TRANSLATION)
+				return name unless tag_translation.is_a?(Array)
+				name.to_s.gsub(*tag_translation)
 			end
 			
 			def init_element_buffer
-		    @element_buffer = {:tag=>nil, :attributes=>DEFAULT_CLASS.new}
+		    @element_buffer = {:tag=>nil, :attributes=>default_class.new}
 			end
 			
 			def send_element_buffer
@@ -562,10 +577,10 @@ module Rfm
 				send_element_buffer
 				if attributes
 					# This crazy thing transforms attribute keys to underscore (or whatever).
-					attributes = DEFAULT_CLASS[*attributes.collect{|k,v| [transform(k),v] }.flatten]
+					attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
 					set_cursor cursor.start_el(tag, attributes)
 				else
-				  @element_buffer = {:tag=>tag, :attributes => DEFAULT_CLASS.new}
+				  @element_buffer = {:tag=>tag, :attributes => default_class.new}
 				end
 			end
 			
@@ -582,10 +597,10 @@ module Rfm
 				#puts "Receiving text '#{value}'"
 				return unless value.to_s[/[^\s]/]
 				if element_buffer?
-				  @element_buffer[:attributes].merge!({DEFAULT_TEXT_LABEL=>value})
+				  @element_buffer[:attributes].merge!({text_label=>value})
 				  send_element_buffer
 				else
-					cursor.attribute(DEFAULT_TEXT_LABEL, value)
+					cursor.attribute(text_label, value)
 				end
 			end
 			
