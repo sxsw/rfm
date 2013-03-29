@@ -105,7 +105,7 @@ module Rfm
 							:depth, :before_close, :each_before_close, :delineate_with_hash, :as_name, :initialize
 							]
 
-		DEFAULTS = [:default_class, :backend, :text_label, :tag_translation, :shared_instance_var, :templates]
+		DEFAULTS = [:default_class, :backend, :text_label, :tag_translation, :shared_instance_var, :templates, :template_prefix]
 
 		class << self
 			attr_accessor *DEFAULTS
@@ -516,7 +516,7 @@ module Rfm
 			end
 			
 			def load_template(dat)
-				prefix = defined?(TEMPLATE_PREFIX) ? TEMPLATE_PREFIX : ''
+				prefix = defined?(template_prefix) ? template_prefix : ''
 		  	rslt = case
 		  		when dat.is_a?(Hash); dat
 		  		when dat.to_s[/\.y.?ml$/i]; (YAML.load_file(File.join(prefix, dat)))
