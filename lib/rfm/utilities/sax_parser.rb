@@ -92,7 +92,10 @@ require 'stringio'
 # TODO: Test new parser with raw data from multiple sources, make sure it works as raw.
 # TODO: Make sure single-attribute (or text) handler has correct objects & models to work with.
 # na  : Rewrite attach_to_what? logic to start with base_object type, then have sub-case statements for the rest.
-# TODO: Build backend-gem loading scheme. Eliminate gem 'require'. Use catch/throw like in XmlParser.
+# done: Build backend-gem loading scheme. Eliminate gem 'require'. Use catch/throw like in XmlParser.
+# TODO: Splash_sax.rb is throwing error when loading User.all when SaxParser.backend is anything other than :ox.
+#       This is probably related to the issue of incomming attributes (that are after the incoming start_element) not knowing their model.
+#       We need a way to know the model of after-start-element attributes, when the associated element/model was not added to the cursor.
 
 
 module Rfm
