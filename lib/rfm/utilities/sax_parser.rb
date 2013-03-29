@@ -44,11 +44,11 @@
 require 'yaml'
 require 'forwardable'
 require 'stringio'
-require 'rexml/streamlistener'
-require 'rexml/document'
-require 'ox'
-require 'libxml'
-require 'nokogiri'
+# require 'rexml/streamlistener'
+# require 'rexml/document'
+# require 'ox'
+# require 'libxml'
+# require 'nokogiri'
 
 # done: Move test data & user models to spec folder and local_testing.
 # done: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
@@ -92,20 +92,20 @@ require 'nokogiri'
 # TODO: Test new parser with raw data from multiple sources, make sure it works as raw.
 # TODO: Make sure single-attribute (or text) handler has correct objects & models to work with.
 # na  : Rewrite attach_to_what? logic to start with base_object type, then have sub-case statements for the rest.
-
+# TODO: Build backend-gem loading scheme. Eliminate gem 'require'. Use catch/throw like in XmlParser.
 
 
 module Rfm
 	module SaxParser
 		extend Forwardable
 
-		BACKENDS = [[:ox, 'ox'], [:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:rexml, 'rexml/document']]
-		
+		PARSERS = {}
+		BACKENDS = [[:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:ox, 'ox'], [:rexml, 'rexml/document']]
 		OPTIONS = [:name, :elements, :attributes, :attach, :attach_elements, :attach_attributes, :compact,
 							:depth, :before_close, :each_before_close, :delineate_with_hash, :as_name, :initialize
 							]
-
 		DEFAULTS = [:default_class, :backend, :text_label, :tag_translation, :shared_instance_var, :templates, :template_prefix]
+		
 
 		class << self
 			attr_accessor *DEFAULTS
@@ -475,13 +475,15 @@ module Rfm
 			
 			SaxParser.install_defaults(self)
 
-			def self.build(io, template=nil, initial_object=default_class.new, _backend=backend)
-				_backend = decide_backend unless _backend
-				_backend = (_backend.is_a?(String) || _backend.is_a?(Symbol)) ? SaxParser.const_get(_backend.to_s.capitalize + "Handler") : _backend
-			  _backend.build(io, template, initial_object)
+			# Main parsing interface (also aliased at SaxParser.build)
+			def self.build(io, template=nil, initial_object=default_class.new, parser=backend)
+				parser = get_backend(parser)
+				puts "Using backend parser: #{parser}"
+			  parser.build(io, template, initial_object)
 		  end
 		  
 		  def self.included(base)
+		  	# Add a .build method to the custom handler class, when the generic Handler module is included.
 		    def base.build(io, template=nil, initial_object= default_class.new)
 		  		handler = new(template, initial_object)
 		  		handler.run_parser(io)
@@ -490,6 +492,19 @@ module Rfm
 		  	end
 		  end # self.included
 		  
+		  # Takes backend symbol and returns custom Handler class for specified backend.
+		  def self.get_backend(parser)
+				(parser = decide_backend) unless parser
+				if parser.is_a?(String) || parser.is_a?(Symbol)
+					parser_proc = PARSERS[parser.to_sym]
+					parser_proc.call unless parser_proc.nil? || const_defined?((parser.to_s.capitalize + 'Handler').to_sym)
+					SaxParser.const_get(parser.to_s.capitalize + "Handler")
+				end
+			rescue
+				raise "Could not load the backend parser '#{parser}': #{$!}"
+		  end
+		  
+		  # Finds a loadable backend and returns its symbol.
 		  def self.decide_backend
 		  	BACKENDS.find{|b| !Gem::Specification::find_all_by_name(b[1]).empty?}[0]
 		  rescue
@@ -505,6 +520,10 @@ module Rfm
 		    set_cursor Cursor.new(@template, initial_object, 'top')
 		  end
 		  
+		  # Takes string, symbol, hash, and returns a (possibly cached) parsing template.
+		  # String can be a file name, yaml, xml.
+		  # Symbol is a name of a template stored in SaxParser@templates (you would set the templates when your app loads).
+		  # Templates stored in the SaxParser@templates var can be strings of code, file specs, or hashes.
 			def get_template(name)
 				dat = templates[name]
 				if dat
@@ -515,6 +534,7 @@ module Rfm
 				(templates[name] = rslt) #unless dat == rslt
 			end
 			
+			# Does the heavy-lifting of template retrieval.
 			def load_template(dat)
 				prefix = defined?(template_prefix) ? template_prefix : ''
 		  	rslt = case
@@ -618,86 +638,95 @@ module Rfm
 		
 		#####  SAX PARSER BACKEND HANDLERS  #####
 		
-		class OxHandler < ::Ox::Sax
-		  include Handler
-		
-		  def run_parser(io)
-				case
-				when (io.is_a?(File) or io.is_a?(StringIO)); Ox.sax_parse self, io
-				when io.to_s[/^</]; StringIO.open(io){|f| Ox.sax_parse self, f}
-				else File.open(io){|f| Ox.sax_parse self, f}
-				end
-			end
+		PARSERS[:libxml] = proc do
+			require 'libxml'
+			class LibxmlHandler
+				include LibXML
+				include XML::SaxParser::Callbacks
+			  include Handler
 			
-			alias_method :start_element, :_start_element
-			alias_method :end_element, :_end_element
-			alias_method :attr, :_attribute
-			alias_method :text, :_text		  
-		end # OxFmpSax
-
-
-		class RexmlHandler
-			# Both of these are needed to use rexml streaming parser,
-			# but don't put them here... put them at the _top.
-			#require 'rexml/streamlistener'
-			#require 'rexml/document'
-			include REXML::StreamListener
-		  include Handler
-		
-		  def run_parser(io)
-		  	parser = REXML::Document
-				case
-				when (io.is_a?(File) or io.is_a?(StringIO)); parser.parse_stream(io, self)
-				when io.to_s[/^</]; StringIO.open(io){|f| parser.parse_stream(f, self)}
-				else File.open(io){|f| parser.parse_stream(f, self)}
+			  def run_parser(io)
+					parser = case
+						when (io.is_a?(File) or io.is_a?(StringIO)); XML::SaxParser.io(io)
+						when io[/^</]; XML::SaxParser.io(StringIO.new(io))
+						else XML::SaxParser.io(File.new(io))
+					end
+					parser.callbacks = self
+					parser.parse	
 				end
-			end
+				
+				alias_method :on_start_element_ns, :_start_element
+				alias_method :on_end_element_ns, :_end_element
+				alias_method :on_characters, :_text
+			end # LibxmlSax	
+		end
+		
+		PARSERS[:nokogiri] = proc do
+			require 'nokogiri'
+			class NokogiriHandler < Nokogiri::XML::SAX::Document
+			  include Handler
 			
-			alias_method :tag_start, :_start_element
-			alias_method :tag_end, :_end_element
-			alias_method :text, :_text
-		end # RexmlStream
-		
-		
-		class LibxmlHandler
-			include LibXML
-			include XML::SaxParser::Callbacks
-		  include Handler
-		
-		  def run_parser(io)
-				parser = case
-					when (io.is_a?(File) or io.is_a?(StringIO)); XML::SaxParser.io(io)
-					when io[/^</]; XML::SaxParser.io(StringIO.new(io))
-					else XML::SaxParser.io(File.new(io))
+			  def run_parser(io)
+					parser = Nokogiri::XML::SAX::Parser.new(self)	  
+					parser.parse(case
+						when (io.is_a?(File) or io.is_a?(StringIO)); io
+						when io[/^</]; StringIO.new(io)
+						else File.new(io)
+					end)
 				end
-				parser.callbacks = self
-				parser.parse	
-			end
+	
+				alias_method :start_element, :_start_element
+				alias_method :end_element, :_end_element
+				alias_method :characters, :_text
+			end # NokogiriSax	
+		end
+		
+		PARSERS[:ox] = proc do
+			require 'ox'
+			class OxHandler < ::Ox::Sax
+			  include Handler
 			
-			alias_method :on_start_element_ns, :_start_element
-			alias_method :on_end_element_ns, :_end_element
-			alias_method :on_characters, :_text
-		end # LibxmlSax	
-		
-		
-		class NokogiriHandler < Nokogiri::XML::SAX::Document
-		  include Handler
-		
-		  def run_parser(io)
-				parser = Nokogiri::XML::SAX::Parser.new(self)	  
-				parser.parse(case
-					when (io.is_a?(File) or io.is_a?(StringIO)); io
-					when io[/^</]; StringIO.new(io)
-					else File.new(io)
-				end)
-			end
+			  def run_parser(io)
+					case
+					when (io.is_a?(File) or io.is_a?(StringIO)); Ox.sax_parse self, io
+					when io.to_s[/^</]; StringIO.open(io){|f| Ox.sax_parse self, f}
+					else File.open(io){|f| Ox.sax_parse self, f}
+					end
+				end
+				
+				alias_method :start_element, :_start_element
+				alias_method :end_element, :_end_element
+				alias_method :attr, :_attribute
+				alias_method :text, :_text		  
+			end # OxFmpSax
+		end
 
-			alias_method :start_element, :_start_element
-			alias_method :end_element, :_end_element
-			alias_method :characters, :_text
-		end # NokogiriSax	
+		PARSERS[:rexml] = proc do
+			require 'rexml/document'
+			require 'rexml/streamlistener'
+			class RexmlHandler
+				# Both of these are needed to use rexml streaming parser,
+				# but don't put them here... put them at the _top.
+				#require 'rexml/streamlistener'
+				#require 'rexml/document'
+				include REXML::StreamListener
+			  include Handler
+			
+			  def run_parser(io)
+			  	parser = REXML::Document
+					case
+					when (io.is_a?(File) or io.is_a?(StringIO)); parser.parse_stream(io, self)
+					when io.to_s[/^</]; StringIO.open(io){|f| parser.parse_stream(f, self)}
+					else File.open(io){|f| parser.parse_stream(f, self)}
+					end
+				end
+				
+				alias_method :tag_start, :_start_element
+				alias_method :tag_end, :_end_element
+				alias_method :text, :_text
+			end # RexmlStream
+		end
 		
-
 
 	end # SaxParser
 end # Rfm
