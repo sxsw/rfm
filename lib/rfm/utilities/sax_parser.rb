@@ -95,7 +95,8 @@ require 'stringio'
 # done: Build backend-gem loading scheme. Eliminate gem 'require'. Use catch/throw like in XmlParser.
 # TODO: Splash_sax.rb is throwing error when loading User.all when SaxParser.backend is anything other than :ox.
 #       This is probably related to the issue of incomming attributes (that are after the incoming start_element) not knowing their model.
-#       We need a way to know the model of after-start-element attributes, when the associated element/model was not added to the cursor.
+#       Some multiple-text attributes were tripping up delineate_with_hash, so I added some fault-tollerance to that method.
+#       But those multi-text attributes are still way ugly when passed by libxml or nokogiri. Ox & Rexml are fine and pass them as one chunk.
 
 
 module Rfm
@@ -182,6 +183,7 @@ module Rfm
 		    #####  SAX METHODS  #####
 		    
 			  def attribute(name, value)
+			  	#puts "Indiv attrb name '#{name}' value '#{value}' object '#{object.class}' model '#{model.keys}' subm '#{submodel.keys}' tag '#{tag}' newtag '#{newtag}'"
 			  	assign_attributes({name=>value}, object, model, model)
 			  rescue
 			  	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
@@ -374,7 +376,7 @@ module Rfm
 			  def attach?(_model=model); _model && _model['attach']; end
 			  def attach_elements?(_model=model); _model['attach_elements']; end
 			  def attach_attributes?(_model=model); _model['attach_attributes']; end
-			  def delineate_with_hash?(_model=model); _model['delineate_with_hash']; end
+			  def delineate_with_hash?(_model=model); _model && _model['delineate_with_hash']; end
 			  def as_name?(_model=model); _model && _model['as_name']; end
 			  def initialize?(_model=model); _model['initialize']; end
 

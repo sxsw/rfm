@@ -270,6 +270,8 @@ module Rfm
 	    	# models/sublayouts/layout/server (Is this done now?).
 	    	grammar_option = state(options)[:grammar]
 	    	options.merge!(:grammar=>grammar_option) if grammar_option
+	    	template = options.delete :template
+	    	
 	      #include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
 	      include_portals = !options[:ignore_portals]
 	      
@@ -287,7 +289,7 @@ module Rfm
 				# Need to specify the connection object as the initial_object of the parsing stack,
 				# so that Fmresultset can get the layout from it.
 				#c.parse('fmresultset.xml', Rfm::Resultset.new(self), nil)
-				c.parse(:records, Rfm::Resultset.new(self))
+				c.parse(template || :records, Rfm::Resultset.new(self))
 	    end
 	    
 	    def params
