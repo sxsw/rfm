@@ -54,7 +54,7 @@ require 'stringio'
 # done: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
 # done: Add option to 'compact' unnecessary or empty elements/attributes - maybe - should this should be handled at Model level?
 # na  : Separate all attribute options in yml into 'attributes:' hash, similar to 'elements:' hash.
-# TODO: Handle multiple 'text' callbacks for a single element.
+# done: Handle multiple 'text' callbacks for a single element.
 # done: Add options for text handling (what to name, where to put).
 # done: Fill in other configuration options in yml
 # done: Clean_elements doesn't work if elements are non-hash/array objects. Make clean_elements work with object attributes.
@@ -71,7 +71,7 @@ require 'stringio'
 # na  : Block attachment methods from seeing parent if parent isn't the current objects true parent (how?).
 # done: Handle attach: hash better (it's not specifically handled, but declaring it will block a parents influence).
 # TODO: CaseInsensitiveHash/IndifferentAccess is not working for sax parser.
-# TODO: Give the yml (and xml) doc the ability to have a top-level hash like "fmresultset" or "fmresultset_yml" or "fmresultset_xml",
+# na  : Give the yml (and xml) doc the ability to have a top-level hash like "fmresultset" or "fmresultset_yml" or "fmresultset_xml",
 #       then you have a label to refer to it if you load several config docs at once (like into a Rfm::SaxParser::TEMPLATES constant).
 #       Use an array of accepted model-keys  to filter whether loaded template is a named-model or actual model data.
 # done: Load up all template docs when Rfm loads, or when Rfm::SaxParser loads. For RFM only, not for parser module.
@@ -89,14 +89,16 @@ require 'stringio'
 # na  : May need to store 'ignored' models in new cursor, with the parent object instead of the new object. Probably not a good idea
 # done: Fix label_or_tag for object-attachment.
 # done: Fix delineate_with_hash in parsing of resultset field_meta (should be hash of hashes, not array of hashes).
-# TODO: Test new parser with raw data from multiple sources, make sure it works as raw.
-# TODO: Make sure single-attribute (or text) handler has correct objects & models to work with.
+# done: Test new parser with raw data from multiple sources, make sure it works as raw.
+# done: Make sure single-attribute (or text) handler has correct objects & models to work with.
 # na  : Rewrite attach_to_what? logic to start with base_object type, then have sub-case statements for the rest.
 # done: Build backend-gem loading scheme. Eliminate gem 'require'. Use catch/throw like in XmlParser.
-# TODO: Splash_sax.rb is throwing error when loading User.all when SaxParser.backend is anything other than :ox.
+# done: Splash_sax.rb is throwing error when loading User.all when SaxParser.backend is anything other than :ox.
 #       This is probably related to the issue of incomming attributes (that are after the incoming start_element) not knowing their model.
 #       Some multiple-text attributes were tripping up delineate_with_hash, so I added some fault-tollerance to that method.
 #       But those multi-text attributes are still way ugly when passed by libxml or nokogiri. Ox & Rexml are fine and pass them as one chunk.
+#       Consider buffering all attributes & text until start of new element.
+# YAY:  I bufffered all attributes & text, and the problem is solved.
 
 
 module Rfm
@@ -182,14 +184,14 @@ module Rfm
 		    
 		    #####  SAX METHODS  #####
 		    
-			  def attribute(name, value)
+			  def receive_attribute(name, value)
 			  	#puts "Indiv attrb name '#{name}' value '#{value}' object '#{object.class}' model '#{model.keys}' subm '#{submodel.keys}' tag '#{tag}' newtag '#{newtag}'"
 			  	assign_attributes({name=>value}, object, model, model)
 			  rescue
 			  	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
 		        
-		    def start_el(_tag, _attributes)		
+		    def receive_start_element(_tag, _attributes)		
 		    	#puts "Start_el: _tag '#{_tag}', cursorobject '#{object.class}', cursor_submodel '#{submodel.to_yaml}'."
 		    	
 		    	# Set newtag for other methods to use during the start_el run.
@@ -226,7 +228,7 @@ module Rfm
 		      return Cursor.new(subm, new_element, returntag)
 		    end # start_el
 		
-		    def end_el(_tag)
+		    def receive_end_element(_tag)
 		      if _tag == self.tag
 		      	begin
 		      		# Data cleaup
@@ -238,7 +240,7 @@ module Rfm
 			      	  object.each{|o| o.send(each_before_close?.to_s, object)}
 		      	  end
 			      rescue
-			      	puts "Error ending element tagged '#{_tag}': #{$!}"
+			      	puts "Error: ending element tagged failed '#{_tag}': #{$!}"
 			      end
 		        return true
 		      end
@@ -582,12 +584,13 @@ module Rfm
 			end
 			
 			def init_element_buffer
-		    @element_buffer = {:tag=>nil, :attributes=>default_class.new}
+		    @element_buffer = {:tag=>nil, :attributes=>default_class.new, :text=>''}
 			end
 			
 			def send_element_buffer
 		    if element_buffer?
-          set_cursor cursor.start_el(@element_buffer[:tag], @element_buffer[:attributes])
+		    	(@element_buffer[:attributes][text_label] = @element_buffer[:text]) if @element_buffer[:text].to_s[/[^\s]/]
+          set_cursor cursor.receive_start_element(@element_buffer[:tag], @element_buffer[:attributes])
           init_element_buffer
 	      end
 	    end
@@ -595,26 +598,24 @@ module Rfm
 	    def element_buffer?
 	      @element_buffer[:tag] && !@element_buffer[:tag].empty?
 	    end
-		
+
+
 		  # Add a node to an existing element.
 			def _start_element(tag, attributes=nil, *args)
 				#puts "Receiving element '#{_tag}' with attributes '#{attributes}'"
 				tag = transform tag
-				send_element_buffer
+				send_element_buffer if element_buffer?
 				if attributes
 					# This crazy thing transforms attribute keys to underscore (or whatever).
 					attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
-					set_cursor cursor.start_el(tag, attributes)
-				else
-				  @element_buffer = {:tag=>tag, :attributes => default_class.new}
 				end
+				@element_buffer.merge!({:tag=>tag, :attributes => attributes || default_class.new})
 			end
 			
 			# Add attribute to existing element.
 			def _attribute(name, value, *args)
 				#puts "Receiving attribute '#{name}' with value '#{value}'"
 				name = transform name
-		    #cursor.attribute(name,value)
 				@element_buffer[:attributes].merge!({name=>value})
 			end
 			
@@ -622,12 +623,7 @@ module Rfm
 			def _text(value, *args)
 				#puts "Receiving text '#{value}'"
 				return unless value.to_s[/[^\s]/]
-				if element_buffer?
-				  @element_buffer[:attributes].merge!({text_label=>value})
-				  send_element_buffer
-				else
-					cursor.attribute(text_label, value)
-				end
+			  @element_buffer[:text] << value
 			end
 			
 			# Close out an existing element.
@@ -635,8 +631,51 @@ module Rfm
 				tag = transform tag
 				#puts "Receiving end_element '#{tag}'"
 	      send_element_buffer
-	      cursor.end_el(tag) and dump_cursor
+	      cursor.receive_end_element(tag) and dump_cursor
 			end
+
+		
+			# 		  # Add a node to an existing element.
+			# 			def _start_element(tag, attributes=nil, *args)
+			# 				#puts "Receiving element '#{_tag}' with attributes '#{attributes}'"
+			# 				tag = transform tag
+			# 				send_element_buffer
+			# 				if attributes
+			# 					# This crazy thing transforms attribute keys to underscore (or whatever).
+			# 					attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
+			# 					set_cursor cursor.receive_start_element(tag, attributes)
+			# 				else
+			# 				  @element_buffer = {:tag=>tag, :attributes => default_class.new}
+			# 				end
+			# 			end
+			# 			
+			# 			# Add attribute to existing element.
+			# 			def _attribute(name, value, *args)
+			# 				#puts "Receiving attribute '#{name}' with value '#{value}'"
+			# 				name = transform name
+			# 		    #cursor.receive_attribute(name,value)
+			# 				@element_buffer[:attributes].merge!({name=>value})
+			# 			end
+			# 			
+			# 			# Add 'content' attribute to existing element.
+			# 			def _text(value, *args)
+			# 				#puts "Receiving text '#{value}'"
+			# 				return unless value.to_s[/[^\s]/]
+			# 				if element_buffer?
+			# 				  @element_buffer[:attributes].merge!({text_label=>value})
+			# 				  send_element_buffer
+			# 				else
+			# 					cursor.receive_attribute(text_label, value)
+			# 				end
+			# 			end
+			# 			
+			# 			# Close out an existing element.
+			# 			def _end_element(tag, *args)
+			# 				tag = transform tag
+			# 				#puts "Receiving end_element '#{tag}'"
+			# 	      send_element_buffer
+			# 	      cursor.receive_end_element(tag) and dump_cursor
+			# 			end
 		  
 		end # Handler
 		
