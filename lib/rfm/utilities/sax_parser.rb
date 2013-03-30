@@ -547,9 +547,9 @@ module Rfm
 				prefix = defined?(template_prefix) ? template_prefix : ''
 		  	rslt = case
 		  		when dat.is_a?(Hash); dat
-		  		when dat.to_s[/\.y.?ml$/i]; (YAML.load_file(File.join(prefix, dat)))
+		  		when dat.to_s[/\.y.?ml$/i]; (YAML.load_file(File.join(*[prefix, dat].compact)))
 		  		# This line might cause an infinite loop.
-		  		when dat.to_s[/\.xml$/i]; self.class.build(File.join(prefix, dat), nil, {'compact'=>true})
+		  		when dat.to_s[/\.xml$/i]; self.class.build(File.join(*[prefix, dat].compact), nil, {'compact'=>true})
 		  		when dat.to_s[/^<.*>/i]; "Convert from xml to Hash - under construction"
 		  		when dat.is_a?(String); YAML.load dat
 		  		else default_class.new

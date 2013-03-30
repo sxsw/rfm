@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-
 ---
 elements:
 - name: FMPXMLLAYOUT
@@ -7,6 +6,7 @@ elements:
   attach_attributes: shared
 - name: ERRORCODE
   as_name: error
+  attach: shared
   compact: true
 - name: PRODUCT
   attach: none
@@ -21,26 +21,37 @@ elements:
   elements:
   - name: STYLE
     attach: none
+    attributes:
+    - name: TYPE
+      as_name: type
+    - name: VALUELIST
+      as_name: valuelist
 - name: VALUELISTS
   attach: none
 - name: VALUELIST
+  class: Array
   as_name: value_lists
-
-
-
+  attach_attributes: instance
+  delineate_with_hash: NAME
+  attach_elements: array
+  
+  
+  
+# Works !!!
 # ---
 # elements:
 # - name: FMPXMLLAYOUT
-#   ignore: self
+#   attach: none
 #   attach_attributes: shared
 # - name: ERRORCODE
 #   as_name: error
+#   attach: shared
 #   compact: true
 # - name: PRODUCT
-#   ignore: self
+#   attach: none
 #   attach_attributes: shared
 # - name: LAYOUT
-#   ignore: self
+#   attach: none
 #   attach_attributes: shared
 # - name: FIELD
 #   class: Rfm::Metadata::FieldControl
@@ -48,57 +59,21 @@ elements:
 #   delineate_with_hash: NAME
 #   elements:
 #   - name: STYLE
-#     ignore: self
-# - name: VALUELISTS
-#   ignore: self
-# - name: VALUELIST
-#   as_name: value_lists
-
-
-# #compact: true
-# attach_elements: individual
-# elements:
-# - name: fmresultset
-#   class: Rfm::FmResultset
-#   ignore: ['self']
-# - name: datasource
-#   class: Rfm::Datasource
-# - name:  metadata
-#   class: Rfm::Meta
-#   elements:
-#   - name: field_definition
-#     as_name: field_meta
-#     attach: hash
-#   - name: portal_definition
-#     as_name: portal_meta
-#     attach: hash
-# - name: resultset
-#   attach_attributes: individual
-#   ignore: ['self']
-# - name: record
-#   class: Rfm::Record
-#   attach_attributes: individual
-#   attach: hash
-#   #initialize: [new, _obj]
-#   elements:
-#   - name: field
-#     class: Rfm::Metadata::Field
-#     attach_attributes: individual
-#     compact: true
 #     attach: none
-#     before_close: :build_record_data
-#   - name: relatedset
-#     class: Rfm::RelatedSet
-#     attach: individual
-#     as_name: portals
-#     delineate_with_hash: table
-#     elements:
-#     - name: record
-#       class: Rfm::Record
-#       attach_attributes: individual
-#       elements:
-#       - name: field
-#         compact: true
-#         class: Rfm::Metadata::Field
-#         attach: none
-#         before_close: :build_record_data
+#     attributes:
+#     - name: TYPE
+#       as_name: type
+#     - name: VALUELIST
+#       as_name: valuelist
+# - name: VALUELISTS
+#   attach: none
+# - name: VALUELIST
+#   class: Array
+#   as_name: value_lists
+#   attach_attributes: instance
+#   delineate_with_hash: NAME
+#   attach_elements: array
+# 
+
+
+
