@@ -88,6 +88,10 @@ module Rfm
         
       end
       
+			def end_element_callback(cursor)
+				cursor.parent.object.merge!(name => data )
+			end
+      
     end # Field
   end # Metadata
 end # Rfm

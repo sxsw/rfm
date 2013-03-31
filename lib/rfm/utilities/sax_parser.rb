@@ -102,6 +102,9 @@ require 'stringio'
 # TODO: Can't configure an attribute (in template) if it is used in delineate_with_hash.
 # TODO: Some configurations in template cause errors - usually having to do with nil.
 # TODO: Can't supply custom class if it's a String (but an unspecified subclass of plain Object works fine!?).
+# TODO: Attaching random object to Array will thro error.
+# TODO: Sending elements with subelements to Shared results in no data attached to the shared var.
+# 
 
 
 module Rfm
@@ -550,7 +553,13 @@ module Rfm
 		  end
 		  
 		  def initialize(_template=nil, initial_object=nil)
-		  	initial_object = initial_object || default_class.new || {}
+		  	initial_object = case
+		  		when initial_object.nil?; default_class.new
+		  		when initial_object.is_a?(Class); initial_object.new
+		  		when initial_object.is_a?(String) || initial_object.is_a?(Symbol); SaxParser.get_constant(initial_object).new
+		  		else initial_object
+		  	end
+		  	#initial_object = initial_object || default_class.new || {}
 		  	@stack = []
 		  	@template = get_template(_template)
 		  	#(@template = @template.values[0]) if @template.size == 1

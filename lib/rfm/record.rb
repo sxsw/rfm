@@ -236,6 +236,8 @@ module Rfm
     # When you do, the change is noted, but *the data is not updated in FileMaker*. You must call
     # Record::save or Record::save_if_not_modified to actually save the data.
   	def [](key)
+  		# Added by wbr, 2013-03-31
+  		return super unless @loaded
   		return fetch(key.to_s.downcase)
   	rescue IndexError
     	raise Rfm::ParameterError, "#{key} does not exists as a field in the current Filemaker layout." unless key.to_s == '' #unless (!layout or self.key?(key_string))

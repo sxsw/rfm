@@ -149,6 +149,13 @@ module Rfm
   	def portal_names
   		portal_meta.keys
   	end
+  	
+		def end_element_callback(cursor)
+			elements = cursor.parent.obj
+			elements.each{|k, v| cursor.set_attr_accessor(k, v) unless k == 'resultset'}
+			# Why is this here? Seems to need it... how does it work?
+			cursor.stack.unshift cursor
+		end
     
     private
     

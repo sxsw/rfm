@@ -204,54 +204,54 @@ module Rfm
   
   
 	#####  USER MODELS - TEMPORARY ONLY!!!  #####
-			
-	class FmResultset < Hash
-	end
-	
-	class Datasource < Hash
-	end
-	
-	class Meta < Hash
-	# 		def attach_meta_objects_to_resultset(cursor)
-	# 			self.each{|k, v| cursor._parent._obj.set_attr_accessor(k, v)}
+	# 			
+	# 	class FmResultset < Hash
+	# 	end
+	# 	
+	# 	class Datasource < Hash
+	# 	end
+	# 	
+	# 	class Meta < Hash
+	# 	# 		def attach_meta_objects_to_resultset(cursor)
+	# 	# 			self.each{|k, v| cursor._parent._obj.set_attr_accessor(k, v)}
+	# 	# 		end
+	# 	end
+	# 	
+	# 	class Resultset# < Array
+	# 		def attach_parent_objects(cursor)
+	# 			elements = cursor.parent.obj
+	# 			elements.each{|k, v| cursor.set_attr_accessor(k, v) unless k == 'resultset'}
+	# 			# Why is this here? Seems to need it... how does it work?
+	# 			cursor.stack.unshift cursor
 	# 		end
-	end
-	
-	class Resultset# < Array
-		def attach_parent_objects(cursor)
-			elements = cursor.parent.obj
-			elements.each{|k, v| cursor.set_attr_accessor(k, v) unless k == 'resultset'}
-			# Why is this here? Seems to need it... how does it work?
-			cursor.stack.unshift cursor
-		end
-	end
-	
-	class Record# < Hash
-		# These are temporary hack for converting the Rfm::Record class to use sax-parser.
-		def [](*args)
-			super
-		end
-		def []=(*args)
-			super
-		end
-	end
-	
-	class Metadata::Field# < Hash
-		# This easy way requires the 'compact' parsing option to be true.
-		def build_record_data(cursor)
-			cursor.parent.object.merge!(name => data )
-		end
-		# This is the harder way - when not using the 'compact' parsing option.
-		# Also see sax_parser_sandbox for other version of this that works.
-		# 		def build_record_data(cursor)
-		# 			dat = data
-		# 			dat = case
-		# 				when dat.is_a?(Array); dat.collect{|d| d['text'] if d.is_a? Hash}.compact.join(', ')
-		# 				when data.is_a?(Hash); dat['text']
-		# 			end
-		# 			cursor._parent._obj.merge!(self.att['name'] => dat )
-		# 		end
-	end
+	# 	end
+	# 	
+	# 	class Record# < Hash
+	# 		# These are temporary hack for converting the Rfm::Record class to use sax-parser.
+	# 		def [](*args)
+	# 			super
+	# 		end
+	# 		def []=(*args)
+	# 			super
+	# 		end
+	# 	end
+	# 	
+	# 	class Metadata::Field# < Hash
+	# 		# This easy way requires the 'compact' parsing option to be true.
+	# 		def build_record_data(cursor)
+	# 			cursor.parent.object.merge!(name => data )
+	# 		end
+	# 		# This is the harder way - when not using the 'compact' parsing option.
+	# 		# Also see sax_parser_sandbox for other version of this that works.
+	# 		# 		def build_record_data(cursor)
+	# 		# 			dat = data
+	# 		# 			dat = case
+	# 		# 				when dat.is_a?(Array); dat.collect{|d| d['text'] if d.is_a? Hash}.compact.join(', ')
+	# 		# 				when data.is_a?(Hash); dat['text']
+	# 		# 			end
+	# 		# 			cursor._parent._obj.merge!(self.att['name'] => dat )
+	# 		# 		end
+	# 	end
 	
 	class RelatedSet < Array
 	end
