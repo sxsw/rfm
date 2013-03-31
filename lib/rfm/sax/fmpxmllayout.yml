@@ -31,15 +31,65 @@ elements:
 - name: VALUELIST
   class: Array
   as_name: value_lists
-  attach_attributes: instance
+  #attach_attributes: instance
   delineate_with_hash: NAME
-  attach_elements: array
+  #attach_elements: array
   elements:
   - name: VALUE
-    attach: cursor
-    class: Rfm::Metadata::Value
-    before_close: :attach_objects
-  
+    # This turns the potential hash into a string
+    class: String
+    # Then we place the main attribute into the string's data.
+    before_close: replace text
+    attributes:
+    - name: DISPLAY
+      as_name: display
+
+
+# Works !!!
+# ---
+# elements:
+# - name: FMPXMLLAYOUT
+#   attach: none
+#   attach_attributes: shared
+# - name: ERRORCODE
+#   as_name: error
+#   attach: shared
+#   compact: true
+# - name: PRODUCT
+#   attach: none
+#   attach_attributes: shared
+# - name: LAYOUT
+#   attach: none
+#   attach_attributes: shared
+# - name: FIELD
+#   class: Rfm::Metadata::FieldControl
+#   as_name: field_controls
+#   delineate_with_hash: NAME
+#   elements:
+#   - name: STYLE
+#     attach: none
+#     attributes:
+#     - name: TYPE
+#       as_name: type
+#     - name: VALUELIST
+#       as_name: valuelist
+# - name: VALUELISTS
+#   attach: none
+# - name: VALUELIST
+#   class: Array
+#   as_name: value_lists
+#   attach_attributes: instance
+#   delineate_with_hash: NAME
+#   attach_elements: array
+#   elements:
+#   - name: VALUE
+#     class: Rfm::Metadata::Value
+#     before_close: :attach_objects
+#     attributes:
+#     - name: DISPLAY
+#       as_name: display
+
+ 
   
 # Works !!!
 # ---

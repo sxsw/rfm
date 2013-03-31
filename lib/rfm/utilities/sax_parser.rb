@@ -139,6 +139,7 @@ module Rfm
 			Handler.build(*args)
 		end
 
+		# Installs attribute accessors for defaults
 		def self.install_defaults(klass)
 			klass.extend Forwardable		    
 	    klass.def_delegators SaxParser, *DEFAULTS
@@ -158,7 +159,7 @@ module Rfm
 		    
 		    # Main get-constant method
 		    def self.get_constant(klass)
-		    	puts "Getting constant '#{klass.to_s}'"
+		    	#puts "Getting constant '#{klass.to_s}'"
 		    	return default_class if klass.to_s == ''
 		    	#return klass unless klass.is_a?(String) || klass.is_a?(Symbol)
 		    	return klass if klass.is_a? Class
@@ -198,7 +199,7 @@ module Rfm
 			  end
 		        
 		    def receive_start_element(_tag, _attributes)		
-		    	puts "receive_start_element: _tag '#{_tag}', current object '#{object.class}', cursor_submodel '#{submodel.to_yaml}'."
+		    	#puts "receive_start_element: _tag '#{_tag}', current object '#{object.class}', cursor_submodel '#{submodel.to_yaml}'."
 		    	
 		    	# Set newtag for other methods to use during the start_el run.
 		    	self.newtag = _tag
@@ -207,7 +208,7 @@ module Rfm
 		      subm = submodel
 		      
 		    	if attachment_prefs(model, subm, 'element')=='none'
-		    		puts "Assigning attributes for attach:none on #{newtag}"
+		    		#puts "Assigning attributes for attach:none on #{newtag}"
 		    		assign_attributes(_attributes, object, subm, subm)
 		    		return
 		    	end		      
@@ -220,7 +221,7 @@ module Rfm
 		      init = initialize?(subm) || []
 		      init[0] ||= :allocate
 		      init[1] = eval(init[1].to_s)
-		      puts "Creating new element '#{const}'"
+		      #puts "Creating new element '#{const}'"
 		      new_element = const.send(*init.compact)
 		      #puts "Created new element of class '#{new_element.class}' for _tag '#{tag}'."
 		      
@@ -242,12 +243,15 @@ module Rfm
 		      	begin
 		      		# Data cleaup
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #top.model && top.model['compact']
-			      	# This is for arrays
-			      	object.send(before_close?.to_s, self) if before_close?
-			      	# TODO: This is for hashes with array as value. It may be ilogical in this context. Is it needed?
-			      	if each_before_close? && object.respond_to?('each')
-			      	  object.each{|o| o.send(each_before_close?.to_s, object)}
-		      	  end
+			      	if before_close?.is_a? Symbol
+			      		object.send before_close?, self
+			      	elsif before_close?.is_a?(String)
+			      		object.send :eval, before_close?
+			      	end
+							# 	# TODO: This is for hashes with array as value. It may be ilogical in this context. Is it needed?
+							# 	if each_before_close? && object.respond_to?('each')
+							# 	  object.each{|o| o.send(each_before_close?.to_s, object)}
+							#   end
 			      rescue
 			      	puts "Error: end_element tag '#{_tag}' failed: #{$!}"
 			      end
@@ -286,7 +290,7 @@ module Rfm
 				def attach_to_what?(base_object, new_object, name, base_model, new_model, type)
 					prefs = attachment_prefs(base_model, new_model, type)
 					
-					case
+					assignment = case
 						when prefs=='shared'; 'shared'
 						when prefs=='cursor'; 'cursor'
 						when prefs=='none' ; 'none'			
@@ -295,7 +299,8 @@ module Rfm
 						when base_object.is_a?(Array) && (type='element' || prefs=='array'); 'array'
 					else
 						puts "Could not determine attach_to_what? for label '#{name}' of type '#{type}'"	
-					end					
+					end
+					puts "Assigning '#{assignment}' to attach '#{new_object.class}' to '#{base_object.class}' name '#{name}' type '#{type}'"			
 				end
 				
 				def attachment_prefs(base_model, new_model, type)
