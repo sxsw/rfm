@@ -310,7 +310,7 @@ module Rfm
 # 					else
 # 						puts "Could not determine attach_to_what? for label '#{name}' of type '#{type}'"	
 					end
-					puts "Assigning '#{assignment}' to attach '#{new_object.class}' to '#{base_object.class}' name '#{name}' type '#{type}'"			
+					#puts "Assigning '#{assignment}' to attach '#{new_object.class}' to '#{base_object.class}' name '#{name}' type '#{type}'"			
 					assignment
 				rescue
 					puts "Could not determine attach_to_what? for label '#{name}' of type '#{type}'"
