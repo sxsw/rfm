@@ -17,7 +17,10 @@ elements:
 - name: FIELD
   class: Rfm::Metadata::FieldControl
   as_name: field_controls
-  delineate_with_hash: NAME
+  delineate_with_hash: name
+  attributes:
+  - name: NAME
+    as_name: name
   elements:
   - name: STYLE
     attach: none
@@ -31,9 +34,7 @@ elements:
 - name: VALUELIST
   class: Array
   as_name: value_lists
-  #attach_attributes: instance
   delineate_with_hash: NAME
-  #attach_elements: array
   elements:
   - name: VALUE
     # This turns the potential hash into a string

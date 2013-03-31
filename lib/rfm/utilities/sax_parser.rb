@@ -293,14 +293,24 @@ module Rfm
 					assignment = case
 						when prefs=='shared'; 'shared'
 						when prefs=='cursor'; 'cursor'
-						when prefs=='none' ; 'none'			
-						when prefs=='instance' || (type=='attribute' && base_object.is_a?(Array)) || (prefs.nil? && !base_object.is_a?(Hash)); 'instance'
-						when base_object.is_a?(Hash) && (prefs.nil? || prefs.to_s[/hash/]); 'hash'
-						when base_object.is_a?(Array) && (type='element' || prefs=='array'); 'array'
-					else
-						puts "Could not determine attach_to_what? for label '#{name}' of type '#{type}'"	
+						when prefs=='none' ; 'none'
+						when prefs=='instance'; 'instance'
+						when base_object.is_a?(Hash) && (prefs.nil? || prefs=='hash'); 'hash'
+						when base_object.is_a?(Array) && (type=='element' || prefs=='array'); 'array'
+						else 'instance'					
+# 						when prefs=='shared'; 'shared'
+# 						when prefs=='cursor'; 'cursor'
+# 						when prefs=='none' ; 'none'			
+# 						when prefs=='instance' || (type=='attribute' && base_object.is_a?(Array)) || (prefs.nil? && !base_object.is_a?(Hash)); 'instance'
+# 						when base_object.is_a?(Hash) && (prefs.nil? || prefs.to_s[/hash/]); 'hash'
+# 						when base_object.is_a?(Array) && (type='element' || prefs=='array'); 'array'
+# 					else
+# 						puts "Could not determine attach_to_what? for label '#{name}' of type '#{type}'"	
 					end
 					puts "Assigning '#{assignment}' to attach '#{new_object.class}' to '#{base_object.class}' name '#{name}' type '#{type}'"			
+					assignment
+				rescue
+					puts "Could not determine attach_to_what? for label '#{name}' of type '#{type}'"
 				end
 				
 				def attachment_prefs(base_model, new_model, type)
