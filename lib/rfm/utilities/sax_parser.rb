@@ -99,6 +99,9 @@ require 'stringio'
 #       But those multi-text attributes are still way ugly when passed by libxml or nokogiri. Ox & Rexml are fine and pass them as one chunk.
 #       Consider buffering all attributes & text until start of new element.
 # YAY:  I bufffered all attributes & text, and the problem is solved.
+# TODO: Can't configure an attribute (in template) if it is used in delineate_with_hash.
+# TODO: Some configurations in template cause errors - usually having to do with nil.
+# TODO: Can't supply custom class if it's a String (but an unspecified subclass of plain Object works fine!?).
 
 
 module Rfm
@@ -155,8 +158,10 @@ module Rfm
 		    
 		    # Main get-constant method
 		    def self.get_constant(klass)
+		    	puts "Getting constant '#{klass.to_s}'"
 		    	return default_class if klass.to_s == ''
-		    	return klass unless klass.is_a?(String) || klass.is_a?(Symbol)
+		    	#return klass unless klass.is_a?(String) || klass.is_a?(Symbol)
+		    	return klass if klass.is_a? Class
 		    	klass = klass.to_s
 		    	
 		    	# Added to evaluate fully-qualified class names
@@ -165,18 +170,19 @@ module Rfm
 		    	# TODO: This can surely be cleaned up.
 		    	case
 			    	when const_defined?(klass); const_get(klass)
-			    	when self.ancestors[0].const_defined?(klass); self.ancestors[0].const_get(klass)
-			    	when SaxParser.const_defined?(klass); SaxParser.const_get(klass)
-			    	#when object.const_defined?(klass); _object.const_get(klass)
-				  	when Module.const_defined?(klass); Module.const_get(klass)
-				  	else puts "Could not find constant '#{klass.to_s}'"; default_class
+						#   	when self.ancestors[0].const_defined?(klass); self.ancestors[0].const_get(klass)
+						#   	when SaxParser.const_defined?(klass); SaxParser.const_get(klass)
+						#   	#when object.const_defined?(klass); _object.const_get(klass)
+						#   	when Module.const_defined?(klass); Module.const_get(klass)
+			  	else
+			  		puts "Could not find constant '#{klass.to_s}'"; default_class
 			  	end
 			  end
 		    
 		    def initialize(_model, _obj, _tag)
-		    	@tag   = _tag
-		    	@model = _model
-		    	@object   = _obj.is_a?(String) ? get_constant(_obj).new : _obj
+		    	@tag     = _tag
+		    	@model   = _model
+		    	@object  = _obj       #_obj.is_a?(String) ? get_constant(_obj).new : _obj
 		    	self
 		    end
 		    
@@ -192,7 +198,7 @@ module Rfm
 			  end
 		        
 		    def receive_start_element(_tag, _attributes)		
-		    	#puts "Start_el: _tag '#{_tag}', cursorobject '#{object.class}', cursor_submodel '#{submodel.to_yaml}'."
+		    	puts "receive_start_element: _tag '#{_tag}', current object '#{object.class}', cursor_submodel '#{submodel.to_yaml}'."
 		    	
 		    	# Set newtag for other methods to use during the start_el run.
 		    	self.newtag = _tag
@@ -201,6 +207,7 @@ module Rfm
 		      subm = submodel
 		      
 		    	if attachment_prefs(model, subm, 'element')=='none'
+		    		puts "Assigning attributes for attach:none on #{newtag}"
 		    		assign_attributes(_attributes, object, subm, subm)
 		    		return
 		    	end		      
@@ -213,6 +220,7 @@ module Rfm
 		      init = initialize?(subm) || []
 		      init[0] ||= :allocate
 		      init[1] = eval(init[1].to_s)
+		      puts "Creating new element '#{const}'"
 		      new_element = const.send(*init.compact)
 		      #puts "Created new element of class '#{new_element.class}' for _tag '#{tag}'."
 		      
@@ -229,6 +237,7 @@ module Rfm
 		    end # start_el
 		
 		    def receive_end_element(_tag)
+		    	#puts "End_element for tag '#{_tag}', object '#{object.class.name}'"
 		      if _tag == self.tag
 		      	begin
 		      		# Data cleaup
@@ -240,7 +249,7 @@ module Rfm
 			      	  object.each{|o| o.send(each_before_close?.to_s, object)}
 		      	  end
 			      rescue
-			      	puts "Error: ending element tagged failed '#{_tag}': #{$!}"
+			      	puts "Error: end_element tag '#{_tag}' failed: #{$!}"
 			      end
 		        return true
 		      end
@@ -266,7 +275,27 @@ module Rfm
 						when 'instance'; merge_with_instance(base_object, new_object, label, new_model)
 						when 'hash'; merge_with_hash(base_object, new_object, label, new_model)
 						when 'array'; merge_with_array(base_object, new_object, label, new_model)
+						when 'strip'; # strip key and pass value.. is this even possible?
+						when 'manual'; # code block to be passed in
+						when 'reverse'; # reverse key/value.. is this practical?
+					else
+						#puts "Skipping attachment of '#{name}' of type '#{type}'"
 					end
+				end
+
+				def attach_to_what?(base_object, new_object, name, base_model, new_model, type)
+					prefs = attachment_prefs(base_model, new_model, type)
+					
+					case
+						when prefs=='shared'; 'shared'
+						when prefs=='cursor'; 'cursor'
+						when prefs=='none' ; 'none'			
+						when prefs=='instance' || (type=='attribute' && base_object.is_a?(Array)) || (prefs.nil? && !base_object.is_a?(Hash)); 'instance'
+						when base_object.is_a?(Hash) && (prefs.nil? || prefs.to_s[/hash/]); 'hash'
+						when base_object.is_a?(Array) && (type='element' || prefs=='array'); 'array'
+					else
+						puts "Could not determine attach_to_what? for label '#{name}' of type '#{type}'"	
+					end					
 				end
 				
 				def attachment_prefs(base_model, new_model, type)
@@ -274,19 +303,6 @@ module Rfm
 						when 'element'; attach?(new_model) || attach_elements?(base_model)
 						when 'attribute'; attach?(new_model) || attach_attributes?(base_model)
 					end
-				end
-				
-				def attach_to_what?(base_object, new_object, name, base_model, new_model, type)
-					prefs = attachment_prefs(base_model, new_model, type)
-					
-					case
-						when prefs=='shared'; 'shared'
-						when prefs=='instance' || (type=='attribute' && base_object.is_a?(Array)) || (prefs.nil? && !base_object.is_a?(Hash)); 'instance'
-						when base_object.is_a?(Hash) && (prefs.nil? || prefs.to_s[/hash/]); 'hash'
-						when base_object.is_a?(Array) && (type='element' || prefs=='array'); 'array'
-						when prefs=='cursor'; 'cursor'
-						when prefs=='none' ; 'none'				
-					end					
 				end
 
 		    def merge_with_shared(base_object, new_object, label, new_model)

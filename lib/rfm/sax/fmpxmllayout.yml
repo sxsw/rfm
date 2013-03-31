@@ -34,7 +34,11 @@ elements:
   attach_attributes: instance
   delineate_with_hash: NAME
   attach_elements: array
-  
+  elements:
+  - name: VALUE
+    attach: cursor
+    class: Rfm::Metadata::Value
+    before_close: :attach_objects
   
   
 # Works !!!
