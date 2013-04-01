@@ -180,7 +180,7 @@ module Rfm
     
     meta_attr_reader :db
     attr_reader :field_mapping
-#     attr_writer :field_names, :portal_meta, :table
+    attr_writer :resultset_meta          #:field_names, :portal_meta, :table
     def_delegator :db, :server
     alias_method :database, :db
 		
@@ -314,7 +314,9 @@ module Rfm
 				# Need to specify the connection object as the initial_object of the parsing stack,
 				# so that Fmresultset can get the layout from it.
 				#c.parse('fmresultset.xml', Rfm::Resultset.new(self), nil)
-				c.parse(template || :records, Rfm::Resultset.new(self))
+				rslt = c.parse(template || :records, Rfm::Resultset.new(self, self))
+				(self.resultset_meta = rslt.clone.replace([])) unless instance_variable_get :@resultset_meta
+				rslt
 	    end
 	    
 	    def params
@@ -357,7 +359,7 @@ module Rfm
     ###  Metadata from Resultset  ###
     
 		def resultset_meta
-			@resultset_meta ||= view
+			@resultset_meta || view
 		end
 		def date_format
 			resultset_meta.date_format

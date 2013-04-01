@@ -87,9 +87,8 @@ module Rfm
 #       @doc							= doc
 # 			@calling_object		= args[1] || options[:calling_object]
 
-			@connection				= options[:connection] || (args[0] if args[0].is_a? Rfm::Connection)
-			@calling_object		= options[:calling_object] || (@connection.config[:parent] if @connection)
-      @layout           = (@calling_object.class.ancestors.include? Rfm::Layout::LayoutModule) ? @calling_object : options[:layout_object]
+			@calling_object		= args[1] || options[:calling_object]
+      @layout           = args[0] || options[:layout_object]
       
 #       @database					= (@layout.database rescue nil) || (@calling_object.class == Rfm::Database ? @calling_object : options[:database_object])
 #       @server           = (@database.server rescue nil) || (@calling_object.class == Rfm::Server ? @calling_object : options[:server_object])
@@ -141,21 +140,59 @@ module Rfm
 		def state(*args)
 			get_config(*args)
 		end
+		
+		def field_meta
+			attributes['field_meta']
+		end
+		
+		def portal_meta
+			attributes['portal_meta']
+		end		
+		
+		def datasource
+			attributes['datasource']
+		end
+		
+		def date_format
+			attributes['date_format']
+		end
+
+		def time_format
+			attributes['time_format']
+		end
+		
+		def timestamp_format
+			attributes['timestamp_format']
+		end
+		
+		def total_count
+			attributes['total_count']
+		end		
+		
+		def foundset_count
+			attributes['foundset_count']
+		end
+		
+		def table
+			attributes['table']
+		end		
+		
         
     def field_names
-    	field_meta.collect{|k,v| v.name}
+    	field_meta.keys
   	end
   	
   	def portal_names
   		portal_meta.keys
   	end
   	
-		def end_element_callback(cursor)
-			elements = cursor.parent.obj
-			elements.each{|k, v| cursor.set_attr_accessor(k, v) unless k == 'resultset'}
-			# Why is this here? Seems to need it... how does it work?
-			cursor.stack.unshift cursor
-		end
+# 		def end_element_callback(cursor)
+# 			elements = cursor.parent.obj
+# 			elements.each{|k, v| cursor.set_attr_accessor(k, v) unless k == 'resultset'}
+# 			# Why is this here? Seems to need it... how does it work?
+# 			cursor.stack.unshift cursor
+# 			layout && layout.instance_variable_get(:@resultset_meta).nil? && layout.resultset_meta = self.clone.replace([])
+# 		end
     
     private
     
