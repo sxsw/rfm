@@ -98,13 +98,14 @@ require 'stringio'
 #       Some multiple-text attributes were tripping up delineate_with_hash, so I added some fault-tollerance to that method.
 #       But those multi-text attributes are still way ugly when passed by libxml or nokogiri. Ox & Rexml are fine and pass them as one chunk.
 #       Consider buffering all attributes & text until start of new element.
-# YAY:  I bufffered all attributes & text, and the problem is solved.
-# TODO: Can't configure an attribute (in template) if it is used in delineate_with_hash.
+# YAY :  I bufffered all attributes & text, and the problem is solved.
+# na  : Can't configure an attribute (in template) if it is used in delineate_with_hash. (actually it works if you specifiy the as_name: correctly).
 # TODO: Some configurations in template cause errors - usually having to do with nil.
-# TODO: Can't supply custom class if it's a String (but an unspecified subclass of plain Object works fine!?).
-# TODO: Attaching random object to Array will thro error.
-# TODO: Sending elements with subelements to Shared results in no data attached to the shared var.
-# 
+# done: Can't supply custom class if it's a String (but an unspecified subclass of plain Object works fine!?).
+# TODO: Attaching non-hash/array object to Array will thro error. Is this actually fixed?
+# done?: Sending elements with subelements to Shared results in no data attached to the shared var.
+# TODO: compact is not working for fmpxmllayout-error
+# TODO: Add ability to put a regex in the as_name parameter, that will operate on the tag/label/name.
 
 
 module Rfm
@@ -324,9 +325,10 @@ module Rfm
 				end
 
 		    def merge_with_shared(base_object, new_object, label, new_model)
-		    	ivg(shared_instance_var, base_object) || set_attr_accessor(shared_instance_var, {}, base_object)
+		    	ivg(shared_instance_var, base_object) || set_attr_accessor(shared_instance_var, default_class.new, base_object)
   			  if ivg(shared_instance_var, base_object)[label]
-					  ivg(shared_instance_var, base_object)[label] = merge_objects(ivg(label), new_object, new_model)
+					  #ivg(shared_instance_var, base_object)[label] = merge_objects(ivg(label), new_object, new_model)
+					  ivg(shared_instance_var, base_object)[label] = merge_objects(ivg(shared_instance_var, base_object)[label], new_object, new_model)
 					else
 					  ivg(shared_instance_var, base_object)[label] = new_object
 				  end
@@ -463,6 +465,8 @@ module Rfm
 				end
 				
 		    def clean_members(obj=object)
+# 		    	cursor.object = clean_member(cursor.object)
+# 		    	clean_members(ivg(shared_attribute_var, obj))
 	    		if obj.is_a?(Hash)
 	    			obj.dup.each do |k,v|
 	    				obj[k] = clean_member(v)
@@ -480,6 +484,11 @@ module Rfm
 							yield(dat) if block_given?
 						end
 	    		end
+# 					obj.instance_variables.each do |var|
+# 						dat = obj.instance_variable_get(var)
+# 						obj.instance_variable_set(var, clean_member(dat))
+# 						yield(dat) if block_given?
+# 					end
 	    	end
 	    	
 	    	def clean_member(val)
@@ -494,13 +503,13 @@ module Rfm
 					else
 						val
 						# Probably shouldn't do this on instance-var values. ...Why not?
-						# 	if val.instance_variables.size < 1
-						# 		nil
-						# 	elsif val.instance_variables.size == 1
-						# 		val.instance_variable_get(val.instance_variables[0])
-						# 	else
-						# 		val
-						# 	end
+# 							if val.instance_variables.size < 1
+# 								nil
+# 							elsif val.instance_variables.size == 1
+# 								val.instance_variable_get(val.instance_variables[0])
+# 							else
+# 								val
+# 							end
 					end
 	    	end
 		

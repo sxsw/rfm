@@ -9,14 +9,20 @@ elements:
   attach: shared
   compact: true
 - name: PRODUCT
-  attach: none
-  attach_attributes: shared
+  attach: shared
+  as_name: product
 - name: LAYOUT
   attach: none
   attach_attributes: shared
+  attributes:
+  - name: DATABASE
+    as_name: database
+  - name: NAME
+    as_name: name
 - name: FIELD
   class: Rfm::Metadata::FieldControl
   as_name: field_controls
+  attach: shared
   delineate_with_hash: name
   attributes:
   - name: NAME
@@ -32,6 +38,7 @@ elements:
 - name: VALUELISTS
   attach: none
 - name: VALUELIST
+  attach: shared
   class: Array
   as_name: value_lists
   delineate_with_hash: NAME
@@ -44,6 +51,57 @@ elements:
     attributes:
     - name: DISPLAY
       as_name: display
+
+
+
+
+# Works !!!
+# ---
+# elements:
+# - name: FMPXMLLAYOUT
+#   attach: none
+#   attach_attributes: shared
+# - name: ERRORCODE
+#   as_name: error
+#   attach: shared
+#   compact: true
+# - name: PRODUCT
+#   attach: none
+#   attach_attributes: shared
+# - name: LAYOUT
+#   attach: none
+#   attach_attributes: shared
+# - name: FIELD
+#   class: Rfm::Metadata::FieldControl
+#   as_name: field_controls
+#   delineate_with_hash: name
+#   attributes:
+#   - name: NAME
+#     as_name: name
+#   elements:
+#   - name: STYLE
+#     attach: none
+#     attributes:
+#     - name: TYPE
+#       as_name: type
+#     - name: VALUELIST
+#       as_name: valuelist
+# - name: VALUELISTS
+#   attach: none
+# - name: VALUELIST
+#   class: Array
+#   as_name: value_lists
+#   delineate_with_hash: NAME
+#   elements:
+#   - name: VALUE
+#     # This turns the potential hash into a string
+#     class: String
+#     # Then we place the main attribute into the string's data.
+#     before_close: replace text
+#     attributes:
+#     - name: DISPLAY
+#       as_name: display
+
 
 
 # Works !!!

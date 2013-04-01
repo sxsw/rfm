@@ -120,6 +120,31 @@ module Rfm
   
   class Layout
 	  include Config
+
+		# Methods that must be kept after rewrite!!!
+		# 	  
+		# field_mapping
+		# db (database)
+		# name
+		# resultset_meta
+		# date_format
+		# time_format
+		# timestamp_format
+		# field_meta
+		# field_controls
+		# field_names
+		# field_names_no_load
+		# value_lists
+		# count
+		# total_count
+		# portal_meta
+		# portal_meta_no_load
+		# portal_names
+		# table
+		# table_no_load
+		# server
+	  
+	  
 		    
     # Initialize a layout object. You never really need to do this. Instead, just do this:
     # 
@@ -146,8 +171,8 @@ module Rfm
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''
                   
       @loaded = false
-      @field_controls = Rfm::CaseInsensitiveHash.new
-      @value_lists = Rfm::CaseInsensitiveHash.new
+#       @field_controls = Rfm::CaseInsensitiveHash.new
+#       @value_lists = Rfm::CaseInsensitiveHash.new
 			#	@portal_meta = nil
 			#	@field_names = nil
 			#@ignore_bad_data = (db_obj.server.state[:ignore_bad_data] rescue nil)
@@ -155,15 +180,15 @@ module Rfm
     
     meta_attr_reader :db
     attr_reader :field_mapping
-    attr_writer :field_names, :portal_meta, :table
+#     attr_writer :field_names, :portal_meta, :table
     def_delegator :db, :server
     alias_method :database, :db
 		
-		# This method may be obsolete, since the option can now be set with #config.
-    def ignore_bad_data(val = nil)
-    	(config :ignore_bad_data => val) unless val.nil?
-    	state[:ignore_bad_data]
-    end
+# 		# This method may be obsolete, since the option can now be set with #config.
+#     def ignore_bad_data(val = nil)
+#     	(config :ignore_bad_data => val) unless val.nil?
+#     	state[:ignore_bad_data]
+#     end
     
     # These methods are to be inclulded in Layout and SubLayout, so that
     # they have their own discrete 'self' in the master class and the subclass.
@@ -329,42 +354,46 @@ module Rfm
 	  include LayoutModule
 	  
 	  
-    ###
-		def view_meta
-			@view_meta ||= view
+    ###  Metadata from Resultset  ###
+    
+		def resultset_meta
+			@resultset_meta ||= view
 		end
 		def date_format
-			@date_format ||= view_meta.date_format
+			resultset_meta.date_format
 		end
 		def time_format
-			@time_format ||= view_meta.time_format
+			resultset_meta.time_format
 		end		
 		def timestamp_format
-			@timestamp_format ||= view_meta.timestamp_format
+			resultset_meta.timestamp_format
 		end
 		def field_meta
-			@field_meta ||= view_meta.field_meta
+			resultset_meta.field_meta
 		end
 		###
     
     
+    ###  Metadata from Layout  ###
+    
+    def layout_meta
+    	@attributes || (load_layout && @attributes)
+    end
+    
     def field_controls
-      load_layout unless @loaded
-      @field_controls
+      layout_meta['field_controls']
     end
     
   	def field_names
-  		load_layout unless @field_names
-  		@field_names
+  		layout_meta['field_controls'].keys
   	end
   	
-  	def field_names_no_load
-  		@field_names
-  	end
+#   	def field_names_no_load
+#   		@field_names
+#   	end
     
     def value_lists
-      load_layout unless @loaded
-      @value_lists
+			layout_meta['value_lists']
     end
     
     def count(find_criteria, options={})
@@ -376,24 +405,24 @@ module Rfm
   	end
   	
   	def portal_meta
-  		@portal_meta ||= view.portal_meta
+  		resultset_meta.portal_meta
   	end
   	
-  	def portal_meta_no_load
-  		@portal_meta
-  	end
+#   	def portal_meta_no_load
+#   		@portal_meta
+#   	end
   	
   	def portal_names
   		portal_meta.keys
   	end
   	
   	def table
-  		@table ||= view.table
+  		resultset_meta.table
   	end
   	
-  	def table_no_load
-  		@table
-  	end
+#   	def table_no_load
+#   		@table
+#   	end
   	
   	#::DEFAULT_CLASS = Hash
     # From Rfm::Server
@@ -402,50 +431,52 @@ module Rfm
     end
     
     def load_layout
-      @loaded = true
+#       @loaded = true
       #fmpxmllayout = db.server.load_layout(self)
       doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:layout, self)
       puts "Layout load result: #{doc.class}"
-      return
-      #doc = XmlParser.new(fmpxmllayout.body, :namespace=>false, :parser=>server.state[:parser])
-      
-      # check for errors
-      error = doc['FMPXMLLAYOUT']['ERRORCODE']['text'].to_s.to_i
-      raise Rfm::Error::FileMakerError.getError(error) if error != 0
-      
-      # process valuelists
-      vlists = doc['FMPXMLLAYOUT']['VALUELISTS']['VALUELIST']
-      if !vlists.nil?    #root.elements['VALUELISTS'].size > 0
-        vlists.each {|valuelist|
-          name = valuelist['NAME']
-          @value_lists[name] = valuelist['VALUE'].collect{|value|
-          	Rfm::Metadata::ValueListItem.new(value['text'], value['DISPLAY'], name)
-          } rescue []
-        }
-        @value_lists.freeze
-      end
 
-      # process field controls
-      doc['FMPXMLLAYOUT']['LAYOUT']['FIELD'].each {|field|
-        name = field_mapping[field['NAME']] || field['NAME']
-        style = field['STYLE']
-        type = style['TYPE']
-        value_list_name = style['VALUELIST']
-        value_list = @value_lists[value_list_name] if value_list_name != ''
-        field_control = Rfm::Metadata::FieldControl.new(name, type, value_list_name, value_list)
-        existing = @field_controls[name]
-        if existing
-          if existing.kind_of?(Array)
-            existing << field_control
-          else
-            @field_controls[name] = Array[existing, field_control]
-          end
-        else
-          @field_controls[name] = field_control
-        end
-      }
-      @field_names ||= @field_controls.collect{|k,v| v.name rescue v[0].name}
-      @field_controls.freeze
+#       doc = XmlParser.new(fmpxmllayout.body, :namespace=>false, :parser=>server.state[:parser])
+#       
+#       # check for errors
+#       error = doc['FMPXMLLAYOUT']['ERRORCODE']['text'].to_s.to_i
+#       raise Rfm::Error::FileMakerError.getError(error) if error != 0
+#       
+#       # process valuelists
+#       vlists = doc['FMPXMLLAYOUT']['VALUELISTS']['VALUELIST']
+#       if !vlists.nil?    #root.elements['VALUELISTS'].size > 0
+#         vlists.each {|valuelist|
+#           name = valuelist['NAME']
+#           @value_lists[name] = valuelist['VALUE'].collect{|value|
+#           	Rfm::Metadata::ValueListItem.new(value['text'], value['DISPLAY'], name)
+#           } rescue []
+#         }
+#         @value_lists.freeze
+#       end
+# 
+#       # process field controls
+#       doc['FMPXMLLAYOUT']['LAYOUT']['FIELD'].each {|field|
+#         name = field_mapping[field['NAME']] || field['NAME']
+#         style = field['STYLE']
+#         type = style['TYPE']
+#         value_list_name = style['VALUELIST']
+#         value_list = @value_lists[value_list_name] if value_list_name != ''
+#         field_control = Rfm::Metadata::FieldControl.new(name, type, value_list_name, value_list)
+#         existing = @field_controls[name]
+#         if existing
+#           if existing.kind_of?(Array)
+#             existing << field_control
+#           else
+#             @field_controls[name] = Array[existing, field_control]
+#           end
+#         else
+#           @field_controls[name] = field_control
+#         end
+#       }
+#       @field_names ||= @field_controls.collect{|k,v| v.name rescue v[0].name}
+#       @field_controls.freeze
+			@loaded = true
+			doc
     end
     
 		def field_mapping
