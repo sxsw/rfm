@@ -70,14 +70,14 @@ desc "benchmark SaxParser engine"
 task :benchmark_sax do
 	require 'benchmark'
 	require 'yaml'
-	load "spec/data/sax_models.rb"
+	#load "spec/data/sax_models.rb"
 	@records = 'spec/data/resultset.xml'
 	@layout = 'spec/data/layout.xml'
 	Benchmark.bm do |b|
 		[:rexml, :nokogiri, :libxml, :ox].each do |backend|
 			b.report("#{backend}\n") do
 				150.times do
-					Rfm::SaxParser::Handler.build(@records, backend, 'spec/data/sax_resultset.yml')
+					Rfm::SaxParser.parse(@records, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new, backend)
 					#Rfm::SaxParser::Handler.build(@layout, backend)
 				end
 			end

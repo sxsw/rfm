@@ -529,7 +529,7 @@ module Rfm
 			def self.build(io, template=nil, initial_object=nil, parser=nil)
 				parser = parser || backend
 				parser = get_backend(parser)
-				puts "Using backend parser: #{parser}"
+				#puts "Using backend parser: #{parser}"
 			  parser.build(io, template, initial_object)
 		  end
 		  
