@@ -106,6 +106,14 @@ require 'stringio'
 # done?: Sending elements with subelements to Shared results in no data attached to the shared var.
 # TODO: compact is not working for fmpxmllayout-error
 # TODO: Add ability to put a regex in the as_name parameter, that will operate on the tag/label/name.
+# TODO: Optimize:
+#				Use variables, not methods.
+#				Use string interpolation not concatenation.
+#				Use destructive! operations (carefully). Really?
+#				Get this book: http://my.safaribooksonline.com/9780321540034?portal=oreilly
+#				See this page: http://www.igvita.com/2008/07/08/6-optimization-tips-for-ruby-mri/
+
+
 
 
 module Rfm
@@ -206,10 +214,12 @@ module Rfm
 		    	#puts "receive_start_element: _tag '#{_tag}', current object '#{object.class}', cursor_submodel '#{submodel.to_yaml}'."
 		    	
 		    	# Set newtag for other methods to use during the start_el run.
-		    	self.newtag = _tag
-		
+		    	#self.newtag = _tag
+					@newtag = _tag
+					
 		    	# Acquire submodel definition.
-		      subm = submodel
+		      #subm = submodel
+		      subm = model_elements?(@newtag) || default_class.new
 		      
 		    	if attachment_prefs(model, subm, 'element')=='none'
 		    		#puts "Assigning attributes for attach:none on #{newtag}"
@@ -274,10 +284,44 @@ module Rfm
 		      end
 				end
 
+# 				def attach_new_object(base_object, new_object, name, base_model, new_model, type)
+# 					label = label_or_tag(name, new_model)
+# 					assignment = attach_to_what?(base_object, new_object, label, base_model, new_model, type)
+# 					#puts "attach_new_object: BO '#{base_object.class}' BM '#{base_model['name'] rescue ''}' NO '#{new_object.class}' NM '#{new_model['name'] rescue ''}' N '#{name}' T '#{type}' p '#{assignment}'"
+# 					case assignment;
+# 						when 'shared'; merge_with_shared(base_object, new_object, label, new_model)
+# 						when 'instance'; merge_with_instance(base_object, new_object, label, new_model)
+# 						when 'hash'; merge_with_hash(base_object, new_object, label, new_model)
+# 						when 'array'; merge_with_array(base_object, new_object, label, new_model)
+# 						when 'strip'; # strip key and pass value.. is this even possible?
+# 						when 'manual'; # code block to be passed in
+# 						when 'reverse'; # reverse key/value.. is this practical?
+# 					else
+# 						#puts "Skipping attachment of '#{name}' of type '#{type}'"
+# 					end
+# 				end
+				
 				def attach_new_object(base_object, new_object, name, base_model, new_model, type)
 					label = label_or_tag(name, new_model)
-					assignment = attach_to_what?(base_object, new_object, label, base_model, new_model, type)
-					#puts "attach_new_object: BO '#{base_object.class}' BM '#{base_model['name'] rescue ''}' NO '#{new_object.class}' NM '#{new_model['name'] rescue ''}' N '#{name}' T '#{type}' p '#{assignment}'"
+					
+					# assignment = attach_to_what?(base_object, new_object, label, base_model, new_model, type)
+					#prefs = attachment_prefs(base_model, new_model, type)
+					
+					prefs = case type
+						when 'element'; attach?(new_model) || attach_elements?(base_model)
+						when 'attribute'; attach?(new_model) || attach_attributes?(base_model)
+					end
+					
+					assignment = case
+						when prefs=='shared'; 'shared'
+						when prefs=='cursor'; 'cursor'
+						when prefs=='none' ; 'none'
+						when prefs=='instance'; 'instance'
+						when base_object.is_a?(Hash) && (prefs.nil? || prefs=='hash'); 'hash'
+						when base_object.is_a?(Array) && (type=='element' || prefs=='array'); 'array'
+						else 'instance'					
+					end
+
 					case assignment;
 						when 'shared'; merge_with_shared(base_object, new_object, label, new_model)
 						when 'instance'; merge_with_instance(base_object, new_object, label, new_model)
@@ -291,31 +335,23 @@ module Rfm
 					end
 				end
 
-				def attach_to_what?(base_object, new_object, name, base_model, new_model, type)
-					prefs = attachment_prefs(base_model, new_model, type)
-					
-					assignment = case
-						when prefs=='shared'; 'shared'
-						when prefs=='cursor'; 'cursor'
-						when prefs=='none' ; 'none'
-						when prefs=='instance'; 'instance'
-						when base_object.is_a?(Hash) && (prefs.nil? || prefs=='hash'); 'hash'
-						when base_object.is_a?(Array) && (type=='element' || prefs=='array'); 'array'
-						else 'instance'					
+# 				def attach_to_what?(base_object, new_object, name, base_model, new_model, type)
+# 					prefs = attachment_prefs(base_model, new_model, type)
+# 					
+# 					case   # assignment = case
 # 						when prefs=='shared'; 'shared'
 # 						when prefs=='cursor'; 'cursor'
-# 						when prefs=='none' ; 'none'			
-# 						when prefs=='instance' || (type=='attribute' && base_object.is_a?(Array)) || (prefs.nil? && !base_object.is_a?(Hash)); 'instance'
-# 						when base_object.is_a?(Hash) && (prefs.nil? || prefs.to_s[/hash/]); 'hash'
-# 						when base_object.is_a?(Array) && (type='element' || prefs=='array'); 'array'
-# 					else
-# 						puts "Could not determine attach_to_what? for label '#{name}' of type '#{type}'"	
-					end
-					#puts "Assigning '#{assignment}' to attach '#{new_object.class}' to '#{base_object.class}' name '#{name}' type '#{type}'"			
-					assignment
-				rescue
-					puts "Could not determine attach_to_what? for label '#{name}' of type '#{type}'"
-				end
+# 						when prefs=='none' ; 'none'
+# 						when prefs=='instance'; 'instance'
+# 						when base_object.is_a?(Hash) && (prefs.nil? || prefs=='hash'); 'hash'
+# 						when base_object.is_a?(Array) && (type=='element' || prefs=='array'); 'array'
+# 						else 'instance'					
+# 					end
+# 					#puts "Assigning '#{assignment}' to attach '#{new_object.class}' to '#{base_object.class}' name '#{name}' type '#{type}'"			
+# 					#assignment
+# 				rescue
+# 					puts "Could not determine attach_to_what? for label '#{name}' of type '#{type}'"
+# 				end
 				
 				def attachment_prefs(base_model, new_model, type)
 					case type
@@ -405,44 +441,44 @@ module Rfm
 			  # Methods for current _model
 			  def ivg(name, _object=object); _object.instance_variable_get "@#{name}"; end
 			  def ivs(name, value, _object=object); _object.instance_variable_set "@#{name}", value; end
-			  def model_elements?(which=nil, _model=model); (_model['elements'] && which ? _model['elements'].find{|e| e['name']==which} : _model['elements']) ; end
-			  def model_attributes?(which=nil, _model=model); (_model['attributes'] && which ? _model['attributes'].find{|a| a['name']==which} : _model['attributes']) ; end
-			  def depth?(_model=model); _model['depth']; end
-			  def before_close?(_model=model); _model['before_close']; end
-			  def each_before_close?(_model=model); _model['each_before_close']; end
-			  def compact?(_model=model); _model['compact'] || top.model['compact']; end
-			  def attach?(_model=model); _model && _model['attach']; end
-			  def attach_elements?(_model=model); _model['attach_elements']; end
-			  def attach_attributes?(_model=model); _model['attach_attributes']; end
+			  def model_elements?(which=nil, _model=model); _model && _model.has_key?('elements') && (_model['elements'] && which ? _model['elements'].find{|e| e.has_key?('name') && e['name']==which} : _model['elements']) ; end
+			  def model_attributes?(which=nil, _model=model); _model && _model.has_key?('attributes') && (_model['attributes'] && which ? _model['attributes'].find{|a| a.has_key?('name') && a['name']==which} : _model['attributes']) ; end
+			  def depth?(_model=model); _model && _model.has_key?('depth') && _model['depth']; end
+			  def before_close?(_model=model); _model && _model.has_key?('before_close') &&_model['before_close']; end
+			  def each_before_close?(_model=model); _model && _model.has_key?('each_before_close') &&_model['each_before_close']; end
+			  def compact?(_model=model); _model && _model.has_key?('compact') &&_model['compact']; end
+			  def attach?(_model=model); _model && _model.has_key?('attach') &&_model['attach']; end
+			  def attach_elements?(_model=model); _model && _model['attach_elements']; end
+			  def attach_attributes?(_model=model); _model && _model['attach_attributes']; end
 			  def delineate_with_hash?(_model=model); _model && _model['delineate_with_hash']; end
 			  def as_name?(_model=model); _model && _model['as_name']; end
-			  def initialize?(_model=model); _model['initialize']; end
+			  def initialize?(_model=model); _model && _model['initialize']; end
 
 			  # Methods for submodel
-				def submodel(_tag=newtag); get_submodel(_tag) || default_submodel; end
 				def label_or_tag(_tag=newtag, _model=submodel); as_name?(_model) || _tag; end
-		  	
-				def get_submodel(name)
-					model_elements?(name)
-				end
-				
-				def default_submodel
-					#puts "Using default submodel"
-					# Depth is not used yet.
-					if depth?.to_i > 0
-						{'elements' => model_elements?, 'depth'=>(depth?.to_i - 1)}
-					else
-						default_class.new
-					end
-				end
+				# 				def submodel(_tag=newtag); get_submodel(_tag) || default_submodel; end
+				# 		  	
+				# 				def get_submodel(name)
+				# 					model_elements?(name)
+				# 				end
+				# 				
+				# 				def default_submodel
+				# 					#puts "Using default submodel"
+				# 					# Depth is not used yet.
+				# 					if depth?.to_i > 0
+				# 						{'elements' => model_elements?, 'depth'=>(depth?.to_i - 1)}
+				# 					else
+				# 						default_class.new
+				# 					end
+				# 				end
 				
 		    def get_attribute(name, obj=object)
 		    	return unless name
 		    	key = shared_instance_var
 		    	case
-		    		when (obj.respond_to?(key) && obj.send(key)); obj.send(key)[name]
+		    		when (r= ivg(key, obj)); r[name] #(obj.respond_to?(key) && obj.send(key)); obj.send(key)[name]
 		    		when (r= ivg(name, obj)); r
-		    		else obj[name]
+		    		else obj.has_key?(name) && obj[name]
 		    	end
 		    end
 		    
