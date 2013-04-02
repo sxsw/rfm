@@ -49,13 +49,13 @@ desc "benchmark XmlMini with available parsers"
 task :benchmark do
 	require 'benchmark'
 	require 'yaml'
-	@records = File.read('spec/data/resultset.xml')
+	@records = File.read('spec/data/resultset_large.xml')
 	@layout = File.read('spec/data/layout.xml')
 	Benchmark.bm do |b|
 		[:oxsax, :libxml, :libxmlsax, :nokogirisax, :nokogiri, :hpricot, :rexml, :rexmlsax].each do |backend|
 			Rfm.backend = backend
 			b.report("#{Rfm::XmlParser.backend}\n") do
-				150.times do
+				5.times do
 				# Rfm::XmlParser.new(@records)
 				# Rfm::XmlParser.new(@layout)
 					Rfm.load_data(@records)
@@ -71,12 +71,12 @@ task :benchmark_sax do
 	require 'benchmark'
 	require 'yaml'
 	#load "spec/data/sax_models.rb"
-	@records = 'spec/data/resultset.xml'
+	@records = 'spec/data/resultset_large.xml'
 	@layout = 'spec/data/layout.xml'
 	Benchmark.bm do |b|
 		[:rexml, :nokogiri, :libxml, :ox].each do |backend|
 			b.report("#{backend}\n") do
-				150.times do
+				5.times do
 					Rfm::SaxParser.parse(@records, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new, backend)
 					#Rfm::SaxParser::Handler.build(@layout, backend)
 				end
