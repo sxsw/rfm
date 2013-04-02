@@ -89,10 +89,10 @@ desc "Profile the sax parser"
 task :profile_sax do
 	require 'ruby-prof'
 	# Profile the code
+	@records = 'spec/data/resultset_large.xml'
 	result = RubyProf.profile do
-		@records = 'spec/data/resultset.xml'
 		# The parser will choose the best available backend.
-		Rfm::SaxParser::Handler.build(@records)
+		Rfm::SaxParser.parse(@records, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new)
 	end
 	# Print a flat profile to text
 	printer = RubyProf::FlatPrinter.new(result)
