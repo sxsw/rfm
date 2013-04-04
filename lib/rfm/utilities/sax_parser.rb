@@ -280,7 +280,19 @@ module Rfm
 		  	# Assign attributes to element.
 				def assign_attributes(_attributes, base_object, base_model, new_model)
 		      if _attributes && !_attributes.empty?
+		      	prefs_exist = base_model.has_key?('attach_attributes') || new_model.has_key?('attributes')
 						_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
+# 						case
+# 							when base_object.is_a?(Hash) && !prefs_exist
+# 								#puts "Loading attributes as whole."
+# 								base_object.merge! _attributes
+# 							when !prefs_exist
+# 								#puts "Loading attributes as shared."
+# 								set_attr_accessor('attributes', _attributes, base_object)
+# 							else
+# 								#puts "Loading attributes individually."
+# 								_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
+# 						end
 		      end
 				end
 
@@ -607,6 +619,7 @@ module Rfm
 		  	#initial_object = initial_object || default_class.new || {}
 		  	@stack = []
 		  	@template = get_template(_template)
+		  	@tag_translation = tag_translation
 		  	#(@template = @template.values[0]) if @template.size == 1
 		  	#y @template
 		  	init_element_buffer
@@ -664,8 +677,8 @@ module Rfm
 			end
 			
 			def transform(name)
-				return name unless tag_translation.is_a?(Array)
-				name.to_s.gsub(*tag_translation)
+				return name unless @tag_translation.is_a?(Array)
+				name.to_s.gsub(*@tag_translation)
 			end
 			
 			def init_element_buffer
@@ -692,7 +705,8 @@ module Rfm
 				send_element_buffer if element_buffer?
 				if attributes
 					# This crazy thing transforms attribute keys to underscore (or whatever).
-					attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
+					#attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
+					attributes = {}.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}
 				end
 				@element_buffer.merge!({:tag=>tag, :attributes => attributes || default_class.new})
 			end
