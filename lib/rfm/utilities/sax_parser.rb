@@ -453,13 +453,13 @@ module Rfm
 			  # Methods for current _model
 			  def ivg(name, _object=object); _object.instance_variable_get "@#{name}"; end
 			  def ivs(name, value, _object=object); _object.instance_variable_set "@#{name}", value; end
-			  def model_elements?(which=nil, _model=model); _model && _model.has_key?('elements') && (_model['elements'] && which ? _model['elements'].find{|e| e.has_key?('name') && e['name']==which} : _model['elements']) ; end
-			  def model_attributes?(which=nil, _model=model); _model && _model.has_key?('attributes') && (_model['attributes'] && which ? _model['attributes'].find{|a| a.has_key?('name') && a['name']==which} : _model['attributes']) ; end
-			  def depth?(_model=model); _model && _model.has_key?('depth') && _model['depth']; end
-			  def before_close?(_model=model); _model && _model.has_key?('before_close') &&_model['before_close']; end
-			  def each_before_close?(_model=model); _model && _model.has_key?('each_before_close') &&_model['each_before_close']; end
-			  def compact?(_model=model); _model && _model.has_key?('compact') &&_model['compact']; end
-			  def attach?(_model=model); _model && _model.has_key?('attach') &&_model['attach']; end
+			  def model_elements?(which=nil, _model=model); _model && _model.has_key?('elements') && ((_model['elements'] && which) ? _model['elements'].find{|e| e['name']==which} : _model['elements']) ; end
+			  def model_attributes?(which=nil, _model=model); _model && _model.has_key?('attributes') && ((_model['attributes'] && which) ? _model['attributes'].find{|a| a['name']==which} : _model['attributes']) ; end
+			  def depth?(_model=model); _model && _model['depth']; end
+			  def before_close?(_model=model); _model && _model['before_close']; end
+			  def each_before_close?(_model=model); _model && _model['each_before_close']; end
+			  def compact?(_model=model); _model && _model['compact']; end
+			  def attach?(_model=model); _model && _model['attach']; end
 			  def attach_elements?(_model=model); _model && _model['attach_elements']; end
 			  def attach_attributes?(_model=model); _model && _model['attach_attributes']; end
 			  def delineate_with_hash?(_model=model); _model && _model['delineate_with_hash']; end
