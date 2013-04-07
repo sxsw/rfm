@@ -493,16 +493,6 @@ module Rfm
 			  		when obj.has_key?(name); obj[name]
 			  	end
 			  end
-				
-				#   def get_attribute(name, obj=object)
-				#   	return unless name
-				#   	key = shared_instance_var
-				#   	case
-				#   		when (obj.respond_to?(key) && obj.send(key)); obj.send(key)[name]
-				#   		when (r= ivg(name, obj)); r
-				#   		else obj[name]
-				#   	end
-				#   end
 		    
 		    def set_attr_accessor(name, data, obj=object)
 					create_accessor(name, obj)
