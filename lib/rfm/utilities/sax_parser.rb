@@ -214,11 +214,9 @@ module Rfm
 		    	#puts "receive_start_element: _tag '#{_tag}', current object '#{object.class}', cursor_submodel '#{submodel.to_yaml}'."
 		    	
 		    	# Set newtag for other methods to use during the start_el run.
-		    	#self.newtag = _tag
 					@newtag = _tag
 					
 		    	# Acquire submodel definition.
-		      #subm = submodel
 		      subm = model_elements?(@newtag) || default_class.new
 		      
 		    	if attachment_prefs(model, subm, 'element')=='none'
@@ -228,9 +226,6 @@ module Rfm
 		    	end		      
 		      
 		      # Create new element.
-		      #new_element = (get_constant((subm['class']).to_s) || Hash).new
-		      #new_element = get_constant(subm['class']).send(*[(allocate(subm) ? :allocate : :new), (initialize_with(subm) ? eval(initialize_with(subm)) : nil)].compact)
-		      #new_element = get_constant(subm['class']).send(*[(allocate(subm) ? :allocate : :new), (initialize_with(subm) ? eval(initialize_with(subm)) : nil)].compact)
 		      const = get_constant(subm['class'])
 		      init = initialize?(subm) || []
 		      init[0] ||= :allocate
@@ -243,7 +238,6 @@ module Rfm
 		      assign_attributes(_attributes, new_element, subm, subm)
 
 					# Attach new element to cursor _object
-					#attach_new_object_master(subm, new_element)
 					attach_new_object(object, new_element, newtag, model, subm, 'element')
 		  		
 		  		returntag = newtag
@@ -282,42 +276,23 @@ module Rfm
 		      if _attributes && !_attributes.empty?
 		      	prefs_exist = base_model.has_key?('attach_attributes') || new_model.has_key?('attributes')
 						_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
-# 						case
-# 							when base_object.is_a?(Hash) && !prefs_exist
-# 								#puts "Loading attributes as whole."
-# 								base_object.merge! _attributes
-# 							when !prefs_exist
-# 								#puts "Loading attributes as shared."
-# 								set_attr_accessor('attributes', _attributes, base_object)
-# 							else
-# 								#puts "Loading attributes individually."
-# 								_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
-# 						end
+						#		# This is trying to merge element set as a whole, if possible.
+						# 	case
+						# 		when base_object.is_a?(Hash) && !prefs_exist
+						# 			#puts "Loading attributes as whole."
+						# 			base_object.merge! _attributes
+						# 		when !prefs_exist
+						# 			#puts "Loading attributes as shared."
+						# 			set_attr_accessor('attributes', _attributes, base_object)
+						# 		else
+						# 			#puts "Loading attributes individually."
+						# 			_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
+						# 	end
 		      end
 				end
-
-# 				def attach_new_object(base_object, new_object, name, base_model, new_model, type)
-# 					label = label_or_tag(name, new_model)
-# 					assignment = attach_to_what?(base_object, new_object, label, base_model, new_model, type)
-# 					#puts "attach_new_object: BO '#{base_object.class}' BM '#{base_model['name'] rescue ''}' NO '#{new_object.class}' NM '#{new_model['name'] rescue ''}' N '#{name}' T '#{type}' p '#{assignment}'"
-# 					case assignment;
-# 						when 'shared'; merge_with_shared(base_object, new_object, label, new_model)
-# 						when 'instance'; merge_with_instance(base_object, new_object, label, new_model)
-# 						when 'hash'; merge_with_hash(base_object, new_object, label, new_model)
-# 						when 'array'; merge_with_array(base_object, new_object, label, new_model)
-# 						when 'strip'; # strip key and pass value.. is this even possible?
-# 						when 'manual'; # code block to be passed in
-# 						when 'reverse'; # reverse key/value.. is this practical?
-# 					else
-# 						#puts "Skipping attachment of '#{name}' of type '#{type}'"
-# 					end
-# 				end
 				
 				def attach_new_object(base_object, new_object, name, base_model, new_model, type)
 					label = label_or_tag(name, new_model)
-					
-					# assignment = attach_to_what?(base_object, new_object, label, base_model, new_model, type)
-					#prefs = attachment_prefs(base_model, new_model, type)
 					
 					prefs = case type
 						when 'element'; attach?(new_model) || attach_elements?(base_model)
@@ -346,24 +321,6 @@ module Rfm
 						#puts "Skipping attachment of '#{name}' of type '#{type}'"
 					end
 				end
-
-# 				def attach_to_what?(base_object, new_object, name, base_model, new_model, type)
-# 					prefs = attachment_prefs(base_model, new_model, type)
-# 					
-# 					case   # assignment = case
-# 						when prefs=='shared'; 'shared'
-# 						when prefs=='cursor'; 'cursor'
-# 						when prefs=='none' ; 'none'
-# 						when prefs=='instance'; 'instance'
-# 						when base_object.is_a?(Hash) && (prefs.nil? || prefs=='hash'); 'hash'
-# 						when base_object.is_a?(Array) && (type=='element' || prefs=='array'); 'array'
-# 						else 'instance'					
-# 					end
-# 					#puts "Assigning '#{assignment}' to attach '#{new_object.class}' to '#{base_object.class}' name '#{name}' type '#{type}'"			
-# 					#assignment
-# 				rescue
-# 					puts "Could not determine attach_to_what? for label '#{name}' of type '#{type}'"
-# 				end
 				
 				def attachment_prefs(base_model, new_model, type)
 					case type
@@ -429,10 +386,10 @@ module Rfm
 		  	  	case key_state
 			  	  	when 5; {current_key => [base_object, new_object]}
 			  	  	when 4; {current_key => base_object, new_key => new_object}
-			  	  	when 3; [base_object, new_object].flatten
+			  	  	when 3; [*base_object] << new_object #[base_object, new_object].flatten #slower
 			  	  	when 2; {current_key => ([*base_object] << new_object)}
 			  	  	when 1; base_object.merge(new_key=>new_object)
-			  	  	else    [base_object, new_object].flatten
+			  	  	else    [*base_object] << new_object #[base_object, new_object].flatten #slower
 		  	  	end
 		  	  	
 	  	    rescue
@@ -468,21 +425,6 @@ module Rfm
 
 			  # Methods for submodel
 				def label_or_tag(_tag=newtag, _model=submodel); as_name?(_model) || _tag; end
-				# 				def submodel(_tag=newtag); get_submodel(_tag) || default_submodel; end
-				# 		  	
-				# 				def get_submodel(name)
-				# 					model_elements?(name)
-				# 				end
-				# 				
-				# 				def default_submodel
-				# 					#puts "Using default submodel"
-				# 					# Depth is not used yet.
-				# 					if depth?.to_i > 0
-				# 						{'elements' => model_elements?, 'depth'=>(depth?.to_i - 1)}
-				# 					else
-				# 						default_class.new
-				# 					end
-				# 				end
 				
 			  def get_attribute(name, obj=object)
 			  	return unless name
@@ -496,16 +438,16 @@ module Rfm
 		    
 		    def set_attr_accessor(name, data, obj=object)
 					create_accessor(name, obj)
-					obj.instance_eval do
-						var = instance_variable_get("@#{name}")
+					#obj.instance_eval do
+						var = obj.instance_variable_get("@#{name}")
 						#puts "Assigning @att attributes for '#{obj.class}' #{data.to_a.join(':')}"
 						case
 						when data.is_a?(Hash) && var.is_a?(Hash); var.merge!(data)
 						when data.is_a?(String) && var.is_a?(String); var << data
 						when var.is_a?(Array); [var, data].flatten!
-						else instance_variable_set("@#{name}", data)
+						else obj.instance_variable_set("@#{name}", data)
 						end
-					end
+					#end
 				end
 								
 				def create_accessor(_tag, obj=object)
@@ -513,8 +455,8 @@ module Rfm
 				end
 				
 		    def clean_members(obj=object)
-# 		    	cursor.object = clean_member(cursor.object)
-# 		    	clean_members(ivg(shared_attribute_var, obj))
+					# 	cursor.object = clean_member(cursor.object)
+					# 	clean_members(ivg(shared_attribute_var, obj))
 	    		if obj.is_a?(Hash)
 	    			obj.dup.each do |k,v|
 	    				obj[k] = clean_member(v)
@@ -532,11 +474,11 @@ module Rfm
 							yield(dat) if block_given?
 						end
 	    		end
-# 					obj.instance_variables.each do |var|
-# 						dat = obj.instance_variable_get(var)
-# 						obj.instance_variable_set(var, clean_member(dat))
-# 						yield(dat) if block_given?
-# 					end
+					# 	obj.instance_variables.each do |var|
+					# 		dat = obj.instance_variable_get(var)
+					# 		obj.instance_variable_set(var, clean_member(dat))
+					# 		yield(dat) if block_given?
+					# 	end
 	    	end
 	    	
 	    	def clean_member(val)
@@ -550,14 +492,14 @@ module Rfm
 						end
 					else
 						val
-						# Probably shouldn't do this on instance-var values. ...Why not?
-# 							if val.instance_variables.size < 1
-# 								nil
-# 							elsif val.instance_variables.size == 1
-# 								val.instance_variable_get(val.instance_variables[0])
-# 							else
-# 								val
-# 							end
+						# 	# Probably shouldn't do this on instance-var values. ...Why not?
+						# 		if val.instance_variables.size < 1
+						# 			nil
+						# 		elsif val.instance_variables.size == 1
+						# 			val.instance_variable_get(val.instance_variables[0])
+						# 		else
+						# 			val
+						# 		end
 					end
 	    	end
 		
@@ -732,49 +674,6 @@ module Rfm
 	      send_element_buffer
 	      cursor.receive_end_element(tag) and dump_cursor
 			end
-
-		
-			# 		  # Add a node to an existing element.
-			# 			def _start_element(tag, attributes=nil, *args)
-			# 				#puts "Receiving element '#{_tag}' with attributes '#{attributes}'"
-			# 				tag = transform tag
-			# 				send_element_buffer
-			# 				if attributes
-			# 					# This crazy thing transforms attribute keys to underscore (or whatever).
-			# 					attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
-			# 					set_cursor cursor.receive_start_element(tag, attributes)
-			# 				else
-			# 				  @element_buffer = {:tag=>tag, :attributes => default_class.new}
-			# 				end
-			# 			end
-			# 			
-			# 			# Add attribute to existing element.
-			# 			def _attribute(name, value, *args)
-			# 				#puts "Receiving attribute '#{name}' with value '#{value}'"
-			# 				name = transform name
-			# 		    #cursor.receive_attribute(name,value)
-			# 				@element_buffer[:attributes].merge!({name=>value})
-			# 			end
-			# 			
-			# 			# Add 'content' attribute to existing element.
-			# 			def _text(value, *args)
-			# 				#puts "Receiving text '#{value}'"
-			# 				return unless value.to_s[/[^\s]/]
-			# 				if element_buffer?
-			# 				  @element_buffer[:attributes].merge!({text_label=>value})
-			# 				  send_element_buffer
-			# 				else
-			# 					cursor.receive_attribute(text_label, value)
-			# 				end
-			# 			end
-			# 			
-			# 			# Close out an existing element.
-			# 			def _end_element(tag, *args)
-			# 				tag = transform tag
-			# 				#puts "Receiving end_element '#{tag}'"
-			# 	      send_element_buffer
-			# 	      cursor.receive_end_element(tag) and dump_cursor
-			# 			end
 		  
 		end # Handler
 		

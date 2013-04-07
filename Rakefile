@@ -87,12 +87,18 @@ end
 
 desc "Profile the sax parser"
 task :profile_sax do
+	# This turns on tail-call-optimization
+	# See http://ephoz.posterous.com/ruby-and-recursion-whats-up-in-19
+	RubyVM::InstructionSequence.compile_option = {
+	  :tailcall_optimization => true,
+	  :trace_instruction => false
+	}
 	require 'ruby-prof'
 	# Profile the code
 	@records = 'spec/data/resultset_large.xml'
 	result = RubyProf.profile do
 		# The parser will choose the best available backend.
-		Rfm::SaxParser.parse(@records, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new)
+		Rfm::SaxParser.parse(@records, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new).result
 	end
 	# Print a flat profile to text
 	printer = RubyProf::FlatPrinter.new(result)
@@ -100,6 +106,14 @@ task :profile_sax do
 	# Print a graph profile to text
 	printer = RubyProf::GraphPrinter.new(result)
 	printer.print(STDOUT, {})
+end
+
+desc "Profile the sax parser"
+task :sample do
+	@records = 'spec/data/resultset_large.xml'
+	r= Rfm::SaxParser.parse(@records, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new).result
+	puts r.to_yaml
+	puts r.field_meta.to_yaml
 end	
 
 desc "run specs with all parser backends"	
