@@ -179,11 +179,11 @@ module Rfm
 		
         
     def field_names
-    	field_meta.keys
+    	field_meta ? field_meta.keys : []
   	end
   	
   	def portal_names
-  		portal_meta.keys
+  		portal_meta ? portal_meta.keys : []
   	end
   	
 # 		def end_element_callback(cursor)
