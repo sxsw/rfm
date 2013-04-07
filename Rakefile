@@ -89,10 +89,12 @@ desc "Profile the sax parser"
 task :profile_sax do
 	# This turns on tail-call-optimization
 	# See http://ephoz.posterous.com/ruby-and-recursion-whats-up-in-19
-	RubyVM::InstructionSequence.compile_option = {
-	  :tailcall_optimization => true,
-	  :trace_instruction => false
-	}
+	if RUBY_VERSION[/1.9/]
+		RubyVM::InstructionSequence.compile_option = {
+		  :tailcall_optimization => true,
+		  :trace_instruction => false
+		}
+	end
 	require 'ruby-prof'
 	# Profile the code
 	@records = 'spec/data/resultset_large.xml'
