@@ -113,88 +113,54 @@ module Rfm
     def_delegators :resultset, :field_meta, :portal_names
     def_delegators :layout, :db, :database, :server
     
-    
-    # Acquired from Rfm::Base.
 		def self.new(*args) # resultset
-			puts "Creating new record from Record. args: #{args.to_yaml}"
-			if args[0].is_a?(ResultSet) && args[0].layout && args[0].layout.model
-				args[0].layout.model.new(*args)
-			elsif args[0].is_a?(ResultSet) && args[0].datasource['table']
-				klass = if self.class.const_defined?(args[0].datasource['table'])
-					self.class.const_get(args[0].datasource['table'])
+			#puts "Creating new record from Record. args: #{args.to_yaml}"
+			record = if args[0].is_a?(Resultset) && args[0].layout && args[0].layout.model
+				args[0].layout.model.allocate
+			elsif args[0].is_a?(Resultset) && args[0].table
+				klass = if self.class.const_defined?(args[0].table)
+					self.class.const_get(args[0].table)
 				else
-					self.class.const_set(args[0].datasource['table'], Class.new(Record)).class_eval do
-						# Created attr-accessors for field names
+					self.class.const_set(args[0].table, Class.new(Record)).class_eval do
+					# Created attr-accessors for field names
 					end
 				end
-				klass.allocate.initialize(*args)
+				klass.allocate
+			else
+				self.allocate
 			end
+			record.send(:initialize, *args)
+			record
 		rescue
-			puts "Record.new threw error and is defaulting to Class.new. Error: #{$!}"
+			puts "Record.new bombed and is defaulting to super.new. Error: #{$!}"
 			super
-			#allocate.send(:initialize, *args)
 		end
 
-
     # def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
-    def initialize(resultset_obj)
+    def initialize(*args)
     
 #       @layout        = layout_obj
-      @resultset     = resultset_obj
-#       @record_id     = record.record_id rescue nil
-#       @mod_id        = record.mod_id rescue nil
-      @mods          = {}
-#       @portals     ||= Rfm::CaseInsensitiveHash.new
-
-#       relatedsets = !portal && resultset_obj.instance_variable_get(:@include_portals) ? record.portals : []
+      @mods						= {}
       
-#       record.columns.each do |field|
-#       	next unless field
-#         field_name = @layout.field_mapping[field.name] || field.name rescue field.name
-#         field_name.gsub!(Regexp.new(portal + '::'), '') if portal
-#         datum = []
-#         data = field.data #['data']; data = data.is_a?(Hash) ? [data] : data
-#         data.each do |x|
-#         	next unless field_meta[field_name]
-#         	begin
-# 	          datum.push(field_meta[field_name].coerce(x, resultset_obj)) #(x['__content__'], resultset_obj))
-#         	rescue StandardError => error
-#         		self.errors.add(field_name, error) if self.respond_to? :errors
-#         		raise error unless @layout.ignore_bad_data
-#         	end
-#         end if data
-#       
-#         if datum.length == 1
-#           rfm_super[field_name] = datum[0]
-#         elsif datum.length == 0
-#           rfm_super[field_name] = nil
-#         else
-#           rfm_super[field_name] = datum
-#         end
-#       end
-      
-#       unless relatedsets.empty?
-#         relatedsets.each do |relatedset|
-#         	next if relatedset.blank?
-#           tablename, records = relatedset.table, []
-#       
-#           relatedset.records.each do |record|
-#           	next unless record
-#             records << self.class.new(record, resultset_obj, resultset_obj.portal_meta[tablename], layout_obj, tablename)
-#           end
-#       
-#           @portals[tablename] = records
-#         end
-#       end
-      
-      @loaded = true
+      # TODO: Only store the resultset_meta and the layout. Stop storing the full restulset in each record,
+      # because then the entire resultset will be kept in memory until the last record is dropped.
+      # Even better, offer the option to store/not-store the resultset in each record.
+			options = args.rfm_extract_options!
+			if args[0].is_a?(Resultset)
+				@resultset			= args[0]
+			elsif self.is_a?(Base)
+        # loop thru each layout field, creating hash keys with nil values
+        #layout_obj.field_names.each do |field|
+        self.class.layout.field_names.each do |field|
+          #field_name = field.to_s
+          #self[field_name] = nil
+          self[field] = nil
+        end
+        self.update_attributes(options) unless options == {}
+        self.merge!(@mods) unless @mods == {}
+      end
+			@loaded = true
     end
-
-#     def self.build_records(records, resultset_obj, field_meta, layout_obj, portal=nil)
-#       records.each do |record|
-#         resultset_obj << self.new(record, resultset_obj, field_meta, layout_obj, portal)
-#       end
-#     end
 
     # Saves local changes to the Record object back to Filemaker. For example:
     #

@@ -29,15 +29,7 @@ module Rfm
 	#   @person = Person.find({:name => 'mike'}, :max_records => 50)[0]
 	#   @person.update_attributes(:name => 'Michael', :title => "Senior Partner")
 	#   @person.save
-	# 
-
-	# 	require 'active_support/core_ext/string/inflections'
-	# 	require 'rfm/database'
-	# 	require 'rfm/layout'
-	# 	require 'rfm/record'
-	# 	require 'rfm/utilities/factory'
-	# 	require 'delegate' 
-
+	#
   class Base <  Rfm::Record  #Hash
     extend Config
     config :parent => 'Rfm::Config'
@@ -47,30 +39,13 @@ module Rfm
       include ActiveModel::Validations
       include ActiveModel::Serialization
       extend ActiveModel::Callbacks
-      define_model_callbacks(:create, :update, :destroy, :validate)
+      include ActiveModel::Validations::Callbacks
+      define_model_callbacks(:create, :update, :destroy)
     rescue LoadError, StandardError
     	def run_callbacks(*args)
     		yield
     	end
     end
-    
-		def initialize(record={}, resultset_obj=[], field_meta='', layout_obj=self.class.layout, portal=nil)
-			if resultset_obj == [] and !record.respond_to?(:columns) #.has_key? 'field'
-				@mods = Rfm::CaseInsensitiveHash.new
-				@layout = layout_obj
-				@resultset = Resultset.allocate
-        # loop thru each layout field, creating hash keys with nil values
-        layout_obj.field_names.each do |field|
-          field_name = field.to_s
-          self[field_name] = nil
-        end
-        self.update_attributes(record) unless record == {}
-        self.merge!(@mods) unless @mods == {}
-        @loaded = true
-      else
-      	super
-      end
-		end
 		
     def to_partial_path(object = self) #@object)
     	return 'some/partial/path'
@@ -96,15 +71,6 @@ module Rfm
 				(Rfm::Factory.models << model).uniq unless Rfm::Factory.models.include? model
 				model.config :parent=>'Rfm::Base'
 			end
-		
-			# Build a new record without saving
-		  def new(*args)
-		  	# Without this method, infinite recursion will happen from Record.new
-		  	puts "Creating new record from BASE. args: #{args.to_yaml}"
-		    rec = self.allocate
-		    rec.send(:initialize, *args)
-		    rec
-		  end
 		  
 	    def config(*args)
 	    	super(*args){|strings| @config.merge!(:layout=>strings[0]) if strings[0]}

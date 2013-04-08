@@ -228,10 +228,13 @@ module Rfm
 		      
 		      # Create new element.
 		      const = get_constant(subm['class'])
-		      init = initialize?(subm) || []
+		      # Needs to be duped !!!
+		      init = initialize?(subm) ? initialize?(subm).dup : []
+		      #puts init.to_yaml
 		      init[0] ||= :allocate
 		      init[1] = eval(init[1].to_s)
-		      #puts "Creating new element '#{const}'"
+		      #puts "Current object: #{eval('object').class}"
+		      #puts "Creating new element '#{const}' with '#{init[0]}' and '#{init[1].class}'"
 		      new_element = const.send(*init.compact)
 		      #puts "Created new element of class '#{new_element.class}' for _tag '#{tag}'."
 		      
@@ -252,6 +255,7 @@ module Rfm
 		      	begin
 		      		# Data cleaup
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #top.model && top.model['compact']
+							# End_element_callback
 			      	if before_close?.is_a? Symbol
 			      		object.send before_close?, self
 			      	elsif before_close?.is_a?(String)

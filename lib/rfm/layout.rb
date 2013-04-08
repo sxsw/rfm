@@ -388,7 +388,7 @@ module Rfm
     end
     
   	def field_names
-  		layout_meta['field_controls'].keys
+  		@resultset_meta.field_names || layout_meta['field_controls'].keys
   	end
   	
 #   	def field_names_no_load
@@ -416,7 +416,8 @@ module Rfm
 #   	end
   	
   	def portal_names
-  		portal_meta.keys
+  		return 'UNDER-CONTSTRUCTION'
+  		@resultset_meta && @resultset_meta.portal_names || layout_meta.keys
   	end
   	
   	def table

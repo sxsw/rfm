@@ -35,6 +35,7 @@ elements:
   attach_attributes: shared
 - name: record
   class: Rfm::Record
+  initialize: [new, object]
   attach: array
   elements:
   - name: field
