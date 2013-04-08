@@ -71,7 +71,7 @@ task :benchmark_sax do
 	require 'benchmark'
 	require 'yaml'
 	#load "spec/data/sax_models.rb"
-	@records = 'spec/data/resultset_large.xml'
+	@records = File.read 'spec/data/resultset_large.xml'
 	@layout = 'spec/data/layout.xml'
 	Benchmark.bm do |b|
 		[:rexml, :nokogiri, :libxml, :ox].each do |backend|
