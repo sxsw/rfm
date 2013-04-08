@@ -1,3 +1,4 @@
+require 'delegate'
 module Rfm
   # The Layout object represents a single FileMaker Pro layout. You use it to interact with 
   # records in FileMaker. *All* access to FileMaker data is done through a layout, and this
@@ -492,6 +493,67 @@ module Rfm
 			end
 			mapping
 		end
+		
+
+
+		###  Methods acquired from Rfm::Base cleanup.  ###
+		
+  	class SubLayout < DelegateClass(Layout)
+  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
+			include Config  	
+  	
+  		include Layout::LayoutModule
+   		attr_accessor :model, :parent_layout
+
+  		def initialize(master)
+  			super(master)
+  			self.parent_layout = master
+  		end
+  	end # SubLayout
+  	
+    attr_accessor :subs
+  	
+  	alias_method :main_init, :initialize
+		def initialize(*args)
+	    @subs ||= []
+	    main_init(*args)
+	  end
+    
+    def sublayout
+    	if self.is_a?(Rfm::Layout)
+    		sub = SubLayout.new(self); subs << sub; sub
+    	else
+    		self
+    	end
+    end
+  	
+    # Creates new class with layout name, subclassed from Rfm::Base, and links the new model to a SubLayout instance.
+    def modelize
+    	model_name = name.to_s.gsub(/\W/, '_').classify.gsub(/_/,'')
+    	(return model_name.constantize) rescue nil
+    	sub = sublayout
+    	sub.instance_eval do
+	    	model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
+	    	model_class.class_exec(self) do |layout_obj|
+	    		@layout = layout_obj
+	    	end
+	    	@model = model_class
+	    	
+	  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
+	  		model.config :parent=>'@layout.parent_layout'
+	    	config :parent=>'model'
+	    end
+	    sub.model.to_s.constantize
+    rescue StandardError, SyntaxError
+    	nil
+  	end
+  	
+  	def models
+  		subs.collect{|s| s.model}
+  	end
+		
+		###  End methods from Rfm::Base  ###
+		
     
   	private :load_layout, :get_records, :params
       

@@ -115,7 +115,7 @@ module Rfm
 		#     def [](layout_name)
 		#       self.layout[layout_name]
 		#     end
-    def_delegator :layouts, :[]
+    def_delegators :layouts, :[], :modelize, :models # modelize & models acquired from Rfm::Base
 
   end
 end

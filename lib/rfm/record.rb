@@ -114,7 +114,7 @@ module Rfm
     def_delegators :layout, :db, :database, :server
     
     
-    # This was moved here from base.rb.
+    # Acquired from Rfm::Base.
 		def self.new(*args) # resultset
 			puts "Creating new record from Record. args: #{args.to_yaml}"
 			if args[0].is_a?(ResultSet) && args[0].layout && args[0].layout.model
