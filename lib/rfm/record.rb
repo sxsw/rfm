@@ -117,15 +117,16 @@ module Rfm
 			#puts "Creating new record from Record. args: #{args.to_yaml}"
 			record = if args[0].is_a?(Resultset) && args[0].layout && args[0].layout.model
 				args[0].layout.model.allocate
-			elsif args[0].is_a?(Resultset) && args[0].table
-				klass = if self.class.const_defined?(args[0].table)
-					self.class.const_get(args[0].table)
-				else
-					self.class.const_set(args[0].table, Class.new(Record)).class_eval do
-					# Created attr-accessors for field names
-					end
-				end
-				klass.allocate
+				# This seems to be broken. Try it on a resultset loaded from disk.
+				# 	elsif args[0].is_a?(Resultset) && args[0].table
+				# 		klass = if self.class.const_defined?(args[0].table)
+				# 			self.class.const_get(args[0].table)
+				# 		else
+				# 			self.class.const_set(args[0].table, Class.new(Record)).class_eval do
+				# 			# Created attr-accessors for field names
+				# 			end
+				# 		end
+				# 		klass.allocate
 			else
 				self.allocate
 			end
