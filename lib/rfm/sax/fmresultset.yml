@@ -37,6 +37,7 @@ elements:
   class: Rfm::Record
   initialize: [new, object]
   attach: array
+  before_close: @loaded=true
   elements:
   - name: field
     class: Rfm::Metadata::Field
@@ -44,15 +45,16 @@ elements:
     attach: cursor
     before_close: :end_element_callback
   - name: relatedset
-  	# I dont think this class exists!!!
-    class: Rfm::RelatedSet
-    attach: instance
+    class: Array
     as_name: portals
+    attach: instance
+    attach_attributes: instance
     delineate_with_hash: table
     elements:
     - name: record
       class: Rfm::Record
       attach: array
+      before_close: @loaded=true
       elements:
       - name: field
         compact: true

@@ -159,8 +159,9 @@ module Rfm
         end
         self.update_attributes(options) unless options == {}
         self.merge!(@mods) unless @mods == {}
+        @loaded = true
       end
-			@loaded = true
+			#@loaded = true
     end
 
     # Saves local changes to the Record object back to Filemaker. For example:

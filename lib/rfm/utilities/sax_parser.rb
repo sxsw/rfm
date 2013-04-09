@@ -279,15 +279,15 @@ module Rfm
 		  	# Assign attributes to element.
 				def assign_attributes(_attributes, base_object, base_model, new_model)
 		      if _attributes && !_attributes.empty?
-		      	prefs_exist = model_attributes?(nil, new_model) || attach_attributes?(base_model)
+		      	prefs_exist = model_attributes?(nil, new_model) || attach_attributes?(base_model) || delineate_with_hash?(base_model)
 		      	#puts "Attaching attributes for '#{@newtag}' with data '#{_attributes['text']}' "
 						#_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
 						# This is trying to merge element set as a whole, if possible.
 						case
-							when base_object.is_a?(Hash) && !prefs_exist
+							when false && base_object.is_a?(Hash) && !prefs_exist
 								#puts "Loading attributes as whole."
 								base_object.merge! _attributes
-							when !prefs_exist
+							when false && !prefs_exist
 								#puts "Loading attributes as shared on '#{base_object.class}'."
 								set_attr_accessor('attributes', _attributes, base_object)
 							else
