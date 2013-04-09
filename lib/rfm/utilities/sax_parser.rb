@@ -288,7 +288,7 @@ module Rfm
 								#puts "Loading attributes as whole."
 								base_object.merge! _attributes
 							when !prefs_exist
-								#puts "Loading attributes as shared."
+								#puts "Loading attributes as shared on '#{base_object.class}'."
 								set_attr_accessor('attributes', _attributes, base_object)
 							else
 								#puts "Loading attributes individually."
@@ -464,6 +464,7 @@ module Rfm
 				end
 								
 				def create_accessor(_tag, obj=object)
+					#puts "Creating attr_accessor for '#{_tag}' on object '#{obj.class}'"
 					obj.class.send :attr_accessor, _tag unless obj.instance_variables.include?(":@#{_tag}")
 				end
 				

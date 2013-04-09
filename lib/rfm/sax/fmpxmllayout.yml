@@ -24,12 +24,15 @@ elements:
   as_name: field_controls
   attach: shared
   delineate_with_hash: name
+  attach_attributes: instance
   attributes:
   - name: NAME
     as_name: name
   elements:
   - name: STYLE
     attach: none
+    # Add logic for 3rd level of prefs, so FieldControl pref captures this attach_attributes instead having to explicitly define here.
+    attach_attributes: instance
     attributes:
     - name: TYPE
       as_name: type
