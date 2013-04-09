@@ -44,6 +44,7 @@ elements:
     attach: cursor
     before_close: :end_element_callback
   - name: relatedset
+  	# I dont think this class exists!!!
     class: Rfm::RelatedSet
     attach: instance
     as_name: portals
