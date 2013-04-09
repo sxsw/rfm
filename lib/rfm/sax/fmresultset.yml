@@ -37,7 +37,7 @@ elements:
   class: Rfm::Record
   initialize: [new, object]
   attach: array
-  before_close: @loaded=true
+  before_close: '@loaded=true'
   elements:
   - name: field
     class: Rfm::Metadata::Field
@@ -54,7 +54,7 @@ elements:
     - name: record
       class: Rfm::Record
       attach: array
-      before_close: @loaded=true
+      before_close: '@loaded=true'
       elements:
       - name: field
         compact: true

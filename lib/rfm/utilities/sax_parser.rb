@@ -183,7 +183,8 @@ module Rfm
 		    	
 		    	# TODO: This can surely be cleaned up.
 		    	case
-			    	when const_defined?(klass); const_get(klass)
+		    		# The 2nd condition as added to debug getting 'Array'. Try to get rid of it, extra computing!
+			    	when const_defined?(klass) || const_get(klass); const_get(klass)
 						#   	when self.ancestors[0].const_defined?(klass); self.ancestors[0].const_get(klass)
 						#   	when SaxParser.const_defined?(klass); SaxParser.const_get(klass)
 						#   	#when object.const_defined?(klass); _object.const_get(klass)
@@ -321,7 +322,7 @@ module Rfm
 						when base_object.is_a?(Array) && (type=='element' || prefs=='array'); 'array'
 						else 'shared'  # Default was instance - nice but expensive.
 					end
-
+					puts "attaching '#{type}' label '#{label}' assign '#{assignment}' base '#{base_object.class}' new '#{new_object.class}'"
 					case assignment;
 						when 'shared'; merge_with_shared(base_object, new_object, label, new_model)
 						when 'instance'; merge_with_instance(base_object, new_object, label, new_model)
@@ -353,7 +354,7 @@ module Rfm
 		    end
 		    
 		    def merge_with_instance(base_object, new_object, label, new_model)
-  			  if ivg(label, base_object)
+  			  if ivg(label, base_object) #|| delineate_with_hash?(new_model)
 					  ivs(label, merge_objects(ivg(label, base_object), new_object, new_model), base_object)
 					else
 					  set_attr_accessor(label, new_object, base_object)
@@ -395,7 +396,7 @@ module Rfm
 		  	    	when !new_key.to_s.empty?; 1
 		  	    	else 0
 		  	    end
-		  	  
+		  	  	puts "Key-State '#{key_state}' tag '#{newtag}' base '#{base_object.class}' obj '#{new_object.class}'"
 		  	  	case key_state
 			  	  	when 5; {current_key => [base_object, new_object]}
 			  	  	when 4; {current_key => base_object, new_key => new_object}
