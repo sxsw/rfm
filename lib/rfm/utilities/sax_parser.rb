@@ -283,13 +283,24 @@ module Rfm
 		      	#puts "Attaching attributes for '#{@newtag}' with data '#{_attributes['text']}' "
 						#_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
 						# This is trying to merge element set as a whole, if possible.
-						if base_object.is_a?(Hash) && !prefs_exist
+						case
+							when base_object.is_a?(Hash) && !prefs_exist
 								#puts "Loading attributes as whole."
 								base_object.merge! _attributes
+							when !prefs_exist
+								#puts "Loading attributes as shared."
+								set_attr_accessor('attributes', _attributes, base_object)
 							else
 								#puts "Loading attributes individually."
 								_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
 						end
+						# 	if base_object.is_a?(Hash) && !prefs_exist
+						# 			#puts "Loading attributes as whole."
+						# 			base_object.merge! _attributes
+						# 		else
+						# 			#puts "Loading attributes individually."
+						# 			_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
+						# 	end
 		      end
 				end
 				
@@ -308,7 +319,7 @@ module Rfm
 						when prefs=='instance'; 'instance'
 						when base_object.is_a?(Hash) && (prefs.nil? || prefs=='hash'); 'hash'
 						when base_object.is_a?(Array) && (type=='element' || prefs=='array'); 'array'
-						else 'instance'					
+						else 'shared'  # Default was instance - nice but expensive.
 					end
 
 					case assignment;
