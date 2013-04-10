@@ -322,7 +322,7 @@ module Rfm
 						when base_object.is_a?(Array) && (type=='element' || prefs=='array'); 'array'
 						else 'shared'  # Default was instance - nice but expensive.
 					end
-					puts "attaching '#{type}' label '#{label}' assign '#{assignment}' base '#{base_object.class}' new '#{new_object.class}'"
+					#puts "attaching '#{type}' label '#{label}' assign '#{assignment}' base '#{base_object.class}' new '#{new_object.class}'"
 					case assignment;
 						when 'shared'; merge_with_shared(base_object, new_object, label, new_model)
 						when 'instance'; merge_with_instance(base_object, new_object, label, new_model)
@@ -354,7 +354,7 @@ module Rfm
 		    end
 		    
 		    def merge_with_instance(base_object, new_object, label, new_model)
-  			  if ivg(label, base_object) #|| delineate_with_hash?(new_model)
+  			  if ivg(label, base_object) || delineate_with_hash?(new_model)
 					  ivs(label, merge_objects(ivg(label, base_object), new_object, new_model), base_object)
 					else
 					  set_attr_accessor(label, new_object, base_object)
@@ -384,6 +384,7 @@ module Rfm
 		    	# current_key/new_key is then used as a hash key to contain objects that match on the delineate_with_hash attribute.
 		    	#puts "merge_objects with tags '#{self.tag}/#{label_or_tag}' current_el '#{current_object.class}' and new_el '#{new_object.class}'."
 	  	  	begin
+	  	  		base_object ||= default_class.new
 		  	    current_key = get_attribute(delineate_with_hash?(new_model), base_object)
 		  	    new_key = get_attribute(delineate_with_hash?(new_model), new_object)
 		  	    #puts "merge_objects: tag '#{tag}', new '#{newtag}', delineate-with-hash '#{delineate_with_hash?(submodel)}', current-key '#{current_key}', new-key '#{new_key}'"
@@ -396,7 +397,7 @@ module Rfm
 		  	    	when !new_key.to_s.empty?; 1
 		  	    	else 0
 		  	    end
-		  	  	puts "Key-State '#{key_state}' tag '#{newtag}' base '#{base_object.class}' obj '#{new_object.class}'"
+		  	  	#puts "Key-State '#{key_state}' tag '#{newtag}' base '#{base_object.class}' obj '#{new_object.class}'"
 		  	  	case key_state
 			  	  	when 5; {current_key => [base_object, new_object]}
 			  	  	when 4; {current_key => base_object, new_key => new_object}
