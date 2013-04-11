@@ -73,12 +73,13 @@ task :benchmark_sax do
 	#load "spec/data/sax_models.rb"
 	@records = File.read 'spec/data/resultset_large.xml'
 	@template = {} #'lib/rfm/sax/fmresultset.yml'
+	@base_class = Hash #Rfm::Resultset
 	@layout = 'spec/data/layout.xml'
 	Benchmark.bm do |b|
 		[:rexml, :nokogiri, :libxml, :ox].each do |backend|
 			b.report("#{backend}\n") do
 				5.times do
-					Rfm::SaxParser.parse(@records, @template, Rfm::Resultset.new, backend)
+					Rfm::SaxParser.parse(@records, @template, @base_class.new, backend)
 					#Rfm::SaxParser::Handler.build(@layout, backend)
 				end
 			end

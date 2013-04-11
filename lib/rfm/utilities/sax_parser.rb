@@ -122,9 +122,9 @@ class Object
 		_prefs = (options[:prefs] || args[2])
 		_assignment = (options[:assignment] || args[3])
 		case
-		when _delimiter; self._merge_object!(obj, obj[_delimiter], args, options) # What about n+1 occurence of delimiter?
-		when _object_key; self._merge_object!(obj, _object_key, args, options)
-		else self._merge_object!(obj, 'unknown_data', args, options)
+		when _delimiter; self._merge_object!(obj, obj[_delimiter], *args[1..9]) # What about n+1 occurence of delimiter?
+		when _object_key; self._merge_object!(obj, _object_key, *args[1..9])
+		else self._merge_object!(obj, 'unknown_data', *args[1..9])
 		end
 	end
 	
@@ -153,11 +153,15 @@ class Object
   	end
   end
   
-  def _attach_to_instance_var
+  def _attach_to_instance_var!
   end
   
-  def _attach_to_shared_var
+  def _attach_to_shared_var!
   end
+  
+	#   def _arrayify!(getter_method, setter_method)
+	#   	setter_method.call([*getter_method.call])
+	#   end
 end # Object
 
 class Array
@@ -183,6 +187,7 @@ class Hash
 		when false; set_attr_accessor(obj[_delimiter], obj, self)
 		else
 			if self[_object_key]
+				#_arrayify!(proc {self[_object_key]}, proc{|obj| self[_object_key) << obj
 				self[_object_key] = [*self[_object_key]]
 				self[_object_key] << obj
 			else
