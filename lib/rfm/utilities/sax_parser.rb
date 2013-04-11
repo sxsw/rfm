@@ -114,7 +114,83 @@ require 'stringio'
 #				See this page: http://www.igvita.com/2008/07/08/6-optimization-tips-for-ruby-mri/
 # TODO: Consider making default attribute-attachment shared, instead of instance.
 
+class Object
+	def _attach_object!(obj, *args) # object_key, delimiter, prefs, assignment, *options: <options>
+		options = args.rfm_extract_options!
+		_object_key = options[:object_key] || args[0]
+		_delimiter = options[:delimiter] || args[1]
+		_prefs = (options[:prefs] || args[2])
+		_assignment = (options[:assignment] || args[3])
+		case
+		when _delimiter; self._merge_object!(obj, obj[_delimiter], args, options) # What about n+1 occurence of delimiter?
+		when _object_key; self._merge_object!(obj, _object_key, args, options)
+		else self._merge_object!(obj, 'unknown_data', args, options)
+		end
+	end
+	
+	def _merge_object!(obj, *args)
+		options = args.rfm_extract_options!
+		_object_key = options[:object_key] || args[0]
+		_delimiter = options[:delimiter] || args[1]
+		_prefs = options[:prefs] || args[2]
+		case 
+		when false;
+		else
+			if _get_attribute(_object_key, 'attributes')
+				instance_variable_set("@#{_object_key}", [*instance_variable_get("@#{_object_key}")] << obj)
+			else
+				instance_variable_set("@#{_object_key}", obj)
+			end
+		end
+	end
+	
+  def _get_attribute(name, shared=nil)
+  	return unless name
+  	case
+  		when (var= instance_variable_get("@#{shared}")); var[name]
+  		when (var= instance_variable_get("@#{name}")); var
+  		when respond_to?(:has_key?) && has_key?(name); self[name]
+  	end
+  end
+  
+  def _attach_to_instance_var
+  end
+  
+  def _attach_to_shared_var
+  end
+end # Object
 
+class Array
+	def _merge_object!(obj, *args)
+		options = args.rfm_extract_options!
+		_object_key = options[:object_key] || args[0]
+		_delimiter = options[:delimiter] || args[1]
+		_prefs = options[:prefs] || args[2]
+		case
+		when false;
+		else self << obj
+		end
+	end
+end # Array
+
+class Hash
+	def _merge_object!(obj, *args)
+		options = args.rfm_extract_options!
+		_object_key = options[:object_key] || args[0]
+		_delimiter = options[:delimiter] || args[1]
+		_prefs = options[:prefs] || args[2]
+		case
+		when false; set_attr_accessor(obj[_delimiter], obj, self)
+		else
+			if self[_object_key]
+				self[_object_key] = [*self[_object_key]]
+				self[_object_key] << obj
+			else
+				self[_object_key] = obj
+			end
+		end
+	end
+end # Hash
 
 
 module Rfm
@@ -304,7 +380,7 @@ module Rfm
 						# 	end
 		      end
 				end
-				
+								
 				def attach_new_object(base_object, new_object, name, base_model, new_model, type)
 					label = label_or_tag(name, new_model)
 					
@@ -322,18 +398,21 @@ module Rfm
 						when base_object.is_a?(Array) && (type=='element' || prefs=='array'); 'array'
 						else 'shared'  # Default was instance - nice but expensive.
 					end
-					#puts "attaching '#{type}' label '#{label}' assign '#{assignment}' base '#{base_object.class}' new '#{new_object.class}'"
-					case assignment;
-						when 'shared'; merge_with_shared(base_object, new_object, label, new_model)
-						when 'instance'; merge_with_instance(base_object, new_object, label, new_model)
-						when 'hash'; merge_with_hash(base_object, new_object, label, new_model)
-						when 'array'; merge_with_array(base_object, new_object, label, new_model)
-						when 'strip'; # strip key and pass value.. is this even possible?
-						when 'manual'; # code block to be passed in
-						when 'reverse'; # reverse key/value.. is this practical?
-					else
-						#puts "Skipping attachment of '#{name}' of type '#{type}'"
-					end
+					#   puts "attaching '#{type}' label '#{label}' assign '#{assignment}' base '#{base_object.class}' new '#{new_object.class}'"
+					
+					base_object._attach_object!(new_object, label, delineate_with_hash?(new_model), prefs, assignment)
+					
+					# 	case assignment;
+					# 		when 'shared'; merge_with_shared(base_object, new_object, label, new_model)
+					# 		when 'instance'; merge_with_instance(base_object, new_object, label, new_model)
+					# 		when 'hash'; merge_with_hash(base_object, new_object, label, new_model)
+					# 		when 'array'; merge_with_array(base_object, new_object, label, new_model)
+					# 		when 'strip'; # strip key and pass value.. is this even possible?
+					# 		when 'manual'; # code block to be passed in
+					# 		when 'reverse'; # reverse key/value.. is this practical?
+					# 	else
+					#   puts "Skipping attachment of '#{name}' of type '#{type}'"
+					# 	end
 				end
 				
 				def attachment_prefs(base_model, new_model, type)
@@ -343,75 +422,75 @@ module Rfm
 					end
 				end
 
-		    def merge_with_shared(base_object, new_object, label, new_model)
-		    	ivg(shared_instance_var, base_object) || set_attr_accessor(shared_instance_var, default_class.new, base_object)
-  			  if ivg(shared_instance_var, base_object)[label]
-					  #ivg(shared_instance_var, base_object)[label] = merge_objects(ivg(label), new_object, new_model)
-					  ivg(shared_instance_var, base_object)[label] = merge_objects(ivg(shared_instance_var, base_object)[label], new_object, new_model)
-					else
-					  ivg(shared_instance_var, base_object)[label] = new_object
-				  end
-		    end
-		    
-		    def merge_with_instance(base_object, new_object, label, new_model)
-  			  if ivg(label, base_object) || delineate_with_hash?(new_model)
-					  ivs(label, merge_objects(ivg(label, base_object), new_object, new_model), base_object)
-					else
-					  set_attr_accessor(label, new_object, base_object)
-				  end
-		    end
-		    
-		    def merge_with_hash(base_object, new_object, label, new_model)
-    			if base_object[label]
-  					base_object[label] = merge_objects(base_object[label], new_object, new_model)
-  			  else			
-  	  			base_object[label] = new_object
-    			end
-		    end
-		    
-		    # TODO: Does this really need to use merge_elements?
-		    def merge_with_array(base_object, new_object, label, new_model)
-					if base_object.size > 0
-						base_object.replace merge_objects(base_object, new_object, new_model)
-					else
-  	  			base_object << new_object
-	  			end
-		    end
-
-		    def merge_objects(base_object, new_object, new_model)
-		    	# delineate_with_hash is the attribute name to match on.
-		    	# current_key/new_key is the actual value of the match object.
-		    	# current_key/new_key is then used as a hash key to contain objects that match on the delineate_with_hash attribute.
-		    	#puts "merge_objects with tags '#{self.tag}/#{label_or_tag}' current_el '#{current_object.class}' and new_el '#{new_object.class}'."
-	  	  	begin
-	  	  		base_object ||= default_class.new
-		  	    current_key = get_attribute(delineate_with_hash?(new_model), base_object)
-		  	    new_key = get_attribute(delineate_with_hash?(new_model), new_object)
-		  	    #puts "merge_objects: tag '#{tag}', new '#{newtag}', delineate-with-hash '#{delineate_with_hash?(submodel)}', current-key '#{current_key}', new-key '#{new_key}'"
-		  	    
-		  	    key_state = case
-		  	    	when !current_key.to_s.empty? && current_key == new_key; 5
-		  	    	when !current_key.to_s.empty? && !new_key.to_s.empty?; 4
-		  	    	when current_key.to_s.empty? && new_key.to_s.empty?; 3
-		  	    	when !current_key.to_s.empty?; 2
-		  	    	when !new_key.to_s.empty?; 1
-		  	    	else 0
-		  	    end
-		  	  	#puts "Key-State '#{key_state}' tag '#{newtag}' base '#{base_object.class}' obj '#{new_object.class}'"
-		  	  	case key_state
-			  	  	when 5; {current_key => [base_object, new_object]}
-			  	  	when 4; {current_key => base_object, new_key => new_object}
-			  	  	when 3; [*base_object] << new_object #[base_object, new_object].flatten #slower
-			  	  	when 2; {current_key => ([*base_object] << new_object)}
-			  	  	when 1; base_object.merge(new_key=>new_object)
-			  	  	else    [*base_object] << new_object #[base_object, new_object].flatten #slower
-		  	  	end
-		  	  	
-	  	    rescue
-	  	    	puts "Error: could not merge '#{base_object.class}' with '#{new_object.class}' given model named '#{new_model && new_model['name']}': #{$!}"
-	  	    	#([*current_object] << new_object) if current_object.is_a?(Array)
-	  	    end
-		    end # merge_objects
+				#   def merge_with_shared(base_object, new_object, label, new_model)
+				#   	ivg(shared_instance_var, base_object) || set_attr_accessor(shared_instance_var, default_class.new, base_object)
+				# 	  if ivg(shared_instance_var, base_object)[label]
+				# 		  #ivg(shared_instance_var, base_object)[label] = merge_objects(ivg(label), new_object, new_model)
+				# 		  ivg(shared_instance_var, base_object)[label] = merge_objects(ivg(shared_instance_var, base_object)[label], new_object, new_model)
+				# 		else
+				# 		  ivg(shared_instance_var, base_object)[label] = new_object
+				# 	  end
+				#   end
+				#   
+				#   def merge_with_instance(base_object, new_object, label, new_model)
+				# 	  if ivg(label, base_object) || delineate_with_hash?(new_model)
+				# 		  ivs(label, merge_objects(ivg(label, base_object), new_object, new_model), base_object)
+				# 		else
+				# 		  set_attr_accessor(label, new_object, base_object)
+				# 	  end
+				#   end
+				#   
+				#   def merge_with_hash(base_object, new_object, label, new_model)
+				# 		if base_object[label]
+				# 			base_object[label] = merge_objects(base_object[label], new_object, new_model)
+				# 	  else			
+				# 			base_object[label] = new_object
+				# 		end
+				#   end
+				#   
+				#   # TODO: Does this really need to use merge_elements?
+				#   def merge_with_array(base_object, new_object, label, new_model)
+				# 		if base_object.size > 0
+				# 			base_object.replace merge_objects(base_object, new_object, new_model)
+				# 		else
+				# 			base_object << new_object
+				# 		end
+				#   end
+				# 
+				#   def merge_objects(base_object, new_object, new_model)
+				#   	# delineate_with_hash is the attribute name to match on.
+				#   	# current_key/new_key is the actual value of the match object.
+				#   	# current_key/new_key is then used as a hash key to contain objects that match on the delineate_with_hash attribute.
+				#   	#puts "merge_objects with tags '#{self.tag}/#{label_or_tag}' current_el '#{current_object.class}' and new_el '#{new_object.class}'."
+				#   	begin
+				#   		base_object ||= default_class.new
+				# 	    current_key = get_attribute(delineate_with_hash?(new_model), base_object)
+				# 	    new_key = get_attribute(delineate_with_hash?(new_model), new_object)
+				# 	    #puts "merge_objects: tag '#{tag}', new '#{newtag}', delineate-with-hash '#{delineate_with_hash?(submodel)}', current-key '#{current_key}', new-key '#{new_key}'"
+				# 	    
+				# 	    key_state = case
+				# 	    	when !current_key.to_s.empty? && current_key == new_key; 5
+				# 	    	when !current_key.to_s.empty? && !new_key.to_s.empty?; 4
+				# 	    	when current_key.to_s.empty? && new_key.to_s.empty?; 3
+				# 	    	when !current_key.to_s.empty?; 2
+				# 	    	when !new_key.to_s.empty?; 1
+				# 	    	else 0
+				# 	    end
+				# 	  	#puts "Key-State '#{key_state}' tag '#{newtag}' base '#{base_object.class}' obj '#{new_object.class}'"
+				# 	  	case key_state
+				#   	  	when 5; {current_key => [base_object, new_object]}
+				#   	  	when 4; {current_key => base_object, new_key => new_object}
+				#   	  	when 3; [*base_object] << new_object #[base_object, new_object].flatten #slower
+				#   	  	when 2; {current_key => ([*base_object] << new_object)}
+				#   	  	when 1; base_object.merge(new_key=>new_object)
+				#   	  	else    [*base_object] << new_object #[base_object, new_object].flatten #slower
+				# 	  	end
+				# 	  	
+				#     rescue
+				#     	puts "Error: could not merge '#{base_object.class}' with '#{new_object.class}' given model named '#{new_model && new_model['name']}': #{$!}"
+				#     	#([*current_object] << new_object) if current_object.is_a?(Array)
+				#     end
+				#   end # merge_objects
 
 
 
