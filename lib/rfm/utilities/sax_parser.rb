@@ -133,14 +133,10 @@ class Object
 		_object_key = options[:object_key] || args[0]
 		_delimiter = options[:delimiter] || args[1]
 		_prefs = options[:prefs] || args[2]
-		case 
-		when false;
+		if _get_attribute(_object_key, 'attributes')
+			instance_variable_set("@#{_object_key}", [instance_variable_get("@#{_object_key}")].flatten << obj)
 		else
-			if _get_attribute(_object_key, 'attributes')
-				instance_variable_set("@#{_object_key}", [*instance_variable_get("@#{_object_key}")] << obj)
-			else
-				instance_variable_set("@#{_object_key}", obj)
-			end
+			instance_variable_set("@#{_object_key}", obj)
 		end
 	end
 	
@@ -171,7 +167,7 @@ class Array
 		_delimiter = options[:delimiter] || args[1]
 		_prefs = options[:prefs] || args[2]
 		case
-		when false;
+		when nil; #obj.is_a?(Array); self.concat!(obj)
 		else self << obj
 		end
 	end
@@ -183,16 +179,12 @@ class Hash
 		_object_key = options[:object_key] || args[0]
 		_delimiter = options[:delimiter] || args[1]
 		_prefs = options[:prefs] || args[2]
-		case
-		when false; set_attr_accessor(obj[_delimiter], obj, self)
+		if self[_object_key]
+			#_arrayify!(proc {self[_object_key]}, proc{|obj| self[_object_key) << obj
+			self[_object_key] = [self[_object_key]].flatten
+			self[_object_key] << obj
 		else
-			if self[_object_key]
-				#_arrayify!(proc {self[_object_key]}, proc{|obj| self[_object_key) << obj
-				self[_object_key] = [*self[_object_key]]
-				self[_object_key] << obj
-			else
-				self[_object_key] = obj
-			end
+			self[_object_key] = obj
 		end
 	end
 end # Hash
