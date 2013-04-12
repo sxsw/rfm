@@ -115,39 +115,44 @@ require 'stringio'
 # TODO: Consider making default attribute-attachment shared, instead of instance.
 
 class Object
-	def _attach_object!(obj, *args) # object_key, delimiter, prefs, assignment, *options: <options>
-		options = args.rfm_extract_options!
-		_object_key = options[:object_key] || args[0]
-		_delimiter = options[:delimiter] || args[1]
-		_prefs = (options[:prefs] || args[2])
-		_assignment = (options[:assignment] || args[3])
+	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
+		options = args.last.is_a?(Hash) ? args.pop : {}
+		puts "base '#{self.class}' obj '#{obj.class}' name '#{args[0]}' delim '#{args[1]}' prefs '#{args[2]}' type '#{args[3]}'"
+		name = (args[0] || options[:name])
+		delimiter = (args[1] || options[:delimiter])
+		prefs = (args[2] || options[:prefs])
+		type = (args[3] || options[:type])
 		case
-		when _delimiter; self._merge_object!(obj, obj[_delimiter], *args[1..9]) # What about n+1 occurence of delimiter?
-		when _object_key; self._merge_object!(obj, _object_key, *args[1..9])
-		else self._merge_object!(obj, 'unknown_data', *args[1..9])
-		end
-	end
-	
-	def _merge_object!(obj, *args)
-		options = args.rfm_extract_options!
-		_object_key = options[:object_key] || args[0]
-		_delimiter = options[:delimiter] || args[1]
-		_prefs = options[:prefs] || args[2]
-		if _get_attribute(_object_key, 'attributes')
-			instance_variable_set("@#{_object_key}", [instance_variable_get("@#{_object_key}")].flatten << obj)
+		when prefs=='shared'
+			eval("@attributes ||= {}")._merge_object!(obj, name, delimiter, prefs, type)
+		when name
+			self._merge_object!(obj, name, delimiter, prefs, type)
 		else
-			instance_variable_set("@#{_object_key}", obj)
+			self._merge_object!(obj, 'unknown_data', delimiter, prefs, type)
 		end
 	end
 	
-  def _get_attribute(name, shared=nil)
-  	return unless name
-  	case
-  		when (var= instance_variable_get("@#{shared}")); var[name]
-  		when (var= instance_variable_get("@#{name}")); var
-  		when respond_to?(:has_key?) && has_key?(name); self[name]
-  	end
-  end
+	def _merge_object!(obj, name, delimiter, prefs, options={})
+		if instance_variable_get("@#{name}") || delimiter
+			if delimiter
+				delimit_name = obj[delimiter]
+				instance_variable_set("@#{name}", instance_variable_get("@#{name}") || {})[delimit_name]=obj
+			else
+				instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
+			end
+		else
+			instance_variable_set("@#{name}", obj)
+		end
+	end
+	
+	#   def _get_attribute(name, shared=nil)
+	#   	return unless name
+	#   	case
+	#   		when (var= instance_variable_get("@#{shared}")); var[name]
+	#   		when (var= instance_variable_get("@#{name}")); var
+	#   		when respond_to?(:has_key?) && has_key?(name); self[name]
+	#   	end
+	#   end
   
   def _attach_to_instance_var!
   end
@@ -161,30 +166,30 @@ class Object
 end # Object
 
 class Array
-	def _merge_object!(obj, *args)
-		options = args.rfm_extract_options!
-		_object_key = options[:object_key] || args[0]
-		_delimiter = options[:delimiter] || args[1]
-		_prefs = options[:prefs] || args[2]
+	def _merge_object!(obj, name, delimiter, prefs, options={})
 		case
-		when nil; #obj.is_a?(Array); self.concat!(obj)
+		when prefs=='instance'; super
 		else self << obj
 		end
 	end
 end # Array
 
 class Hash
-	def _merge_object!(obj, *args)
-		options = args.rfm_extract_options!
-		_object_key = options[:object_key] || args[0]
-		_delimiter = options[:delimiter] || args[1]
-		_prefs = options[:prefs] || args[2]
-		if self[_object_key]
-			#_arrayify!(proc {self[_object_key]}, proc{|obj| self[_object_key) << obj
-			self[_object_key] = [self[_object_key]].flatten
-			self[_object_key] << obj
+	def _merge_object!(obj, name, delimiter, prefs, options={})
+		#puts "hash._merge_object name '#{name}' delimiter '#{delimiter}' prefs '#{prefs}'"
+		case
+		when prefs=='instance'; super
+		when (self[name] || delimiter)
+			if delimiter
+				delimit_name = obj[delimiter]
+				self[name] ||= {}
+				self[name][delimit_name]=obj
+			else
+				self[name] = [self[name]].flatten
+				self[name] << obj
+			end
 		else
-			self[_object_key] = obj
+			self[name] = obj
 		end
 	end
 end # Hash
@@ -386,18 +391,19 @@ module Rfm
 						when 'attribute'; attach?(new_model) || attach_attributes?(base_model)
 					end
 					
-					assignment = case
-						when prefs=='shared'; 'shared'
-						when prefs=='cursor'; 'cursor'
-						when prefs=='none' ; 'none'
-						when prefs=='instance'; 'instance'
-						when base_object.is_a?(Hash) && (prefs.nil? || prefs=='hash'); 'hash'
-						when base_object.is_a?(Array) && (type=='element' || prefs=='array'); 'array'
-						else 'shared'  # Default was instance - nice but expensive.
-					end
+					# 	assignment = case
+					# 		when prefs=='shared'; 'shared'
+					# 		when prefs=='cursor'; 'cursor'
+					# 		when prefs=='none' ; 'none'
+					# 		when prefs=='instance'; 'instance'
+					# 		when base_object.is_a?(Hash) && (prefs.nil? || prefs=='hash'); 'hash'
+					# 		when base_object.is_a?(Array) && (type=='element' || prefs=='array'); 'array'
+					# 		else 'shared'  # Default was instance - nice but expensive.
+					# 	end
 					#   puts "attaching '#{type}' label '#{label}' assign '#{assignment}' base '#{base_object.class}' new '#{new_object.class}'"
 					
-					base_object._attach_object!(new_object, label, delineate_with_hash?(new_model), prefs, assignment)
+					puts "delim: #{delineate_with_hash?(new_model)}"
+					base_object._attach_object!(new_object, label, delineate_with_hash?(new_model), prefs, type)
 					
 					# 	case assignment;
 					# 		when 'shared'; merge_with_shared(base_object, new_object, label, new_model)
