@@ -117,7 +117,7 @@ require 'stringio'
 class Object
 	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
 		options = args.last.is_a?(Hash) ? args.pop : {}
-		puts "base '#{self.class}' obj '#{obj.class}' name '#{args[0]}' delim '#{args[1]}' prefs '#{args[2]}' type '#{args[3]}'"
+		#puts "base '#{self.class}' obj '#{obj.class}' name '#{args[0]}' delim '#{args[1]}' prefs '#{args[2]}' type '#{args[3]}'"
 		name = (args[0] || options[:name])
 		delimiter = (args[1] || options[:delimiter])
 		prefs = (args[2] || options[:prefs])
@@ -402,7 +402,9 @@ module Rfm
 					# 	end
 					#   puts "attaching '#{type}' label '#{label}' assign '#{assignment}' base '#{base_object.class}' new '#{new_object.class}'"
 					
-					puts "delim: #{delineate_with_hash?(new_model)}"
+					#puts "delim: #{new_model && new_model['delineate_with_hash']}"
+					#puts "model: #{new_model}"
+					#puts base_model.to_yaml
 					base_object._attach_object!(new_object, label, delineate_with_hash?(new_model), prefs, type)
 					
 					# 	case assignment;
