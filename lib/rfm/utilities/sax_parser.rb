@@ -113,10 +113,16 @@ require 'stringio'
 #				Get this book: http://my.safaribooksonline.com/9780321540034?portal=oreilly
 #				See this page: http://www.igvita.com/2008/07/08/6-optimization-tips-for-ruby-mri/
 # TODO: Consider making default attribute-attachment shared, instead of instance.
+# TODO: Find a way to get SaxParser defaults into core class patches.
+# TODO: Check resultset portal_meta in Splash Asset model for field-definitions coming out correct according to sax template.
+
+
+SHARED_VAR = 'attributes'
+DEFAULT_CLASS = Hash
 
 class Object
 	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
-		options = args.last.is_a?(Hash) ? args.pop : {}
+		options = args.last.is_a?(Hash) ? args.pop : DEFAULT_CLASS.new
 		#puts "base '#{self.class}' obj '#{obj.class}' name '#{args[0]}' delim '#{args[1]}' prefs '#{args[2]}' type '#{args[3]}'"
 		name = (args[0] || options[:name])
 		delimiter = (args[1] || options[:delimiter])
@@ -140,30 +146,31 @@ class Object
 	end
 	
 	def _merge_shared!(obj, name, delimiter, prefs, type)
-		eval("@attributes ||= {}")._merge_object!(obj, name, delimiter, nil, type)
+		eval("@#{SHARED_VAR} ||= #{DEFAULT_CLASS.new}")._merge_object!(obj, name, delimiter, nil, type)
+		meta = (class << self; self; end)
+		meta.send(:attr_reader, SHARED_VAR)
 	end
 	
 	def _merge_instance!(obj, name, delimiter, prefs, type)
 		if instance_variable_get("@#{name}") || delimiter
 			if delimiter
-				#delimit_name = obj[delimiter]
-				delimit_name = _get_attribute(delimiter, 'attributes')
-				instance_variable_set("@#{name}", instance_variable_get("@#{name}") || {})[delimit_name]=obj
+				delimit_name = obj._get_attribute(delimiter, SHARED_VAR)
+				instance_variable_set("@#{name}", instance_variable_get("@#{name}") || DEFAULT_CLASS.new)[delimit_name]=obj
 			else
 				instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
 			end
 		else
 			instance_variable_set("@#{name}", obj)
 		end
+		meta = (class << self; self; end)
+		meta.send(:attr_reader, name.downcase.gsub(/\s/,'_'))
 	end
 	
-  def _get_attribute(name, shared=nil)
+  def _get_attribute(name, shared=SHARED_VAR)
   	return unless name
-  	case
-  		when (var= instance_variable_get("@#{shared}")); var[name]
-  		when (var= instance_variable_get("@#{name}")); var
-  		when respond_to?(:has_key?) && has_key?(name); self[name]
-  	end
+		( respond_to?(:has_key?) && has_key?(name) && self[name] ) ||
+		( (var= instance_variable_get("@#{shared}")) && var[name] ) ||
+		instance_variable_get("@#{name}")
   end
 
 end # Object
@@ -188,8 +195,8 @@ class Hash
 			_merge_instance!(obj, name, delimiter, prefs, type)
 		when (self[name] || delimiter)
 			if delimiter
-				delimit_name = _get_attribute(delimiter, 'attributes') #obj[delimiter]
-				self[name] ||= {}
+				delimit_name =  obj._get_attribute(delimiter)
+				self[name] ||= DEFAULT_CLASS.new
 				self[name][delimit_name]=obj
 			else
 				self[name] = [self[name]].flatten
@@ -197,6 +204,10 @@ class Hash
 			end
 		else
 			self[name] = obj
+		end
+		meta = (class << self; self; end)
+		meta.send(:define_method, name.downcase.gsub(/\s/,'_')) do
+			self[name.downcase.gsub(/\s/,'_')] = obj
 		end
 	end
 end # Hash
@@ -342,12 +353,11 @@ module Rfm
 		      		# Data cleaup
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #top.model && top.model['compact']
 							# Construct attr_accessor methods
-							attributes = object.instance_variables.collect{|v| v.to_s.gsub(/@/, '').to_sym}
-							#puts "Instance Variables for '#{_tag}': #{attributes.join(', ')}"
-							if attributes.size > 0
-								def object.meta; (class << self; self; end); end
-								object.meta.send(:attr_reader, *attributes)
-							end
+							# 	attributes = object.instance_variables.collect{|v| v.to_s.gsub(/@/, '').to_sym}
+							# 	if attributes.size > 0
+							# 		def object.meta; (class << self; self; end); end
+							# 		object.meta.send(:attr_reader, *attributes)
+							# 	end
 							# End_element_callback
 			      	if before_close?.is_a? Symbol
 			      		object.send before_close?, self
