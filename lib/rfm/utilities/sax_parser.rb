@@ -118,110 +118,6 @@ require 'stringio'
 # TODO: Make sure Rfm::Metadata::Field is being used in portal-definitions.
 
 
-# These should only be temporary.
-SHARED_VAR = 'attributes'
-DEFAULT_CLASS = Hash
-CREATE_ACCESSORS = false
-
-class Object
-	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
-		options = args.last.is_a?(Hash) ? args.pop : DEFAULT_CLASS.new
-		#puts "base '#{self.class}' obj '#{obj.class}' name '#{args[0]}' delim '#{args[1]}' prefs '#{args[2]}' type '#{args[3]}'"
-		name = (args[0] || options[:name])
-		delimiter = (args[1] || options[:delimiter])
-		prefs = (args[2] || options[:prefs])
-		type = (args[3] || options[:type])
-		case
-		when prefs=='none' || prefs=='cursor'; nil
-		when name
-			self._merge_object!(obj, name, delimiter, prefs, type)
-		else
-			self._merge_object!(obj, 'unknown_data', delimiter, prefs, type)
-		end
-	end
-	
-	def _merge_object!(obj, name, delimiter, prefs, type)
-		if prefs=='instance'
-			_merge_instance!(obj, name, delimiter, prefs, type)
-		else
-			_merge_shared!(obj, name, delimiter, prefs, type)
-		end
-	end
-	
-	def _merge_shared!(obj, name, delimiter, prefs, type)
-		eval("@#{SHARED_VAR} ||= #{DEFAULT_CLASS.new}")._merge_object!(obj, name, delimiter, nil, type)
-		if CREATE_ACCESSORS
-			meta = (class << self; self; end)
-			meta.send(:attr_reader, SHARED_VAR)
-		end
-	end
-	
-	def _merge_instance!(obj, name, delimiter, prefs, type)
-		if instance_variable_get("@#{name}") || delimiter
-			if delimiter
-				delimit_name = obj._get_attribute(delimiter, SHARED_VAR)
-				instance_variable_set("@#{name}", instance_variable_get("@#{name}") || DEFAULT_CLASS.new)[delimit_name]=obj
-			else
-				instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
-			end
-		else
-			instance_variable_set("@#{name}", obj)
-		end
-		if CREATE_ACCESSORS
-			meta = (class << self; self; end)
-			meta.send(:attr_reader, name.downcase.gsub(/\s/,'_'))
-		end
-	end
-	
-  def _get_attribute(name, shared=SHARED_VAR)
-  	return unless name
-		( respond_to?(:has_key?) && has_key?(name) && self[name] ) ||
-		( (var= instance_variable_get("@#{shared}")) && var[name] ) ||
-		instance_variable_get("@#{name}")
-  end
-
-end # Object
-
-class Array
-	def _merge_object!(obj, name, delimiter, prefs, type)
-		case
-		when prefs=='shared' || type == 'attribute'; _merge_shared!(obj, name, delimiter, prefs, type)
-		when prefs=='instance'; _merge_instance!(obj, name, delimiter, prefs, type)
-		else self << obj
-		end
-	end
-end # Array
-
-class Hash
-	def _merge_object!(obj, name, delimiter, prefs, type)
-		#puts "hash._merge_object name '#{name}' delimiter '#{delimiter}' prefs '#{prefs}'"
-		case
-		when prefs=='shared'
-			_merge_shared!(obj, name, delimiter, prefs, type)
-		when prefs=='instance'
-			_merge_instance!(obj, name, delimiter, prefs, type)
-		when (self[name] || delimiter)
-			if delimiter
-				delimit_name =  obj._get_attribute(delimiter)
-				self[name] ||= DEFAULT_CLASS.new
-				self[name][delimit_name]=obj
-			else
-				self[name] = [self[name]].flatten
-				self[name] << obj
-			end
-		else
-			self[name] = obj
-		end
-		if CREATE_ACCESSORS
-			meta = (class << self; self; end)
-			meta.send(:define_method, name.downcase.gsub(/\s/,'_')) do
-				self[name.downcase.gsub(/\s/,'_')] = obj
-			end
-		end
-	end
-end # Hash
-
-
 module Rfm
 	module SaxParser
 		extend Forwardable
@@ -290,10 +186,6 @@ module Rfm
 		    	case
 		    		# The 2nd condition as added to debug getting 'Array'. Try to get rid of it, extra computing!
 			    	when const_defined?(klass) || const_get(klass); const_get(klass)
-						#   	when self.ancestors[0].const_defined?(klass); self.ancestors[0].const_get(klass)
-						#   	when SaxParser.const_defined?(klass); SaxParser.const_get(klass)
-						#   	#when object.const_defined?(klass); _object.const_get(klass)
-						#   	when Module.const_defined?(klass); Module.const_get(klass)
 			  	else
 			  		puts "Could not find constant '#{klass.to_s}'"; default_class
 			  	end
@@ -361,7 +253,8 @@ module Rfm
 		      	begin
 		      		# Data cleaup
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #top.model && top.model['compact']
-							# Construct attr_accessor methods
+							# Construct attr_accessor methods:
+							# These have been moved to core patches.
 							# 	attributes = object.instance_variables.collect{|v| v.to_s.gsub(/@/, '').to_sym}
 							# 	if attributes.size > 0
 							# 		def object.meta; (class << self; self; end); end
@@ -424,33 +317,8 @@ module Rfm
 						when 'attribute'; attach?(new_model) || attach_attributes?(base_model)
 					end
 					
-					# 	assignment = case
-					# 		when prefs=='shared'; 'shared'
-					# 		when prefs=='cursor'; 'cursor'
-					# 		when prefs=='none' ; 'none'
-					# 		when prefs=='instance'; 'instance'
-					# 		when base_object.is_a?(Hash) && (prefs.nil? || prefs=='hash'); 'hash'
-					# 		when base_object.is_a?(Array) && (type=='element' || prefs=='array'); 'array'
-					# 		else 'shared'  # Default was instance - nice but expensive.
-					# 	end
-					#   puts "attaching '#{type}' label '#{label}' assign '#{assignment}' base '#{base_object.class}' new '#{new_object.class}'"
-					
-					#puts "delim: #{new_model && new_model['delineate_with_hash']}"
-					#puts "model: #{new_model}"
-					#puts base_model.to_yaml
-					base_object._attach_object!(new_object, label, delineate_with_hash?(new_model), prefs, type)
-					
-					# 	case assignment;
-					# 		when 'shared'; merge_with_shared(base_object, new_object, label, new_model)
-					# 		when 'instance'; merge_with_instance(base_object, new_object, label, new_model)
-					# 		when 'hash'; merge_with_hash(base_object, new_object, label, new_model)
-					# 		when 'array'; merge_with_array(base_object, new_object, label, new_model)
-					# 		when 'strip'; # strip key and pass value.. is this even possible?
-					# 		when 'manual'; # code block to be passed in
-					# 		when 'reverse'; # reverse key/value.. is this practical?
-					# 	else
-					#   puts "Skipping attachment of '#{name}' of type '#{type}'"
-					# 	end
+					base_object._attach_object!(new_object, label, delineate_with_hash?(new_model), prefs, type, :create_accessors=>:shared, :default_class=>default_class)
+
 				end
 				
 				def attachment_prefs(base_model, new_model, type)
@@ -459,76 +327,6 @@ module Rfm
 						when 'attribute'; attach?(new_model) || attach_attributes?(base_model)
 					end
 				end
-
-				#   def merge_with_shared(base_object, new_object, label, new_model)
-				#   	ivg(shared_instance_var, base_object) || set_attr_accessor(shared_instance_var, default_class.new, base_object)
-				# 	  if ivg(shared_instance_var, base_object)[label]
-				# 		  #ivg(shared_instance_var, base_object)[label] = merge_objects(ivg(label), new_object, new_model)
-				# 		  ivg(shared_instance_var, base_object)[label] = merge_objects(ivg(shared_instance_var, base_object)[label], new_object, new_model)
-				# 		else
-				# 		  ivg(shared_instance_var, base_object)[label] = new_object
-				# 	  end
-				#   end
-				#   
-				#   def merge_with_instance(base_object, new_object, label, new_model)
-				# 	  if ivg(label, base_object) || delineate_with_hash?(new_model)
-				# 		  ivs(label, merge_objects(ivg(label, base_object), new_object, new_model), base_object)
-				# 		else
-				# 		  set_attr_accessor(label, new_object, base_object)
-				# 	  end
-				#   end
-				#   
-				#   def merge_with_hash(base_object, new_object, label, new_model)
-				# 		if base_object[label]
-				# 			base_object[label] = merge_objects(base_object[label], new_object, new_model)
-				# 	  else			
-				# 			base_object[label] = new_object
-				# 		end
-				#   end
-				#   
-				#   # TODO: Does this really need to use merge_elements?
-				#   def merge_with_array(base_object, new_object, label, new_model)
-				# 		if base_object.size > 0
-				# 			base_object.replace merge_objects(base_object, new_object, new_model)
-				# 		else
-				# 			base_object << new_object
-				# 		end
-				#   end
-				# 
-				#   def merge_objects(base_object, new_object, new_model)
-				#   	# delineate_with_hash is the attribute name to match on.
-				#   	# current_key/new_key is the actual value of the match object.
-				#   	# current_key/new_key is then used as a hash key to contain objects that match on the delineate_with_hash attribute.
-				#   	#puts "merge_objects with tags '#{self.tag}/#{label_or_tag}' current_el '#{current_object.class}' and new_el '#{new_object.class}'."
-				#   	begin
-				#   		base_object ||= default_class.new
-				# 	    current_key = get_attribute(delineate_with_hash?(new_model), base_object)
-				# 	    new_key = get_attribute(delineate_with_hash?(new_model), new_object)
-				# 	    #puts "merge_objects: tag '#{tag}', new '#{newtag}', delineate-with-hash '#{delineate_with_hash?(submodel)}', current-key '#{current_key}', new-key '#{new_key}'"
-				# 	    
-				# 	    key_state = case
-				# 	    	when !current_key.to_s.empty? && current_key == new_key; 5
-				# 	    	when !current_key.to_s.empty? && !new_key.to_s.empty?; 4
-				# 	    	when current_key.to_s.empty? && new_key.to_s.empty?; 3
-				# 	    	when !current_key.to_s.empty?; 2
-				# 	    	when !new_key.to_s.empty?; 1
-				# 	    	else 0
-				# 	    end
-				# 	  	#puts "Key-State '#{key_state}' tag '#{newtag}' base '#{base_object.class}' obj '#{new_object.class}'"
-				# 	  	case key_state
-				#   	  	when 5; {current_key => [base_object, new_object]}
-				#   	  	when 4; {current_key => base_object, new_key => new_object}
-				#   	  	when 3; [*base_object] << new_object #[base_object, new_object].flatten #slower
-				#   	  	when 2; {current_key => ([*base_object] << new_object)}
-				#   	  	when 1; base_object.merge(new_key=>new_object)
-				#   	  	else    [*base_object] << new_object #[base_object, new_object].flatten #slower
-				# 	  	end
-				# 	  	
-				#     rescue
-				#     	puts "Error: could not merge '#{base_object.class}' with '#{new_object.class}' given model named '#{new_model && new_model['name']}': #{$!}"
-				#     	#([*current_object] << new_object) if current_object.is_a?(Array)
-				#     end
-				#   end # merge_objects
 
 
 
@@ -558,29 +356,29 @@ module Rfm
 			  # Methods for submodel
 				def label_or_tag(_tag=newtag, _model=submodel); as_name?(_model) || _tag; end
 				
-			  def get_attribute(name, obj=object)
-			  	return unless name
-			  	key = shared_instance_var
-			  	case
-			  		when (r= ivg(key, obj)); r[name] #(obj.respond_to?(key) && obj.send(key)); obj.send(key)[name]
-			  		when (r= ivg(name, obj)); r
-			  		when obj.has_key?(name); obj[name]
-			  	end
-			  end
-		    
-		    def set_attr_accessor(name, data, obj=object)
-					create_accessor(name, obj)
-					#obj.instance_eval do
-						var = obj.instance_variable_get("@#{name}")
-						#puts "Assigning @att attributes for '#{obj.class}' #{data.to_a.join(':')}"
-						case
-						when data.is_a?(Hash) && var.is_a?(Hash); var.merge!(data)
-						when data.is_a?(String) && var.is_a?(String); var << data
-						when var.is_a?(Array); [var, data].flatten!
-						else obj.instance_variable_set("@#{name}", data)
-						end
-					#end
-				end
+				# 			  def get_attribute(name, obj=object)
+				# 			  	return unless name
+				# 			  	key = shared_instance_var
+				# 			  	case
+				# 			  		when (r= ivg(key, obj)); r[name] #(obj.respond_to?(key) && obj.send(key)); obj.send(key)[name]
+				# 			  		when (r= ivg(name, obj)); r
+				# 			  		when obj.has_key?(name); obj[name]
+				# 			  	end
+				# 			  end
+				# 		    
+				# 		    def set_attr_accessor(name, data, obj=object)
+				# 					create_accessor(name, obj)
+				# 					#obj.instance_eval do
+				# 						var = obj.instance_variable_get("@#{name}")
+				# 						#puts "Assigning @att attributes for '#{obj.class}' #{data.to_a.join(':')}"
+				# 						case
+				# 						when data.is_a?(Hash) && var.is_a?(Hash); var.merge!(data)
+				# 						when data.is_a?(String) && var.is_a?(String); var << data
+				# 						when var.is_a?(Array); [var, data].flatten!
+				# 						else obj.instance_variable_set("@#{name}", data)
+				# 						end
+				# 					#end
+				# 				end
 								
 				def create_accessor(_tag, obj=object)
 					#puts "Creating attr_accessor for '#{_tag}' on object '#{obj.class}'"
@@ -906,4 +704,115 @@ module Rfm
 
 	end # SaxParser
 end # Rfm
+
+
+
+
+#####  CORE PATCHES  #####
+
+class Object
+
+	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
+		default_options = {
+			:shared_variable_name => 'attributes',
+			:default_class => Hash,
+			:create_accessors => nil #:all, :private, :shared
+		}
+		options = default_options.merge(args.last.is_a?(Hash) ? args.pop : {})
+		#puts "base '#{self.class}' obj '#{obj.class}' name '#{args[0]}' delim '#{args[1]}' prefs '#{args[2]}' type '#{args[3]}'"
+		name = (args[0] || options[:name])
+		delimiter = (args[1] || options[:delimiter])
+		prefs = (args[2] || options[:prefs])
+		type = (args[3] || options[:type])
+		case
+		when prefs=='none' || prefs=='cursor'; nil
+		when name
+			self._merge_object!(obj, name, delimiter, prefs, type, options)
+		else
+			self._merge_object!(obj, 'unknown_data', delimiter, prefs, type, options)
+		end
+	end
+	
+	def _merge_object!(obj, name, delimiter, prefs, type, options={})
+		if prefs=='instance'
+			_merge_instance!(obj, name, delimiter, prefs, type, options)
+		else
+			_merge_shared!(obj, name, delimiter, prefs, type, options)
+		end
+	end
+	
+	def _merge_shared!(obj, name, delimiter, prefs, type, options={})
+		eval("@#{options[:shared_variable_name]} ||= #{options[:default_class].new}")._merge_object!(obj, name, delimiter, nil, type, options)
+		if options[:create_accessors] == :all || options[:create_accessors] == :shared
+			meta = (class << self; self; end)
+			meta.send(:attr_reader, options[:shared_variable_name])
+		end
+	end
+	
+	def _merge_instance!(obj, name, delimiter, prefs, type, options={})
+		if instance_variable_get("@#{name}") || delimiter
+			if delimiter
+				delimit_name = obj._get_attribute(delimiter, options[:shared_variable_name])
+				instance_variable_set("@#{name}", instance_variable_get("@#{name}") || options[:default_class].new)[delimit_name]=obj
+			else
+				instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
+			end
+		else
+			instance_variable_set("@#{name}", obj)
+		end
+		if options[:create_accessors] == :all || options[:create_accessors] == :private
+			meta = (class << self; self; end)
+			meta.send(:attr_reader, name.downcase.gsub(/\s/,'_'))
+		end
+	end
+	
+  def _get_attribute(name, shared=nil, options={})
+  	return unless name
+  	(shared = options[:shared_variable_name]) unless shared
+		( respond_to?(:has_key?) && has_key?(name) && self[name] ) ||
+		( (var= instance_variable_get("@#{shared}")) && var[name] ) ||
+		instance_variable_get("@#{name}")
+  end
+
+end # Object
+
+class Array
+	def _merge_object!(obj, name, delimiter, prefs, type, options={})
+		case
+		when prefs=='shared' || type == 'attribute'; _merge_shared!(obj, name, delimiter, prefs, type, options)
+		when prefs=='instance'; _merge_instance!(obj, name, delimiter, prefs, type, options)
+		else self << obj
+		end
+	end
+end # Array
+
+class Hash
+	def _merge_object!(obj, name, delimiter, prefs, type, options={})
+		#puts "hash._merge_object name '#{name}' delimiter '#{delimiter}' prefs '#{prefs}'"
+		case
+		when prefs=='shared'
+			_merge_shared!(obj, name, delimiter, prefs, type, options)
+		when prefs=='instance'
+			_merge_instance!(obj, name, delimiter, prefs, type, options)
+		when (self[name] || delimiter)
+			if delimiter
+				delimit_name =  obj._get_attribute(delimiter)
+				self[name] ||= options[:default_class].new
+				self[name][delimit_name]=obj
+			else
+				self[name] = [self[name]].flatten
+				self[name] << obj
+			end
+		else
+			self[name] = obj
+		end
+		if options[:create_accessors] == :all || options[:create_accessors] == :hash
+			meta = (class << self; self; end)
+			meta.send(:define_method, name.downcase.gsub(/\s/,'_')) do
+				self[name.downcase.gsub(/\s/,'_')] = obj
+			end
+		end
+	end
+end # Hash
+
 
