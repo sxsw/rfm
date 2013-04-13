@@ -1,3 +1,4 @@
+require 'delegate'
 module Rfm
   # The Layout object represents a single FileMaker Pro layout. You use it to interact with 
   # records in FileMaker. *All* access to FileMaker data is done through a layout, and this
@@ -120,6 +121,31 @@ module Rfm
   
   class Layout
 	  include Config
+
+		# Methods that must be kept after rewrite!!!
+		# 	  
+		# field_mapping
+		# db (database)
+		# name
+		# resultset_meta
+		# date_format
+		# time_format
+		# timestamp_format
+		# field_meta
+		# field_controls
+		# field_names
+		# field_names_no_load
+		# value_lists
+		# count
+		# total_count
+		# portal_meta
+		# portal_meta_no_load
+		# portal_names
+		# table
+		# table_no_load
+		# server
+	  
+	  
 		    
     # Initialize a layout object. You never really need to do this. Instead, just do this:
     # 
@@ -146,8 +172,8 @@ module Rfm
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''
                   
       @loaded = false
-      @field_controls = Rfm::CaseInsensitiveHash.new
-      @value_lists = Rfm::CaseInsensitiveHash.new
+#       @field_controls = Rfm::CaseInsensitiveHash.new
+#       @value_lists = Rfm::CaseInsensitiveHash.new
 			#	@portal_meta = nil
 			#	@field_names = nil
 			#@ignore_bad_data = (db_obj.server.state[:ignore_bad_data] rescue nil)
@@ -155,15 +181,15 @@ module Rfm
     
     meta_attr_reader :db
     attr_reader :field_mapping
-    attr_writer :field_names, :portal_meta, :table
+    attr_writer :resultset_meta          #:field_names, :portal_meta, :table
     def_delegator :db, :server
     alias_method :database, :db
 		
-		# This method may be obsolete, since the option can now be set with #config.
-    def ignore_bad_data(val = nil)
-    	(config :ignore_bad_data => val) unless val.nil?
-    	state[:ignore_bad_data]
-    end
+# 		# This method may be obsolete, since the option can now be set with #config.
+#     def ignore_bad_data(val = nil)
+#     	(config :ignore_bad_data => val) unless val.nil?
+#     	state[:ignore_bad_data]
+#     end
     
     # These methods are to be inclulded in Layout and SubLayout, so that
     # they have their own discrete 'self' in the master class and the subclass.
@@ -270,6 +296,8 @@ module Rfm
 	    	# models/sublayouts/layout/server (Is this done now?).
 	    	grammar_option = state(options)[:grammar]
 	    	options.merge!(:grammar=>grammar_option) if grammar_option
+	    	template = options.delete :template
+	    	
 	      #include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
 	      include_portals = !options[:ignore_portals]
 	      
@@ -280,8 +308,16 @@ module Rfm
 	      #map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
 	      prms.dup.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
 	      
-	      xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
-	      Rfm::Resultset.new(xml_response, self, include_portals)
+				#   xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
+				#   Rfm::Resultset.new(xml_response, self, include_portals)
+
+				c = Connection.new(action, prms, options, state.merge(:parent=>self))
+				# Need to specify the connection object as the initial_object of the parsing stack,
+				# so that Fmresultset can get the layout from it.
+				#c.parse('fmresultset.xml', Rfm::Resultset.new(self), nil)
+				rslt = c.parse(template || :records, Rfm::Resultset.new(self, self))
+				(self.resultset_meta = rslt.clone.replace([])) unless instance_variable_get :@resultset_meta
+				rslt
 	    end
 	    
 	    def params
@@ -289,26 +325,26 @@ module Rfm
 	    end
 	    			
 			
-			# Intended to set each repeat individually but doesn't work with FM
-			def expand_repeats(hash)
-				hash.each do |key,val|
-					if val.kind_of? Array
-						val.each_with_index{|v, i| hash["#{key}(#{i+1})"] = v}
-						hash.delete(key)
-					end
-				end
-				hash
-			end
-			
-			# Intended to brute-force repeat setting but doesn't work with FM
-			def join_repeats(hash)
-				hash.each do |key,val|
-					if val.kind_of? Array
-						hash[key] = val.join('\x1D')
-					end
-				end
-				hash
-			end
+			# 	# Intended to set each repeat individually but doesn't work with FM
+			# 	def expand_repeats(hash)
+			# 		hash.each do |key,val|
+			# 			if val.kind_of? Array
+			# 				val.each_with_index{|v, i| hash["#{key}(#{i+1})"] = v}
+			# 				hash.delete(key)
+			# 			end
+			# 		end
+			# 		hash
+			# 	end
+			# 	
+			# 	# Intended to brute-force repeat setting but doesn't work with FM
+			# 	def join_repeats(hash)
+			# 		hash.each do |key,val|
+			# 			if val.kind_of? Array
+			# 				hash[key] = val.join('\x1D')
+			# 			end
+			# 		end
+			# 		hash
+			# 	end
 
 	    def name; state[:layout].to_s; end
 	    
@@ -321,42 +357,46 @@ module Rfm
 	  include LayoutModule
 	  
 	  
-    ###
-		def view_meta
-			@view_meta ||= view
+    ###  Metadata from Resultset  ###
+    
+		def resultset_meta
+			@resultset_meta || view
 		end
 		def date_format
-			@date_format ||= view_meta.date_format
+			resultset_meta.date_format
 		end
 		def time_format
-			@time_format ||= view_meta.time_format
+			resultset_meta.time_format
 		end		
 		def timestamp_format
-			@timestamp_format ||= view_meta.timestamp_format
+			resultset_meta.timestamp_format
 		end
 		def field_meta
-			@field_meta ||= view_meta.field_meta
+			resultset_meta.field_meta
 		end
 		###
     
     
+    ###  Metadata from Layout  ###
+    
+    def layout_meta
+    	@attributes || (load_layout && @attributes)
+    end
+    
     def field_controls
-      load unless @loaded
-      @field_controls
+      layout_meta['field_controls']
     end
     
   	def field_names
-  		load unless @field_names
-  		@field_names
+  		@resultset_meta.field_names || layout_meta['field_controls'].keys
   	end
   	
-  	def field_names_no_load
-  		@field_names
-  	end
+#   	def field_names_no_load
+#   		@field_names
+#   	end
     
     def value_lists
-      load unless @loaded
-      @value_lists
+			layout_meta['value_lists']
     end
     
     def count(find_criteria, options={})
@@ -368,67 +408,79 @@ module Rfm
   	end
   	
   	def portal_meta
-  		@portal_meta ||= view.portal_meta
+  		resultset_meta.portal_meta
   	end
   	
-  	def portal_meta_no_load
-  		@portal_meta
-  	end
+#   	def portal_meta_no_load
+#   		@portal_meta
+#   	end
   	
   	def portal_names
-  		portal_meta.keys
+  		return 'UNDER-CONTSTRUCTION'
+  		@resultset_meta && @resultset_meta.portal_names || layout_meta.keys
   	end
   	
   	def table
-  		@table ||= view.table
+  		resultset_meta.table
   	end
   	
-  	def table_no_load
-  		@table
-  	end
+#   	def table_no_load
+#   		@table
+#   	end
+  	
+  	#::DEFAULT_CLASS = Hash
+    # From Rfm::Server
+    def load_layout_test
+      Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:layout, self)
+    end
     
-    def load
-      @loaded = true
-      fmpxmllayout = db.server.load_layout(self)
-      doc = XmlParser.new(fmpxmllayout.body, :namespace=>false, :parser=>server.state[:parser])
-      
-      # check for errors
-      error = doc['FMPXMLLAYOUT']['ERRORCODE'].to_s.to_i
-      raise Rfm::Error::FileMakerError.getError(error) if error != 0
-      
-      # process valuelists
-      vlists = doc['FMPXMLLAYOUT']['VALUELISTS']['VALUELIST']
-      if !vlists.nil?    #root.elements['VALUELISTS'].size > 0
-        vlists.each {|valuelist|
-          name = valuelist['NAME']
-          @value_lists[name] = valuelist['VALUE'].collect{|value|
-          	Rfm::Metadata::ValueListItem.new(value['__content__'], value['DISPLAY'], name)
-          } rescue []
-        }
-        @value_lists.freeze
-      end
+    def load_layout
+#       @loaded = true
+      #fmpxmllayout = db.server.load_layout(self)
+      doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:layout, self)
+      puts "Layout load result: #{doc.class}"
 
-      # process field controls
-      doc['FMPXMLLAYOUT']['LAYOUT']['FIELD'].each {|field|
-        name = field_mapping[field['NAME']] || field['NAME']
-        style = field['STYLE']
-        type = style['TYPE']
-        value_list_name = style['VALUELIST']
-        value_list = @value_lists[value_list_name] if value_list_name != ''
-        field_control = Rfm::Metadata::FieldControl.new(name, type, value_list_name, value_list)
-        existing = @field_controls[name]
-        if existing
-          if existing.kind_of?(Array)
-            existing << field_control
-          else
-            @field_controls[name] = Array[existing, field_control]
-          end
-        else
-          @field_controls[name] = field_control
-        end
-      }
-      @field_names ||= @field_controls.collect{|k,v| v.name rescue v[0].name}
-      @field_controls.freeze
+#       doc = XmlParser.new(fmpxmllayout.body, :namespace=>false, :parser=>server.state[:parser])
+#       
+#       # check for errors
+#       error = doc['FMPXMLLAYOUT']['ERRORCODE']['text'].to_s.to_i
+#       raise Rfm::Error::FileMakerError.getError(error) if error != 0
+#       
+#       # process valuelists
+#       vlists = doc['FMPXMLLAYOUT']['VALUELISTS']['VALUELIST']
+#       if !vlists.nil?    #root.elements['VALUELISTS'].size > 0
+#         vlists.each {|valuelist|
+#           name = valuelist['NAME']
+#           @value_lists[name] = valuelist['VALUE'].collect{|value|
+#           	Rfm::Metadata::ValueListItem.new(value['text'], value['DISPLAY'], name)
+#           } rescue []
+#         }
+#         @value_lists.freeze
+#       end
+# 
+#       # process field controls
+#       doc['FMPXMLLAYOUT']['LAYOUT']['FIELD'].each {|field|
+#         name = field_mapping[field['NAME']] || field['NAME']
+#         style = field['STYLE']
+#         type = style['TYPE']
+#         value_list_name = style['VALUELIST']
+#         value_list = @value_lists[value_list_name] if value_list_name != ''
+#         field_control = Rfm::Metadata::FieldControl.new(name, type, value_list_name, value_list)
+#         existing = @field_controls[name]
+#         if existing
+#           if existing.kind_of?(Array)
+#             existing << field_control
+#           else
+#             @field_controls[name] = Array[existing, field_control]
+#           end
+#         else
+#           @field_controls[name] = field_control
+#         end
+#       }
+#       @field_names ||= @field_controls.collect{|k,v| v.name rescue v[0].name}
+#       @field_controls.freeze
+			@loaded = true
+			doc
     end
     
 		def field_mapping
@@ -442,8 +494,69 @@ module Rfm
 			end
 			mapping
 		end
+		
+
+
+		###  Methods acquired from Rfm::Base cleanup.  ###
+		
+  	class SubLayout < DelegateClass(Layout)
+  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
+			include Config  	
+  	
+  		include Layout::LayoutModule
+   		attr_accessor :model, :parent_layout
+
+  		def initialize(master)
+  			super(master)
+  			self.parent_layout = master
+  		end
+  	end # SubLayout
+  	
+    attr_accessor :subs
+  	
+  	alias_method :main_init, :initialize
+		def initialize(*args)
+	    @subs ||= []
+	    main_init(*args)
+	  end
     
-  	private :load, :get_records, :params
+    def sublayout
+    	if self.is_a?(Rfm::Layout)
+    		sub = SubLayout.new(self); subs << sub; sub
+    	else
+    		self
+    	end
+    end
+  	
+    # Creates new class with layout name, subclassed from Rfm::Base, and links the new model to a SubLayout instance.
+    def modelize
+    	model_name = name.to_s.gsub(/\W/, '_').classify.gsub(/_/,'')
+    	(return model_name.constantize) rescue nil
+    	sub = sublayout
+    	sub.instance_eval do
+	    	model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
+	    	model_class.class_exec(self) do |layout_obj|
+	    		@layout = layout_obj
+	    	end
+	    	@model = model_class
+	    	
+	  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
+	  		model.config :parent=>'@layout.parent_layout'
+	    	config :parent=>'model'
+	    end
+	    sub.model.to_s.constantize
+    rescue StandardError, SyntaxError
+    	nil
+  	end
+  	
+  	def models
+  		subs.collect{|s| s.model}
+  	end
+		
+		###  End methods from Rfm::Base  ###
+		
+    
+  	private :load_layout, :get_records, :params
       
       
   end # Layout

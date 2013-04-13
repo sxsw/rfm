@@ -112,64 +112,56 @@ module Rfm
     attr_reader :record_id, :mod_id, :portals
     def_delegators :resultset, :field_meta, :portal_names
     def_delegators :layout, :db, :database, :server
-
-    def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
     
-      @layout        = layout_obj
-      @resultset     = resultset_obj
-      @record_id     = record.record_id rescue nil
-      @mod_id        = record.mod_id rescue nil
-      @mods          = {}
-      @portals     ||= Rfm::CaseInsensitiveHash.new
+		def self.new(*args) # resultset
+			#puts "Creating new record from Record. args: #{args.to_yaml}"
+			record = if args[0].is_a?(Resultset) && args[0].layout && args[0].layout.model
+				args[0].layout.model.allocate
+				# This seems to be broken. Try it on a resultset loaded from disk.
+				# 	elsif args[0].is_a?(Resultset) && args[0].table
+				# 		klass = if self.class.const_defined?(args[0].table)
+				# 			self.class.const_get(args[0].table)
+				# 		else
+				# 			self.class.const_set(args[0].table, Class.new(Record)).class_eval do
+				# 			# Created attr-accessors for field names
+				# 			end
+				# 		end
+				# 		klass.allocate
+			else
+				self.allocate
+			end
+			record.send(:initialize, *args)
+			record
+		rescue
+			puts "Record.new bombed and is defaulting to super.new. Error: #{$!}"
+			super
+		end
 
-      relatedsets = !portal && resultset_obj.instance_variable_get(:@include_portals) ? record.portals : []
+    # def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
+    def initialize(*args)
+    
+#       @layout        = layout_obj
+      @mods						= {}
       
-      record.columns.each do |field|
-      	next unless field
-        field_name = @layout.field_mapping[field.name] || field.name rescue field.name
-        field_name.gsub!(Regexp.new(portal + '::'), '') if portal
-        datum = []
-        data = field.data #['data']; data = data.is_a?(Hash) ? [data] : data
-        data.each do |x|
-        	next unless field_meta[field_name]
-        	begin
-	          datum.push(field_meta[field_name].coerce(x, resultset_obj)) #(x['__content__'], resultset_obj))
-        	rescue StandardError => error
-        		self.errors.add(field_name, error) if self.respond_to? :errors
-        		raise error unless @layout.ignore_bad_data
-        	end
-        end if data
-      
-        if datum.length == 1
-          rfm_super[field_name] = datum[0]
-        elsif datum.length == 0
-          rfm_super[field_name] = nil
-        else
-          rfm_super[field_name] = datum
+      # TODO: Only store the resultset_meta and the layout. Stop storing the full restulset in each record,
+      # because then the entire resultset will be kept in memory until the last record is dropped.
+      # Even better, offer the option to store/not-store the resultset in each record.
+			options = args.rfm_extract_options!
+			if args[0].is_a?(Resultset)
+				@resultset			= args[0]
+			elsif self.is_a?(Base)
+        # loop thru each layout field, creating hash keys with nil values
+        #layout_obj.field_names.each do |field|
+        self.class.layout.field_names.each do |field|
+          #field_name = field.to_s
+          #self[field_name] = nil
+          self[field] = nil
         end
+        self.update_attributes(options) unless options == {}
+        self.merge!(@mods) unless @mods == {}
+        @loaded = true
       end
-      
-      unless relatedsets.empty?
-        relatedsets.each do |relatedset|
-        	next if relatedset.blank?
-          tablename, records = relatedset.table, []
-      
-          relatedset.records.each do |record|
-          	next unless record
-            records << self.class.new(record, resultset_obj, resultset_obj.portal_meta[tablename], layout_obj, tablename)
-          end
-      
-          @portals[tablename] = records
-        end
-      end
-      
-      @loaded = true
-    end
-
-    def self.build_records(records, resultset_obj, field_meta, layout_obj, portal=nil)
-      records.each do |record|
-        resultset_obj << self.new(record, resultset_obj, field_meta, layout_obj, portal)
-      end
+			#@loaded = true
     end
 
     # Saves local changes to the Record object back to Filemaker. For example:
@@ -212,6 +204,8 @@ module Rfm
     # When you do, the change is noted, but *the data is not updated in FileMaker*. You must call
     # Record::save or Record::save_if_not_modified to actually save the data.
   	def [](key)
+  		# Added by wbr, 2013-03-31
+  		return super unless @loaded
   		return fetch(key.to_s.downcase)
   	rescue IndexError
     	raise Rfm::ParameterError, "#{key} does not exists as a field in the current Filemaker layout." unless key.to_s == '' #unless (!layout or self.key?(key_string))

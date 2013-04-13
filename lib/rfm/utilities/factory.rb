@@ -8,7 +8,10 @@
 
 module Rfm
 
-  module Factory 
+  module Factory
+  	# Acquired from Rfm::Base
+  	@models ||= []
+  	
   	extend Config
   	config :parent=>'Rfm::Config'
   
@@ -119,6 +122,23 @@ module Rfm
     	def names
     		keys
     	end
+    	
+    	# Acquired from Rfm::Base
+    	def modelize(filter = /.*/)
+    		all.values.each{|lay| lay.modelize if lay.name.match(filter)}
+    		models
+    	end
+    	
+    	# Acquired from Rfm::Base
+    	def models
+	    	rslt = {}
+    		each do |k,lay|
+    			layout_models = lay.models
+    			rslt[k] = layout_models if !layout_models.blank?
+	    	end
+	    	rslt
+    	end
+    	
     end # LayoutFactory
     
     
@@ -156,6 +176,16 @@ module Rfm
     
     
     class << self
+    
+    	# Acquired from Rfm::Base
+  		attr_accessor :models
+	  	# Shortcut to Factory.db().layouts.modelize()
+	  	# If first parameter is regex, it is used for modelize filter.
+	  	# Otherwise, parameters are passed to Factory.database
+	  	def modelize(*args)
+	  		regx = args[0].is_a?(Regexp) ? args.shift : /.*/
+	  		db(*args).layouts.modelize(regx)
+	  	end
     	
 			def servers
 				@servers ||= ServerFactory.new

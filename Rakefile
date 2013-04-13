@@ -49,13 +49,13 @@ desc "benchmark XmlMini with available parsers"
 task :benchmark do
 	require 'benchmark'
 	require 'yaml'
-	@records = File.read('spec/data/resultset.xml')
+	@records = File.read('spec/data/resultset_large.xml')
 	@layout = File.read('spec/data/layout.xml')
 	Benchmark.bm do |b|
 		[:oxsax, :libxml, :libxmlsax, :nokogirisax, :nokogiri, :hpricot, :rexml, :rexmlsax].each do |backend|
 			Rfm.backend = backend
 			b.report("#{Rfm::XmlParser.backend}\n") do
-				150.times do
+				5.times do
 				# Rfm::XmlParser.new(@records)
 				# Rfm::XmlParser.new(@layout)
 					Rfm.load_data(@records)
@@ -70,14 +70,16 @@ desc "benchmark SaxParser engine"
 task :benchmark_sax do
 	require 'benchmark'
 	require 'yaml'
-	load "spec/data/sax_models.rb"
-	@records = 'spec/data/resultset.xml'
+	#load "spec/data/sax_models.rb"
+	@records = File.read 'spec/data/resultset_large.xml'
+	@template = {} #'lib/rfm/sax/fmresultset.yml'
+	@base_class = Hash #Rfm::Resultset
 	@layout = 'spec/data/layout.xml'
 	Benchmark.bm do |b|
 		[:rexml, :nokogiri, :libxml, :ox].each do |backend|
 			b.report("#{backend}\n") do
-				150.times do
-					Rfm::SaxParser::Handler.build(@records, backend, 'spec/data/sax_resultset.yml')
+				5.times do
+					Rfm::SaxParser.parse(@records, @template, @base_class.new, backend)
 					#Rfm::SaxParser::Handler.build(@layout, backend)
 				end
 			end
@@ -87,12 +89,20 @@ end
 
 desc "Profile the sax parser"
 task :profile_sax do
+	# This turns on tail-call-optimization
+	# See http://ephoz.posterous.com/ruby-and-recursion-whats-up-in-19
+	if RUBY_VERSION[/1.9/]
+		RubyVM::InstructionSequence.compile_option = {
+		  :tailcall_optimization => true,
+		  :trace_instruction => false
+		}
+	end
 	require 'ruby-prof'
 	# Profile the code
+	@records = 'spec/data/resultset_large.xml'
 	result = RubyProf.profile do
-		@records = 'spec/data/resultset.xml'
 		# The parser will choose the best available backend.
-		Rfm::SaxParser::Handler.build(@records)
+		Rfm::SaxParser.parse(@records, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new).result
 	end
 	# Print a flat profile to text
 	printer = RubyProf::FlatPrinter.new(result)
@@ -100,6 +110,14 @@ task :profile_sax do
 	# Print a graph profile to text
 	printer = RubyProf::GraphPrinter.new(result)
 	printer.print(STDOUT, {})
+end
+
+desc "Profile the sax parser"
+task :sample do
+	@records = 'spec/data/resultset_large.xml'
+	r= Rfm::SaxParser.parse(@records, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new).result
+	puts r.to_yaml
+	puts r.field_meta.to_yaml
 end	
 
 desc "run specs with all parser backends"	

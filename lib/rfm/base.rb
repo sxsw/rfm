@@ -29,137 +29,7 @@ module Rfm
 	#   @person = Person.find({:name => 'mike'}, :max_records => 50)[0]
 	#   @person.update_attributes(:name => 'Michael', :title => "Senior Partner")
 	#   @person.save
-	# 
 	#
-	require 'active_support/core_ext/string/inflections'
-	require 'rfm/database'
-	require 'rfm/layout'
-	require 'rfm/record'
-	require 'rfm/utilities/factory'
-	require 'delegate' 
-  
-  class Layout
-
-  	class SubLayout < DelegateClass(Layout)
-  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
-			include Config  	
-  	
-  		include Layout::LayoutModule
-   		attr_accessor :model, :parent_layout
-
-  		def initialize(master)
-  			super(master)
-  			self.parent_layout = master
-  		end
-  	end # SubLayout
-  	
-    attr_accessor :subs
-  	
-  	alias_method :main_init, :initialize
-		def initialize(*args)
-	    @subs ||= []
-	    main_init(*args)
-	  end
-    
-    def sublayout
-    	if self.is_a?(Rfm::Layout)
-    		sub = SubLayout.new(self); subs << sub; sub
-    	else
-    		self
-    	end
-    end
-  	
-    # Creates new class with layout name, subclassed from Rfm::Base, and links the new model to a SubLayout instance.
-    def modelize
-    	model_name = name.to_s.gsub(/\W/, '_').classify.gsub(/_/,'')
-    	(return model_name.constantize) rescue nil
-    	sub = sublayout
-    	sub.instance_eval do
-	    	model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
-	    	model_class.class_exec(self) do |layout_obj|
-	    		@layout = layout_obj
-	    	end
-	    	@model = model_class
-	    	
-	  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
-	  		model.config :parent=>'@layout.parent_layout'
-	    	config :parent=>'model'
-	    end
-	    sub.model.to_s.constantize
-    rescue StandardError, SyntaxError
-    	nil
-  	end
-  	
-  	def models
-  		subs.collect{|s| s.model}
-  	end
-
-  end # Layout
-  
-
-
-
-        
-  class Record
-  	class << self
-			def new(*args)
-				#puts "Creating new record from RECORD. Layout: #{args[3].class} #{args[3].object_id}"
-				args[3].model.new(*args)
-			rescue
-				#puts "RECORD failed to send 'new' to MODEL"
-				super
-				#allocate.send(:initialize, *args)
-			end
-    end # class << self
-  end # class Record
-
-
-
-
-  
-  class Database
-  	def_delegators :layouts, :modelize, :models
-  end
-
-
-
-  
-  module Factory
-    @models ||= []
-
-  	class << self
-  		attr_accessor :models
-  		
-	  	# Shortcut to Factory.db().layouts.modelize()
-	  	# If first parameter is regex, it is used for modelize filter.
-	  	# Otherwise, parameters are passed to Factory.database
-	  	def modelize(*args)
-	  		regx = args[0].is_a?(Regexp) ? args.shift : /.*/
-	  		db(*args).layouts.modelize(regx)
-	  	end
-  	end # class << self
-  	
-  	class LayoutFactory
-    	def modelize(filter = /.*/)
-    		all.values.each{|lay| lay.modelize if lay.name.match(filter)}
-    		models
-    	end
-    	
-    	def models
-	    	rslt = {}
-    		each do |k,lay|
-    			layout_models = lay.models
-    			rslt[k] = layout_models if !layout_models.blank?
-	    	end
-	    	rslt
-    	end
-    	
-    end # LayoutFactory
-  end # Factory
-	
-
-
-	
   class Base <  Rfm::Record  #Hash
     extend Config
     config :parent => 'Rfm::Config'
@@ -169,30 +39,13 @@ module Rfm
       include ActiveModel::Validations
       include ActiveModel::Serialization
       extend ActiveModel::Callbacks
-      define_model_callbacks(:create, :update, :destroy, :validate)
+      include ActiveModel::Validations::Callbacks
+      define_model_callbacks(:create, :update, :destroy)
     rescue LoadError, StandardError
     	def run_callbacks(*args)
     		yield
     	end
     end
-    
-		def initialize(record={}, resultset_obj=[], field_meta='', layout_obj=self.class.layout, portal=nil)
-			if resultset_obj == [] and !record.respond_to?(:columns) #.has_key? 'field'
-				@mods = Rfm::CaseInsensitiveHash.new
-				@layout = layout_obj
-				@resultset = Resultset.allocate
-        # loop thru each layout field, creating hash keys with nil values
-        layout_obj.field_names.each do |field|
-          field_name = field.to_s
-          self[field_name] = nil
-        end
-        self.update_attributes(record) unless record == {}
-        self.merge!(@mods) unless @mods == {}
-        @loaded = true
-      else
-      	super
-      end
-		end
 		
     def to_partial_path(object = self) #@object)
     	return 'some/partial/path'
@@ -218,15 +71,6 @@ module Rfm
 				(Rfm::Factory.models << model).uniq unless Rfm::Factory.models.include? model
 				model.config :parent=>'Rfm::Base'
 			end
-		
-			# Build a new record without saving
-		  def new(*args)
-		  	# Without this method, infinite recursion will happen from Record.new
-		  	#puts "Creating new record from BASE"
-		    rec = self.allocate
-		    rec.send(:initialize, *args)
-		    rec
-		  end
 		  
 	    def config(*args)
 	    	super(*args){|strings| @config.merge!(:layout=>strings[0]) if strings[0]}
@@ -435,6 +279,4 @@ module Rfm
   end # Base
 
 end # Rfm
-
-
 

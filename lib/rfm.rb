@@ -37,6 +37,7 @@ module Rfm
   autoload :Fmpxmlresult,	'rfm/utilities/fmpxmlresult.rb'
   autoload :Fmpdsoresult,	'rfm/utilities/fmpdsoresult.rb'
   autoload :Fmpxmllayout,	'rfm/utilities/fmpxmllayout.rb'
+  autoload :Connection,   'rfm/utilities/connection.rb'
 
 	module Metadata
 		autoload :Script,         'rfm/metadata/script'
