@@ -140,7 +140,7 @@ class Object
 	end
 	
 	def _merge_shared!(obj, name, delimiter, prefs, type)
-		eval("@attributes ||= {}")._merge_object!(obj, name, nil, nil, type)
+		eval("@attributes ||= {}")._merge_object!(obj, name, delimiter, nil, type)
 	end
 	
 	def _merge_instance!(obj, name, delimiter, prefs, type)
