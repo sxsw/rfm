@@ -112,13 +112,16 @@ require 'stringio'
 #				Use destructive! operations (carefully). Really?
 #				Get this book: http://my.safaribooksonline.com/9780321540034?portal=oreilly
 #				See this page: http://www.igvita.com/2008/07/08/6-optimization-tips-for-ruby-mri/
-# TODO: Consider making default attribute-attachment shared, instead of instance.
+# done: Consider making default attribute-attachment shared, instead of instance.
 # TODO: Find a way to get SaxParser defaults into core class patches.
 # TODO: Check resultset portal_meta in Splash Asset model for field-definitions coming out correct according to sax template.
+# TODO: Make sure Rfm::Metadata::Field is being used in portal-definitions.
 
 
+# These should only be temporary.
 SHARED_VAR = 'attributes'
 DEFAULT_CLASS = Hash
+CREATE_ACCESSORS = false
 
 class Object
 	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
@@ -147,8 +150,10 @@ class Object
 	
 	def _merge_shared!(obj, name, delimiter, prefs, type)
 		eval("@#{SHARED_VAR} ||= #{DEFAULT_CLASS.new}")._merge_object!(obj, name, delimiter, nil, type)
-		meta = (class << self; self; end)
-		meta.send(:attr_reader, SHARED_VAR)
+		if CREATE_ACCESSORS
+			meta = (class << self; self; end)
+			meta.send(:attr_reader, SHARED_VAR)
+		end
 	end
 	
 	def _merge_instance!(obj, name, delimiter, prefs, type)
@@ -162,8 +167,10 @@ class Object
 		else
 			instance_variable_set("@#{name}", obj)
 		end
-		meta = (class << self; self; end)
-		meta.send(:attr_reader, name.downcase.gsub(/\s/,'_'))
+		if CREATE_ACCESSORS
+			meta = (class << self; self; end)
+			meta.send(:attr_reader, name.downcase.gsub(/\s/,'_'))
+		end
 	end
 	
   def _get_attribute(name, shared=SHARED_VAR)
@@ -205,9 +212,11 @@ class Hash
 		else
 			self[name] = obj
 		end
-		meta = (class << self; self; end)
-		meta.send(:define_method, name.downcase.gsub(/\s/,'_')) do
-			self[name.downcase.gsub(/\s/,'_')] = obj
+		if CREATE_ACCESSORS
+			meta = (class << self; self; end)
+			meta.send(:define_method, name.downcase.gsub(/\s/,'_')) do
+				self[name.downcase.gsub(/\s/,'_')] = obj
+			end
 		end
 	end
 end # Hash
