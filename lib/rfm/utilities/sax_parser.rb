@@ -123,8 +123,7 @@ class Object
 		prefs = (args[2] || options[:prefs])
 		type = (args[3] || options[:type])
 		case
-		when prefs=='shared'
-			eval("@attributes ||= {}")._merge_object!(obj, name, delimiter, prefs, type)
+		when prefs=='none' || prefs=='cursor'; nil
 		when name
 			self._merge_object!(obj, name, delimiter, prefs, type)
 		else
@@ -132,10 +131,23 @@ class Object
 		end
 	end
 	
-	def _merge_object!(obj, name, delimiter, prefs, options={})
+	def _merge_object!(obj, name, delimiter, prefs, type)
+		if prefs=='instance'
+			_merge_instance!(obj, name, delimiter, prefs, type)
+		else
+			_merge_shared!(obj, name, delimiter, prefs, type)
+		end
+	end
+	
+	def _merge_shared!(obj, name, delimiter, prefs, type)
+		eval("@attributes ||= {}")._merge_object!(obj, name, nil, nil, type)
+	end
+	
+	def _merge_instance!(obj, name, delimiter, prefs, type)
 		if instance_variable_get("@#{name}") || delimiter
 			if delimiter
-				delimit_name = obj[delimiter]
+				#delimit_name = obj[delimiter]
+				delimit_name = _get_attribute(name, 'attributes')
 				instance_variable_set("@#{name}", instance_variable_get("@#{name}") || {})[delimit_name]=obj
 			else
 				instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
@@ -145,40 +157,35 @@ class Object
 		end
 	end
 	
-	#   def _get_attribute(name, shared=nil)
-	#   	return unless name
-	#   	case
-	#   		when (var= instance_variable_get("@#{shared}")); var[name]
-	#   		when (var= instance_variable_get("@#{name}")); var
-	#   		when respond_to?(:has_key?) && has_key?(name); self[name]
-	#   	end
-	#   end
-  
-  def _attach_to_instance_var!
+  def _get_attribute(name, shared=nil)
+  	return unless name
+  	case
+  		when (var= instance_variable_get("@#{shared}")); var[name]
+  		when (var= instance_variable_get("@#{name}")); var
+  		when respond_to?(:has_key?) && has_key?(name); self[name]
+  	end
   end
-  
-  def _attach_to_shared_var!
-  end
-  
-	#   def _arrayify!(getter_method, setter_method)
-	#   	setter_method.call([*getter_method.call])
-	#   end
+
 end # Object
 
 class Array
-	def _merge_object!(obj, name, delimiter, prefs, options={})
+	def _merge_object!(obj, name, delimiter, prefs, type)
 		case
-		when prefs=='instance'; super
+		when prefs=='shared' || type == 'attribute'; _merge_shared!(obj, name, delimiter, prefs, type)
+		when prefs=='instance'; _merge_instance!(obj, name, delimiter, prefs, type)
 		else self << obj
 		end
 	end
 end # Array
 
 class Hash
-	def _merge_object!(obj, name, delimiter, prefs, options={})
+	def _merge_object!(obj, name, delimiter, prefs, type)
 		#puts "hash._merge_object name '#{name}' delimiter '#{delimiter}' prefs '#{prefs}'"
 		case
-		when prefs=='instance'; super
+		when prefs=='shared'
+			_merge_shared!(obj, name, delimiter, prefs, type)
+		when prefs=='instance'
+			_merge_instance!(obj, name, delimiter, prefs, type)
 		when (self[name] || delimiter)
 			if delimiter
 				delimit_name = obj[delimiter]
@@ -334,6 +341,13 @@ module Rfm
 		      	begin
 		      		# Data cleaup
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #top.model && top.model['compact']
+							# Construct attr_accessor methods
+							attributes = object.instance_variables.collect{|v| v.to_s.gsub(/@/, '').to_sym}
+							#puts "Instance Variables for '#{_tag}': #{attributes.join(', ')}"
+							if attributes.size > 0
+								def object.meta; (class << self; self; end); end
+								object.meta.send(:attr_reader, *attributes)
+							end
 							# End_element_callback
 			      	if before_close?.is_a? Symbol
 			      		object.send before_close?, self
