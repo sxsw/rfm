@@ -147,7 +147,7 @@ class Object
 		if instance_variable_get("@#{name}") || delimiter
 			if delimiter
 				#delimit_name = obj[delimiter]
-				delimit_name = _get_attribute(name, 'attributes')
+				delimit_name = _get_attribute(delimiter, 'attributes')
 				instance_variable_set("@#{name}", instance_variable_get("@#{name}") || {})[delimit_name]=obj
 			else
 				instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
@@ -188,7 +188,7 @@ class Hash
 			_merge_instance!(obj, name, delimiter, prefs, type)
 		when (self[name] || delimiter)
 			if delimiter
-				delimit_name = obj[delimiter]
+				delimit_name = _get_attribute(delimiter, 'attributes') #obj[delimiter]
 				self[name] ||= {}
 				self[name][delimit_name]=obj
 			else
