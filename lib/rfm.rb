@@ -3,16 +3,10 @@ module Rfm
 	$LOAD_PATH.unshift(PATH) unless $LOAD_PATH.include?(PATH)
 end
 
-require 'thread' # some versions of ActiveSupport will raise error about Mutex unless 'thread' is loaded.
-require 'active_support'
-require 'active_support/core_ext/object/blank'
-require 'active_support/ordered_hash'
-require 'active_support/version'
+#require 'thread' # some versions of ActiveSupport will raise error about Mutex unless 'thread' is loaded.
+
 require 'rfm/utilities/core_ext'
 require 'rfm/utilities/case_insensitive_hash'
-#require 'rfm/utilities/config'
-#require 'rfm/utilities/factory'
-#require 'rfm/version.rb'
 
 module Rfm
   

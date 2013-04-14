@@ -133,7 +133,7 @@ module Rfm
 		
 		# Is this a newly created record, not saved yet?					
   	def new_record?
-  		return true if self.record_id.blank?
+  		return true if (self.record_id.nil? || self.record_id.empty?)
   	end
 
 		# Reload record from database

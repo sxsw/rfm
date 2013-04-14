@@ -169,7 +169,7 @@ module Rfm
 		def config_filter(conf, filters=nil)
 			conf = conf.clone
 			filters = (conf[:use].rfm_force_array | filters.rfm_force_array).compact
-			filters.each{|f| next unless conf[f]; conf.merge!(conf[f] || {})} if !filters.blank?
+			filters.each{|f| next unless conf[f]; conf.merge!(conf[f] || {})} if (!filters.nil? && !filters.empty?)
 			conf.delete(:use)
 			conf
 		end

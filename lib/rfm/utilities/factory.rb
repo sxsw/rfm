@@ -134,7 +134,7 @@ module Rfm
 	    	rslt = {}
     		each do |k,lay|
     			layout_models = lay.models
-    			rslt[k] = layout_models if !layout_models.blank?
+    			rslt[k] = layout_models if (!layout_models.nil? && !layout_models.empty?)
 	    	end
 	    	rslt
     	end
