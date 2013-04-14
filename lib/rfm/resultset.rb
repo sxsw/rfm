@@ -142,44 +142,44 @@ module Rfm
 		end
 		
 		def field_meta
-			attributes['field_meta']
+			@attributes['field_meta']
 		end
 		
 		def portal_meta
-			attributes['portal_meta']
+			@attributes['portal_meta']
 		end		
 		
 		def datasource
-			attributes['datasource']
+			@attributes['datasource']
 		end
 		
 		def date_format
-			attributes['date_format']
+			@attributes['date_format']
 		end
 
 		def time_format
-			attributes['time_format']
+			@attributes['time_format']
 		end
 		
 		def timestamp_format
-			attributes['timestamp_format']
+			@attributes['timestamp_format']
 		end
 		
 		def total_count
-			attributes['total_count']
+			@attributes['total_count']
 		end		
 		
 		def foundset_count
-			attributes['foundset_count']
+			@attributes['count']
 		end
 		
 		def table
-			attributes['table']
+			@attributes['table']
 		end		
 		
         
     def field_names
-    	field_meta ? field_meta.keys : []
+    	field_meta ? field_meta.values.collect{|v| v['name']} : []
   	end
   	
   	def portal_names

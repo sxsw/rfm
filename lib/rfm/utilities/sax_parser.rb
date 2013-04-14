@@ -113,9 +113,11 @@ require 'stringio'
 #				Get this book: http://my.safaribooksonline.com/9780321540034?portal=oreilly
 #				See this page: http://www.igvita.com/2008/07/08/6-optimization-tips-for-ruby-mri/
 # done: Consider making default attribute-attachment shared, instead of instance.
-# TODO: Find a way to get SaxParser defaults into core class patches.
+# done: Find a way to get SaxParser defaults into core class patches.
 # TODO: Check resultset portal_meta in Splash Asset model for field-definitions coming out correct according to sax template.
 # TODO: Make sure Rfm::Metadata::Field is being used in portal-definitions.
+# TODO: Scan thru Rfm classes and use @instance variables instead of their accessors, so sax-parser does less work.
+# TODO: Change 'instance' option to 'private'. Change 'shared' to <whatever>.
 
 
 module Rfm
@@ -317,7 +319,7 @@ module Rfm
 						when 'attribute'; attach?(new_model) || attach_attributes?(base_model)
 					end
 					
-					base_object._attach_object!(new_object, label, delineate_with_hash?(new_model), prefs, type, :create_accessors=>:shared, :default_class=>default_class)
+					base_object._attach_object!(new_object, label, delineate_with_hash?(new_model), prefs, type, :default_class=>default_class)
 
 				end
 				
@@ -355,35 +357,7 @@ module Rfm
 
 			  # Methods for submodel
 				def label_or_tag(_tag=newtag, _model=submodel); as_name?(_model) || _tag; end
-				
-				# 			  def get_attribute(name, obj=object)
-				# 			  	return unless name
-				# 			  	key = shared_instance_var
-				# 			  	case
-				# 			  		when (r= ivg(key, obj)); r[name] #(obj.respond_to?(key) && obj.send(key)); obj.send(key)[name]
-				# 			  		when (r= ivg(name, obj)); r
-				# 			  		when obj.has_key?(name); obj[name]
-				# 			  	end
-				# 			  end
-				# 		    
-				# 		    def set_attr_accessor(name, data, obj=object)
-				# 					create_accessor(name, obj)
-				# 					#obj.instance_eval do
-				# 						var = obj.instance_variable_get("@#{name}")
-				# 						#puts "Assigning @att attributes for '#{obj.class}' #{data.to_a.join(':')}"
-				# 						case
-				# 						when data.is_a?(Hash) && var.is_a?(Hash); var.merge!(data)
-				# 						when data.is_a?(String) && var.is_a?(String); var << data
-				# 						when var.is_a?(Array); [var, data].flatten!
-				# 						else obj.instance_variable_set("@#{name}", data)
-				# 						end
-				# 					#end
-				# 				end
-								
-				def create_accessor(_tag, obj=object)
-					#puts "Creating attr_accessor for '#{_tag}' on object '#{obj.class}'"
-					obj.class.send :attr_accessor, _tag unless obj.instance_variables.include?(":@#{_tag}")
-				end
+
 				
 		    def clean_members(obj=object)
 					# 	cursor.object = clean_member(cursor.object)
@@ -729,7 +703,7 @@ class Object
 		when name
 			self._merge_object!(obj, name, delimiter, prefs, type, options)
 		else
-			self._merge_object!(obj, 'unknown_data', delimiter, prefs, type, options)
+			self._merge_object!(obj, 'unknown_name', delimiter, prefs, type, options)
 		end
 	end
 	
@@ -742,7 +716,9 @@ class Object
 	end
 	
 	def _merge_shared!(obj, name, delimiter, prefs, type, options={})
-		eval("@#{options[:shared_variable_name]} ||= #{options[:default_class].new}")._merge_object!(obj, name, delimiter, nil, type, options)
+		shared_var = instance_variable_get("@#{options[:shared_variable_name]}") || instance_variable_set("@#{options[:shared_variable_name]}", options[:default_class].new)
+		#eval("@#{options[:shared_variable_name]} ||= #{options[:default_class].new}")._merge_object!(obj, name, delimiter, nil, type, options)
+		shared_var._merge_object!(obj, name, delimiter, nil, type, options)
 		if options[:create_accessors] == :all || options[:create_accessors] == :shared
 			meta = (class << self; self; end)
 			meta.send(:attr_reader, options[:shared_variable_name])

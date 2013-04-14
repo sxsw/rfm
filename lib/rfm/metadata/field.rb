@@ -88,9 +88,10 @@ module Rfm
         
       end
       
+      # This class is used temporarily to build Record, but it is not attached to the Resultset.
 			def end_element_callback(cursor)
 				#cursor.parent.object.merge!(name => data )
-				cursor.parent.object.merge!(@attributes['name'] => @attributes['data'])
+				cursor.parent.object[@attributes['name'].downcase] = @attributes['data']
 			end
       
     end # Field

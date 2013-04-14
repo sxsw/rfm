@@ -73,7 +73,7 @@ task :benchmark_sax do
 	#load "spec/data/sax_models.rb"
 	@records = File.read 'spec/data/resultset_large.xml'
 	@template = {} #'lib/rfm/sax/fmresultset.yml'
-	@base_class = Hash #Rfm::Resultset
+	@base_class = Rfm::Resultset
 	@layout = 'spec/data/layout.xml'
 	Benchmark.bm do |b|
 		[:rexml, :nokogiri, :libxml, :ox].each do |backend|
@@ -99,10 +99,10 @@ task :profile_sax do
 	end
 	require 'ruby-prof'
 	# Profile the code
-	@records = 'spec/data/resultset_large.xml'
+	@data = 'spec/data/resultset_large.xml'
 	result = RubyProf.profile do
 		# The parser will choose the best available backend.
-		Rfm::SaxParser.parse(@records, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new).result
+		Rfm::SaxParser.parse(@data, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new).result
 	end
 	# Print a flat profile to text
 	printer = RubyProf::FlatPrinter.new(result)

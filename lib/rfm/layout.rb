@@ -388,7 +388,7 @@ module Rfm
     end
     
   	def field_names
-  		@resultset_meta.field_names || layout_meta['field_controls'].keys
+  		(@resultset_meta && @resultset_meta.field_names) || layout_meta['field_controls'].values.collect{|v| v.name}
   	end
   	
 #   	def field_names_no_load

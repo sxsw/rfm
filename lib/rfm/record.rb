@@ -108,10 +108,11 @@ module Rfm
   #   copy of the same record
   class Record < Rfm::CaseInsensitiveHash
     
-    attr_accessor :layout, :resultset
+    attr_accessor :layout #, :resultset
     attr_reader :record_id, :mod_id, :portals
-    def_delegators :resultset, :field_meta, :portal_names
-    def_delegators :layout, :db, :database, :server
+    #def_delegators :resultset, :field_meta, :portal_meta, :portal_names
+    #def_delegators :layout, :db, :database, :server
+    def_delegators :layout, :db, :database, :server, :field_meta, :portal_meta, :field_names, :portal_names
     
 		def self.new(*args) # resultset
 			#puts "Creating new record from Record. args: #{args.to_yaml}"
@@ -138,9 +139,7 @@ module Rfm
 		end
 
     # def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
-    def initialize(*args)
-    
-#       @layout        = layout_obj
+    def initialize(*args)    
       @mods						= {}
       
       # TODO: Only store the resultset_meta and the layout. Stop storing the full restulset in each record,
@@ -148,11 +147,11 @@ module Rfm
       # Even better, offer the option to store/not-store the resultset in each record.
 			options = args.rfm_extract_options!
 			if args[0].is_a?(Resultset)
-				@resultset			= args[0]
+				#@resultset			= args[0]
+				@layout = args[0].layout
 			elsif self.is_a?(Base)
-        # loop thru each layout field, creating hash keys with nil values
-        #layout_obj.field_names.each do |field|
-        self.class.layout.field_names.each do |field|
+				@layout = self.class.layout
+        @layout.field_names.each do |field|
           #field_name = field.to_s
           #self[field_name] = nil
           self[field] = nil
@@ -250,7 +249,7 @@ module Rfm
 		# 		end  
 		  
 	  def field_names
-    	resultset.field_names rescue layout.field_names
+    	layout.field_names
     end
 
 
