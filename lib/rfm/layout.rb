@@ -172,11 +172,6 @@ module Rfm
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''
                   
       @loaded = false
-#       @field_controls = Rfm::CaseInsensitiveHash.new
-#       @value_lists = Rfm::CaseInsensitiveHash.new
-			#	@portal_meta = nil
-			#	@field_names = nil
-			#@ignore_bad_data = (db_obj.server.state[:ignore_bad_data] rescue nil)
     end
     
     meta_attr_reader :db
@@ -184,12 +179,6 @@ module Rfm
     attr_writer :resultset_meta          #:field_names, :portal_meta, :table
     def_delegator :db, :server
     alias_method :database, :db
-		
-# 		# This method may be obsolete, since the option can now be set with #config.
-#     def ignore_bad_data(val = nil)
-#     	(config :ignore_bad_data => val) unless val.nil?
-#     	state[:ignore_bad_data]
-#     end
     
     # These methods are to be inclulded in Layout and SubLayout, so that
     # they have their own discrete 'self' in the master class and the subclass.
@@ -307,9 +296,6 @@ module Rfm
 	      # TODO: Make this part handle string AND symbol keys.
 	      #map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
 	      prms.dup.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
-	      
-				#   xml_response = server.connect(state[:account_name], state[:password], action, prms, options).body
-				#   Rfm::Resultset.new(xml_response, self, include_portals)
 
 				c = Connection.new(action, prms, options, state.merge(:parent=>self))
 				# Need to specify the connection object as the initial_object of the parsing stack,
@@ -390,10 +376,6 @@ module Rfm
   	def field_names
   		(@resultset_meta && @resultset_meta.field_names) || layout_meta['field_controls'].values.collect{|v| v.name}
   	end
-  	
-#   	def field_names_no_load
-#   		@field_names
-#   	end
     
     def value_lists
 			layout_meta['value_lists']
@@ -411,10 +393,6 @@ module Rfm
   		resultset_meta.portal_meta
   	end
   	
-#   	def portal_meta_no_load
-#   		@portal_meta
-#   	end
-  	
   	def portal_names
   		return 'UNDER-CONTSTRUCTION'
   		@resultset_meta && @resultset_meta.portal_names || layout_meta.keys
@@ -424,61 +402,15 @@ module Rfm
   		resultset_meta.table
   	end
   	
-#   	def table_no_load
-#   		@table
-#   	end
-  	
-  	#::DEFAULT_CLASS = Hash
-    # From Rfm::Server
     def load_layout_test
       Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:layout, self)
     end
     
     def load_layout
-#       @loaded = true
       #fmpxmllayout = db.server.load_layout(self)
       doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:layout, self)
       puts "Layout load result: #{doc.class}"
 
-#       doc = XmlParser.new(fmpxmllayout.body, :namespace=>false, :parser=>server.state[:parser])
-#       
-#       # check for errors
-#       error = doc['FMPXMLLAYOUT']['ERRORCODE']['text'].to_s.to_i
-#       raise Rfm::Error::FileMakerError.getError(error) if error != 0
-#       
-#       # process valuelists
-#       vlists = doc['FMPXMLLAYOUT']['VALUELISTS']['VALUELIST']
-#       if !vlists.nil?    #root.elements['VALUELISTS'].size > 0
-#         vlists.each {|valuelist|
-#           name = valuelist['NAME']
-#           @value_lists[name] = valuelist['VALUE'].collect{|value|
-#           	Rfm::Metadata::ValueListItem.new(value['text'], value['DISPLAY'], name)
-#           } rescue []
-#         }
-#         @value_lists.freeze
-#       end
-# 
-#       # process field controls
-#       doc['FMPXMLLAYOUT']['LAYOUT']['FIELD'].each {|field|
-#         name = field_mapping[field['NAME']] || field['NAME']
-#         style = field['STYLE']
-#         type = style['TYPE']
-#         value_list_name = style['VALUELIST']
-#         value_list = @value_lists[value_list_name] if value_list_name != ''
-#         field_control = Rfm::Metadata::FieldControl.new(name, type, value_list_name, value_list)
-#         existing = @field_controls[name]
-#         if existing
-#           if existing.kind_of?(Array)
-#             existing << field_control
-#           else
-#             @field_controls[name] = Array[existing, field_control]
-#           end
-#         else
-#           @field_controls[name] = field_control
-#         end
-#       }
-#       @field_names ||= @field_controls.collect{|k,v| v.name rescue v[0].name}
-#       @field_controls.freeze
 			@loaded = true
 			doc
     end

@@ -3,7 +3,7 @@
 elements:
 - name: FMPXMLLAYOUT
   attach: none
-  attach_attributes: shared
+  #attach_attributes: shared
 - name: ERRORCODE
   as_name: error
   attach: shared
@@ -13,7 +13,7 @@ elements:
   as_name: product
 - name: LAYOUT
   attach: none
-  attach_attributes: shared
+  #attach_attributes: shared
   attributes:
   - name: DATABASE
     as_name: database

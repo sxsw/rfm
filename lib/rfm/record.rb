@@ -110,8 +110,6 @@ module Rfm
     
     attr_accessor :layout #, :resultset
     attr_reader :record_id, :mod_id, :portals
-    #def_delegators :resultset, :field_meta, :portal_meta, :portal_names
-    #def_delegators :layout, :db, :database, :server
     def_delegators :layout, :db, :database, :server, :field_meta, :portal_meta, :field_names, :portal_names
     
 		def self.new(*args) # resultset
@@ -142,9 +140,6 @@ module Rfm
     def initialize(*args)    
       @mods						= {}
       
-      # TODO: Only store the resultset_meta and the layout. Stop storing the full restulset in each record,
-      # because then the entire resultset will be kept in memory until the last record is dropped.
-      # Even better, offer the option to store/not-store the resultset in each record.
 			options = args.rfm_extract_options!
 			if args[0].is_a?(Resultset)
 				#@resultset			= args[0]
@@ -234,19 +229,6 @@ module Rfm
 			end
       super(key, value)
     end
-		#
-		# 		alias_method :old_setter, '[]='
-		# 		def []=(key,val)
-		# 			old_setter(key,val)
-		# 			return val unless [Date, Time, DateTime].member? val.class
-		# 			field_type = layout.field_meta[key.to_sym].result
-		# 			@mods[key] = case field_type
-		# 				when 'time'; val.strftime(layout.time_format)
-		# 				when 'date'; val.strftime(layout.date_format)
-		# 				when 'timestamp'; val.strftime(layout.timestamp_format)
-		# 				else val
-		# 			end
-		# 		end  
 		  
 	  def field_names
     	layout.field_names

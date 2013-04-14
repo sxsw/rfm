@@ -114,9 +114,9 @@ require 'stringio'
 #				See this page: http://www.igvita.com/2008/07/08/6-optimization-tips-for-ruby-mri/
 # done: Consider making default attribute-attachment shared, instead of instance.
 # done: Find a way to get SaxParser defaults into core class patches.
-# TODO: Check resultset portal_meta in Splash Asset model for field-definitions coming out correct according to sax template.
-# TODO: Make sure Rfm::Metadata::Field is being used in portal-definitions.
-# TODO: Scan thru Rfm classes and use @instance variables instead of their accessors, so sax-parser does less work.
+# done: Check resultset portal_meta in Splash Asset model for field-definitions coming out correct according to sax template.
+# done: Make sure Rfm::Metadata::Field is being used in portal-definitions.
+# done: Scan thru Rfm classes and use @instance variables instead of their accessors, so sax-parser does less work.
 # TODO: Change 'instance' option to 'private'. Change 'shared' to <whatever>.
 
 
