@@ -354,7 +354,7 @@ Use the configuration setting method `config` to set configuration for specific 
 	     config :use => :customer1, :layout => 'some_layout'
 	   end
 	
-The current heirarchy of configurable objects in Rfm, starting at the top, is:
+The current hierarchy of configurable objects in Rfm, starting at the top, is:
 
 * rfm.yml      # file of settings in yaml format
 * RFM_CONFIG   # user-defined hash
@@ -409,7 +409,7 @@ Following are all of the recognized configuration options, including defaults if
 	   :parent           => 'Rfm::Config'                 # the parent configuration object of the current configuration object, as string
 	   :file_name        => 'rfm.yml                      # name of configuration file to load yaml from
 	   :file_path        => ['', 'config/']               # array of additional file paths to look for configuration file
-	   :parser           => ActiveSupport::XmlMini_REXML  # XmlParser to use if no other is specified or can be found
+	   :parser           => :ox                           # Prefferred XML parser (you must require the parsing gem, or specify it in your gemfile)
 	   :ignore_bad_data  => nil                           # Instruct Rfm to ignore data mismatch errors when loading a resultset
 	
 
@@ -591,9 +591,9 @@ There are a number of methods within Rfm that have been made accessible from the
 	   # Any of these methods can be accessed via Rfm.<method_name>
 	   
 	   Rfm::Factory    :servers, :server, :db, :database, :layout, :models, :modelize
-	   Rfm::XmlParser  :backend, :backend=
 	   Rfm::Config     :config, :get_config, :config_clear
 	   Rfm::Resultset  :ignore_bad_data
+	   Rfm::SaxParser  :backend
 	
 If you are working with a Filemaker database that returns codes like '?' for a missing value in a date field, Rfm will throw an error. Set your main configuration, your server, or your layout to `ignore_bad_data true`, if you want Rfm to silently ignore data mismatch errors when loading resultset data. If ActiveRecord is loaded, and your resultset is loaded into a Rfm model, your model records will log these errors in the @errors attribute.
 

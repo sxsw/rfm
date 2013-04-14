@@ -44,30 +44,8 @@ task :info do
 	puts Rfm.info
 end
 
-
-desc "benchmark XmlMini with available parsers"	
+desc "Benchmark loading & parsing XML data into Rfm classes"	
 task :benchmark do
-	require 'benchmark'
-	require 'yaml'
-	@records = File.read('spec/data/resultset_large.xml')
-	@layout = File.read('spec/data/layout.xml')
-	Benchmark.bm do |b|
-		[:oxsax, :libxml, :libxmlsax, :nokogirisax, :nokogiri, :hpricot, :rexml, :rexmlsax].each do |backend|
-			Rfm.backend = backend
-			b.report("#{Rfm::XmlParser.backend}\n") do
-				5.times do
-				# Rfm::XmlParser.new(@records)
-				# Rfm::XmlParser.new(@layout)
-					Rfm.load_data(@records)
-				#	Rfm.load_data(@layout)
-				end
-			end
-		end
-	end
-end
-
-desc "benchmark SaxParser engine"	
-task :benchmark_sax do
 	require 'benchmark'
 	require 'yaml'
 	#load "spec/data/sax_models.rb"

@@ -27,7 +27,6 @@ module Rfm
   autoload :Resultset,    'rfm/resultset'
   autoload :Record,       'rfm/record'
   autoload :Base,         'rfm/base'
-  autoload :XmlParser,    'rfm/utilities/xml_parser'
   autoload :SaxParser,    'rfm/utilities/sax_parser'
   autoload :Config,       'rfm/utilities/config'
   autoload :Factory,      'rfm/utilities/factory'
@@ -50,10 +49,9 @@ module Rfm
     rslt = <<-EEOOFF
       Name: ginjo-rfm
       Version: #{VERSION}
-      ActiveSupport Version: #{ActiveSupport::VERSION::STRING}
-      ActiveModel Loaded? #{defined?(ActiveModel) ? 'true' : 'false'}
-      ActiveModel Loadable? #{begin; require 'active_model'; rescue LoadError; $!; end}
-      XML Parser: #{XmlParser.backend}
+      ActiveModel loadable? #{begin; Gem::Specification::find_all_by_name('activemodel')[0].version.to_s; rescue LoadError; $!; end}
+      ActiveModel loaded? #{defined?(ActiveModel) ? 'true' : 'false'}
+      XML-parser: #{SaxParser::Handler.get_backend}
     EEOOFF
     rslt.gsub!(/^[ \t]*/, '')
   rescue
@@ -61,11 +59,12 @@ module Rfm
 	end
 	
 	def info_short
-		"Using ginjo-rfm version #{::Rfm::VERSION} with #{XmlParser.backend}"
+		"Using ginjo-rfm version #{::Rfm::VERSION} with #{SaxParser::Handler.get_backend}"
 	end
 	
 	def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout
-	def_delegators 'Rfm::XmlParser', :backend, :backend=
+	def_delegators 'Rfm::SaxParser', :backend, :backend=
+	def_delegators 'Rfm::SaxParser::Handler', :get_backend
 	def_delegators 'Rfm::Config', :config, :get_config, :config_clear
 	def_delegators 'Rfm::Resultset', :load_data
 	

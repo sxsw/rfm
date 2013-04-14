@@ -3,7 +3,8 @@ require 'data/sax_models'
 
 describe Rfm::SaxParser::Handler do
 	#subject {Rfm::SaxParser::Handler}
-	HANDLER = Rfm::SaxParser::OxHandler
+	Rfm.get_backend :rexml
+	HANDLER = Rfm::SaxParser::RexmlHandler
 
 	describe '#set_cursor' do
 		subject {HANDLER.allocate} #new('local_testing/sax_parse.yml')}

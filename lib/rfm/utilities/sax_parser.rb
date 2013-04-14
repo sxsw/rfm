@@ -438,7 +438,7 @@ module Rfm
 		  end # self.included
 		  
 		  # Takes backend symbol and returns custom Handler class for specified backend.
-		  def self.get_backend(parser)
+		  def self.get_backend(parser=nil)
 				(parser = decide_backend) unless parser
 				if parser.is_a?(String) || parser.is_a?(Symbol)
 					parser_proc = PARSERS[parser.to_sym]
