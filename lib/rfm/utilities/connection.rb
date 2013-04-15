@@ -7,11 +7,11 @@ require 'net/https'
 require 'cgi'
 module Rfm
 	SaxParser.default_class = CaseInsensitiveHash
-	SaxParser.template_prefix = File.join(File.dirname(__FILE__), '../sax/')
+	SaxParser.template_prefix = File.join(File.dirname(__FILE__), './sax/')
 	SaxParser.templates.merge!({
-		:layout => 'fmpxmllayout.yml',
-		:records => 'fmresultset.yml',
-		:alt => 'fmpxmlresult.yml',
+		:fmpxmllayout => 'fmpxmllayout.yml',
+		:fmresultset => 'fmresultset.yml',
+		:fmpxmlresult => 'fmpxmlresult.yml',
 		:none => nil
 	})
 	

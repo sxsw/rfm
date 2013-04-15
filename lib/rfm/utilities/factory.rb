@@ -60,11 +60,13 @@ module Rfm
       
       def all
         if !@loaded
-        	xml = @server.connect(@server.state[:account_name], @server.state[:password], '-dbnames', {}).body
-          Rfm::Resultset.new(xml, :server_object => @server).each {|record|
-            name = record['DATABASE_NAME']
-            self[name] = Rfm::Database.new(name, @server) if self.keys.find{|k| k.to_s.downcase == name.to_s.downcase} == nil
-          }
+#         	xml = @server.connect(@server.state[:account_name], @server.state[:password], '-dbnames', {}).body
+#           Rfm::Resultset.new(xml, :server_object => @server).each {|record|
+#             name = record['DATABASE_NAME']
+#             self[name] = Rfm::Database.new(name, @server) if self.keys.find{|k| k.to_s.downcase == name.to_s.downcase} == nil
+#           }
+					c = Connection.new('-dbnames', {}, {:grammar=>'FMPXMLRESULT'}, Factory.get_config.merge(:parent=>self))
+					rslt = c.parse({}, self)
           @loaded = true
         end
         self

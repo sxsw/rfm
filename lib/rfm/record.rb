@@ -118,18 +118,18 @@ module Rfm
 				
 			# Allocate record from official model.
 			when args[0].is_a?(Resultset) && args[0].layout && args[0].layout.respond_to?(:model) && args[0].layout.model
-				puts "New record from model '#{args[0].layout.model}'"
+				#puts "New record from model '#{args[0].layout.model}'"
 				args[0].layout.model.allocate
 				
 			# Create model from layout, then allocate record.
 			when args[0].is_a?(Resultset) && args[0].layout
-				puts "New record from layout-modelize '#{args[0].layout.name}'"
+				#puts "New record from layout-modelize '#{args[0].layout.name}'"
 				args[0].layout.modelize.allocate
 
 			# Create subclass of Rfm::Record, then allocate.
 			# I don't think this is necessary. Try it on a resultset loaded from disk.
 			when args[0].is_a?(Resultset) && args[0].table
-				puts "New record from table-const '#{args[0].table}'"
+				#puts "New record from table-const '#{args[0].table}'"
 				klass = if self.class.const_defined?(args[0].table)
 					self.class.const_get(args[0].table)
 				else
@@ -139,7 +139,7 @@ module Rfm
 			
 			# Allocate instance of Rfm::Record.	
 			else
-				puts "New record from generic '#{args[0].table}'"
+				#puts "New record from generic '#{args[0].table}'"
 				self.allocate
 			end
 			record.send(:initialize, *args)

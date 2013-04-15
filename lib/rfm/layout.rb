@@ -122,6 +122,13 @@ module Rfm
   class Layout
 	  include Config
 
+    meta_attr_reader :db
+    attr_reader :field_mapping
+    attr_writer :resultset_meta          #:field_names, :portal_meta, :table
+    def_delegator :db, :server
+    alias_method :database, :db
+    attr_accessor :model, :parent_layout, :subs
+
 		# Methods that must be kept after rewrite!!!
 		# 	  
 		# field_mapping
@@ -161,11 +168,12 @@ module Rfm
     #   myServer = Rfm::Server.new(...)
     #   myLayout = myServer["Customers"]["Details"]
     def initialize(*args) #name, db_obj
+    	self.subs ||= []
+    	
     	options = get_config(*args)
     	rfm_metaclass.instance_variable_set :@db, (options[:objects].delete_at(0) || options[:database_object])
     	config :parent=> 'db'
     	options = get_config(options)
-    	
     	config sanitize_config(options, {}, true)
     	config :layout => options[:strings].delete_at(0) || options[:layout]
     
@@ -173,14 +181,7 @@ module Rfm
                   
       @loaded = false
     end
-    
-    meta_attr_reader :db
-    attr_reader :field_mapping
-    attr_writer :resultset_meta          #:field_names, :portal_meta, :table
-    def_delegator :db, :server
-    alias_method :database, :db
-    
-    attr_accessor :model, :parent_layout, :subs
+
     
     # These methods are to be inclulded in Layout and SubLayout, so that
     # they have their own discrete 'self' in the master class and the subclass.
@@ -300,7 +301,7 @@ module Rfm
 	      prms.dup.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
 
 				c = Connection.new(action, prms, options, state.merge(:parent=>self))
-				rslt = c.parse(template || :records, Rfm::Resultset.new(self, self))
+				rslt = c.parse(template || :fmresultset, Rfm::Resultset.new(self, self))
 				capture_resultset_meta(rslt) unless @resultset_meta
 				rslt
 	    end
@@ -328,6 +329,17 @@ module Rfm
 	  end # LayoutModule
 	  
 	  include LayoutModule
+
+  	class SubLayout < DelegateClass(Layout)
+			include Config  	
+  		include Layout::LayoutModule
+
+  		def initialize(master)
+  			super(master)
+  			self.parent_layout = master
+  		end
+  	end # SubLayout	  
+	  
 	  
 	  
     ###  Metadata from Resultset  ###
@@ -394,12 +406,12 @@ module Rfm
   	end
   	
     def load_layout_test
-      Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:layout, self)
+      Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:fmpxmllaout, self)
     end
     
     def load_layout
       #fmpxmllayout = db.server.load_layout(self)
-      doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:layout, self)
+      doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:fmpxmllayout, self)
       puts "Layout load result: #{doc.class}"
 
 			@loaded = true
@@ -418,29 +430,6 @@ module Rfm
 			mapping
 		end
 		
-
-
-		###  Methods acquired from Rfm::Base cleanup.  ###
-		
-  	class SubLayout < DelegateClass(Layout)
-  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
-			include Config  	
-  	
-  		include Layout::LayoutModule
-   		# attr_accessor :model, :parent_layout
-
-  		def initialize(master)
-  			super(master)
-  			self.parent_layout = master
-  		end
-  	end # SubLayout
-  	  	
-  	alias_method :main_init, :initialize
-		def initialize(*args)
-	    self.subs ||= []
-	    main_init(*args)
-	  end
-       	
     # Creates new class with layout name.
     def modelize
     	@model ||= (
@@ -460,9 +449,7 @@ module Rfm
   	def models
   		subs.collect{|s| s.model}
   	end
-		
-		###  End methods from Rfm::Base  ###
-		
+				
     
   	private :load_layout, :get_records, :params
       
