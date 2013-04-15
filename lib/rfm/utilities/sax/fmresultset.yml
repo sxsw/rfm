@@ -1,0 +1,241 @@
+#!/usr/bin/env ruby
+# YAML structure defining a SAX xml parsing scheme/fmp-grammar.
+
+
+# This is for the newly rewritten object-merge methods.
+---
+elements:
+- name: fmresultset
+  attach: none
+  #attach_attributes: shared
+- name: product
+  attach: shared
+- name: error
+  attach: none
+  attributes:
+  - name: code
+    as_name: error
+    #attach: shared
+- name: datasource
+  attach: none
+  #attach_attributes: shared
+- name:  metadata
+  attach: none
+- name: field_definition
+  delineate_with_hash: name
+  as_name: field_meta
+  attach: shared
+- name: relatedset_definition
+  delineate_with_hash: table
+  as_name: portal_meta
+  attach: shared
+  elements:
+  - name: field_definition
+    delineate_with_hash: name
+    as_name: field_meta
+- name: resultset
+  attach: none
+  #attach_attributes: shared
+- name: record
+  class: Rfm::Record
+  initialize: [new, object]
+  attach_attributes: instance
+  before_close: '@loaded=true'
+  elements:
+  - name: field
+    class: Rfm::Metadata::Field
+    compact: true
+    attach: cursor
+    before_close: :end_element_callback
+  - name: relatedset
+    class: Array
+    as_name: portals
+    attach: instance
+    attach_attributes: instance
+    delineate_with_hash: table
+    elements:
+    - name: record
+      class: Rfm::Record
+      attach_attributes: instance
+      before_close: '@loaded=true'
+      elements:
+      - name: field
+        compact: true
+        class: Rfm::Metadata::Field
+        attach: cursor
+        before_close: :end_element_callback
+
+
+
+# # This puts all metadata into the @attributes var.
+# ---
+# elements:
+# - name: fmresultset
+#   attach: none
+#   attach_attributes: shared
+# - name: product
+#   attach: shared
+# - name: error
+#   attach: none
+#   attributes:
+#   - name: code
+#     as_name: error
+#     attach: shared
+# - name: datasource
+#   attach: none
+#   #class: Rfm::Datasource
+#   attach_attributes: shared
+# - name:  metadata
+#   attach: none
+# - name: field_definition
+#   delineate_with_hash: name
+#   as_name: field_meta
+#   attach: shared
+# - name: relatedset_definition
+#   delineate_with_hash: table
+#   as_name: portal_meta
+#   attach: shared
+# - name: resultset
+#   attach: none
+#   attach_attributes: shared
+# - name: record
+#   class: Rfm::Record
+#   initialize: [new, object]
+#   attach: array
+#   before_close: '@loaded=true'
+#   elements:
+#   - name: field
+#     class: Rfm::Metadata::Field
+#     compact: true
+#     attach: cursor
+#     before_close: :end_element_callback
+#   - name: relatedset
+#     class: Array
+#     as_name: portals
+#     attach: instance
+#     attach_attributes: instance
+#     delineate_with_hash: table
+#     elements:
+#     - name: record
+#       class: Rfm::Record
+#       attach: array
+#       before_close: '@loaded=true'
+#       elements:
+#       - name: field
+#         compact: true
+#         class: Rfm::Metadata::Field
+#         attach: cursor
+#         before_close: :end_element_callback
+
+
+
+# # This puts field_meta and portal_meta in separate instance variables.
+# ---
+# elements:
+# - name: fmresultset
+#   attach: none
+#   attach_attributes: shared
+# - name: product
+#   attach: shared
+# - name: error
+#   attach: none
+#   attributes:
+#   - name: code
+#     as_name: error
+#     attach: shared
+# - name: datasource
+#   attach: none
+#   #class: Rfm::Datasource
+#   attach_attributes: shared
+# - name:  metadata
+#   attach: none
+# - name: field_definition
+#   delineate_with_hash: name
+#   as_name: field_meta
+#   attach: instance
+# - name: relatedset_definition
+#   delineate_with_hash: table
+#   as_name: portal_meta
+#   attach: instance
+# - name: resultset
+#   attach: none
+#   attach_attributes: shared
+# - name: record
+#   class: Rfm::Record
+#   attach: array
+#   elements:
+#   - name: field
+#     class: Rfm::Metadata::Field
+#     compact: true
+#     attach: cursor
+#     before_close: :end_element_callback
+#   - name: relatedset
+#     class: Rfm::RelatedSet
+#     attach: instance
+#     as_name: portals
+#     delineate_with_hash: table
+#     elements:
+#     - name: record
+#       class: Rfm::Record
+#       attach: array
+#       elements:
+#       - name: field
+#         compact: true
+#         class: Rfm::Metadata::Field
+#         attach: cursor
+#         before_close: :end_element_callback
+
+
+# ---
+# elements:
+# - name: fmresultset
+#   attach: none
+#   attach_attributes: shared
+# - name: product
+#   attach: shared
+# - name: error
+#   attach: none
+#   attributes:
+#   - name: code
+#     as_name: error
+#     attach: shared
+# - name: datasource
+#   attach: none
+#   #class: Rfm::Datasource
+#   attach_attributes: shared
+# - name:  metadata
+#   attach: none
+# - name: field_definition
+#   delineate_with_hash: name
+#   as_name: field_meta
+# - name: relatedset_definition
+#   delineate_with_hash: table
+#   as_name: portal_meta
+# - name: resultset
+#   attach: none
+#   attach_attributes: shared
+# - name: record
+#   class: Rfm::Record
+#   attach: array
+#   elements:
+#   - name: field
+#     class: Rfm::Metadata::Field
+#     compact: true
+#     attach: cursor
+#     before_close: :end_element_callback
+#   - name: relatedset
+#     class: Rfm::RelatedSet
+#     attach: instance
+#     as_name: portals
+#     delineate_with_hash: table
+#     elements:
+#     - name: record
+#       class: Rfm::Record
+#       attach: array
+#       elements:
+#       - name: field
+#         compact: true
+#         class: Rfm::Metadata::Field
+#         attach: cursor
+#         before_close: :end_element_callback
+

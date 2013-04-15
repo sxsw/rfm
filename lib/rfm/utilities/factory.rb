@@ -60,20 +60,16 @@ module Rfm
       
       def all
         if !@loaded
-#         	xml = @server.connect(@server.state[:account_name], @server.state[:password], '-dbnames', {}).body
-#           Rfm::Resultset.new(xml, :server_object => @server).each {|record|
-#             name = record['DATABASE_NAME']
-#             self[name] = Rfm::Database.new(name, @server) if self.keys.find{|k| k.to_s.downcase == name.to_s.downcase} == nil
-#           }
-					c = Connection.new('-dbnames', {}, {:grammar=>'FMPXMLRESULT'}, Factory.get_config.merge(:parent=>self))
-					rslt = c.parse({}, self)
+					c = Connection.new('-dbnames', {}, {:grammar=>'FMPXMLRESULT'}, :parent=>@server)
+					c.parse('fmpxml_databases.yml', {})['DATA'].each{|k,v| self[k] = Rfm::Database.new(v['text'], @server)}
           @loaded = true
         end
         self
       end
       
       def names
-      	keys
+      	#keys
+      	self.values.collect{|v| v.name}
       end
     
     end # DbFactory
@@ -81,7 +77,7 @@ module Rfm
     
     
     class LayoutFactory < Rfm::CaseInsensitiveHash # :nodoc: all
-    
+    	
       def initialize(server, database)
         @server = server
         @database = database
@@ -99,14 +95,17 @@ module Rfm
       
       def all
         if !@loaded
-	        get_layout_names.each {|record|
-	          name = record['LAYOUT_NAME']
-	        	begin
-	          	(self[name] = Rfm::Layout.new(name, @database)) unless !self[name].nil? or name.to_s.strip == ''
-	          rescue
-	          	$stderr.puts $!
-	          end
-	        }
+# 	        get_layout_names.each {|record|
+# 	          name = record['LAYOUT_NAME']
+# 	        	begin
+# 	          	(self[name] = Rfm::Layout.new(name, @database)) unless !self[name].nil? or name.to_s.strip == ''
+# 	          rescue
+# 	          	$stderr.puts $!
+# 	          end
+# 	        }
+					c = Connection.new('-layoutnames', {"-db" => @database.name}, {:grammar=>'FMPXMLRESULT'}, :parent=>@database)
+					#c.parse('fmpxml_layouts.yml', {})['DATA'].each{|k,v| self[k] = Rfm::Layout.new(v['text'], @database)}
+					return c.parse({}, {})  #['DATA'].each{|k,v| self[k] = Rfm::Layout.new(v['text'], @database)}
           @loaded = true
         end
         self

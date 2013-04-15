@@ -314,19 +314,19 @@ module Rfm
 				def attach_new_object(base_object, new_object, name, base_model, new_model, type)
 					label = label_or_tag(name, new_model)
 					
-					prefs = case type
-						when 'element'; attach?(new_model) || attach_elements?(base_model)
-						when 'attribute'; attach?(new_model) || attach_attributes?(base_model)
-					end
+					prefs = attachment_prefs(base_model, new_model, type)
+					# 	prefs = case type
+					# 		when 'element'; attach?(new_model) || attach_elements?(base_model)
+					# 		when 'attribute'; attach?(new_model) || attach_attributes?(base_model)
+					# 	end
 					
 					base_object._attach_object!(new_object, label, delineate_with_hash?(new_model), prefs, type, :default_class=>default_class)
-
 				end
 				
 				def attachment_prefs(base_model, new_model, type)
 					case type
-						when 'element'; attach?(new_model) || attach_elements?(base_model)
-						when 'attribute'; attach?(new_model) || attach_attributes?(base_model)
+						when 'element'; attach?(new_model) || attach_elements?(base_model) || attach?(top.model) || attach_elements?(top.model)
+						when 'attribute'; attach?(new_model) || attach_attributes?(base_model) || attach?(top.model) || attach_attributes?(top.model)
 					end
 				end
 
