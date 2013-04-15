@@ -161,3 +161,16 @@ class Time
 		[d,t]
 	end
 end # Time
+
+class String
+	def title_case
+		self.gsub(/\w+/) do |word|
+		  word.capitalize
+		end
+	end
+end # String
+
+
+
+
+

@@ -180,6 +180,8 @@ module Rfm
     def_delegator :db, :server
     alias_method :database, :db
     
+    attr_accessor :model, :parent_layout, :subs
+    
     # These methods are to be inclulded in Layout and SubLayout, so that
     # they have their own discrete 'self' in the master class and the subclass.
     # This means these methods will not get forwarded, and will talk to the correct
@@ -298,45 +300,30 @@ module Rfm
 	      prms.dup.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
 
 				c = Connection.new(action, prms, options, state.merge(:parent=>self))
-				# Need to specify the connection object as the initial_object of the parsing stack,
-				# so that Fmresultset can get the layout from it.
-				#c.parse('fmresultset.xml', Rfm::Resultset.new(self), nil)
 				rslt = c.parse(template || :records, Rfm::Resultset.new(self, self))
-				(self.resultset_meta = rslt.clone.replace([])) unless instance_variable_get :@resultset_meta
+				capture_resultset_meta(rslt) unless @resultset_meta
 				rslt
 	    end
 	    
 	    def params
 	      {"-db" => db.name, "-lay" => self.name}
 	    end
-	    			
-			
-			# 	# Intended to set each repeat individually but doesn't work with FM
-			# 	def expand_repeats(hash)
-			# 		hash.each do |key,val|
-			# 			if val.kind_of? Array
-			# 				val.each_with_index{|v, i| hash["#{key}(#{i+1})"] = v}
-			# 				hash.delete(key)
-			# 			end
-			# 		end
-			# 		hash
-			# 	end
-			# 	
-			# 	# Intended to brute-force repeat setting but doesn't work with FM
-			# 	def join_repeats(hash)
-			# 		hash.each do |key,val|
-			# 			if val.kind_of? Array
-			# 				hash[key] = val.join('\x1D')
-			# 			end
-			# 		end
-			# 		hash
-			# 	end
 
 	    def name; state[:layout].to_s; end
 	    
 			def state(*args)
 				get_config(*args)
 			end
+			
+			
+	    # Gets new sublayout or self if self is sublayout.
+	    def sublayout
+	    	if self.is_a?(Layout) && !self.is_a?(SubLayout)
+	    		sub = SubLayout.new(self); subs << sub; sub
+	    	else
+	    		self
+	    	end
+	    end
 
 	  end # LayoutModule
 	  
@@ -359,6 +346,10 @@ module Rfm
 		end
 		def field_meta
 			resultset_meta.field_meta
+		end
+		
+		def capture_resultset_meta(resultset)
+			(@resultset_meta = resultset.clone.replace([])) #unless @resultset_meta
 		end
 		###
     
@@ -436,48 +427,33 @@ module Rfm
 			include Config  	
   	
   		include Layout::LayoutModule
-   		attr_accessor :model, :parent_layout
+   		# attr_accessor :model, :parent_layout
 
   		def initialize(master)
   			super(master)
   			self.parent_layout = master
   		end
   	end # SubLayout
-  	
-    attr_accessor :subs
-  	
+  	  	
   	alias_method :main_init, :initialize
 		def initialize(*args)
-	    @subs ||= []
+	    self.subs ||= []
 	    main_init(*args)
 	  end
-    
-    def sublayout
-    	if self.is_a?(Rfm::Layout)
-    		sub = SubLayout.new(self); subs << sub; sub
-    	else
-    		self
-    	end
-    end
-  	
-    # Creates new class with layout name, subclassed from Rfm::Base, and links the new model to a SubLayout instance.
+       	
+    # Creates new class with layout name.
     def modelize
-    	model_name = name.to_s.gsub(/\W/, '_').classify.gsub(/_/,'')
-    	(return model_name.constantize) rescue nil
-    	sub = sublayout
-    	sub.instance_eval do
+    	@model ||= (
+	    	model_name = name.to_s.gsub(/\W|_/, ' ').title_case.gsub(/\s/,'')
 	    	model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
 	    	model_class.class_exec(self) do |layout_obj|
 	    		@layout = layout_obj
 	    	end
-	    	@model = model_class
-	    	
-	  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
-	  		model.config :parent=>'@layout.parent_layout'
-	    	config :parent=>'model'
-	    end
-	    sub.model.to_s.constantize
+	  		model_class.config :parent=>'@layout'
+		    model_class
+	    )
     rescue StandardError, SyntaxError
+    	puts "Error in layout#modelize: #{$!}"
     	nil
   	end
   	
