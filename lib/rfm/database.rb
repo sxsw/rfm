@@ -67,11 +67,16 @@ module Rfm
     #
     # This sample code gets a database object representing the Customers database on the FileMaker server.
     def initialize(*args) #name, server_obj, acnt=nil, pass=nil
+    	puts "Initializing NEW db with args: #{args}\n\n"
     	options = get_config(*args)
+    	puts "After FIRST options processing: #{options}\n\n"
     	rfm_metaclass.instance_variable_set :@server, (options[:objects].delete_at(0) || options[:server_object])
-    	options = get_config(options)
+    	#options = get_config(options)
+    	options = get_config(*args)
+    	puts "After SECOND options processing: #{options}\n\n"
     	
-    	config sanitize_config(options, {}, true)
+    	#config sanitize_config(options, {}, true)
+    	puts "After SANITIZE_CONFIG: #{config}\n\n"
     	config :parent=> 'server'
     	config :database=> options[:strings].delete_at(0) || options[:database]
     	config :account_name=> options[:strings].delete_at(0) || options[:account_name]

@@ -210,6 +210,7 @@ module Rfm
 		  	account_name = options[:strings].delete_at(0) || options[:account_name]
 		  	password = options[:strings].delete_at(0) || options[:password]
 				s = server(options)
+				#puts "Creating db object in Factory.db. Options: #{options.to_yaml}"
 				s[name, account_name, password, options]
 		  end
 		  
