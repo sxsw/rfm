@@ -9,6 +9,7 @@ module Rfm
 	# 	end
 	#
 	# And similar to ActiveRecord, you can define callbacks, validations, attributes, and methods on your model.
+	#   (if you have ActiveModel loaded).
 	#
 	#   class Account < Rfm::Base
 	#     config :layout=>'account_xml'
@@ -244,7 +245,7 @@ module Rfm
     end
     
     def create
-      #return unless @mods.size > 0
+      raise "Record not valid" if (defined?(ActiveModel::Validations) && !valid?)
       run_callbacks :create do
         return unless @mods.size > 0
   	    merge_rfm_result self.class.create_from_new(@mods)
@@ -253,8 +254,8 @@ module Rfm
   	end
   	
     def update(mod_id=nil)
-      #return unless @mods.size > 0 and record_id
-      return false unless record_id
+      raise "Record not valid" if (defined?(ActiveModel::Validations) && !valid?)
+      return false unless record_id 
   	  run_callbacks :update do
   	    return unless @mods.size > 0
   	    unless mod_id
