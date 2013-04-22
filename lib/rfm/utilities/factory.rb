@@ -194,11 +194,12 @@ module Rfm
     
 	  	# Returns Rfm::Server instance, given config hash or array
 	  	def server(*conf)
-	  		options = get_config(*conf)
+	  		#options = get_config(*conf)
+	  		#host = options[:strings].delete_at(0) || options[:host]
 				#server = servers[server_name, options]
 				# These disconnect servers from the ServerFactory hash, but it breaks the ActiveModel spec suite.
 				#Rfm::Server.new(server_name, options.rfm_filter(:account_name, :password, :delete=>true))
-				Rfm::Server.new(options)
+				Rfm::Server.new(*conf)
 		  end
 			# Potential refactor
 			#def_delegator 'Rfm::Factory::ServerFactory', :[], :server  #, :[]

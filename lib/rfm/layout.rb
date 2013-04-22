@@ -173,8 +173,8 @@ module Rfm
     	options = get_config(*args)
     	rfm_metaclass.instance_variable_set :@db, (options[:objects].delete_at(0) || options[:database_object])
     	config :parent=> 'db'
-    	options = get_config(options)
-    	config sanitize_config(options, {}, true)
+    	options = get_config(*options)
+    	#config sanitize_config(options, {}, true)
     	config :layout => options[:strings].delete_at(0) || options[:layout]
     
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''
@@ -300,7 +300,8 @@ module Rfm
 	      #map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
 	      prms.dup.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
 
-				c = Connection.new(action, prms, options, state.merge(:parent=>self))
+				#c = Connection.new(action, prms, options, state.merge(:parent=>self))
+				c = Connection.new(action, prms, options, self)
 				rslt = c.parse(template || :fmresultset, Rfm::Resultset.new(self, self))
 				capture_resultset_meta(rslt) unless @resultset_meta
 				rslt
@@ -404,14 +405,12 @@ module Rfm
   	def table
   		resultset_meta.table
   	end
-  	
-    def load_layout_test
-      Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:fmpxmllaout, self)
-    end
     
     def load_layout
       #fmpxmllayout = db.server.load_layout(self)
-      doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:fmpxmllayout, self)
+      #doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:fmpxmllayout, self)
+      doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}).parse(:fmpxmllayout, self)
+
       puts "Layout load result: #{doc.class}"
 
 			@loaded = true

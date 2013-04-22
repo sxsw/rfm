@@ -144,8 +144,15 @@ module Rfm
 	  	
 	  # Get composite config from all levels, processing :use parameters at each level
 	  def config_merge_with_parent(filters=nil)
-      remote = if (self != Rfm::Config) 
-      	eval(@config[:parent] || 'Rfm::Config').config_merge_with_parent rescue {}
+      remote = if (self != Rfm::Config)
+      	parent = case
+      		when @config[:parent].is_a?(String); eval(@config[:parent])
+      		when !@config[:parent].nil?; @config[:parent]
+      		else eval('Rfm::Config')
+      	end
+      	#puts "config_merge_with_parent: self '#{self.to_s}' parent '#{parent.to_s}'"
+      	parent.config_merge_with_parent
+      	#eval(@config[:parent] || 'Rfm::Config').config_merge_with_parent rescue {}
       else
       	get_config_file.merge((defined?(RFM_CONFIG) and RFM_CONFIG.is_a?(Hash)) ? RFM_CONFIG : {})
       end.clone
@@ -162,6 +169,8 @@ module Rfm
 			rslt.delete :parent
 			
 			rslt
+			# rescue
+			# 	puts "Config#config_merge_with_parent for '#{self.class}' falied with #{$1}"
     end
      
 		# Returns a configuration hash overwritten by :use filters in the hash

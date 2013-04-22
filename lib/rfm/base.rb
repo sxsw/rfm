@@ -80,13 +80,17 @@ module Rfm
 			# Access/create the layout object associated with this model
 	  	def layout
 	  		return @layout if @layout
-	  		cnf = get_config
-	  		raise "Could not get :layout from get_config in Base.layout method" unless cnf[:layout] #return unless cnf[:layout]
-	  		@layout = Rfm::Factory.layout(cnf).sublayout
+# 	  		cnf = get_config
+# 	  		raise "Could not get :layout from get_config in Base.layout method" unless cnf[:layout] #return unless cnf[:layout]
+# 	  		@layout = Rfm::Factory.layout(cnf).sublayout
+				name = get_config[:layout]
+				@layout = Rfm::Factory.layout(name, self).sublayout
 	  		
 	  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
-	  		config :parent=>'parent_layout'
-	  		@layout.config :parent=>'model'
+	  		#config :parent=>'parent_layout'
+	  		#config :parent=>'Rfm::Config'
+	  		#@layout.config :parent=>'model'
+	  		@layout.config :parent=>self
 	  		
 				@layout.model = self
 				@layout

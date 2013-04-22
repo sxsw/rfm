@@ -18,13 +18,14 @@ module Rfm
   class Connection
   	include Config  	
   
-		def initialize(action, prms, request_options={}, *args)
+		def initialize(action, params, request_options={},  *args)
     	#config :parent => 'Rfm::Config'
     	options = get_config(*args)
-    	config sanitize_config(options, {}, true)
+    	config :parent => (options[:objects].delete_at(0) || options[:parent] || 'Rfm::Config')
+    	#config sanitize_config(options, {}, true)
       
       @action = action
-      @prms = prms
+      @params = params
       @request_options = request_options
       
       @defaults = {
@@ -45,6 +46,7 @@ module Rfm
         :ignore_bad_data => false,
         :grammar => 'fmresultset'
       }   #.merge(options)
+	
     end
 
     def state(*args)
@@ -55,9 +57,9 @@ module Rfm
 	  def scheme; state[:ssl] ? "https" : "http"; end
 	  def port; state[:ssl] && state[:port].nil? ? 443 : state[:port]; end
 
-    def connect(action=@action, prms=@prms, request_options = @request_options, account_name=state[:account_name], password=state[:password])
+    def connect(action=@action, params=@params, request_options = @request_options, account_name=state[:account_name], password=state[:password])
     	grammar_option = request_options.delete(:grammar)
-      post = prms.merge(expand_options(request_options)).merge({action => ''})
+      post = params.merge(expand_options(request_options)).merge({action => ''})
       grammar = select_grammar(post, :grammar=>grammar_option)
       http_fetch(host_name, port, "/fmi/xml/#{grammar}.xml", account_name, password, post)
     end
