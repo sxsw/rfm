@@ -195,14 +195,23 @@ module Rfm
     #            :root_cert_name => 'example.pem'
     #            :root_cert_path => '/usr/cert_file/'
     #            })
+    def self.new(*args)
+    	puts caller.first
+    	s = allocate
+    	s.send :initialize, *args
+    	s
+    end
     def initialize(*args)
-    	#config :parent => 'Rfm::Config'
     	options = get_config(*args)
-    	#config sanitize_config(options, {}, true)
     	config :parent => (options[:objects].delete_at(0) || options[:parent] || 'Rfm::Config')
-    	options = get_config(*options)
-    	config :host => (options[:strings].delete_at(0) || options[:host] )
+    	config(*args)
     	
+    	options = get_config(*args)
+    	config :host => (options[:strings].delete_at(0) || options[:host] )
+    	config :account_name => (options[:strings].delete_at(0) || options[:account_name] )
+    	config :password => (options[:strings].delete_at(0) || options[:password] )
+    	
+ 	
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{config[:host]}'.") if config[:host].to_s == ''
       
       @defaults = {

@@ -169,12 +169,18 @@ module Rfm
     #   myLayout = myServer["Customers"]["Details"]
     def initialize(*args) #name, db_obj
     	self.subs ||= []
-    	
     	options = get_config(*args)
-    	rfm_metaclass.instance_variable_set :@db, (options[:objects].delete_at(0) || options[:database_object])
-    	config :parent=> 'db'
-    	options = get_config(*options)
-    	#config sanitize_config(options, {}, true)
+    	config :parent => (options[:objects].delete_at(0) || options[:parent] || 'Rfm::Config')
+    	config(*args)
+    	
+			# 	options = get_config(*args)
+			# 	rfm_metaclass.instance_variable_set :@db, options[:database_object]    # (options[:objects].delete_at(0) || options[:database_object])
+			# 	#config :parent=> 'db'
+			# 	config :parent => options[:objects].delete_at(0) || options[:parent]
+			# 	options = get_config(*options)
+			# 	#config sanitize_config(options, {}, true)
+			
+			options = get_config *args
     	config :layout => options[:strings].delete_at(0) || options[:layout]
     
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''
@@ -308,7 +314,7 @@ module Rfm
 	    end
 	    
 	    def params
-	      {"-db" => db.name, "-lay" => self.name}
+	      {"-db" => state[:database], "-lay" => self.name}
 	    end
 
 	    def name; state[:layout].to_s; end
@@ -409,12 +415,13 @@ module Rfm
     def load_layout
       #fmpxmllayout = db.server.load_layout(self)
       #doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:fmpxmllayout, self)
-      doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}).parse(:fmpxmllayout, self)
+      connection = Connection.new('-view', {'-db' => state[:database], '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, self)
+      rslt = connection.parse(:fmpxmllayout, self)
 
-      puts "Layout load result: #{doc.class}"
+      puts "Layout load result: #{rslt.class}"
 
 			@loaded = true
-			doc
+			rslt
     end
     
 		def field_mapping

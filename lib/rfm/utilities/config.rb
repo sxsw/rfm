@@ -183,6 +183,19 @@ module Rfm
 			conf
 		end
 		
+		def config_extract_options!(*args)
+			strings, symbols, objects = [], [], []
+			options = args.last.is_a?(Hash) ? args.pop : {}
+			args.each do |a|
+				case
+				when a.is_a?(String); strings << a
+				when a.is_a?(Symbol); symbols << a
+				else objects << a
+				end
+			end
+			{:strings=>strings, :symbols=>symbols, :objects=>objects, :hash=>options}
+		end
+		
 		    
     # This loads RFM_CONFIG into @config. It is not necessary,
     # as get_config will merge all configuration into RFM_CONFIG at runtime.
