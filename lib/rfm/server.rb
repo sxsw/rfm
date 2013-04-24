@@ -202,34 +202,28 @@ module Rfm
     	s
     end
     def initialize(*args)
-    	# Make this block it's own method. See base.rb 'def config()...'
-			config(*args, *{:capture_strings_with=>[:host, :account_name, :password]}) do |options|
-			# 	@config[:parent] = (options[:objects].delete_at(0) || options[:hash][:parent] || 'Rfm::Config').to_s
-			# 	@config[:host] = (options[:strings].delete_at(0) || options[:hash][:host] )
-			# 	@config[:account_name] = (options[:strings].delete_at(0) || options[:hash][:account_name] )
-			# 	@config[:password] = (options[:strings].delete_at(0) || options[:hash][:password] )
-	    end
+    	config(*args)
 
-    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{config[:host]}'.") if config[:host].to_s == ''
+    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{get_config[:host]}'.") if get_config[:host].to_s == ''
       
-      @defaults = {
-        :host => 'localhost',
-        :port => 80,
-        :ssl => true,
-        :root_cert => true,
-        :root_cert_name => '',
-        :root_cert_path => '/',
-        :account_name => '',
-        :password => '',
-        :log_actions => false,
-        :log_responses => false,
-        :log_parser => false,
-        :warn_on_redirect => true,
-        :raise_on_401 => false,
-        :timeout => 60,
-        :ignore_bad_data => false,
-        :grammar => 'fmresultset'
-      }   #.merge(options)
+			#   @defaults = {
+			#     :host => 'localhost',
+			#     :port => 80,
+			#     :ssl => true,
+			#     :root_cert => true,
+			#     :root_cert_name => '',
+			#     :root_cert_path => '/',
+			#     :account_name => '',
+			#     :password => '',
+			#     :log_actions => false,
+			#     :log_responses => false,
+			#     :log_parser => false,
+			#     :warn_on_redirect => true,
+			#     :raise_on_401 => false,
+			#     :timeout => 60,
+			#     :ignore_bad_data => false,
+			#     :grammar => 'fmresultset'
+			#   }   #.merge(options)
       
       @databases = Rfm::Factory::DbFactory.new(self)
     end
@@ -255,8 +249,13 @@ module Rfm
     # Legacy Rfm method to get/create databases from server object
     alias_method :db, :databases
     
+    def config(*args)
+    	super(*args, :capture_strings_with=>[:host, :account_name, :password])
+    end
+    
     def state(*args)
-    	@defaults.merge(get_config(*args))
+    	#@defaults.merge(get_config(*args))
+    	get_config(*args)
     end
     
 	  def host_name; state[:host]; end

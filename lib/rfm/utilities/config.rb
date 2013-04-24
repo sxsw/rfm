@@ -26,9 +26,10 @@ module Rfm
 			parent
 			grammar
 			field_mapping
+			capture_strings_with
 		)
 		
-		CONFIG_DONT_STORE = %w(strings using parents symbols objects)
+		CONFIG_DONT_STORE = %w(strings using parents symbols objects capture_strings_with)
 
 	# Top level config hash accepts any defined config parameters,
 	# or group-name keys pointing to config subsets.
@@ -59,6 +60,7 @@ module Rfm
 	  def config(*args, &block)
 	  	#opt = args.rfm_extract_options!
 	  	@config ||= {}
+	  	return @config if args.empty?
 			#config_write(opt, args, &block)
 			config_write(*args, &block)
 			@config
@@ -68,6 +70,7 @@ module Rfm
 	  def config_clear(*args)
 	  	#opt = args.rfm_extract_options!
 	  	@config = {}
+	  	return @config if args.empty?
 			#config_write(opt, args)
 			config_write(*args)
 			@config
@@ -141,9 +144,10 @@ module Rfm
 	  def config_write(*args)   #(opt, args)
 	  	options = config_extract_options!(*args)
 	  	options[:symbols].each{|a| @config.merge!(:use=>a.to_sym)}
+	  	#puts "config_write #{args.to_yaml}"
 	  	@config.merge!(options[:hash]).reject! {|k,v| CONFIG_DONT_STORE.include? k.to_s}
-	  	options[:capture_strings_with].rfm_force_array.each do |label|
-	  		string = (options[:strings].delete_at(0) || options[:hash][label] )
+	  	options[:hash][:capture_strings_with].rfm_force_array.each do |label|
+	  		string = options[:strings].delete_at(0)
 	  		(@config[label] = string) if string
 	  	end
 	  	parent = (options[:objects].delete_at(0) || options[:hash][:parent])

@@ -67,13 +67,13 @@ module Rfm
     #
     # This sample code gets a database object representing the Customers database on the FileMaker server.
     def initialize(*args) #name, server_obj, acnt=nil, pass=nil
-    	# Make this block it's own method. See base.rb 'def config()...'
-			config(*args) do |options|
-				@config[:parent] = (options[:objects].delete_at(0) || options[:hash][:parent] || 'Rfm::Config').to_s
-	    	@config[:database]= options[:strings].delete_at(0) || options[:hash][:database]
-	    	@config[:account_name]= options[:strings].delete_at(0) || options[:hash][:account_name]
-	    	@config[:password]= options[:strings].delete_at(0) || options[:hash][:password]
-	    end
+			config(*args)
+			# config(*args) do |options|
+			# 	@config[:parent] = (options[:objects].delete_at(0) || options[:hash][:parent] || 'Rfm::Config').to_s
+			# 	@config[:database]= options[:strings].delete_at(0) || options[:hash][:database]
+			# 	@config[:account_name]= options[:strings].delete_at(0) || options[:hash][:account_name]
+			# 	@config[:password]= options[:strings].delete_at(0) || options[:hash][:password]
+			# end
 
       raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Database has no name. Attempted name '#{state[:database]}'.") if state[:database].to_s == ''
             
@@ -94,6 +94,10 @@ module Rfm
     def account_name=(x); config :account_name=>x; end
     def password; state[:password]; end
     def password=(x); config :password=>x; end
+    
+    def config(*args)
+    	super(*args, :capture_strings_with=>[:database, :account_name, :password])
+    end
     
 		def state(*args)
 			get_config(*args)
