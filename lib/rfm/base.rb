@@ -74,7 +74,7 @@ module Rfm
 			end
 		  
 	    def config(*args)
-	    	super(*args){|strings| @config.merge!(:layout=>strings[0]) if strings[0]}
+	    	super(*args){|options| @config.merge!(:layout=>options[:strings][0]) if options[:strings] && options[:strings][0]}
 	    end
 		  		  			
 			# Access/create the layout object associated with this model
@@ -90,7 +90,7 @@ module Rfm
 	  		#config :parent=>'parent_layout'
 	  		#config :parent=>'Rfm::Config'
 	  		#@layout.config :parent=>'model'
-	  		@layout.config :parent=>self
+	  		@layout.config :parent=>self.to_s
 	  		
 				@layout.model = self
 				@layout

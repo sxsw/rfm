@@ -202,16 +202,14 @@ module Rfm
     	s
     end
     def initialize(*args)
-    	options = get_config(*args)
-    	config :parent => (options[:objects].delete_at(0) || options[:parent] || 'Rfm::Config')
-    	config(*args)
-    	
-    	options = get_config(*args)
-    	config :host => (options[:strings].delete_at(0) || options[:host] )
-    	config :account_name => (options[:strings].delete_at(0) || options[:account_name] )
-    	config :password => (options[:strings].delete_at(0) || options[:password] )
-    	
- 	
+    	# Make this block it's own method. See base.rb 'def config()...'
+			config(*args, *{:capture_strings_with=>[:host, :account_name, :password]}) do |options|
+			# 	@config[:parent] = (options[:objects].delete_at(0) || options[:hash][:parent] || 'Rfm::Config').to_s
+			# 	@config[:host] = (options[:strings].delete_at(0) || options[:hash][:host] )
+			# 	@config[:account_name] = (options[:strings].delete_at(0) || options[:hash][:account_name] )
+			# 	@config[:password] = (options[:strings].delete_at(0) || options[:hash][:password] )
+	    end
+
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{config[:host]}'.") if config[:host].to_s == ''
       
       @defaults = {

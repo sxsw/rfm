@@ -57,17 +57,19 @@ module Rfm
 	  #    Factory.layout 'my_layout', :my_group  # to get a layout from settings in :my_group
 	  #
 	  def config(*args, &block)
-	  	opt = args.rfm_extract_options!
+	  	#opt = args.rfm_extract_options!
 	  	@config ||= {}
-			config_write(opt, args, &block)
+			#config_write(opt, args, &block)
+			config_write(*args, &block)
 			@config
 	  end
 	  
 	  # Sets @config just as above config method, but clears @config first.
 	  def config_clear(*args)
-	  	opt = args.rfm_extract_options!
+	  	#opt = args.rfm_extract_options!
 	  	@config = {}
-			config_write(opt, args)
+			#config_write(opt, args)
+			config_write(*args)
 			@config
 	  end
 	  
@@ -86,19 +88,20 @@ module Rfm
   	def get_config(*arguments)
   		args = arguments.clone
   		@config ||= {}
-  		opt = args.rfm_extract_options!
-  		strings = opt[:strings].rfm_force_array || []
-  		symbols = opt[:use].rfm_force_array || []
-  		objects = opt[:objects].rfm_force_array || []
-  		args.each do |arg|
-  			case true
-  			when arg.is_a?(String) ; strings << arg
-  			when arg.is_a?(Symbol) ; symbols << arg
-  			else objects.unshift arg
-  			end
-  		end
+  		#opt = args.rfm_extract_options!
+  		options = config_extract_options!(*args)
+  		strings = options[:strings].rfm_force_array || []
+  		symbols = options[:symbols].rfm_force_array.concat(options[:hash][:use].rfm_force_array) || []
+  		objects = options[:objects].rfm_force_array || []
+			# 	args.each do |arg|
+			# 		case true
+			# 		when arg.is_a?(String) ; strings << arg
+			# 		when arg.is_a?(Symbol) ; symbols << arg
+			# 		else objects.unshift arg
+			# 		end
+			# 	end
 
-			rslt = config_merge_with_parent(symbols).merge(opt)
+			rslt = config_merge_with_parent(symbols).merge(options[:hash])
 			#using = rslt[:using].rfm_force_array
 			sanitize_config(rslt, CONFIG_DONT_STORE, false)
 			rslt[:using].delete ""
@@ -135,11 +138,17 @@ module Rfm
 		# Merge args into @config, as :use=>[arg1, arg2, ...]
 		# Then merge optional config hash into @config.
 		# Pass in a block to use with strings in args. See base.rb.
-	  def config_write(opt, args)
-	  	strings = []; while args[0].is_a?(String) do; strings << args.shift; end
-	  	args.each{|a| @config.merge!(:use=>a.to_sym)}
-	  	@config.merge!(opt).reject! {|k,v| CONFIG_DONT_STORE.include? k.to_s}
-	  	yield(strings) if block_given?
+	  def config_write(*args)   #(opt, args)
+	  	options = config_extract_options!(*args)
+	  	options[:symbols].each{|a| @config.merge!(:use=>a.to_sym)}
+	  	@config.merge!(options[:hash]).reject! {|k,v| CONFIG_DONT_STORE.include? k.to_s}
+	  	options[:capture_strings_with].rfm_force_array.each do |label|
+	  		string = (options[:strings].delete_at(0) || options[:hash][label] )
+	  		(@config[label] = string) if string
+	  	end
+	  	parent = (options[:objects].delete_at(0) || options[:hash][:parent])
+  		(@config[:parent] = parent) if parent
+	  	yield(options) if block_given?
 	  end
 	  	
 	  # Get composite config from all levels, processing :use parameters at each level

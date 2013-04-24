@@ -169,23 +169,14 @@ module Rfm
     #   myLayout = myServer["Customers"]["Details"]
     def initialize(*args) #name, db_obj
     	self.subs ||= []
-    	options = get_config(*args)
-    	config :parent => (options[:objects].delete_at(0) || options[:parent] || 'Rfm::Config')
-    	config(*args)
-    	
-			# 	options = get_config(*args)
-			# 	rfm_metaclass.instance_variable_set :@db, options[:database_object]    # (options[:objects].delete_at(0) || options[:database_object])
-			# 	#config :parent=> 'db'
-			# 	config :parent => options[:objects].delete_at(0) || options[:parent]
-			# 	options = get_config(*options)
-			# 	#config sanitize_config(options, {}, true)
-			
-			options = get_config *args
-    	config :layout => options[:strings].delete_at(0) || options[:layout]
-    
-    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''
-                  
+    	# Make this block it's own method. See base.rb 'def config()...'
+			config(*args) do |options|
+				@config[:parent] = (options[:objects].delete_at(0) || options[:hash][:parent] || 'Rfm::Config').to_s
+	    	@config[:layout] = (options[:strings].delete_at(0) || options[:hash][:layout]).to_s
+	    end
+    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''         
       @loaded = false
+      self
     end
 
     
