@@ -122,7 +122,7 @@ module Rfm
   class Layout
 	  include Config
 
-    meta_attr_reader :db
+    meta_attr_accessor :db
     attr_reader :field_mapping
     attr_writer :resultset_meta          #:field_names, :portal_meta, :table
     def_delegator :db, :server
@@ -169,16 +169,20 @@ module Rfm
     #   myLayout = myServer["Customers"]["Details"]
     def initialize(*args) #name, db_obj
     	self.subs ||= []
-    	# Make this block it's own method. See base.rb 'def config()...'
-			config(*args) do |options|
-				@config[:parent] = (options[:objects].delete_at(0) || options[:hash][:parent] || 'Rfm::Config').to_s
-	    	@config[:layout] = (options[:strings].delete_at(0) || options[:hash][:layout]).to_s
-	    end
+			config(*args)
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''         
       @loaded = false
       self
     end
 
+    def config(*args)
+    	super(*args, :capture_strings_with=>[:layout])
+    end
+    
+    alias_method :db_orig, :db
+  	def db
+  		db_orig || (self.db = Rfm::Database.new(state[:database], state[:account_name], state[:password], self))
+  	end
     
     # These methods are to be inclulded in Layout and SubLayout, so that
     # they have their own discrete 'self' in the master class and the subclass.

@@ -1,35 +1,35 @@
 module Rfm
 
-  	# Should these go in Rfm module?
-  	CONFIG_KEYS = %w(
-			file_name
-			file_path
-			parser
-			host
-			port
-			account_name
-			password
-			database
-			layout
-			ignore_bad_data
-			ssl
-			root_cert
-			root_cert_name
-			root_cert_path
-			warn_on_redirect
-			raise_on_401
-			timeout
-			log_actions
-			log_responses
-			log_parser
-			use
-			parent
-			grammar
-			field_mapping
-			capture_strings_with
-		)
-		
-		CONFIG_DONT_STORE = %w(strings using parents symbols objects capture_strings_with)
+	# Should these go in Rfm module?
+	CONFIG_KEYS = %w(
+		file_name
+		file_path
+		parser
+		host
+		port
+		account_name
+		password
+		database
+		layout
+		ignore_bad_data
+		ssl
+		root_cert
+		root_cert_name
+		root_cert_path
+		warn_on_redirect
+		raise_on_401
+		timeout
+		log_actions
+		log_responses
+		log_parser
+		use
+		parent
+		grammar
+		field_mapping
+		capture_strings_with
+	)
+	
+	CONFIG_DONT_STORE = %w(strings using parents symbols objects capture_strings_with)
 
 	# Top level config hash accepts any defined config parameters,
 	# or group-name keys pointing to config subsets.
@@ -58,20 +58,16 @@ module Rfm
 	  #    Factory.layout 'my_layout', :my_group  # to get a layout from settings in :my_group
 	  #
 	  def config(*args, &block)
-	  	#opt = args.rfm_extract_options!
 	  	@config ||= {}
 	  	return @config if args.empty?
-			#config_write(opt, args, &block)
 			config_write(*args, &block)
 			@config
 	  end
 	  
 	  # Sets @config just as above config method, but clears @config first.
 	  def config_clear(*args)
-	  	#opt = args.rfm_extract_options!
 	  	@config = {}
 	  	return @config if args.empty?
-			#config_write(opt, args)
 			config_write(*args)
 			@config
 	  end
@@ -91,18 +87,10 @@ module Rfm
   	def get_config(*arguments)
   		args = arguments.clone
   		@config ||= {}
-  		#opt = args.rfm_extract_options!
   		options = config_extract_options!(*args)
   		strings = options[:strings].rfm_force_array || []
   		symbols = options[:symbols].rfm_force_array.concat(options[:hash][:use].rfm_force_array) || []
   		objects = options[:objects].rfm_force_array || []
-			# 	args.each do |arg|
-			# 		case true
-			# 		when arg.is_a?(String) ; strings << arg
-			# 		when arg.is_a?(Symbol) ; symbols << arg
-			# 		else objects.unshift arg
-			# 		end
-			# 	end
 
 			rslt = config_merge_with_parent(symbols).merge(options[:hash])
 			#using = rslt[:using].rfm_force_array
@@ -144,7 +132,6 @@ module Rfm
 	  def config_write(*args)   #(opt, args)
 	  	options = config_extract_options!(*args)
 	  	options[:symbols].each{|a| @config.merge!(:use=>a.to_sym)}
-	  	#puts "config_write #{args.to_yaml}"
 	  	@config.merge!(options[:hash]).reject! {|k,v| CONFIG_DONT_STORE.include? k.to_s}
 	  	options[:hash][:capture_strings_with].rfm_force_array.each do |label|
 	  		string = options[:strings].delete_at(0)
@@ -163,7 +150,6 @@ module Rfm
       		when !@config[:parent].nil?; @config[:parent]
       		else eval('Rfm::Config')
       	end
-      	#puts "config_merge_with_parent: self '#{self.to_s}' parent '#{parent.to_s}'"
       	parent.config_merge_with_parent
       	#eval(@config[:parent] || 'Rfm::Config').config_merge_with_parent rescue {}
       else
@@ -182,8 +168,8 @@ module Rfm
 			rslt.delete :parent
 			
 			rslt
-			# rescue
-			# 	puts "Config#config_merge_with_parent for '#{self.class}' falied with #{$1}"
+		rescue
+			puts "Config#config_merge_with_parent for '#{self.class}' falied with #{$1}"
     end
      
 		# Returns a configuration hash overwritten by :use filters in the hash

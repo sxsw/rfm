@@ -107,7 +107,6 @@ module Rfm
   # * *name* is the name of this database
   # * *state* is a hash of all server options used to initialize this server
   class Server
-    #extend Config
     include Config
     
   
@@ -195,36 +194,9 @@ module Rfm
     #            :root_cert_name => 'example.pem'
     #            :root_cert_path => '/usr/cert_file/'
     #            })
-    def self.new(*args)
-    	puts caller.first
-    	s = allocate
-    	s.send :initialize, *args
-    	s
-    end
     def initialize(*args)
     	config(*args)
-
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{get_config[:host]}'.") if get_config[:host].to_s == ''
-      
-			#   @defaults = {
-			#     :host => 'localhost',
-			#     :port => 80,
-			#     :ssl => true,
-			#     :root_cert => true,
-			#     :root_cert_name => '',
-			#     :root_cert_path => '/',
-			#     :account_name => '',
-			#     :password => '',
-			#     :log_actions => false,
-			#     :log_responses => false,
-			#     :log_parser => false,
-			#     :warn_on_redirect => true,
-			#     :raise_on_401 => false,
-			#     :timeout => 60,
-			#     :ignore_bad_data => false,
-			#     :grammar => 'fmresultset'
-			#   }   #.merge(options)
-      
       @databases = Rfm::Factory::DbFactory.new(self)
     end
    	

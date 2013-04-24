@@ -26,15 +26,6 @@ module Rfm
 				#   super(host).config(options) if (options)
 				#   super(host)
       end
-			
-			# Potential refactor
-			# 		def [](*conf)
-			# 			options = Factory.get_config(*conf)
-			#   		server_name = options[:strings][0] || options[:host]
-			#   		options[:host] = server_name
-			# 			#server = servers[server_name, options]
-			# 			super(server_name) or (self[server_name] = Rfm::Server.new(options.reject{|k,v| [:account_name, :password].include? k}))
-			# 		end
     
     end # ServerFactory
     
@@ -194,37 +185,19 @@ module Rfm
     
 	  	# Returns Rfm::Server instance, given config hash or array
 	  	def server(*conf)
-	  		#options = get_config(*conf)
-	  		#host = options[:strings].delete_at(0) || options[:host]
-				#server = servers[server_name, options]
-				# These disconnect servers from the ServerFactory hash, but it breaks the ActiveModel spec suite.
-				#Rfm::Server.new(server_name, options.rfm_filter(:account_name, :password, :delete=>true))
 				Server.new(*conf)
 		  end
-			# Potential refactor
-			#def_delegator 'Rfm::Factory::ServerFactory', :[], :server  #, :[]
 	  
 		  # Returns Rfm::Db instance, given config hash or array
 		  def db(*conf)
-			# 	options = get_config(*conf)
-			# 	name = options[:strings].delete_at(0) || options[:database]
-			# 	account_name = options[:strings].delete_at(0) || options[:account_name]
-			# 	password = options[:strings].delete_at(0) || options[:password]
-			# 	s = server(options)
-			# 	#puts "Creating db object in Factory.db. Options: #{options.to_yaml}"
-			# 	s[name, account_name, password, options]
-			Database.new(*conf)
+				Database.new(*conf)
 		  end
 		  
 		  alias_method :database, :db
 		  
 		  # Returns Rfm::Layout instance, given config hash or array
 	  	def layout(*conf)
-			# 	options = get_config(*conf)
-			# 	name = options[:strings].delete_at(0) || options[:layout]
-			# 	d = db(options)
-			# 	d[name, options]
-			Layout.new(*conf)
+				Layout.new(*conf)
 	  	end
 
     end # class << self
