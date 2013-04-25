@@ -262,18 +262,5 @@ module Rfm
     #     { :max_records => 20 }
     #   )
     
-#     def connect(account_name, password, action, args, options = {})
-#     	grammar_option = options.delete(:grammar)
-#       post = args.merge(expand_options(options)).merge({action => ''})
-#       grammar = select_grammar(post, :grammar=>grammar_option)
-#       http_fetch(host_name, port, "/fmi/xml/#{grammar}.xml", account_name, password, post)
-#     end
-    
-#     def connect(action, params, request_options, *args)
-#     	options = get_config(*args)
-#     	parent = (options[:objects].delete_at(0) || options[:parent] || self
-#       Connection.new(action, params, request_options, parent, *options)
-#     end
-    
   end
 end

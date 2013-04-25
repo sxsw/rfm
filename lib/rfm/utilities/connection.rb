@@ -19,10 +19,7 @@ module Rfm
   	include Config  	
   
 		def initialize(action, params, request_options={},  *args)
-    	#config :parent => 'Rfm::Config'
-    	options = get_config(*args)
-    	config :parent => (options[:objects].delete_at(0) || options[:parent] || 'Rfm::Config')
-    	#config sanitize_config(options, {}, true)
+    	config *args
       
       @action = action
       @params = params

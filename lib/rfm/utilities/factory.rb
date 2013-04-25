@@ -51,15 +51,14 @@ module Rfm
       
       def all
         if !@loaded
-					c = Connection.new('-dbnames', {}, {:grammar=>'FMPXMLRESULT'}, :parent=>@server)
-					c.parse('fmpxml_databases.yml', {})['DATA'].each{|k,v| self[k] = Rfm::Database.new(v['text'], @server)}
+					c = Connection.new('-dbnames', {}, {:grammar=>'FMPXMLRESULT'}, @server)
+					c.parse('fmpxml_minimal.yml', {})['DATA'].each{|k,v| self[k] = Rfm::Database.new(v['text'], @server) if v['text']}
           @loaded = true
         end
         self
       end
       
       def names
-      	#keys
       	self.values.collect{|v| v.name}
       end
     
@@ -86,33 +85,15 @@ module Rfm
       
       def all
         if !@loaded
-# 	        get_layout_names.each {|record|
-# 	          name = record['LAYOUT_NAME']
-# 	        	begin
-# 	          	(self[name] = Rfm::Layout.new(name, @database)) unless !self[name].nil? or name.to_s.strip == ''
-# 	          rescue
-# 	          	$stderr.puts $!
-# 	          end
-# 	        }
-					c = Connection.new('-layoutnames', {"-db" => @database.name}, {:grammar=>'FMPXMLRESULT'}, :parent=>@database)
-					#c.parse('fmpxml_layouts.yml', {})['DATA'].each{|k,v| self[k] = Rfm::Layout.new(v['text'], @database)}
-					return c.parse({}, {})  #['DATA'].each{|k,v| self[k] = Rfm::Layout.new(v['text'], @database)}
+					c = Connection.new('-layoutnames', {"-db" => @database.name}, {:grammar=>'FMPXMLRESULT'}, @database)
+					c.parse('fmpxml_minimal.yml', {})['DATA'].each{|k,v| self[k] = Rfm::Layout.new(v['text'], @database) if v['text']}
           @loaded = true
         end
         self
       end
-      
-      def get_layout_names_xml
-      	@server.connect(@database.account_name, @database.password, '-layoutnames', {"-db" => @database.name})
-      end
-      
-      def get_layout_names
-      	#Rfm::Resultset.new(@server, get_layout_names_xml.body, nil)
-      	Rfm::Resultset.new(get_layout_names_xml.body, :database_object => @database)
-      end
     
     	def names
-    		keys
+    		values.collect{|v| v.name}
     	end
     	
     	# Acquired from Rfm::Base
@@ -149,18 +130,15 @@ module Rfm
       
       def all
         if !@loaded
-        	xml = @server.connect(@database.account_name, @database.password, '-scriptnames', {"-db" => @database.name}).body
-          Rfm::Resultset.new(xml, :database_object => @database).each {|record|
-            name = record['SCRIPT_NAME']
-            self[name] = Rfm::Metadata::Script.new(name, @database) if self[name] == nil
-          }
+					c = Connection.new('-scriptnames', {"-db" => @database.name}, {:grammar=>'FMPXMLRESULT'}, @database)
+					c.parse('fmpxml_minimal.yml', {})['DATA'].each{|k,v| self[k] = Rfm::Metadata::Script.new(v['text'], @database) if v['text']}
           @loaded = true
         end
         self
       end
  
  			def names
- 				keys
+ 				values.collect{|v| v.name}
  			end
     
     end # ScriptFactory
