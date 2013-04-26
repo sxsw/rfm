@@ -196,7 +196,7 @@ module Rfm
     #            })
     def initialize(*args)
     	config(*args)
-    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{get_config[:host]}'.") if get_config[:host].to_s == ''
+    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{state[:host]}'.") if state[:host].to_s == ''
       @databases = Rfm::Factory::DbFactory.new(self)
     end
    	
@@ -226,7 +226,6 @@ module Rfm
     end
     
     def state(*args)
-    	#@defaults.merge(get_config(*args))
     	get_config(*args)
     end
     

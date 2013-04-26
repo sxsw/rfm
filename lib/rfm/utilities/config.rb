@@ -128,14 +128,14 @@ module Rfm
 	  
 		# Merge args into @config, as :use=>[arg1, arg2, ...]
 		# Then merge optional config hash into @config.
-		# Pass in a block to use with strings in args. See base.rb.
+		# Pass in a block to use with parsed config in args.
 	  def config_write(*args)   #(opt, args)
 	  	options = config_extract_options!(*args)
 	  	options[:symbols].each{|a| @config.merge!(:use=>a.to_sym)}
 	  	@config.merge!(options[:hash]).reject! {|k,v| CONFIG_DONT_STORE.include? k.to_s}
 	  	options[:hash][:capture_strings_with].rfm_force_array.each do |label|
 	  		string = options[:strings].delete_at(0)
-	  		(@config[label] = string) if string
+	  		(@config[label] = string) if string && !string.empty?
 	  	end
 	  	parent = (options[:objects].delete_at(0) || options[:hash][:parent])
   		(@config[:parent] = parent) if parent
