@@ -176,7 +176,9 @@ module Rfm
     end
 
     def config(*args)
-    	super(*args, :capture_strings_with=>[:layout])
+    	super(*args, :capture_strings_with=>[:layout]) do |params|
+    		(self.db = params[:objects][0]) if params && params[:objects] && params[:objects][0] && params[:objects][0].is_a?(Rfm::Database)
+    	end
     end
     
     alias_method :db_orig, :db
