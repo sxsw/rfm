@@ -80,7 +80,9 @@ task :profile_sax do
 	@data = 'spec/data/resultset_large.xml'
 	result = RubyProf.profile do
 		# The parser will choose the best available backend.
-		Rfm::SaxParser.parse(@data, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new).result
+		rr = Rfm::SaxParser.parse(@data, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new).result
+		puts rr.class
+		puts rr.size
 	end
 	# Print a flat profile to text
 	printer = RubyProf::FlatPrinter.new(result)

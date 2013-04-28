@@ -22,9 +22,11 @@ elements:
 - name:  metadata
   attach: none
 - name: field_definition
+  class: Rfm::Metadata::Field
   delineate_with_hash: name
   as_name: field_meta
   attach: shared
+  attach_attributes: instance
 - name: relatedset_definition
   delineate_with_hash: table
   as_name: portal_meta

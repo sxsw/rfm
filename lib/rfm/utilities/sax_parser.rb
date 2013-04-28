@@ -686,6 +686,7 @@ end # Rfm
 
 class Object
 
+	# Master method to attach any object to this object.
 	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
 		default_options = {
 			:shared_variable_name => 'attributes',
@@ -698,6 +699,7 @@ class Object
 		delimiter = (args[1] || options[:delimiter])
 		prefs = (args[2] || options[:prefs])
 		type = (args[3] || options[:type])
+		#puts [self.class, obj.class, name, delimiter, prefs, type].join(', ')
 		case
 		when prefs=='none' || prefs=='cursor'; nil
 		when name
@@ -707,6 +709,7 @@ class Object
 		end
 	end
 	
+	# Master method to merge any object with this object
 	def _merge_object!(obj, name, delimiter, prefs, type, options={})
 		if prefs=='instance'
 			_merge_instance!(obj, name, delimiter, prefs, type, options)
@@ -715,8 +718,10 @@ class Object
 		end
 	end
 	
+	# Merge a named object with the shared instance variable of self.
 	def _merge_shared!(obj, name, delimiter, prefs, type, options={})
 		shared_var = instance_variable_get("@#{options[:shared_variable_name]}") || instance_variable_set("@#{options[:shared_variable_name]}", options[:default_class].new)
+		#puts "Merge shared: self '#{self.class}' obj '#{obj.class}' name '#{name}' delimiter '#{delimiter}' type '#{type}' shared_var '#{options[:shared_variable_name]} - #{shared_var.class}'"
 		#eval("@#{options[:shared_variable_name]} ||= #{options[:default_class].new}")._merge_object!(obj, name, delimiter, nil, type, options)
 		shared_var._merge_object!(obj, name, delimiter, nil, type, options)
 		if options[:create_accessors] == :all || options[:create_accessors] == :shared
@@ -725,6 +730,7 @@ class Object
 		end
 	end
 	
+	# Merge a named object with the specified instance variable of self.
 	def _merge_instance!(obj, name, delimiter, prefs, type, options={})
 		if instance_variable_get("@#{name}") || delimiter
 			if delimiter
@@ -742,12 +748,19 @@ class Object
 		end
 	end
 	
+	# Get an instance variable, a member of a shared instance variable, or a hash value of self.
   def _get_attribute(name, shared=nil, options={})
   	return unless name
   	(shared = options[:shared_variable_name]) unless shared
-		( respond_to?(:has_key?) && has_key?(name) && self[name] ) ||
-		( (var= instance_variable_get("@#{shared}")) && var[name] ) ||
-		instance_variable_get("@#{name}")
+		
+		rslt = case
+		when self.is_a?(Hash); self[name]
+		when (var= instance_variable_get("@#{shared}")); var[name]
+		else instance_variable_get("@#{name}")
+		end
+		
+		puts "Object#_get_attribute: name '#{name}' shared '#{shared}' options '#{options}' rslt '#{rslt}'"
+		rslt
   end
 
 end # Object
@@ -772,7 +785,8 @@ class Hash
 			_merge_instance!(obj, name, delimiter, prefs, type, options)
 		when (self[name] || delimiter)
 			if delimiter
-				delimit_name =  obj._get_attribute(delimiter)
+				delimit_name =  obj._get_attribute(delimiter, options[:shared_variable_name])
+				puts "merging delimited object with hash: self '#{self.class}' obj '#{obj.class}' name '#{name}' delim '#{delimiter}' delim_name '#{delimit_name}' options '#{options}'"
 				self[name] ||= options[:default_class].new
 				self[name][delimit_name]=obj
 			else
