@@ -691,7 +691,7 @@ class Object
 		default_options = {
 			:shared_variable_name => 'attributes',
 			:default_class => Hash,
-			:create_accessors => nil #:all, :private, :shared
+			:create_accessors => [] #:all, :private, :shared, :hash
 		}
 		options = default_options.merge(args.last.is_a?(Hash) ? args.pop : {})
 		#puts "base '#{self.class}' obj '#{obj.class}' name '#{args[0]}' delim '#{args[1]}' prefs '#{args[2]}' type '#{args[3]}'"
@@ -724,7 +724,7 @@ class Object
 		#puts "Merge shared: self '#{self.class}' obj '#{obj.class}' name '#{name}' delimiter '#{delimiter}' type '#{type}' shared_var '#{options[:shared_variable_name]} - #{shared_var.class}'"
 		#eval("@#{options[:shared_variable_name]} ||= #{options[:default_class].new}")._merge_object!(obj, name, delimiter, nil, type, options)
 		shared_var._merge_object!(obj, name, delimiter, nil, type, options)
-		if options[:create_accessors] == :all || options[:create_accessors] == :shared
+		if (options[:create_accessors] & [:all, :shared]).size > 0
 			meta = (class << self; self; end)
 			meta.send(:attr_reader, options[:shared_variable_name])
 		end
@@ -742,7 +742,7 @@ class Object
 		else
 			instance_variable_set("@#{name}", obj)
 		end
-		if options[:create_accessors] == :all || options[:create_accessors] == :private
+		if (options[:create_accessors] & [:all, :private]).size > 0
 			meta = (class << self; self; end)
 			meta.send(:attr_reader, name.downcase.gsub(/\s/,'_'))
 		end
@@ -796,7 +796,7 @@ class Hash
 		else
 			self[name] = obj
 		end
-		if options[:create_accessors] == :all || options[:create_accessors] == :hash
+		if (options[:create_accessors] & [:all, :hash]).size > 0
 			meta = (class << self; self; end)
 			meta.send(:define_method, name.downcase.gsub(/\s/,'_')) do
 				self[name.downcase.gsub(/\s/,'_')] = obj
