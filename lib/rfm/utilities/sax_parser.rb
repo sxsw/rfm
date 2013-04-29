@@ -759,7 +759,7 @@ class Object
 		else instance_variable_get("@#{name}")
 		end
 		
-		puts "Object#_get_attribute: name '#{name}' shared '#{shared}' options '#{options}' rslt '#{rslt}'"
+		#puts "Object#_get_attribute: name '#{name}' shared '#{shared}' options '#{options}' rslt '#{rslt}'"
 		rslt
   end
 
@@ -786,7 +786,7 @@ class Hash
 		when (self[name] || delimiter)
 			if delimiter
 				delimit_name =  obj._get_attribute(delimiter, options[:shared_variable_name])
-				puts "merging delimited object with hash: self '#{self.class}' obj '#{obj.class}' name '#{name}' delim '#{delimiter}' delim_name '#{delimit_name}' options '#{options}'"
+				#puts "merging delimited object with hash: self '#{self.class}' obj '#{obj.class}' name '#{name}' delim '#{delimiter}' delim_name '#{delimit_name}' options '#{options}'"
 				self[name] ||= options[:default_class].new
 				self[name][delimit_name]=obj
 			else

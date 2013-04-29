@@ -74,24 +74,39 @@ module Rfm
       # Coerces the text value from an +fmresultset+ document into proper Ruby types based on the 
       # type of the field. You'll never need to do this: Rfm does it automatically for you when you
       # access field data through the Record object.
-      def coerce(value, resultset)
+			#   def coerce(value, resultset)
+			#     return nil if (value.nil? or value.empty?)
+			#     case self.result.downcase
+			#     when "text"      then value
+			#     when "number"    then BigDecimal.new(value.to_s)
+			#     when "date"      then Date.strptime(value, resultset.date_format)
+			#     when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{resultset.time_format}")
+			#     when "timestamp" then DateTime.strptime(value, resultset.timestamp_format)
+			#     when "container" then URI.parse("#{resultset.server.scheme}://#{resultset.server.host_name}:#{resultset.server.port}#{value}")
+			#     else nil
+			#     end
+			#   end
+      def coerce(name, value, resultset)
         return nil if (value.nil? or value.empty?)
-        case self.result.downcase
+        config = resultset.layout.get_config
+        case resultset.field_meta[name.to_s.downcase].result.downcase
         when "text"      then value
         when "number"    then BigDecimal.new(value.to_s)
         when "date"      then Date.strptime(value, resultset.date_format)
         when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{resultset.time_format}")
         when "timestamp" then DateTime.strptime(value, resultset.timestamp_format)
-        when "container" then URI.parse("#{resultset.server.scheme}://#{resultset.server.host_name}:#{resultset.server.port}#{value}")
+        when "container" then URI.parse("#{config[:scheme]}://#{config[:host_name]}:#{config[:port]}#{value}")
         else nil
         end
-        
+      rescue
+        puts(name, value, resultset.field_meta[name.to_s.downcase].result.downcase, resultset.timestamp_format)
+        nil
       end
-      
+            
       # This class is used temporarily to build Record, but it is not attached to the Resultset.
 			def end_element_callback(cursor)
 				#cursor.parent.object.merge!(name => data )
-				cursor.parent.object[@attributes['name'].downcase] = @attributes['data']
+				cursor.parent.object[@attributes['name'].downcase] = coerce(@attributes['name'], @attributes['data'], cursor.top.object)
 			end
       
     end # Field
