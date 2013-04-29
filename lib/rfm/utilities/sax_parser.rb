@@ -734,7 +734,7 @@ class Object
 	def _merge_instance!(obj, name, delimiter, prefs, type, options={})
 		if instance_variable_get("@#{name}") || delimiter
 			if delimiter
-				delimit_name = obj._get_attribute(delimiter, options[:shared_variable_name])
+				delimit_name = obj._get_attribute(delimiter, options[:shared_variable_name]).downcase
 				instance_variable_set("@#{name}", instance_variable_get("@#{name}") || options[:default_class].new)[delimit_name]=obj
 			else
 				instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
@@ -785,7 +785,7 @@ class Hash
 			_merge_instance!(obj, name, delimiter, prefs, type, options)
 		when (self[name] || delimiter)
 			if delimiter
-				delimit_name =  obj._get_attribute(delimiter, options[:shared_variable_name])
+				delimit_name =  obj._get_attribute(delimiter, options[:shared_variable_name]).downcase
 				#puts "merging delimited object with hash: self '#{self.class}' obj '#{obj.class}' name '#{name}' delim '#{delimiter}' delim_name '#{delimit_name}' options '#{options}'"
 				self[name] ||= options[:default_class].new
 				self[name][delimit_name]=obj

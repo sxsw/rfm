@@ -7,7 +7,6 @@
 elements:
 - name: fmresultset
   attach: none
-  #attach_attributes: shared
 - name: product
   attach: shared
 - name: error
@@ -15,10 +14,8 @@ elements:
   attributes:
   - name: code
     as_name: error
-    #attach: shared
 - name: datasource
   attach: none
-  #attach_attributes: shared
 - name:  metadata
   attach: none
 - name: field_definition
@@ -33,11 +30,13 @@ elements:
   attach: shared
   elements:
   - name: field_definition
+    class: Rfm::Metadata::Field
     delineate_with_hash: name
     as_name: field_meta
+    attach: shared
+    attach_attributes: instance
 - name: resultset
   attach: none
-  #attach_attributes: shared
 - name: record
   class: Rfm::Record
   initialize: [new, object]

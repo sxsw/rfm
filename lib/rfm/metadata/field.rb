@@ -88,14 +88,16 @@ module Rfm
 			#   end
       def coerce(name, value, resultset)
         return nil if (value.nil? or value.empty?)
-        config = resultset.layout.get_config
+        # TODO: Need access to DOCTYPE node of xml, so can get base URL, instead of looking at layout.get_config (there might be no layout or no config).
+        #config = resultset.layout.get_config
         case resultset.field_meta[name.to_s.downcase].result.downcase
         when "text"      then value
         when "number"    then BigDecimal.new(value.to_s)
         when "date"      then Date.strptime(value, convert_date_time_format(resultset.date_format))
         when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{convert_date_time_format(resultset.time_format)}")
         when "timestamp" then DateTime.strptime(value, convert_date_time_format(resultset.timestamp_format))
-        when "container" then URI.parse("#{config[:scheme]}://#{config[:host_name]}:#{config[:port]}#{value}")
+        #when "container" then URI.parse("#{config[:scheme]}://#{config[:host_name]}:#{config[:port]}#{value}")
+        when "container" then value
         else nil
         end
       rescue
@@ -117,6 +119,7 @@ module Rfm
 			def end_element_callback(cursor)
 				#cursor.parent.object.merge!(name => data )
 				cursor.parent.object[@attributes['name'].downcase] = coerce(@attributes['name'], @attributes['data'], cursor.top.object)
+				#cursor.parent.object[@attributes['name'].downcase] = @attributes['data']				
 			end
       
     end # Field

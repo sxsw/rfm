@@ -50,7 +50,7 @@ task :benchmark do
 	require 'yaml'
 	#load "spec/data/sax_models.rb"
 	@records = File.read 'spec/data/resultset_large.xml'
-	@template = {} #'lib/rfm/sax/fmresultset.yml'
+	@template = 'lib/rfm/utilities/sax/fmresultset.yml'
 	@base_class = Rfm::Resultset
 	@layout = 'spec/data/layout.xml'
 	Benchmark.bm do |b|
@@ -80,7 +80,7 @@ task :profile_sax do
 	@data = 'spec/data/resultset_large.xml'
 	result = RubyProf.profile do
 		# The parser will choose the best available backend.
-		rr = Rfm::SaxParser.parse(@data, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new).result
+		rr = Rfm::SaxParser.parse(@data, 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new).result
 		puts rr.class
 		puts rr.size
 	end
@@ -92,10 +92,10 @@ task :profile_sax do
 	printer.print(STDOUT, {})
 end
 
-desc "Profile the sax parser"
+desc "Run test data thru the sax parser"
 task :sample do
 	@records = 'spec/data/resultset_large.xml'
-	r= Rfm::SaxParser.parse(@records, 'lib/rfm/sax/fmresultset.yml', Rfm::Resultset.new).result
+	r= Rfm::SaxParser.parse(@records, 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new).result
 	puts r.to_yaml
 	puts r.field_meta.to_yaml
 end	
