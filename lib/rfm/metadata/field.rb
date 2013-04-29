@@ -99,7 +99,7 @@ module Rfm
         else nil
         end
       rescue
-        puts(name, value, resultset.field_meta[name.to_s.downcase].result.downcase, resultset.timestamp_format)
+        puts("ERROR - Field#coerce:", name, value, resultset.field_meta[name.to_s.downcase].result.downcase, $!)
         nil
       end
       
