@@ -117,7 +117,8 @@ module Rfm
             
       # This class is used temporarily to build Record, but it is not attached to the Resultset.
 			def end_element_callback(cursor)
-				#cursor.parent.object.merge!(name => data )
+				puts cursor.parent.object.class
+				puts @attributes
 				cursor.parent.object[@attributes['name'].downcase] = coerce(@attributes['name'], @attributes['data'], cursor.top.object)
 				#cursor.parent.object[@attributes['name'].downcase] = @attributes['data']				
 			end

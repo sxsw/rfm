@@ -90,39 +90,39 @@ module Rfm
 		end
 		
 		def field_meta
-			@attributes['field_meta']
+			@meta['field_meta']
 		end
 		
 		def portal_meta
-			@attributes['portal_meta']
+			@meta['portal_meta']
 		end		
 		
 		def datasource
-			@attributes['datasource']
+			@meta['datasource']
 		end
 		
 		def date_format
-			@attributes['date_format']
+			@meta['date_format']
 		end
 
 		def time_format
-			@attributes['time_format']
+			@meta['time_format']
 		end
 		
 		def timestamp_format
-			@attributes['timestamp_format']
+			@meta['timestamp_format']
 		end
 		
 		def total_count
-			@attributes['total_count']
+			@meta['total_count']
 		end		
 		
 		def foundset_count
-			@attributes['count']
+			@meta['count']
 		end
 		
 		def table
-			@attributes['table']
+			@meta['table']
 		end		
 		
         

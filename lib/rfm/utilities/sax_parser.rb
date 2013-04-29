@@ -204,6 +204,7 @@ module Rfm
 		    
 		    #####  SAX METHODS  #####
 		    
+		    # Not sure if this is still used.
 			  def receive_attribute(name, value)
 			  	#puts "Indiv attrb name '#{name}' value '#{value}' object '#{object.class}' model '#{model.keys}' subm '#{submodel.keys}' tag '#{tag}' newtag '#{newtag}'"
 			  	assign_attributes({name=>value}, object, model, model)
@@ -213,7 +214,7 @@ module Rfm
 		        
 		    def receive_start_element(_tag, _attributes)		
 		    	#puts "receive_start_element: _tag '#{_tag}', current object '#{object.class}', cursor_submodel '#{submodel.to_yaml}'."
-		    	
+		    	#puts ['START', _tag, object.class, model]
 		    	# Set newtag for other methods to use during the start_el run.
 					@newtag = _tag
 					
@@ -222,7 +223,7 @@ module Rfm
 		      
 		    	if attachment_prefs(model, subm, 'element')=='none'
 		    		#puts "Assigning attributes for attach:none on #{newtag}"
-		    		assign_attributes(_attributes, object, subm, subm)
+		    		assign_attributes(_attributes, object, model, subm)
 		    		return
 		    	end		      
 		      
@@ -287,7 +288,7 @@ module Rfm
 				def assign_attributes(_attributes, base_object, base_model, new_model)
 		      if _attributes && !_attributes.empty?
 		      	prefs_exist = model_attributes?(nil, new_model) || attach_attributes?(base_model) || delineate_with_hash?(base_model)
-		      	#puts "Attaching attributes for '#{@newtag}' with data '#{_attributes['text']}' "
+		      	#puts ['ASSIGN_ATTRIBUTES', base_object.class, base_model, new_model]
 						#_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
 						# This is trying to merge element set as a whole, if possible.
 						case
@@ -319,14 +320,21 @@ module Rfm
 					# 		when 'element'; attach?(new_model) || attach_elements?(base_model)
 					# 		when 'attribute'; attach?(new_model) || attach_attributes?(base_model)
 					# 	end
+					shared_variable_name = nil
 					
-					base_object._attach_object!(new_object, label, delineate_with_hash?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_variable_name?, :create_accessors=>create_accessors?)
+					if prefs.to_s[0,1] == "_"
+						shared_variable_name = prefs.gsub(/^_/, '')
+						prefs = "shared"
+					end
+					
+					#puts ['ATTACH_NEW_OBJECT', base_object.class, new_object.class, label, type, prefs, shared_variable_name, create_accessors?(base_model)]
+					base_object._attach_object!(new_object, label, delineate_with_hash?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_variable_name, :create_accessors=>create_accessors?(base_model))
 				end
 				
 				def attachment_prefs(base_model, new_model, type)
 					case type
-						when 'element'; attach?(new_model) || attach_elements?(base_model) || attach?(top.model) || attach_elements?(top.model)
-						when 'attribute'; attach?(new_model) || attach_attributes?(base_model) || attach?(top.model) || attach_attributes?(top.model)
+						when 'element'; attach?(new_model) || attach_elements?(base_model) #|| attach?(top.model) || attach_elements?(top.model)
+						when 'attribute'; attach?(new_model) || attach_attributes?(base_model) #|| attach?(top.model) || attach_attributes?(top.model)
 					end
 				end
 
@@ -354,8 +362,7 @@ module Rfm
 			  def delineate_with_hash?(_model=model); _model && _model['delineate_with_hash']; end
 			  def as_name?(_model=model); _model && _model['as_name']; end
 			  def initialize?(_model=model); _model && _model['initialize']; end
-			  def create_accessors?(_model=model); _model && _model['create_accessors']; end
-			  def shared_variable_name?(_model=model); _model && _model['shared_variable_name']; end
+			  def create_accessors?(_model=model); _model && [_model['create_accessors']].flatten.compact; end
 			  
 
 			  # Methods for submodel
@@ -696,13 +703,12 @@ class Object
 			:default_class => Hash,
 			:create_accessors => [] #:all, :private, :shared, :hash
 		}
-		options = default_options.merge(args.last.is_a?(Hash) ? args.pop : {}){|new,old| old || new}
-		#puts "base '#{self.class}' obj '#{obj.class}' name '#{args[0]}' delim '#{args[1]}' prefs '#{args[2]}' type '#{args[3]}'"
+		options = default_options.merge(args.last.is_a?(Hash) ? args.pop : {}){|key, old, new| new || old}
 		name = (args[0] || options[:name])
 		delimiter = (args[1] || options[:delimiter])
 		prefs = (args[2] || options[:prefs])
 		type = (args[3] || options[:type])
-		#puts [self.class, obj.class, name, delimiter, prefs, type].join(', ')
+		#puts ['_ATTACH_OBJECT', self.class, obj.class, name, type, prefs, options[:shared_variable_name], options[:create_accessors]]
 		case
 		when prefs=='none' || prefs=='cursor'; nil
 		when name
