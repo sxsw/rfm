@@ -2,14 +2,16 @@
 # YAML structure defining a SAX xml parsing scheme/fmp-grammar.
 
 
-# This is for dynamic shared instance variables and dynamic accessors.
+# This is for dynamic shared instance variables.
 ---
 attach_elements: _meta
 attach_attributes: _meta
-create_accessors: shared
+#create_accessors: all
+#before_close: :end_element_callback
 elements:
 - name: fmresultset
   attach: none
+  #before_close: :end_element_callback
 - name: product
 - name: error
   attach: none
@@ -18,6 +20,7 @@ elements:
     as_name: error
 - name: datasource
   attach: none
+  before_close: :end_element_callback
 - name:  metadata
   attach: none
 - name: field_definition
@@ -48,7 +51,7 @@ elements:
     class: Rfm::Metadata::Field
     compact: true
     attach: cursor
-    before_close: :end_element_callback
+    before_close: :end_data_callback
   - name: relatedset
     class: Array
     as_name: portals
@@ -65,7 +68,7 @@ elements:
         compact: true
         class: Rfm::Metadata::Field
         attach: cursor
-        before_close: :end_element_callback
+        before_close: :end_data_callback
 
 
 

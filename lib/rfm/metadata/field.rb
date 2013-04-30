@@ -93,9 +93,9 @@ module Rfm
         case resultset.field_meta[name.to_s.downcase].result.downcase
         when "text"      then value
         when "number"    then BigDecimal.new(value.to_s)
-        when "date"      then Date.strptime(value, convert_date_time_format(resultset.date_format))
-        when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{convert_date_time_format(resultset.time_format)}")
-        when "timestamp" then DateTime.strptime(value, convert_date_time_format(resultset.timestamp_format))
+        when "date"      then Date.strptime(value, resultset.date_format)
+        when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{resultset.time_format}")
+        when "timestamp" then DateTime.strptime(value, resultset.timestamp_format)
         #when "container" then URI.parse("#{config[:scheme]}://#{config[:host_name]}:#{config[:port]}#{value}")
         when "container" then value
         else nil
@@ -105,21 +105,23 @@ module Rfm
         nil
       end
       
-		  def convert_date_time_format(fm_format)
-		    fm_format.gsub!('MM', '%m')
-		    fm_format.gsub!('dd', '%d')
-		    fm_format.gsub!('yyyy', '%Y')
-		    fm_format.gsub!('HH', '%H')
-		    fm_format.gsub!('mm', '%M')
-		    fm_format.gsub!('ss', '%S')
-		    fm_format
-		  end
+# 		  def convert_date_time_format(fm_format)
+# 		    fm_format.gsub!('MM', '%m')
+# 		    fm_format.gsub!('dd', '%d')
+# 		    fm_format.gsub!('yyyy', '%Y')
+# 		    fm_format.gsub!('HH', '%H')
+# 		    fm_format.gsub!('mm', '%M')
+# 		    fm_format.gsub!('ss', '%S')
+# 		    fm_format
+# 		  end
             
       # This class is used temporarily to build Record, but it is not attached to the Resultset.
-			def end_element_callback(cursor)
-				puts cursor.parent.object.class
-				puts @attributes
-				cursor.parent.object[@attributes['name'].downcase] = coerce(@attributes['name'], @attributes['data'], cursor.top.object)
+			def end_data_callback(cursor)
+				name = @attributes['name'].to_s
+				data = @attributes['data']
+				#puts cursor.parent.object.class
+				#puts @attributes
+				cursor.parent.object[name.downcase] = coerce(name, @attributes['data'], cursor.top.object)
 				#cursor.parent.object[@attributes['name'].downcase] = @attributes['data']				
 			end
       

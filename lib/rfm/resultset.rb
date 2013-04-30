@@ -134,6 +134,10 @@ module Rfm
   		portal_meta ? portal_meta.keys : []
   	end
   	
+  	def end_element_callback(cursor)
+  		puts "CALLBACK-RESULTSET"
+  		%w(date_format time_format timestamp_format).each{|f| convert_date_time_format(eval(f))}
+  	end
     
   private
     
@@ -141,15 +145,15 @@ module Rfm
       raise Rfm::Error.getError(code) if code != 0 && (code != 401 || raise_401)
     end
 
-		#   def convert_date_time_format(fm_format)
-		#     fm_format.gsub!('MM', '%m')
-		#     fm_format.gsub!('dd', '%d')
-		#     fm_format.gsub!('yyyy', '%Y')
-		#     fm_format.gsub!('HH', '%H')
-		#     fm_format.gsub!('mm', '%M')
-		#     fm_format.gsub!('ss', '%S')
-		#     fm_format
-		#   end
+	  def convert_date_time_format(fm_format)
+	    fm_format.gsub!('MM', '%m')
+	    fm_format.gsub!('dd', '%d')
+	    fm_format.gsub!('yyyy', '%Y')
+	    fm_format.gsub!('HH', '%H')
+	    fm_format.gsub!('mm', '%M')
+	    fm_format.gsub!('ss', '%S')
+	    fm_format
+	  end
     
   end
 end

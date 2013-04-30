@@ -118,6 +118,11 @@ require 'stringio'
 # done: Make sure Rfm::Metadata::Field is being used in portal-definitions.
 # done: Scan thru Rfm classes and use @instance variables instead of their accessors, so sax-parser does less work.
 # TODO: Change 'instance' option to 'private'. Change 'shared' to <whatever>.
+# TODO: Since unattached elements won't callback, add their callback to an array of procs on the current cursor at the beginning
+#				of the non-attached tag.
+
+
+
 
 
 module Rfm
@@ -251,18 +256,9 @@ module Rfm
 		    end # start_el
 		
 		    def receive_end_element(_tag)
-		    	#puts "End_element for tag '#{_tag}', object '#{object.class.name}'"
-		      if _tag == self.tag
-		      	begin
-		      		# Data cleaup
-							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #top.model && top.model['compact']
-							# Construct attr_accessor methods:
-							# These have been moved to core patches.
-							# 	attributes = object.instance_variables.collect{|v| v.to_s.gsub(/@/, '').to_sym}
-							# 	if attributes.size > 0
-							# 		def object.meta; (class << self; self; end); end
-							# 		object.meta.send(:attr_reader, *attributes)
-							# 	end
+		    	puts ["END_ELEMENT", _tag, object.class.name, before_close?]
+	      	begin
+		      	# if _tag == self.tag
 							# End_element_callback
 			      	if before_close?.is_a? Symbol
 			      		object.send before_close?, self
@@ -273,10 +269,19 @@ module Rfm
 							# 	if each_before_close? && object.respond_to?('each')
 							# 	  object.each{|o| o.send(each_before_close?.to_s, object)}
 							#   end
-			      rescue
-			      	puts "Error: end_element tag '#{_tag}' failed: #{$!}"
-			      end
-		        return true
+						# end
+	
+						if _tag == self.tag
+		      		# Data cleaup
+							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #top.model && top.model['compact']
+						end
+						
+						# return true only if matching tags
+						if _tag == self.tag
+							return true
+						end
+		      rescue
+		      	puts "Error: end_element tag '#{_tag}' failed: #{$!}"
 		      end
 		    end
 
