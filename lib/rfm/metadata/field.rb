@@ -101,7 +101,7 @@ module Rfm
         else nil
         end
       rescue
-        puts("ERROR - Field#coerce:", name, value, resultset.field_meta[name.to_s.downcase].result.downcase, $!)
+        puts("ERROR in Field#coerce:", name, value, resultset.field_meta[name.to_s.downcase].result.downcase, $!)
         nil
       end
       
@@ -121,7 +121,7 @@ module Rfm
 				data = @attributes['data']
 				#puts cursor.parent.object.class
 				#puts @attributes
-				cursor.parent.object[name.downcase] = coerce(name, @attributes['data'], cursor.top.object)
+				cursor.parent.object[name.downcase] = coerce(name, data, cursor.top.object)
 				#cursor.parent.object[@attributes['name'].downcase] = @attributes['data']				
 			end
       

@@ -120,6 +120,7 @@ require 'stringio'
 # TODO: Change 'instance' option to 'private'. Change 'shared' to <whatever>.
 # TODO: Since unattached elements won't callback, add their callback to an array of procs on the current cursor at the beginning
 #				of the non-attached tag.
+# TODO: Handle check-for-errors in Rfm class loading.
 
 
 
@@ -174,7 +175,7 @@ module Rfm
 		
 		class Cursor
 		
-		    attr_accessor :model, :object, :tag, :parent, :top, :stack, :newtag
+		    attr_accessor :model, :object, :tag, :parent, :top, :stack, :newtag, :callbacks
 		    
 				SaxParser.install_defaults(self)
 		    
@@ -202,6 +203,7 @@ module Rfm
 		    	@tag     = _tag
 		    	@model   = _model
 		    	@object  = _obj       #_obj.is_a?(String) ? get_constant(_obj).new : _obj
+		    	@callbacks = {}
 		    	self
 		    end
 		    
@@ -226,7 +228,10 @@ module Rfm
 		    	# Acquire submodel definition.
 		      subm = model_elements?(@newtag) || default_class.new
 		      
+		      # Clean-up and return if new element is not to be attached.
 		    	if attachment_prefs(model, subm, 'element')=='none'
+		    		# Set callbacks, since object & model of new element won't be stored.
+		    		callbacks[_tag] = lambda {run_callback(_tag, self, subm)}
 		    		#puts "Assigning attributes for attach:none on #{newtag}"
 		    		assign_attributes(_attributes, object, model, subm)
 		    		return
@@ -252,28 +257,31 @@ module Rfm
 		  		
 		  		returntag = newtag
 		  		self.newtag = nil
-		      return Cursor.new(subm, new_element, returntag)
+		      Cursor.new(subm, new_element, returntag)
 		    end # start_el
 		
 		    def receive_end_element(_tag)
-		    	puts ["END_ELEMENT", _tag, object.class.name, before_close?]
+		    	#puts ["END_ELEMENT", _tag, object.class.name, before_close?]
 	      	begin
-		      	# if _tag == self.tag
-							# End_element_callback
-			      	if before_close?.is_a? Symbol
-			      		object.send before_close?, self
-			      	elsif before_close?.is_a?(String)
-			      		object.send :eval, before_close?
-			      	end
+						if _tag == self.tag
+		      		# Data cleaup
+							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #top.model && top.model['compact']
+						end
+	      	
+	      		# Run callback of non-stored element.
+	      		callbacks[_tag].call if callbacks[_tag]
+		      	if _tag == self.tag
+							# End-element callbacks.
+							run_callback(_tag, self)
+							# 	if before_close?.is_a? Symbol
+							# 		object.send before_close?, self
+							# 	elsif before_close?.is_a?(String)
+							# 		object.send :eval, before_close?
+							# 	end
 							# 	# TODO: This is for hashes with array as value. It may be ilogical in this context. Is it needed?
 							# 	if each_before_close? && object.respond_to?('each')
 							# 	  object.each{|o| o.send(each_before_close?.to_s, object)}
 							#   end
-						# end
-	
-						if _tag == self.tag
-		      		# Data cleaup
-							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #top.model && top.model['compact']
 						end
 						
 						# return true only if matching tags
@@ -284,6 +292,17 @@ module Rfm
 		      	puts "Error: end_element tag '#{_tag}' failed: #{$!}"
 		      end
 		    end
+
+				def run_callback(_tag, _cursor=self, _model=_cursor.model, _object=_cursor.object )
+	    		callback = before_close?(_model)
+	    		#puts ['RUN_CALLBACK', _tag, _cursor.tag, _object.class, callback]
+	      	if callback.is_a? Symbol
+	      		_object.send callback, _cursor
+	      	elsif callback.is_a?(String)
+	      		_object.send :eval, callback
+	      	end
+	      end
+
 
 
 

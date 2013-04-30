@@ -135,7 +135,7 @@ module Rfm
   	end
   	
   	def end_element_callback(cursor)
-  		puts "CALLBACK-RESULTSET"
+  		#puts "CALLBACK-RESULTSET"
   		%w(date_format time_format timestamp_format).each{|f| convert_date_time_format(eval(f))}
   	end
     
