@@ -121,6 +121,7 @@ require 'stringio'
 # TODO: Since unattached elements won't callback, add their callback to an array of procs on the current cursor at the beginning
 #				of the non-attached tag.
 # TODO: Handle check-for-errors in Rfm class loading.
+# TODO: Figure out way to get doctype from nokogiri.
 
 
 
@@ -588,7 +589,7 @@ module Rfm
 				if attributes
 					# This crazy thing transforms attribute keys to underscore (or whatever).
 					#attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
-					attributes = {}.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}.merge!(:extra_args=>args)
+					attributes = {}.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}
 				end
 				@element_buffer.merge!({:tag=>tag, :attributes => attributes || default_class.new})
 			end
@@ -649,8 +650,8 @@ module Rfm
 				# 		_start_element(name, attributes)
 				# 	end
 				
-				alias_method :on_start_element_ns, :_start_element
-				alias_method :on_end_element_ns, :_end_element
+				alias_method :on_start_element, :_start_element
+				alias_method :on_end_element, :_end_element
 				alias_method :on_characters, :_text
 				alias_method :on_internal_subset, :_doctype
 			end # LibxmlSax	
