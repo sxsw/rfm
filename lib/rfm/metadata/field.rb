@@ -74,18 +74,6 @@ module Rfm
       # Coerces the text value from an +fmresultset+ document into proper Ruby types based on the 
       # type of the field. You'll never need to do this: Rfm does it automatically for you when you
       # access field data through the Record object.
-			#   def coerce(value, resultset)
-			#     return nil if (value.nil? or value.empty?)
-			#     case self.result.downcase
-			#     when "text"      then value
-			#     when "number"    then BigDecimal.new(value.to_s)
-			#     when "date"      then Date.strptime(value, resultset.date_format)
-			#     when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{resultset.time_format}")
-			#     when "timestamp" then DateTime.strptime(value, resultset.timestamp_format)
-			#     when "container" then URI.parse("#{resultset.server.scheme}://#{resultset.server.host_name}:#{resultset.server.port}#{value}")
-			#     else nil
-			#     end
-			#   end
       def coerce(name, value, resultset)
         return nil if (value.nil? or value.empty?)
         # TODO: Need access to DOCTYPE node of xml, so can get base URL, instead of looking at layout.get_config (there might be no layout or no config).
@@ -104,25 +92,12 @@ module Rfm
         puts("ERROR in Field#coerce:", name, value, resultset.field_meta[name.to_s.downcase].result.downcase, $!)
         nil
       end
-      
-# 		  def convert_date_time_format(fm_format)
-# 		    fm_format.gsub!('MM', '%m')
-# 		    fm_format.gsub!('dd', '%d')
-# 		    fm_format.gsub!('yyyy', '%Y')
-# 		    fm_format.gsub!('HH', '%H')
-# 		    fm_format.gsub!('mm', '%M')
-# 		    fm_format.gsub!('ss', '%S')
-# 		    fm_format
-# 		  end
             
-      # This class is used temporarily to build Record, but it is not attached to the Resultset.
+      # This class is used temporarily to build Record data, but it is not attached to the Resultset.
 			def end_data_callback(cursor)
 				name = @attributes['name'].to_s
 				data = @attributes['data']
-				#puts cursor.parent.object.class
-				#puts @attributes
 				cursor.parent.object[name.downcase] = coerce(name, data, cursor.top.object)
-				#cursor.parent.object[@attributes['name'].downcase] = @attributes['data']				
 			end
       
     end # Field

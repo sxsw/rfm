@@ -7,11 +7,14 @@
 attach_elements: _meta
 attach_attributes: _meta
 #create_accessors: all
-#before_close: :end_element_callback
 elements:
+- name: doctype
+  attach: none
+  attributes:
+  - name: value
+    as_name: doctype
 - name: fmresultset
   attach: none
-  #before_close: :end_element_callback
 - name: product
 - name: error
   attach: none
@@ -36,7 +39,6 @@ elements:
     class: Rfm::Metadata::Field
     delineate_with_hash: name
     as_name: field_meta
-    #attach: _meta
     attach_attributes: instance
 - name: resultset
   attach: none

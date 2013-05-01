@@ -233,6 +233,7 @@ module Rfm
 		    		# Set callbacks, since object & model of new element won't be stored.
 		    		callbacks[_tag] = lambda {run_callback(_tag, self, subm)}
 		    		#puts "Assigning attributes for attach:none on #{newtag}"
+		    		# This passes current model, since that is the model that will be accepting thiese attributes, if any.
 		    		assign_attributes(_attributes, object, model, subm)
 		    		return
 		    	end		      
@@ -581,13 +582,13 @@ module Rfm
 
 		  # Add a node to an existing element.
 			def _start_element(tag, attributes=nil, *args)
-				#puts "Receiving element '#{_tag}' with attributes '#{attributes}'"
+				#puts ["_START_ELEMENT", tag, attributes, args].to_yaml # if tag.to_s.downcase=='fmrestulset'
 				tag = transform tag
 				send_element_buffer if element_buffer?
 				if attributes
 					# This crazy thing transforms attribute keys to underscore (or whatever).
 					#attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
-					attributes = {}.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}
+					attributes = {}.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}.merge!(:extra_args=>args)
 				end
 				@element_buffer.merge!({:tag=>tag, :attributes => attributes || default_class.new})
 			end
@@ -613,6 +614,12 @@ module Rfm
 	      send_element_buffer
 	      cursor.receive_end_element(tag) and dump_cursor
 			end
+			
+			def _doctype(*args)
+				(args = args[0].gsub(/"/, '').split) if args.size ==1
+				_start_element('doctype', :value=>args)
+				_end_element('doctype')
+			end
 		  
 		end # Handler
 		
@@ -637,9 +644,15 @@ module Rfm
 					parser.parse	
 				end
 				
+				# 	def on_start_element_ns(name, attributes, prefix, uri, namespaces)
+				# 		attributes.merge!(:prefix=>prefix, :uri=>uri, :xmlns=>namespaces)
+				# 		_start_element(name, attributes)
+				# 	end
+				
 				alias_method :on_start_element_ns, :_start_element
 				alias_method :on_end_element_ns, :_end_element
 				alias_method :on_characters, :_text
+				alias_method :on_internal_subset, :_doctype
 			end # LibxmlSax	
 		end
 		
@@ -679,7 +692,8 @@ module Rfm
 				alias_method :start_element, :_start_element
 				alias_method :end_element, :_end_element
 				alias_method :attr, :_attribute
-				alias_method :text, :_text		  
+				alias_method :text, :_text		
+				alias_method :doctype, :_doctype  
 			end # OxFmpSax
 		end
 
@@ -706,6 +720,7 @@ module Rfm
 				alias_method :tag_start, :_start_element
 				alias_method :tag_end, :_end_element
 				alias_method :text, :_text
+				alias_method :doctype, :_doctype
 			end # RexmlStream
 		end
 		
