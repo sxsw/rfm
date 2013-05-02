@@ -1,18 +1,38 @@
+#!/usr/bin/env ruby
 # Database names from fmpxmlresult #
-#<?xml version="1.0"?>
-#<FMPXMLRESULT xmlns="http://www.filemaker.com/fmpxmlresult">
-#	<ERRORCODE>0</ERRORCODE>
-#	<PRODUCT BUILD="03/15/2012" NAME="FileMaker Web Publishing Engine" VERSION="12.0.1.150"/>
-#	<DATABASE DATEFORMAT="" LAYOUT="" NAME="DBNAMES" RECORDS="6" TIMEFORMAT=""/>
-#	<METADATA>
-#		<FIELD EMPTYOK="NO" MAXREPEAT="1" NAME="DATABASE_NAME" TYPE="TEXT"/>
-#	</METADATA>
-#	<RESULTSET FOUND="6">
-#		<ROW MODID="0" RECORDID="0">
-#			<COL>
-#				<DATA>FMServer_Sample</DATA>
+#
+# 	<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+# 	<!DOCTYPE FMPXMLRESULT PUBLIC "-//FMI//DTD FMPXMLRESULT//EN" "/fmi/xml/FMPXMLRESULT.dtd">
+# 	<FMPXMLRESULT xmlns="http://www.filemaker.com/fmpxmlresult">
+# 		<ERRORCODE>0</ERRORCODE>
+# 		<PRODUCT BUILD="03/02/2011" NAME="FileMaker Web Publishing Engine" VERSION="11.0.3.302"/>
+# 		<DATABASE DATEFORMAT="" LAYOUT="" NAME="DBNAMES" RECORDS="3" TIMEFORMAT=""/>
+# 		<METADATA>
+# 			<FIELD EMPTYOK="NO" MAXREPEAT="1" NAME="DATABASE_NAME" TYPE="TEXT"/>
+# 		</METADATA>
+# 		<RESULTSET FOUND="3">
+# 			<ROW MODID="0" RECORDID="0">
+# 				<COL>
+# 					<DATA>SDS</DATA>
+# 				</COL>
+# 			</ROW>
+# 			<ROW MODID="0" RECORDID="0">
+# 				<COL>
+# 					<DATA>SevenDev</DATA>
+# 				</COL>
+# 			</ROW>
+# 			<ROW MODID="0" RECORDID="0">
+# 				<COL>
+# 					<DATA>SevenGables</DATA>
+# 				</COL>
+# 			</ROW>
+# 		</RESULTSET>
+# 	</FMPXMLRESULT>
+#
+# The top level represents the initial object, a basic hash in this case.
 ---
-attach: none
+attach_elements: none
+attach_attributes: none
 elements:
 - name: DATA
   compact: true

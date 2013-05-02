@@ -53,6 +53,7 @@ module Rfm
         if !@loaded
 					c = Connection.new('-dbnames', {}, {:grammar=>'FMPXMLRESULT'}, @server)
 					c.parse('fmpxml_minimal.yml', {})['DATA'].each{|k,v| self[k] = Rfm::Database.new(v['text'], @server) if v['text']}
+					#r = c.parse('fmpxml_minimal.yml', {})
           @loaded = true
         end
         self

@@ -85,7 +85,7 @@ module Rfm
         when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{resultset.time_format}")
         when "timestamp" then DateTime.strptime(value, resultset.timestamp_format)
         #when "container" then URI.parse("#{config[:scheme]}://#{config[:host_name]}:#{config[:port]}#{value}")
-        when "container" then value
+        when "container" then URI.parse(result.doctype.last.to_s).tap{|uri| uri.path=value}
         else nil
         end
       rescue
