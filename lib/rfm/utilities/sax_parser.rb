@@ -118,10 +118,10 @@ require 'stringio'
 # done: Make sure Rfm::Metadata::Field is being used in portal-definitions.
 # done: Scan thru Rfm classes and use @instance variables instead of their accessors, so sax-parser does less work.
 # TODO: Change 'instance' option to 'private'. Change 'shared' to <whatever>.
-# TODO: Since unattached elements won't callback, add their callback to an array of procs on the current cursor at the beginning
+# done: Since unattached elements won't callback, add their callback to an array of procs on the current cursor at the beginning
 #				of the non-attached tag.
 # TODO: Handle check-for-errors in Rfm class loading.
-# TODO: Figure out way to get doctype from nokogiri.
+# abort: Figure out way to get doctype from nokogiri. Tried, may be practically impossible.
 
 
 
@@ -783,7 +783,7 @@ class Object
 	def _merge_instance!(obj, name, delimiter, prefs, type, options={})
 		if instance_variable_get("@#{name}") || delimiter
 			if delimiter
-				delimit_name = obj._get_attribute(delimiter, options[:shared_variable_name]).downcase
+				delimit_name = obj._get_attribute(delimiter, options[:shared_variable_name]).to_s.downcase
 				instance_variable_set("@#{name}", instance_variable_get("@#{name}") || options[:default_class].new)[delimit_name]=obj
 			else
 				instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
@@ -834,7 +834,7 @@ class Hash
 			_merge_instance!(obj, name, delimiter, prefs, type, options)
 		when (self[name] || delimiter)
 			if delimiter
-				delimit_name =  obj._get_attribute(delimiter, options[:shared_variable_name]).downcase
+				delimit_name =  obj._get_attribute(delimiter, options[:shared_variable_name]).to_s.downcase
 				#puts "merging delimited object with hash: self '#{self.class}' obj '#{obj.class}' name '#{name}' delim '#{delimiter}' delim_name '#{delimit_name}' options '#{options}'"
 				self[name] ||= options[:default_class].new
 				self[name][delimit_name]=obj

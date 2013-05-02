@@ -52,7 +52,7 @@ module Rfm
       def all
         if !@loaded
 					c = Connection.new('-dbnames', {}, {:grammar=>'FMPXMLRESULT'}, @server)
-					c.parse('fmpxml_minimal.yml', {})['DATA'].each{|k,v| self[k] = Rfm::Database.new(v['text'], @server) if v['text']}
+					c.parse('fmpxml_minimal.yml', {})['DATA'].each{|k,v| (self[k] = Rfm::Database.new(v['text'], @server)) if k.to_s != '' && v['text']}
 					#r = c.parse('fmpxml_minimal.yml', {})
           @loaded = true
         end
@@ -87,7 +87,7 @@ module Rfm
       def all
         if !@loaded
 					c = Connection.new('-layoutnames', {"-db" => @database.name}, {:grammar=>'FMPXMLRESULT'}, @database)
-					c.parse('fmpxml_minimal.yml', {})['DATA'].each{|k,v| self[k] = Rfm::Layout.new(v['text'], @database) if v['text']}
+					c.parse('fmpxml_minimal.yml', {})['DATA'].each{|k,v| (self[k] = Rfm::Layout.new(v['text'], @database)) if k.to_s != '' && v['text']}
           @loaded = true
         end
         self
@@ -132,7 +132,7 @@ module Rfm
       def all
         if !@loaded
 					c = Connection.new('-scriptnames', {"-db" => @database.name}, {:grammar=>'FMPXMLRESULT'}, @database)
-					c.parse('fmpxml_minimal.yml', {})['DATA'].each{|k,v| self[k] = Rfm::Metadata::Script.new(v['text'], @database) if v['text']}
+					c.parse('fmpxml_minimal.yml', {})['DATA'].each{|k,v| (self[k] = Rfm::Metadata::Script.new(v['text'], @database)) if k.to_s != '' && v['text']}
           @loaded = true
         end
         self
