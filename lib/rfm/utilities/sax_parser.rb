@@ -29,15 +29,15 @@
 #   initialize:									array: initialize new objects with this code [:method, params] instead of defaulting to 'allocate'
 #   elements:										array of element hashes {'name'=>'element-tag'}
 #   attributes:									array of attribute hashes {'name'=>'attribute-name'} UC
-#   class:											string-or-class: class name for new element
+#   class: NOT USED							string-or-class: class name for new element
 #   depth:											integer: depth-of-default-class UC
-#		attach:											string: shared, instance, hash, array, cursor, none - attach this element or attribute to parent. 
+#		attach:											string: shared, _shared_name, private, hash, array, cursor, none - attach this element or attribute to parent. 
 #		attach_elements:						string: same as 'attach' - for all subelements, unless they have their own 'attach' specification
 #		attach_attributes:					string: same as 'attach' - for all attributes, unless they have their own 'attach' specification
 #   before_close:								method-name-as-symbol: run a model method before closing tag
-#   each_before_close:					method-name-as-symbol
+#   each_before_close: NOT USED	method-name-as-symbol
 #   as_name:										string: store element or attribute keyed as specified
-#   delineate_with_hash:				string: attribute/hash key to delineate objects with identical tags
+#   delimiter:									string: attribute/hash key to delineate objects with identical tags
 #
 #
 #gem('ox', '1.8.5') if RUBY_VERSION[2].to_i > 8
@@ -134,7 +134,7 @@ module Rfm
 		PARSERS = {}
 		BACKENDS = [[:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:ox, 'ox'], [:rexml, 'rexml/document']]
 		OPTIONS = [:name, :elements, :attributes, :attach, :attach_elements, :attach_attributes, :compact,
-							:depth, :before_close, :each_before_close, :delineate_with_hash, :as_name, :initialize
+							:depth, :before_close, :each_before_close, :delimiter, :as_name, :initialize
 							]
 		DEFAULTS = [:default_class, :backend, :text_label, :tag_translation, :shared_instance_var, :templates, :template_prefix]
 		
@@ -313,7 +313,7 @@ module Rfm
 		  	# Assign attributes to element.
 				def assign_attributes(_attributes, base_object, base_model, new_model)
 		      if _attributes && !_attributes.empty?
-		      	prefs_exist = model_attributes?(nil, new_model) || attach_attributes?(base_model) || delineate_with_hash?(base_model)
+		      	prefs_exist = model_attributes?(nil, new_model) || attach_attributes?(base_model) || delimiter?(base_model)
 		      	#puts ['ASSIGN_ATTRIBUTES', base_object.class, base_model, new_model]
 						#_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
 						# This is trying to merge element set as a whole, if possible.
@@ -354,7 +354,7 @@ module Rfm
 					end
 					
 					#puts ['ATTACH_NEW_OBJECT', base_object.class, new_object.class, label, type, prefs, shared_variable_name, create_accessors?(base_model)]
-					base_object._attach_object!(new_object, label, delineate_with_hash?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_variable_name, :create_accessors=>create_accessors?(base_model))
+					base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_variable_name, :create_accessors=>create_accessors?(base_model))
 				end
 				
 				def attachment_prefs(base_model, new_model, type)
@@ -385,7 +385,7 @@ module Rfm
 			  def attach?(_model=model); _model && _model['attach']; end
 			  def attach_elements?(_model=model); _model && _model['attach_elements']; end
 			  def attach_attributes?(_model=model); _model && _model['attach_attributes']; end
-			  def delineate_with_hash?(_model=model); _model && _model['delineate_with_hash']; end
+			  def delimiter?(_model=model); _model && _model['delimiter']; end
 			  def as_name?(_model=model); _model && _model['as_name']; end
 			  def initialize?(_model=model); _model && _model['initialize']; end
 			  def create_accessors?(_model=model); _model && [_model['create_accessors']].flatten.compact; end

@@ -26,7 +26,7 @@ elements:
   class: Rfm::Metadata::FieldControl
   as_name: field_controls
   attach: shared
-  delineate_with_hash: name
+  delimiter: name
   attach_attributes: private
   attributes:
   - name: NAME

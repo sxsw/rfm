@@ -38,5 +38,5 @@ elements:
   compact: true
   attach: hash
   attach_attributes: hash
-  delineate_with_hash: text
+  delimiter: text
 

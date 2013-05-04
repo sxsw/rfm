@@ -28,16 +28,16 @@ elements:
   attach: none
 - name: field_definition
   class: Rfm::Metadata::Field
-  delineate_with_hash: name
+  delimiter: name
   as_name: field_meta
   attach_attributes: private
 - name: relatedset_definition
-  delineate_with_hash: table
+  delimiter: table
   as_name: portal_meta
   elements:
   - name: field_definition
     class: Rfm::Metadata::Field
-    delineate_with_hash: name
+    delimiter: name
     as_name: field_meta
     attach_attributes: private
 - name: resultset
@@ -59,7 +59,7 @@ elements:
     as_name: portals
     attach: private
     attach_attributes: private
-    delineate_with_hash: table
+    delimiter: table
     elements:
     - name: record
       class: Rfm::Record
