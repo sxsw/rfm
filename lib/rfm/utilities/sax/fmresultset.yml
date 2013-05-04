@@ -30,7 +30,7 @@ elements:
   class: Rfm::Metadata::Field
   delineate_with_hash: name
   as_name: field_meta
-  attach_attributes: instance
+  attach_attributes: private
 - name: relatedset_definition
   delineate_with_hash: table
   as_name: portal_meta
@@ -39,14 +39,14 @@ elements:
     class: Rfm::Metadata::Field
     delineate_with_hash: name
     as_name: field_meta
-    attach_attributes: instance
+    attach_attributes: private
 - name: resultset
   attach: none
 - name: record
   class: Rfm::Record
   initialize: [new, object]
   attach: array
-  attach_attributes: instance
+  attach_attributes: private
   before_close: '@loaded=true'
   elements:
   - name: field
@@ -57,13 +57,15 @@ elements:
   - name: relatedset
     class: Array
     as_name: portals
-    attach: instance
-    attach_attributes: instance
+    attach: private
+    attach_attributes: private
     delineate_with_hash: table
     elements:
     - name: record
       class: Rfm::Record
-      attach_attributes: instance
+      # Should this be enabled?
+      #initialize: [new, object]
+      attach_attributes: private
       before_close: '@loaded=true'
       elements:
       - name: field

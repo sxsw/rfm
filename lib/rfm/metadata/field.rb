@@ -63,41 +63,41 @@ module Rfm
       
       # Initializes a field object. You'll never need to do this. Instead, get your Field objects from
       # ResultSet::fields
-      def initialize(field, options={})
-        @name        = options[:field_mapping][field.name] || field.name rescue field.name #['name']
-        @result      = field.result #['result']
-        @type        = field.type #['type']
-        @max_repeats = field.max_repeats #['max-repeats']
-        @global      = field.global #['global']
-      end
+#       def initialize(field, options={})
+#         @name        = options[:field_mapping][field.name] || field.name rescue field.name #['name']
+#         @result      = field.result #['result']
+#         @type        = field.type #['type']
+#         @max_repeats = field.max_repeats #['max-repeats']
+#         @global      = field.global #['global']
+#       end
     
       # Coerces the text value from an +fmresultset+ document into proper Ruby types based on the 
       # type of the field. You'll never need to do this: Rfm does it automatically for you when you
       # access field data through the Record object.
-      def coerce(name, value, resultset)
+      def coerce(_name, value, resultset)
         return nil if (value.nil? or value.empty?)
-        # TODO: Need access to DOCTYPE node of xml, so can get base URL, instead of looking at layout.get_config (there might be no layout or no config).
-        #config = resultset.layout.get_config
-        case resultset.field_meta[name.to_s.downcase].result.downcase
+        puts resultset.instance_variable_get(:@meta)['doctype'].last.to_s
+        case resultset.field_meta[_name.to_s.downcase].result.downcase
         when "text"      then value
         when "number"    then BigDecimal.new(value.to_s)
         when "date"      then Date.strptime(value, resultset.date_format)
         when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{resultset.time_format}")
         when "timestamp" then DateTime.strptime(value, resultset.timestamp_format)
         #when "container" then URI.parse("#{config[:scheme]}://#{config[:host_name]}:#{config[:port]}#{value}")
-        when "container" then URI.parse(result.doctype.last.to_s).tap{|uri| uri.path=value}
+        when "container" then URI.parse(resultset.instance_variable_get(:@meta)['doctype'].last.to_s).tap{|uri| uri.path=value}
         else nil
         end
-      rescue
-        puts("ERROR in Field#coerce:", name, value, resultset.field_meta[name.to_s.downcase].result.downcase, $!)
-        nil
+#       rescue
+#         puts("ERROR in Field#coerce:", _name, value, resultset.field_meta[name.to_s.downcase].result.downcase, $!)
+#         nil
       end
             
       # This class is used temporarily to build Record data, but it is not attached to the Resultset.
 			def end_data_callback(cursor)
-				name = @attributes['name'].to_s
+				_name = @attributes['name'].to_s
 				data = @attributes['data']
-				cursor.parent.object[name.downcase] = coerce(name, data, cursor.top.object)
+				#puts [_name, data, cursor.top.object.class]
+				cursor.parent.object[_name.downcase] = coerce(_name, data, cursor.top.object)
 			end
       
     end # Field

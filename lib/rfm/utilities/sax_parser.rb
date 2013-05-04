@@ -760,7 +760,7 @@ class Object
 	
 	# Master method to merge any object with this object
 	def _merge_object!(obj, name, delimiter, prefs, type, options={})
-		if prefs=='instance'
+		if prefs=='private'
 			_merge_instance!(obj, name, delimiter, prefs, type, options)
 		else
 			_merge_shared!(obj, name, delimiter, prefs, type, options)
@@ -818,7 +818,7 @@ class Array
 	def _merge_object!(obj, name, delimiter, prefs, type, options={})
 		case
 		when prefs=='shared' || type == 'attribute'; _merge_shared!(obj, name, delimiter, prefs, type, options)
-		when prefs=='instance'; _merge_instance!(obj, name, delimiter, prefs, type, options)
+		when prefs=='private'; _merge_instance!(obj, name, delimiter, prefs, type, options)
 		else self << obj
 		end
 	end
@@ -830,7 +830,7 @@ class Hash
 		case
 		when prefs=='shared'
 			_merge_shared!(obj, name, delimiter, prefs, type, options)
-		when prefs=='instance'
+		when prefs=='private'
 			_merge_instance!(obj, name, delimiter, prefs, type, options)
 		when (self[name] || delimiter)
 			if delimiter
