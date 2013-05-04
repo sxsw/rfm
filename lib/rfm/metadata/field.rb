@@ -76,20 +76,20 @@ module Rfm
       # access field data through the Record object.
       def coerce(_name, value, resultset)
         return nil if (value.nil? or value.empty?)
-        puts resultset.instance_variable_get(:@meta)['doctype'].last.to_s
-        case resultset.field_meta[_name.to_s.downcase].result.downcase
+        result_type = resultset.field_meta[_name.to_s.downcase].result.to_s.downcase
+        case result_type
         when "text"      then value
         when "number"    then BigDecimal.new(value.to_s)
         when "date"      then Date.strptime(value, resultset.date_format)
         when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{resultset.time_format}")
         when "timestamp" then DateTime.strptime(value, resultset.timestamp_format)
-        #when "container" then URI.parse("#{config[:scheme]}://#{config[:host_name]}:#{config[:port]}#{value}")
-        when "container" then URI.parse(resultset.instance_variable_get(:@meta)['doctype'].last.to_s).tap{|uri| uri.path=value}
+        when "container" then
+        	URI.parse(resultset.instance_variable_get(:@meta)['doctype'].last.to_s).tap{|uri| uri.path, uri.query = value.split('?')}
         else nil
         end
-#       rescue
-#         puts("ERROR in Field#coerce:", _name, value, resultset.field_meta[name.to_s.downcase].result.downcase, $!)
-#         nil
+      rescue
+        puts("ERROR in Field#coerce:", _name, value, result_type, $!)
+        nil
       end
             
       # This class is used temporarily to build Record data, but it is not attached to the Resultset.
