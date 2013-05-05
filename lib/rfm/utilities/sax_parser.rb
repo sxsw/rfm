@@ -290,8 +290,8 @@ module Rfm
 						if _tag == self.tag
 							return true
 						end
-		      rescue
-		      	puts "Error: end_element tag '#{_tag}' failed: #{$!}"
+# 		      rescue
+# 		      	puts "Error: end_element tag '#{_tag}' failed: #{$!}"
 		      end
 		    end
 

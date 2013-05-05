@@ -18,12 +18,13 @@ elements:
 - name: product
 - name: error
   attach: none
+  before_close: 'check_for_errors'
   attributes:
   - name: code
     as_name: error
 - name: datasource
   attach: none
-  before_close: :end_element_callback
+  before_close: :end_datasource_element_callback
 - name:  metadata
   attach: none
 - name: field_definition

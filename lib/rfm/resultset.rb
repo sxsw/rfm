@@ -133,8 +133,7 @@ module Rfm
 		
 		def table
 			@meta['table']
-		end		
-		
+		end
         
     def field_names
     	field_meta ? field_meta.values.collect{|v| v['name']} : []
@@ -144,14 +143,13 @@ module Rfm
   		portal_meta ? portal_meta.keys : []
   	end
   	
-  	def end_element_callback(cursor)
-  		#puts "CALLBACK-RESULTSET"
+  	def end_datasource_element_callback(cursor)
   		%w(date_format time_format timestamp_format).each{|f| convert_date_time_format(eval(f))}
   	end
     
   private
     
-    def check_for_errors(code, raise_401)
+    def check_for_errors(code=@meta['error'].to_i, raise_401=get_config[:raise_401])
       raise Rfm::Error.getError(code) if code != 0 && (code != 401 || raise_401)
     end
 
