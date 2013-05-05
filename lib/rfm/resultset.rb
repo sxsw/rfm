@@ -47,8 +47,8 @@ module Rfm
     # alias_method :db, :database
     
     class << self
-    	#alias_method :load_data, :new
     	def load_data(data)
+    		Rfm::Connection
     		Rfm::SaxParser.parse(data, :fmresultset, Rfm::Resultset.new)
     	end
     end
