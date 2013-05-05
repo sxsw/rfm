@@ -38,12 +38,13 @@ module Rfm
   class Resultset < Array
   	include Config
     
-    attr_reader :layout, :database, :server, :calling_object, :doc
-    attr_reader :field_meta, :portal_meta, :include_portals, :datasource
-    attr_reader :date_format, :time_format, :timestamp_format
-    attr_reader :total_count, :foundset_count, :table
+    attr_reader :layout, :meta, :calling_object
+#     attr_reader :layout, :database, :server, :calling_object, :doc
+#     attr_reader :field_meta, :portal_meta, :include_portals, :datasource
+#     attr_reader :date_format, :time_format, :timestamp_format
+#     attr_reader :total_count, :foundset_count, :table
     #def_delegators :layout, :db, :database
-    alias_method :db, :database
+    # alias_method :db, :database
     
     class << self
     	alias_method :load_data, :new
@@ -71,8 +72,7 @@ module Rfm
     #   layout contains portals, you can find out what fields they contain here. Again, if it's the data you're
     #   after, you want to look at the Record object.
     def initialize(*args) # connection or calling_object or hash
-    	#Was xml_response, calling_object, portals
-
+			# TODO: clean this up, accounting for new config chain scheme.
     	options = args.rfm_extract_options!      
       config :parent=>'calling_object'
       config sanitize_config(options, {}, true)
@@ -87,6 +87,16 @@ module Rfm
     
 		def state(*args)
 			get_config(*args)
+		end
+		
+		def database
+			layout.database
+		end
+		
+		alias_method :db, :database
+		
+		def server
+			database.server
 		end
 		
 		def field_meta

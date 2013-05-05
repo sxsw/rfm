@@ -26,10 +26,10 @@ module Rfm
   autoload :Factory,      'rfm/utilities/factory'
   autoload :CompoundQuery,'rfm/utilities/compound_query'
   autoload :VERSION,      'rfm/version'
-  autoload :Fmresultset,	'rfm/utilities/fmresultset.rb'
-  autoload :Fmpxmlresult,	'rfm/utilities/fmpxmlresult.rb'
-  autoload :Fmpdsoresult,	'rfm/utilities/fmpdsoresult.rb'
-  autoload :Fmpxmllayout,	'rfm/utilities/fmpxmllayout.rb'
+	# autoload :Fmresultset,	'rfm/utilities/fmresultset.rb'
+	# autoload :Fmpxmlresult,	'rfm/utilities/fmpxmlresult.rb'
+	# autoload :Fmpdsoresult,	'rfm/utilities/fmpdsoresult.rb'
+	# autoload :Fmpxmllayout,	'rfm/utilities/fmpxmllayout.rb'
   autoload :Connection,   'rfm/utilities/connection.rb'
 
 	module Metadata
@@ -37,6 +37,7 @@ module Rfm
 		autoload :Field,          'rfm/metadata/field'
 		autoload :FieldControl,   'rfm/metadata/field_control'
 		autoload :ValueListItem,  'rfm/metadata/value_list_item'
+		autoload :Datum,  				'rfm/metadata/datum'
 	end
 
 	def info

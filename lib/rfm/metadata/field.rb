@@ -60,24 +60,23 @@ module Rfm
     class Field
       
       attr_reader :name, :result, :type, :max_repeats, :global
-      
+      meta_attr_accessor :resultset
       # Initializes a field object. You'll never need to do this. Instead, get your Field objects from
       # ResultSet::fields
-#       def initialize(field, options={})
-#         @name        = options[:field_mapping][field.name] || field.name rescue field.name #['name']
-#         @result      = field.result #['result']
-#         @type        = field.type #['type']
-#         @max_repeats = field.max_repeats #['max-repeats']
-#         @global      = field.global #['global']
-#       end
+			# 	def initialize(field, options={})
+			# 	  @name        = options[:field_mapping][field.name] || field.name rescue field.name #['name']
+			# 	  @result      = field.result #['result']
+			# 	  @type        = field.type #['type']
+			# 	  @max_repeats = field.max_repeats #['max-repeats']
+			# 	  @global      = field.global #['global']
+			# 	end
     
       # Coerces the text value from an +fmresultset+ document into proper Ruby types based on the 
       # type of the field. You'll never need to do this: Rfm does it automatically for you when you
       # access field data through the Record object.
-      def coerce(_name, value, resultset)
+      def coerce(value)
         return nil if (value.nil? or value.empty?)
-        result_type = resultset.field_meta[_name.to_s.downcase].result.to_s.downcase
-        case result_type
+        case result
         when "text"      then value
         when "number"    then BigDecimal.new(value.to_s)
         when "date"      then Date.strptime(value, resultset.date_format)
@@ -87,17 +86,18 @@ module Rfm
         	URI.parse(resultset.instance_variable_get(:@meta)['doctype'].last.to_s).tap{|uri| uri.path, uri.query = value.split('?')}
         else nil
         end
-      rescue
-        puts("ERROR in Field#coerce:", _name, value, result_type, $!)
-        nil
+#       rescue
+#         puts("ERROR in Field#coerce:", name, value, result, $!)
+#         nil
+      end
+      
+      def get_mapped_name
+      	resultset.layout.field_mapping[name] || name
       end
             
-      # This class is used temporarily to build Record data, but it is not attached to the Resultset.
-			def end_data_callback(cursor)
-				_name = @attributes['name'].to_s
-				data = @attributes['data']
-				#puts [_name, data, cursor.top.object.class]
-				cursor.parent.object[_name.downcase] = coerce(_name, data, cursor.top.object)
+			def end_element_callback(cursor)
+				self.resultset = cursor.top.object
+				@name = get_mapped_name
 			end
       
     end # Field

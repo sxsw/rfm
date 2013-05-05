@@ -31,6 +31,7 @@ elements:
   delimiter: name
   as_name: field_meta
   attach_attributes: private
+  before_close: :end_element_callback
 - name: relatedset_definition
   delimiter: table
   as_name: portal_meta
@@ -40,6 +41,7 @@ elements:
     delimiter: name
     as_name: field_meta
     attach_attributes: private
+    before_close: :end_element_callback
 - name: resultset
   attach: none
 - name: record
@@ -50,10 +52,10 @@ elements:
   before_close: '@loaded=true'
   elements:
   - name: field
-    class: Rfm::Metadata::Field
+    class: Rfm::Metadata::Datum
     compact: true
     attach: cursor
-    before_close: :end_data_callback
+    before_close: :end_element_callback
   - name: relatedset
     class: Array
     as_name: portals
@@ -70,9 +72,9 @@ elements:
       elements:
       - name: field
         compact: true
-        class: Rfm::Metadata::Field
+        class: Rfm::Metadata::Datum
         attach: cursor
-        before_close: :end_data_callback
+        before_close: :end_element_callback
 
 
 
