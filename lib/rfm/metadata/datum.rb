@@ -5,7 +5,7 @@ module Rfm
     class Datum   #< DelegateClass(Field)
     
       def get_mapped_name(name, resultset)
-      	resultset.layout.field_mapping[name] || name
+      	(resultset && resultset.layout && resultset.layout.field_mapping[name]) || name
       end
       
 			def end_element_callback(cursor)

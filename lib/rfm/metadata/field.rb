@@ -92,7 +92,7 @@ module Rfm
       end
       
       def get_mapped_name
-      	resultset.layout.field_mapping[name] || name
+      	(resultset && resultset.layout && resultset.layout.field_mapping[name]) || name
       end
             
 			def end_element_callback(cursor)

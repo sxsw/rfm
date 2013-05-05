@@ -167,9 +167,9 @@ module Rfm
 			
 			rslt.delete :parent
 			
-			rslt
-		rescue
-			puts "Config#config_merge_with_parent for '#{self.class}' falied with #{$1}"
+			rslt || {}
+# 		rescue
+# 			puts "Config#config_merge_with_parent for '#{self.class}' falied with #{$1}"
     end
      
 		# Returns a configuration hash overwritten by :use filters in the hash

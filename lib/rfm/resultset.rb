@@ -47,7 +47,10 @@ module Rfm
     # alias_method :db, :database
     
     class << self
-    	alias_method :load_data, :new
+    	#alias_method :load_data, :new
+    	def load_data(data)
+    		Rfm::SaxParser.parse(data, :fmresultset, Rfm::Resultset.new)
+    	end
     end
     
     # Initializes a new ResultSet object. You will probably never do this your self (instead, use the Layout
@@ -73,17 +76,23 @@ module Rfm
     #   after, you want to look at the Record object.
     def initialize(*args) # connection or calling_object or hash
 			# TODO: clean this up, accounting for new config chain scheme.
-    	options = args.rfm_extract_options!      
-      config :parent=>'calling_object'
-      config sanitize_config(options, {}, true)
-      
-      error = 0 #doc.error
-      check_for_errors(error, (server.state[:raise_on_401] rescue nil))
-
-			@calling_object		= args[1] || options[:calling_object]
-      @layout           = args[0] || options[:layout_object]
+#     	options = args.rfm_extract_options!      
+#       config :parent=>'calling_object'
+#       config sanitize_config(options, {}, true)
+			config *args
+#       
+#       error = 0 #doc.error
+#       check_for_errors(error, (server.state[:raise_on_401] rescue nil))
+# 
+# 			@calling_object		= args[1] || options[:calling_object]
+#       @layout           = args[0] || options[:layout_object]
     end # initialize
 
+    def config(*args)
+    	super(*args) do |params|
+    		(@layout = params[:objects][0]) if params && params[:objects] && params[:objects][0] && params[:objects][0].is_a?(Rfm::Layout)
+    	end
+    end
     
 		def state(*args)
 			get_config(*args)
