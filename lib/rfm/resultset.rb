@@ -100,15 +100,11 @@ module Rfm
 		end
 		
 		def field_meta
-			@meta['field_meta']
+			@meta['field_meta'] || {}
 		end
 		
 		def portal_meta
-			@meta['portal_meta']
-		end		
-		
-		def datasource
-			@meta['datasource']
+			@meta['portal_meta'] || {}
 		end
 		
 		def date_format
@@ -133,6 +129,10 @@ module Rfm
 		
 		def table
 			@meta['table']
+		end
+		
+		def error
+			@meta['error']
 		end
         
     def field_names
