@@ -109,11 +109,11 @@ module Rfm
 		end
 		
 		def field_meta
-			@meta['field_meta'] || {}
+			@meta['field_meta'] ||= {}
 		end
 		
 		def portal_meta
-			@meta['portal_meta'] || {}
+			@meta['portal_meta'] ||= {}
 		end
 		
 		def date_format

@@ -29,20 +29,22 @@ elements:
   attach: none
 - name: field_definition
   class: Rfm::Metadata::Field
+  attach: cursor
   delimiter: name
   as_name: field_meta
   attach_attributes: private
-  before_close: :end_element_callback
+  before_close: :main_callback
 - name: relatedset_definition
   delimiter: table
   as_name: portal_meta
   elements:
   - name: field_definition
     class: Rfm::Metadata::Field
+    attach: cursor
     delimiter: name
     as_name: field_meta
     attach_attributes: private
-    before_close: :end_element_callback
+    before_close: :portal_callback
 - name: resultset
   attach: none
 - name: record
@@ -56,7 +58,7 @@ elements:
     class: Rfm::Metadata::Datum
     compact: true
     attach: cursor
-    before_close: :end_element_callback
+    before_close: :main_callback
   - name: relatedset
     class: Array
     as_name: portals
@@ -76,7 +78,7 @@ elements:
         compact: true
         class: Rfm::Metadata::Datum
         attach: cursor
-        before_close: :end_element_callback
+        before_close: :portal_callback
 
 
 

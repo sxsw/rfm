@@ -95,9 +95,14 @@ module Rfm
       	(resultset && resultset.layout && resultset.layout.field_mapping[name]) || name
       end
             
-			def end_element_callback(cursor)
+			def main_callback(cursor)
 				self.resultset = cursor.top.object
-				@name = get_mapped_name
+				resultset.field_meta[get_mapped_name.to_s.downcase] = self
+			end
+			
+			def portal_callback(cursor)
+				self.resultset = cursor.top.object
+				cursor.parent.object[get_mapped_name.split('::').last.to_s.downcase] = self
 			end
       
     end # Field
