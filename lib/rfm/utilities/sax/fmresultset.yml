@@ -37,6 +37,7 @@ elements:
 - name: relatedset_definition
   delimiter: table
   as_name: portal_meta
+  attach_attributes: private
   elements:
   - name: field_definition
     class: Rfm::Metadata::Field

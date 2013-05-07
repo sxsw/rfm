@@ -100,7 +100,7 @@ require 'stringio'
 #       Consider buffering all attributes & text until start of new element.
 # YAY :  I bufffered all attributes & text, and the problem is solved.
 # na  : Can't configure an attribute (in template) if it is used in delineate_with_hash. (actually it works if you specifiy the as_name: correctly).
-# TODO: Some configurations in template cause errors - usually having to do with nil.
+# TODO: Some configurations in template cause errors - usually having to do with nil. See below about eliminating all 'rescue's .
 # done: Can't supply custom class if it's a String (but an unspecified subclass of plain Object works fine!?).
 # TODO: Attaching non-hash/array object to Array will thro error. Is this actually fixed?
 # done?: Sending elements with subelements to Shared results in no data attached to the shared var.
@@ -354,7 +354,7 @@ module Rfm
 						prefs = "shared"
 					end
 					
-					#puts ['ATTACH_NEW_OBJECT', base_object.class, new_object.class, label, type, prefs, shared_variable_name, create_accessors?(base_model)]
+					#puts ["\nATTACH_NEW_OBJECT", base_object.class, new_object.class, label, type, prefs, shared_variable_name, create_accessors?(base_model)]
 					base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_variable_name, :create_accessors=>create_accessors?(base_model))
 				end
 				
@@ -749,7 +749,7 @@ class Object
 		delimiter = (args[1] || options[:delimiter])
 		prefs = (args[2] || options[:prefs])
 		type = (args[3] || options[:type])
-		#puts ['_ATTACH_OBJECT', self.class, obj.class, name, type, prefs, options[:shared_variable_name], options[:create_accessors]]
+		# puts ['_ATTACH_OBJECT', self.class, obj.class, name, type, prefs, options[:shared_variable_name], options[:create_accessors]]
 		case
 		when prefs=='none' || prefs=='cursor'; nil
 		when name
@@ -761,6 +761,7 @@ class Object
 	
 	# Master method to merge any object with this object
 	def _merge_object!(obj, name, delimiter, prefs, type, options={})
+		#puts "\n-----OBJECT._merge_object", self.class, (obj.to_s rescue obj.class), name, delimiter, prefs, type.titleize, options
 		if prefs=='private'
 			_merge_instance!(obj, name, delimiter, prefs, type, options)
 		else
@@ -803,17 +804,17 @@ class Object
 	end
 	
 	# Get an instance variable, a member of a shared instance variable, or a hash value of self.
-  def _get_attribute(name, shared=nil, options={})
+  def _get_attribute(name, shared_var_name=nil, options={})
   	return unless name
-  	(shared = options[:shared_variable_name]) unless shared
+  	(shared_var_name = options[:shared_variable_name]) unless shared_var_name
 		
 		rslt = case
-		when self.is_a?(Hash); self[name]
-		when (var= instance_variable_get("@#{shared}")); var[name]
+		when self.is_a?(Hash) && self[name]; self[name]
+		when (var= instance_variable_get("@#{shared_var_name}")) && var[name]; var[name]
 		else instance_variable_get("@#{name}")
 		end
 		
-		#puts "Object#_get_attribute: name '#{name}' shared '#{shared}' options '#{options}' rslt '#{rslt}'"
+		#puts "OBJECT#_get_attribute: name '#{name}' shared_var_name '#{shared_var_name}' options '#{options}' rslt '#{rslt}'"
 		rslt
   end
 
@@ -821,8 +822,9 @@ end # Object
 
 class Array
 	def _merge_object!(obj, name, delimiter, prefs, type, options={})
+		#puts "\n+++++ARRAY._merge_object", self.class, (obj.to_s rescue obj.class), name, delimiter, prefs, type.titleize, options
 		case
-		when prefs=='shared' || type == 'attribute'; _merge_shared!(obj, name, delimiter, prefs, type, options)
+		when prefs=='shared' || type == 'attribute' && prefs.to_s != 'private' ; _merge_shared!(obj, name, delimiter, prefs, type, options)
 		when prefs=='private'; _merge_instance!(obj, name, delimiter, prefs, type, options)
 		else self << obj
 		end
@@ -831,7 +833,7 @@ end # Array
 
 class Hash
 	def _merge_object!(obj, name, delimiter, prefs, type, options={})
-		#puts "hash._merge_object name '#{name}' delimiter '#{delimiter}' prefs '#{prefs}'"
+		#puts "\n*****HASH._merge_object", self.class, (obj.to_s rescue obj.class), name, delimiter, prefs, type.titleize, options
 		case
 		when prefs=='shared'
 			_merge_shared!(obj, name, delimiter, prefs, type, options)
@@ -840,7 +842,7 @@ class Hash
 		when (self[name] || delimiter)
 			if delimiter
 				delimit_name =  obj._get_attribute(delimiter, options[:shared_variable_name]).to_s.downcase
-				#puts "merging delimited object with hash: self '#{self.class}' obj '#{obj.class}' name '#{name}' delim '#{delimiter}' delim_name '#{delimit_name}' options '#{options}'"
+				#puts "MERGING delimited object with hash: self '#{self.class}' obj '#{obj.class}' name '#{name}' delim '#{delimiter}' delim_name '#{delimit_name}' options '#{options}'"
 				self[name] ||= options[:default_class].new
 				self[name][delimit_name]=obj
 			else
