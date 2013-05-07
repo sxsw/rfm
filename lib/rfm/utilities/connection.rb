@@ -138,8 +138,9 @@ module Rfm
   
     def expand_options(options)
       result = {}
+      field_mapping = options.delete(:field_mapping) || {}
       options.each do |key,value|
-        case key
+        case key.to_sym
         when :max_portal_rows
         	result['-relatedsets.max'] = value
         	result['-relatedsets.filter'] = 'layout'
@@ -150,9 +151,9 @@ module Rfm
         when :sort_field
           if value.kind_of? Array
             raise Rfm::ParameterError.new(":sort_field can have at most 9 fields, but you passed an array with #{value.size} elements.") if value.size > 9
-            value.each_index { |i| result["-sortfield.#{i+1}"] = value[i] }
+            value.each_index { |i| result["-sortfield.#{i+1}"] = field_mapping[value[i]] || value[i] }
           else
-            result["-sortfield.1"] = value
+            result["-sortfield.1"] = field_mapping[value] || value
           end
         when :sort_order
           if value.kind_of? Array
