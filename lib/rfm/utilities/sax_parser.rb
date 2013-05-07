@@ -264,12 +264,19 @@ module Rfm
 		    end # start_el
 		
 		    def receive_end_element(_tag)
-		    	#puts ["END_ELEMENT", _tag, object.class.name, before_close?]
+		    	#puts ["\nEND_ELEMENT", object.class, _tag, self.tag, before_close?]
 	      	begin
 						if _tag == self.tag
 		      		# Data cleaup
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #top.model && top.model['compact']
 						end
+	      	
+	      		# Create accessors is specified.
+	      		# TODO: This creates redundant calls when elements close with the same model as current. But how to get the correct model when elements close that are attach:none  ???
+	      		if create_accessors?.any?
+	      			#puts ['CREATING_ACCESSORS', create_accessors?]
+			      	object._create_accessors(create_accessors?)
+			      end
 	      	
 	      		# Run callback of non-stored element.
 	      		callbacks[_tag].call if callbacks[_tag]
@@ -353,6 +360,7 @@ module Rfm
 						shared_variable_name = prefs.gsub(/^_/, '')
 						prefs = "shared"
 					end
+					
 					
 					#puts ["\nATTACH_NEW_OBJECT", base_object.class, new_object.class, label, type, prefs, shared_variable_name, create_accessors?(base_model)]
 					base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_variable_name, :create_accessors=>create_accessors?(base_model))
@@ -775,10 +783,10 @@ class Object
 		#puts "Merge shared: self '#{self.class}' obj '#{obj.class}' name '#{name}' delimiter '#{delimiter}' type '#{type}' shared_var '#{options[:shared_variable_name]} - #{shared_var.class}'"
 		#eval("@#{options[:shared_variable_name]} ||= #{options[:default_class].new}")._merge_object!(obj, name, delimiter, nil, type, options)
 		shared_var._merge_object!(obj, name, delimiter, nil, type, options)
-		if (options[:create_accessors] & [:all, :shared]).size > 0
-			meta = (class << self; self; end)
-			meta.send(:attr_reader, options[:shared_variable_name])
-		end
+# 		if (options[:create_accessors] & [:all, :shared]).size > 0
+# 			meta = (class << self; self; end)
+# 			meta.send(:attr_reader, options[:shared_variable_name])
+# 		end
 	end
 	
 	# Merge a named object with the specified instance variable of self.
@@ -797,10 +805,10 @@ class Object
 			#puts ['_setting_new_instance_var', name]
 			instance_variable_set("@#{name}", obj)
 		end
-		if (options[:create_accessors] & [:all, :private]).size > 0
-			meta = (class << self; self; end)
-			meta.send(:attr_reader, name.downcase.gsub(/\s/,'_'))
-		end
+# 		if (options[:create_accessors] & [:all, :private]).size > 0
+# 			meta = (class << self; self; end)
+# 			meta.send(:attr_reader, name.downcase.gsub(/\s/,'_'))
+# 		end
 	end
 	
 	# Get an instance variable, a member of a shared instance variable, or a hash value of self.
@@ -816,6 +824,19 @@ class Object
 		
 		#puts "OBJECT#_get_attribute: name '#{name}' shared_var_name '#{shared_var_name}' options '#{options}' rslt '#{rslt}'"
 		rslt
+  end
+  
+  # We don't know which attributes are shared, so this isn't really accurate per the options.
+  def _create_accessors options=[]
+  	options=[options].flatten.compact
+  	#puts ['CREATE_ACCESSORS', self.class, options]
+		if (options & ['all', 'private']).any?
+			meta = (class << self; self; end)
+			meta.send(:attr_reader, *instance_variables.collect{|v| v.to_s[1,99].to_sym})
+		end
+		if (options & ['all', 'shared']).any?
+			instance_variables.collect{|v| instance_variable_get(v)._create_accessors('hash')}
+		end
   end
 
 end # Object
@@ -852,13 +873,28 @@ class Hash
 		else
 			self[name] = obj
 		end
-		if (options[:create_accessors] & [:all, :hash]).size > 0
+# 		if (options[:create_accessors] & [:all, :hash]).size > 0
+# 			meta = (class << self; self; end)
+# 			meta.send(:define_method, name.downcase.gsub(/\s/,'_')) do
+# 				self[name.downcase.gsub(/\s/,'_')] = obj
+# 			end
+# 		end
+	end
+	
+	def _create_accessors options=[]
+		#puts ['CREATE_ACCESSORS_for_HASH', self.class, options]
+		options=[options].flatten.compact
+		super
+		if (options & ['all', 'hash']).any?
 			meta = (class << self; self; end)
-			meta.send(:define_method, name.downcase.gsub(/\s/,'_')) do
-				self[name.downcase.gsub(/\s/,'_')] = obj
+			keys.each do |k|
+				meta.send(:define_method, k) do
+					self[k]
+				end
 			end
 		end
 	end
+	
 end # Hash
 
 
