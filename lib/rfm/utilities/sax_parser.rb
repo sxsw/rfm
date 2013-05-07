@@ -782,14 +782,18 @@ class Object
 	
 	# Merge a named object with the specified instance variable of self.
 	def _merge_instance!(obj, name, delimiter, prefs, type, options={})
+		#puts ['_merge_instance!', self.class, obj.class, name, delimiter, prefs, type, options.keys, '_end_merge_instance!']
 		if instance_variable_get("@#{name}") || delimiter
 			if delimiter
 				delimit_name = obj._get_attribute(delimiter, options[:shared_variable_name]).to_s.downcase
+				#puts ['_setting_with_delimiter', delimit_name]
 				instance_variable_set("@#{name}", instance_variable_get("@#{name}") || options[:default_class].new)[delimit_name]=obj
 			else
+				#puts ['_setting_existing_instance_var', name]
 				instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
 			end
 		else
+			#puts ['_setting_new_instance_var', name]
 			instance_variable_set("@#{name}", obj)
 		end
 		if (options[:create_accessors] & [:all, :private]).size > 0
