@@ -124,10 +124,10 @@ module Rfm
 
     meta_attr_accessor :db
     attr_reader :field_mapping
-    attr_writer :resultset_meta          #:field_names, :portal_meta, :table
+    attr_writer :resultset_meta
     def_delegator :db, :server
     alias_method :database, :db
-    attr_accessor :model, :parent_layout, :subs
+    attr_accessor :model #, :parent_layout, :subs
 
 		# Methods that must be kept after rewrite!!!
 		# 	  
@@ -168,7 +168,7 @@ module Rfm
     #   myServer = Rfm::Server.new(...)
     #   myLayout = myServer["Customers"]["Details"]
     def initialize(*args) #name, db_obj
-    	self.subs ||= []
+#     	self.subs ||= []
 			config(*args)
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''         
       @loaded = false
@@ -186,14 +186,14 @@ module Rfm
   		db_orig || (self.db = Rfm::Database.new(state[:database], state[:account_name], state[:password], self))
   	end
     
-    # These methods are to be inclulded in Layout and SubLayout, so that
-    # they have their own discrete 'self' in the master class and the subclass.
-    # This means these methods will not get forwarded, and will talk to the correct
-    # variables & objects of the correct self.
-    # Do not get or set instance variables in Layout from other objects directly,
-    # always use getter & setter methods.
-    # This all means that any chain of methods that want to refer ultimately to Sublayout, must all be defined or included in Sublayout
-    module LayoutModule
+#     # These methods are to be inclulded in Layout and SubLayout, so that
+#     # they have their own discrete 'self' in the master class and the subclass.
+#     # This means these methods will not get forwarded, and will talk to the correct
+#     # variables & objects of the correct self.
+#     # Do not get or set instance variables in Layout from other objects directly,
+#     # always use getter & setter methods.
+#     # This all means that any chain of methods that want to refer ultimately to Sublayout, must all be defined or included in Sublayout
+#     module LayoutModule
     
 	    # Returns a ResultSet object containing _every record_ in the table associated with this layout.
 	    def all(options = {})
@@ -322,28 +322,28 @@ module Rfm
 			end
 			
 			
-	    # Gets new sublayout or self if self is sublayout.
-	    def sublayout
-	    	if self.is_a?(Layout) && !self.is_a?(SubLayout)
-	    		sub = SubLayout.new(self); subs << sub; sub
-	    	else
-	    		self
-	    	end
-	    end
-
-	  end # LayoutModule
-	  
-	  include LayoutModule
-
-  	class SubLayout < DelegateClass(Layout)
-			include Config  	
-  		include Layout::LayoutModule
-
-  		def initialize(master)
-  			super(master)
-  			self.parent_layout = master
-  		end
-  	end # SubLayout	  
+# 	    # Gets new sublayout or self if self is sublayout.
+# 	    def sublayout
+# 	    	if self.is_a?(Layout) && !self.is_a?(SubLayout)
+# 	    		sub = SubLayout.new(self); subs << sub; sub
+# 	    	else
+# 	    		self
+# 	    	end
+# 	    end
+# 
+# 	  end # LayoutModule
+# 	  
+# 	  include LayoutModule
+# 
+#   	class SubLayout < DelegateClass(Layout)
+# 			include Config  	
+#   		include Layout::LayoutModule
+# 
+#   		def initialize(master)
+#   			super(master)
+#   			self.parent_layout = master
+#   		end
+#   	end # SubLayout	  
 	  
 	  
 	  
@@ -451,7 +451,8 @@ module Rfm
   	end
   	
   	def models
-  		subs.collect{|s| s.model}
+  		#subs.collect{|s| s.model}
+  		[@model]
   	end
 				
     

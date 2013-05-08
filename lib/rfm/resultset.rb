@@ -85,7 +85,7 @@ module Rfm
     		(@layout = params[:objects][0]) if params &&
     			params[:objects] &&
     			params[:objects][0] &&
-    			(params[:objects][0].class.ancestors & [Rfm::Layout, Rfm::Layout::LayoutModule]).any?
+    			(params[:objects][0].class.ancestors & [Rfm::Layout]).any?   ## [Rfm::Layout, Rfm::Layout::LayoutModule]
     	end
     end
     

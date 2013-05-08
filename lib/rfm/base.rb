@@ -84,22 +84,22 @@ module Rfm
 # 	  		raise "Could not get :layout from get_config in Base.layout method" unless cnf[:layout] #return unless cnf[:layout]
 # 	  		@layout = Rfm::Factory.layout(cnf).sublayout
 				name = get_config[:layout]
-				@layout = Rfm::Factory.layout(name, self).sublayout
+				@layout = Rfm::Factory.layout(name, self) #.sublayout
 	  		
 	  		# Added by wbr to give config heirarchy: layout -> model -> sublayout
 	  		#config :parent=>'parent_layout'
 	  		#config :parent=>'Rfm::Config'
-	  		#@layout.config :parent=>'model'
-	  		@layout.config :parent=>self.to_s
+	  		#@layout.config model
+	  		@layout.config :parent=>self
 	  		
 				@layout.model = self
 				@layout
 	  	end
 	  	
-	  	# Access the parent layout of this model
-	  	def parent_layout
-	  		layout.parent_layout
-	  	end
+# 	  	# Access the parent layout of this model
+# 	  	def parent_layout
+# 	  		layout #.parent_layout
+# 	  	end
 		  			
 			# Just like Layout#find, but searching by record_id will return a record, not a resultset.
 	  	def find(find_criteria, options={})
