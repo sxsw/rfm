@@ -104,7 +104,7 @@ require 'stringio'
 # done: Can't supply custom class if it's a String (but an unspecified subclass of plain Object works fine!?).
 # TODO: Attaching non-hash/array object to Array will thro error. Is this actually fixed?
 # done?: Sending elements with subelements to Shared results in no data attached to the shared var.
-# TODO: compact is not working for fmpxmllayout-error. Consider rewrite of 'compact' method.
+# TODO: compact is not working for fmpxmllayout-error. Consider rewrite of 'compact' method, or allow compact to work on end_element with no matching tag.
 # mabe: Add ability to put a regex in the as_name parameter, that will operate on the tag/label/name.
 # TODO: Optimize:
 #				Use variables, not methods.

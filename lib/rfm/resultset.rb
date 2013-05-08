@@ -75,22 +75,17 @@ module Rfm
     #   layout contains portals, you can find out what fields they contain here. Again, if it's the data you're
     #   after, you want to look at the Record object.
     def initialize(*args) # connection or calling_object or hash
-			# TODO: clean this up, accounting for new config chain scheme.
-#     	options = args.rfm_extract_options!      
-#       config :parent=>'calling_object'
-#       config sanitize_config(options, {}, true)
 			config *args
-#       
-#       error = 0 #doc.error
-#       check_for_errors(error, (server.state[:raise_on_401] rescue nil))
-# 
 # 			@calling_object		= args[1] || options[:calling_object]
 #       @layout           = args[0] || options[:layout_object]
     end # initialize
 
     def config(*args)
-    	super(*args) do |params|
-    		(@layout = params[:objects][0]) if params && params[:objects] && params[:objects][0] && params[:objects][0].is_a?(Rfm::Layout)
+    	super do |params|
+    		(@layout = params[:objects][0]) if params &&
+    			params[:objects] &&
+    			params[:objects][0] &&
+    			(params[:objects][0].class.ancestors & [Rfm::Layout, Rfm::Layout::LayoutModule]).any?
     	end
     end
     
