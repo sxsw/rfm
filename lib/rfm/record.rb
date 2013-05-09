@@ -186,7 +186,8 @@ module Rfm
     # to optimize on your end. Just save, and if you've changed the record it will be saved. If not, no
     # server hit is incurred.
     def save
-      self.merge!(layout.edit(self.record_id, @mods)[0]) if @mods.size > 0
+      # self.merge!(layout.edit(self.record_id, @mods)[0]) if @mods.size > 0
+      self.replace_with_fresh_data(layout.edit(self.record_id, @mods)[0]) if @mods.size > 0
       @mods.clear
     end
 
@@ -194,7 +195,8 @@ module Rfm
     # modified after the record was fetched but before it was saved. In other words, prevents you from
     # accidentally overwriting changes someone else made to the record.
     def save_if_not_modified
-      self.merge!(layout.edit(@record_id, @mods, {:modification_id => @mod_id})[0]) if @mods.size > 0
+      # self.merge!(layout.edit(@record_id, @mods, {:modification_id => @mod_id})[0]) if @mods.size > 0
+      self.replace_with_fresh_data(layout.edit(@record_id, @mods, {:modification_id => @mod_id})[0]) if @mods.size > 0
       @mods.clear
     end
     
@@ -247,7 +249,14 @@ module Rfm
 	  def field_names
     	layout.field_names
     end
-
+    
+    def replace_with_fresh_data(record)
+			self.replace record
+			[:@mod_id, :@record_id, :@portals, :@mods].each do |var|
+				self.instance_variable_set var, record.instance_variable_get(var)
+			end
+			self
+		end
 
   private
 

@@ -147,7 +147,7 @@ module Rfm
 		def reload(force=false)
 	    if (@mods.empty? or force) and record_id
 	    	@mods.clear
-	      self.replace layout.find(self.record_id)[0]   #self.class.find(self.record_id)
+	      self.replace_with_fresh_data layout.find(self.record_id)[0]   #self.class.find(self.record_id)
       end
     end
     
@@ -255,7 +255,8 @@ module Rfm
       raise "Record not valid" if (defined?(ActiveModel::Validations) && !valid?)
       run_callbacks :create do
         return unless @mods.size > 0
-  	    merge_rfm_result self.class.create_from_new(@mods)
+  	    # merge_rfm_result self.class.create_from_new(@mods)
+  	    replace_with_fresh_data self.class.create_from_new(@mods)
   	  end
   	  self
   	end
@@ -267,15 +268,18 @@ module Rfm
   	    return unless @mods.size > 0
   	    unless mod_id
   	      # regular save
-  	      merge_rfm_result self.class.send :edit, record_id, @mods
+  	      # merge_rfm_result self.class.send :edit, record_id, @mods
+  	      replace_with_fresh_data self.class.send :edit, record_id, @mods
 	      else
 	        # save_if_not_modified
-	        merge_rfm_result self.class.send :edit, record_id, @mods, :modification_id=>mod_id
+	        # merge_rfm_result self.class.send :edit, record_id, @mods, :modification_id=>mod_id
+	        replace_with_fresh_data self.class.send :edit, record_id, @mods, :modification_id=>mod_id
         end
   	  end
   	  self
   	end
   	
+  	# Deprecated in favor of Record#replace_with_fresh_data
   	def merge_rfm_result(result_record)
       return unless @mods.size > 0
       @record_id ||= result_record.record_id
