@@ -90,7 +90,7 @@ module Rfm
 	  		#config :parent=>'parent_layout'
 	  		#config :parent=>'Rfm::Config'
 	  		#@layout.config model
-	  		@layout.config :parent=>self
+	  		#@layout.config :parent=>self
 	  		
 				@layout.model = self
 				@layout
@@ -172,6 +172,7 @@ module Rfm
         end
       end            
       self.merge!(@mods) unless @mods == {}
+      #self.merge!(@mods) unless @mods == Rfm::CaseInsensitiveHash.new
     end
     
     # Mass update of record attributes, with saving.
@@ -280,6 +281,7 @@ module Rfm
       self.merge! result_record
       @mods.clear
       self || {}
+      #self || Rfm::CaseInsensitiveHash.new
     end
     
   end # Base

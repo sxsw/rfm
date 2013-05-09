@@ -11,7 +11,7 @@ module Rfm
 			def main_callback(cursor)
 				resultset = cursor.top.object
 				name = get_mapped_name(@attributes['name'].to_s, resultset)
-				field = resultset.field_meta[@attributes['name'].to_s.downcase]
+				field = resultset.field_meta[name]
 				data = @attributes['data']
 				cursor.parent.object[name.downcase] = field.coerce(data)
 			end

@@ -85,7 +85,8 @@ module Rfm
     		(@layout = params[:objects][0]) if params &&
     			params[:objects] &&
     			params[:objects][0] &&
-    			(params[:objects][0].class.ancestors & [Rfm::Layout]).any?   ## [Rfm::Layout, Rfm::Layout::LayoutModule]
+    			#(params[:objects][0].class.ancestors & [Rfm::Layout, Rfm::Layout::LayoutModule]).any?
+    			params[:objects][0].is_a?(Rfm::Layout)
     	end
     end
     
@@ -104,11 +105,11 @@ module Rfm
 		end
 		
 		def field_meta
-			@meta['field_meta'] ||= {}
+			@meta['field_meta'] ||= Rfm::CaseInsensitiveHash.new
 		end
 		
 		def portal_meta
-			@meta['portal_meta'] ||= {}
+			@meta['portal_meta'] ||= Rfm::CaseInsensitiveHash.new
 		end
 		
 		def date_format

@@ -8,10 +8,11 @@
 #     <optional: configuration-yml-file or yml-string or config-hash>
 #   )
 #
-# Note: 'attach: none' puts the object in the cursor & stack but does not attach it to the parent.
-#       'ignore: self' prevents the object from entering the cursor or stack.
+# Note: 'attach: cursor' puts the object in the cursor & stack but does not attach it to the parent.
+#       'attach: none' prevents the object from entering the cursor or stack.
 #				Both of these will still allow processing of attributes and subelements.
 #   
+# TODO: Update the examples.
 # Examples:
 #   r = Rfm::SaxParser::Handler.build('some/file.xml')  # => defaults to best xml backend with no parsing configuration.
 #   r = Rfm::SaxParser::Handler.build('some/file.xml', :ox)  # => uses ox backend or throws error.
@@ -144,6 +145,7 @@ module Rfm
 			attr_accessor *DEFAULTS
 		end
 	
+		### Default class MUST be a descendant of Hash or respond to hash methods !!!
 		(@default_class = Hash) unless defined? @default_class
 		
 		# Use :libxml, :nokogiri, :ox, :rexml, or anything else, if you want it to always default
@@ -216,7 +218,8 @@ module Rfm
 		    # Not sure if this is still used.
 			  def receive_attribute(name, value)
 			  	#puts "Indiv attrb name '#{name}' value '#{value}' object '#{object.class}' model '#{model.keys}' subm '#{submodel.keys}' tag '#{tag}' newtag '#{newtag}'"
-			  	assign_attributes({name=>value}, object, model, model)
+			  	new_att = default_class.new.tap{|att| att[name]=value}
+			  	assign_attributes(new_att, object, model, model)
 			  rescue
 			  	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
@@ -466,10 +469,10 @@ module Rfm
 			SaxParser.install_defaults(self)
 
 			# Main parsing interface (also aliased at SaxParser.parse)
-			def self.build(io, template=nil, initial_object=nil, parser=nil)
-				parser = parser || backend
+			def self.build(io, template=nil, initial_object=nil, parser=nil, options={})
+				parser = parser || options[:parser] || backend
 				parser = get_backend(parser)
-				#puts "Using backend parser: #{parser}"
+				(warn "Using backend parser: #{parser}") if options[:log_parser]
 			  parser.build(io, template, initial_object)
 		  end
 		  
@@ -598,7 +601,7 @@ module Rfm
 				if attributes
 					# This crazy thing transforms attribute keys to underscore (or whatever).
 					#attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
-					attributes = {}.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}
+					attributes = default_class.new.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}
 				end
 				@element_buffer.merge!({:tag=>tag, :attributes => attributes || default_class.new})
 			end
@@ -607,7 +610,8 @@ module Rfm
 			def _attribute(name, value, *args)
 				#puts "Receiving attribute '#{name}' with value '#{value}'"
 				name = transform name
-				@element_buffer[:attributes].merge!({name=>value})
+				new_att = default_class.new.tap{|att| att[name]=value}
+				@element_buffer[:attributes].merge!(new_att)
 			end
 			
 			# Add 'content' attribute to existing element.
@@ -757,7 +761,7 @@ class Object
 		delimiter = (args[1] || options[:delimiter])
 		prefs = (args[2] || options[:prefs])
 		type = (args[3] || options[:type])
-		# puts ['_ATTACH_OBJECT', self.class, obj.class, name, type, prefs, options[:shared_variable_name], options[:create_accessors]]
+		#puts ['_ATTACH_OBJECT', self.class, obj.class, name, type, prefs, options[:shared_variable_name], options[:create_accessors], options[:default_class]]
 		case
 		when prefs=='none' || prefs=='cursor'; nil
 		when name
