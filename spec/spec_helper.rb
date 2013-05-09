@@ -39,7 +39,7 @@ Spec::Runner.configure do |config|
 			#Memo = TestModel = Class.new(Rfm::Base){self.config :base_test}
 			# Note the capitalization of these instance variables.
 			@Server = Memo.server
-			@Layout = Memo.layout.parent_layout
+			@Layout = Memo.layout   #.parent_layout
 	
 			LAYOUT_XML.stub(:body).and_return(LAYOUT_XML)
 			RESULTSET_XML.stub(:body).and_return(RESULTSET_XML)
