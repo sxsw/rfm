@@ -143,10 +143,11 @@ module Rfm
 
 		# Reload record from database
 		# TODO: handle error when record has been deleted
+		# TODO: Move this to Rfm::Record.
 		def reload(force=false)
 	    if (@mods.empty? or force) and record_id
 	    	@mods.clear
-	      self.replace self.class.find(self.record_id)
+	      self.replace layout.find(self.record_id)[0]   #self.class.find(self.record_id)
       end
     end
     

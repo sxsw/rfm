@@ -141,7 +141,7 @@ module Rfm
 		end
         
     def field_names
-    	field_meta ? field_meta.values.collect{|v| v['name']} : []
+    	field_meta ? field_meta.values.collect{|v| v.name} : []
   	end
   	
   	def portal_names

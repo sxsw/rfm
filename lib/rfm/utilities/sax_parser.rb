@@ -39,6 +39,7 @@
 #   each_before_close: NOT USED	method-name-as-symbol
 #   as_name:										string: store element or attribute keyed as specified
 #   delimiter:									string: attribute/hash key to delineate objects with identical tags
+#		create_accessors:		UC			string or array: all, private, shared, hash
 #
 #
 #gem('ox', '1.8.5') if RUBY_VERSION[2].to_i > 8
@@ -787,10 +788,6 @@ class Object
 		#puts "Merge shared: self '#{self.class}' obj '#{obj.class}' name '#{name}' delimiter '#{delimiter}' type '#{type}' shared_var '#{options[:shared_variable_name]} - #{shared_var.class}'"
 		#eval("@#{options[:shared_variable_name]} ||= #{options[:default_class].new}")._merge_object!(obj, name, delimiter, nil, type, options)
 		shared_var._merge_object!(obj, name, delimiter, nil, type, options)
-# 		if (options[:create_accessors] & [:all, :shared]).size > 0
-# 			meta = (class << self; self; end)
-# 			meta.send(:attr_reader, options[:shared_variable_name])
-# 		end
 	end
 	
 	# Merge a named object with the specified instance variable of self.
@@ -809,10 +806,6 @@ class Object
 			#puts ['_setting_new_instance_var', name]
 			instance_variable_set("@#{name}", obj)
 		end
-# 		if (options[:create_accessors] & [:all, :private]).size > 0
-# 			meta = (class << self; self; end)
-# 			meta.send(:attr_reader, name.downcase.gsub(/\s/,'_'))
-# 		end
 	end
 	
 	# Get an instance variable, a member of a shared instance variable, or a hash value of self.
@@ -877,12 +870,6 @@ class Hash
 		else
 			self[name] = obj
 		end
-# 		if (options[:create_accessors] & [:all, :hash]).size > 0
-# 			meta = (class << self; self; end)
-# 			meta.send(:define_method, name.downcase.gsub(/\s/,'_')) do
-# 				self[name.downcase.gsub(/\s/,'_')] = obj
-# 			end
-# 		end
 	end
 	
 	def _create_accessors options=[]

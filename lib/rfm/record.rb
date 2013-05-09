@@ -151,7 +151,8 @@ module Rfm
 
     # def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
     def initialize(*args)    
-      @mods						= {}
+      @mods						||= {}
+      @portals        ||= Rfm::CaseInsensitiveHash.new
       
 			options = args.rfm_extract_options!
 			if args[0].is_a?(Resultset)
