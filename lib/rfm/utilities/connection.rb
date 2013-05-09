@@ -22,8 +22,11 @@ module Rfm
 		def initialize(action, params, request_options={},  *args)
     	config *args
       
+      # Action sent to FMS
       @action = action
+      # Query params sent to FMS
       @params = params
+      # Additional options sent to FMS
       @request_options = request_options
       
       @defaults = {

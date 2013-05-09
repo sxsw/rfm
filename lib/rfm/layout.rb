@@ -294,6 +294,7 @@ module Rfm
 	    	options.merge!(:grammar=>grammar_option) if grammar_option
 	    	template = options.delete :template
 	    	
+	    	# TODO: incorporate this into request.
 	      #include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
 	      include_portals = !options[:ignore_portals]
 	      
