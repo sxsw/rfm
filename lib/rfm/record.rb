@@ -144,9 +144,9 @@ module Rfm
 			end
 			record.send(:initialize, *args)
 			record
-		rescue
-			puts "Record.new bombed and is defaulting to super.new. Error: #{$!}"
-			super
+# 		rescue
+# 			puts "Record.new bombed and is defaulting to super.new. Error: #{$!}"
+# 			super
 		end
 
     # def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
