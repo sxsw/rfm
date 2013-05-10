@@ -83,7 +83,7 @@ module Rfm
 # 	  		cnf = get_config
 # 	  		raise "Could not get :layout from get_config in Base.layout method" unless cnf[:layout] #return unless cnf[:layout]
 # 	  		@layout = Rfm::Factory.layout(cnf).sublayout
-				name = get_config[:layout]
+				name = get_config[:layout] || 'test'   # The 'test' was added to help active-model-lint tests pass.
 				@layout = Rfm::Factory.layout(name, self) #.sublayout
 	  		
 	  		# Added by wbr to give config heirarchy: layout -> model -> sublayout

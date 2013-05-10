@@ -4,17 +4,22 @@ require './lib/rfm'
 
 task :default => :spec
 
-require 'spec/rake/spectask'
-Spec::Rake::SpecTask.new(:spec) do |spec|
-  spec.libs << 'lib' << 'spec'
-  spec.spec_files = FileList['spec/**/*_spec.rb']
+#require 'spec/rake/spectask'
+#require 'rspec'
+require 'rspec/core/rake_task'
+
+# Manual
+desc "Manually run rspec 2 - works but ugly"
+task :spec do
+	puts exec("rspec -O spec/spec.opts")
 end
 
-Spec::Rake::SpecTask.new(:rcov) do |spec|
-  spec.libs << 'lib' << 'spec'
-  spec.pattern = 'spec/**/*_spec.rb'
-  spec.rcov = true
-end
+#Spec::Rake::SpecTask
+#RSpec::Core::RakeTask.new(:spec) # do |spec|
+#   spec.libs << 'lib' << 'spec'
+#   spec.spec_files = FileList['spec/**/*_spec.rb']
+# end
+
 
 require 'rdoc/task'
 Rake::RDocTask.new do |rdoc|

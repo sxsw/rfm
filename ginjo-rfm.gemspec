@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 # This gemspec has been crafted by hand - do not overwrite with Jeweler!
 # See http://yehudakatz.com/2010/12/16/clarifying-the-roles-of-the-gemspec-and-gemfile/
@@ -33,13 +34,12 @@ Gem::Specification.new do |s|
   s.add_development_dependency(%q<activemodel>, [">= 0"])
   s.add_development_dependency(%q<rake>, [">= 0"])
   s.add_development_dependency(%q<rdoc>, [">= 0"])
-  s.add_development_dependency(%q<rspec>, ["~> 1.3.0"])
+  s.add_development_dependency(%q<rspec>, ["~> 2"])
   s.add_development_dependency(%q<diff-lcs>, [">= 0"])
   s.add_development_dependency(%q<yard>, [">= 0"])
   s.add_development_dependency(%q<redcarpet>, [">= 0"])
   s.add_development_dependency(%q<libxml-ruby>, [">= 0"]) unless RUBY_PLATFORM == 'java'
   s.add_development_dependency(%q<nokogiri>, [">= 0"])
-  s.add_development_dependency(%q<hpricot>, [">= 0"])
   s.add_development_dependency(%q<ox>, [">= 0"])
   
 end # Gem::Specification.new

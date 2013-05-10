@@ -4,12 +4,14 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'yaml'
 require 'rfm'
 #require 'rfm/base'  # Use this to test if base.rb breaks anything, or if it's absence breaks anything.
-require 'spec'
-require 'spec/autorun'
+# require 'spec'
+# require 'spec/autorun'
+require 'rspec'
 
 if ENV['parser']; Rfm.backend = ENV['parser'].to_sym; end
 
 puts Rfm.info_short
+puts "RSpec #{RSpec::Version::STRING}"
 
 RFM_CONFIG = {
 	:ignore_bad_data => true,
@@ -33,7 +35,7 @@ LAYOUT_XML = File.read('spec/data/layout.xml')
 RESULTSET_XML = File.read('spec/data/resultset.xml')
 RESULTSET_PORTALS_XML = File.read('spec/data/resultset_with_portals.xml')
 
-Spec::Runner.configure do |config|
+RSpec.configure do |config|
 	config.before(:each) do
 		Kernel.silence_warnings do
 			#Memo = TestModel = Class.new(Rfm::Base){self.config :base_test}
