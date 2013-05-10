@@ -420,7 +420,7 @@ module Rfm
       rslt = connection.parse(:fmpxmllayout, self)
       #puts "Layout load result: #{rslt.class}"
 			@loaded = true
-			rslt
+			self #rslt
     end
     
 		def field_mapping

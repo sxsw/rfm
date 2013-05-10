@@ -2,21 +2,20 @@ require 'active_model_lint'
 
 describe Rfm::Base do
 
-	# TODO: Need to fix spec_helper config before any of these will work.
 	describe TestModel do
 		it_should_behave_like "ActiveModel"
 	end
 			
-	describe 'Test stubbing' do
-		it "server has stubbed methods for db connections" do
-			m = Memo.new(:memotext=>'test1').save!
-		end
-	end
+# 	describe 'Test stubbing' do
+# 		it "server has stubbed methods for db connections" do
+# 			m = Memo.new(:memotext=>'test1').save!
+# 		end
+# 	end
 
 	describe '.inherited' do
 		it("adds new model class to Rfm::Factory@models"){Rfm::Factory.models.include?(Memo).should be_true}
 		it("sets model @config with :parent and other config options") do
-			Memo.config[:parent].should == Memo.layout  #'parent_layout'
+			Memo.config[:parent].should == 'Rfm::Base'  #'parent_layout'
 			Memo.get_config[:layout].should == 'testlay1'
 		end
 	end

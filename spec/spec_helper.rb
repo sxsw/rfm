@@ -39,14 +39,13 @@ RSpec.configure do |config|
 	config.before(:each) do
 		Kernel.silence_warnings do
 			#Memo = TestModel = Class.new(Rfm::Base){self.config :base_test}
-			# Note the capitalization of these instance variables.
-			@Server = Memo.server
+			# NOTE the capitalization of these instance variables.
 			@Layout = Memo.layout   #.parent_layout
-	
-			LAYOUT_XML.stub(:body).and_return(LAYOUT_XML)
-			RESULTSET_XML.stub(:body).and_return(RESULTSET_XML)
+			@Server = Memo.server
+
 			@Server.stub(:load_layout).and_return(LAYOUT_XML)
 			@Server.stub(:connect).and_return(RESULTSET_XML)
+			@Layout.stub(:load_layout).and_return(Rfm::SaxParser.parse(LAYOUT_XML, 'fmpxmllayout.yml', @Layout))
 		end
 	end
 end
