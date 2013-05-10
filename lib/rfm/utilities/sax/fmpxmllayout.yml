@@ -8,10 +8,16 @@ elements:
     as_name: doctype
 - name: FMPXMLLAYOUT
   attach: none
+# - name: ERRORCODE
+#   as_name: error
+#   attach: shared
+#   compact: true
 - name: ERRORCODE
-  as_name: error
-  attach: shared
-  compact: true
+  attach: none
+  #before_close: 'check_for_errors'
+  attributes:
+  - name: text
+    as_name: error
 - name: PRODUCT
   attach: shared
   as_name: product
@@ -47,16 +53,17 @@ elements:
   attach: shared
   class: Array
   as_name: value_lists
-  delineate_with_hash: NAME
+  delimiter: NAME
   elements:
   - name: VALUE
-    # This turns the potential hash into a string
-    class: String
-    # Then we place the main attribute into the string's data.
-    before_close: replace text
+    class: Rfm::Metadata::ValueListItem
+    before_close: replace(@value.to_s)
+    attach_attributes: private
     attributes:
     - name: DISPLAY
       as_name: display
+    - name: text
+      as_name: value
 
 
 
