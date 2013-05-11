@@ -376,7 +376,7 @@ module Rfm
     ###  Metadata from Layout  ###
     
     def layout_meta
-    	@attributes || (load_layout && @attributes)
+    	@meta || (load_layout && @meta)
     end
     
     def field_controls

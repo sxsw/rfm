@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
+# YAML structure defining a SAX parsing scheme for fmpxmllayout xml.
+# The initial object of this parse should be a new instance of Rfm::Layout.
 ---
+attach_elements: _meta
+attach_attributes: _meta
 elements:
 - name: doctype
   attach: none
@@ -8,18 +12,15 @@ elements:
     as_name: doctype
 - name: FMPXMLLAYOUT
   attach: none
-# - name: ERRORCODE
-#   as_name: error
-#   attach: shared
-#   compact: true
 - name: ERRORCODE
   attach: none
+  # TODO: Build check_for_errors method in Layout class.
   #before_close: 'check_for_errors'
   attributes:
   - name: text
     as_name: error
 - name: PRODUCT
-  attach: shared
+  #attach: shared
   as_name: product
 - name: LAYOUT
   attach: none
@@ -31,7 +32,7 @@ elements:
 - name: FIELD
   class: Rfm::Metadata::FieldControl
   as_name: field_controls
-  attach: shared
+  #attach: shared
   delimiter: name
   attach_attributes: private
   attributes:
@@ -50,7 +51,8 @@ elements:
 - name: VALUELISTS
   attach: none
 - name: VALUELIST
-  attach: shared
+  # TODO: Disabling this breaks the delimiter.
+  #attach: shared
   class: Array
   as_name: value_lists
   delimiter: NAME

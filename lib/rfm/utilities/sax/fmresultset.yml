@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
-# YAML structure defining a SAX xml parsing scheme/fmp-grammar.
-
-
-# This is for dynamic shared instance variables.
+# YAML structure defining a SAX parsing scheme for fmresultset xml.
+# The initial object of this parse should be a new instance of Rfm::Resultset.
 ---
 attach_elements: _meta
 attach_attributes: _meta
