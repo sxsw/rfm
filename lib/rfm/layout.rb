@@ -170,7 +170,7 @@ module Rfm
     def initialize(*args) #name, db_obj
 #     	self.subs ||= []
 			config(*args)
-    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''         
+    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if get_config[:layout].to_s == ''         
       @loaded = false
       self
     end

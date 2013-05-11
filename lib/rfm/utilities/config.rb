@@ -148,6 +148,7 @@ module Rfm
 	  	
 	  # Get composite config from all levels, processing :use parameters at each level
 	  def config_merge_with_parent(filters=nil)
+	  	@config ||= {}
       remote = if (self != Rfm::Config)
       	parent = case
       		when @config[:parent].is_a?(String); eval(@config[:parent])
