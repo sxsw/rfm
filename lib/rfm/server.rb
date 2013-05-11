@@ -222,7 +222,8 @@ module Rfm
     alias_method :db, :databases
     
     def config(*args)
-    	super(*args, :capture_strings_with=>[:host, :account_name, :password])
+    	super(:capture_strings_with=>[:host, :account_name, :password]) 
+    	super(*args)
     end
     
     def state(*args)

@@ -17,7 +17,7 @@ describe Rfm::Config do
 		
 		it "passes strings to block if block given" do
 			string_test = []
-			klass.config('string1', 'string2', :group1, :groups2, :layout=>'lay5'){|strings| string_test = strings}
+			klass.config('string1', 'string2', :group1, :group2, :layout=>'lay5'){|params| string_test = params[:strings]}
 			string_test.should == ['string1', 'string2']
 		end
 	end

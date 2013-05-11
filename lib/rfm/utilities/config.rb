@@ -29,7 +29,7 @@ module Rfm
 		capture_strings_with
 	)
 	
-	CONFIG_DONT_STORE = %w(strings using parents symbols objects capture_strings_with)
+	CONFIG_DONT_STORE = %w(strings using parents symbols objects)  #capture_strings_with)
 
 	# Top level config hash accepts any defined config parameters,
 	# or group-name keys pointing to config subsets.
@@ -136,7 +136,8 @@ module Rfm
 	  	#(@config[:use] ||= []).concat options[:symbols]  #if options[:symbols].any?
 	  	options[:symbols].each{|a| @config.merge!(:use=>a.to_sym){|h,v1,v2| [v1].flatten << v2  }}
 	  	@config.merge!(options[:hash]).reject! {|k,v| CONFIG_DONT_STORE.include? k.to_s}
-	  	options[:hash][:capture_strings_with].rfm_force_array.each do |label|
+	  	#options[:hash][:capture_strings_with].rfm_force_array.each do |label|
+	  	@config[:capture_strings_with].rfm_force_array.each do |label|
 	  		string = options[:strings].delete_at(0)
 	  		(@config[label] = string) if string && !string.empty?
 	  	end
@@ -150,7 +151,7 @@ module Rfm
       remote = if (self != Rfm::Config)
       	parent = case
       		when @config[:parent].is_a?(String); eval(@config[:parent])
-      		when !@config[:parent].nil?; @config[:parent]
+      		when !@config[:parent].nil? && @config[:parent].respond_to?(:config_merge_with_parent); @config[:parent]
       		else eval('Rfm::Config')
       	end
       	parent.config_merge_with_parent

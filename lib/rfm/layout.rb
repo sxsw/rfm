@@ -176,7 +176,8 @@ module Rfm
     end
 
     def config(*args)
-    	super(*args, :capture_strings_with=>[:layout]) do |params|
+    	super(:capture_strings_with=>[:layout])
+    	super(*args) do |params|
     		(self.name = params[:strings][0]) if params && params[:strings] && params[:strings].any?
     		(self.db = params[:objects][0]) if params && params[:objects] && params[:objects][0] && params[:objects][0].is_a?(Rfm::Database)
     	end

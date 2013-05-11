@@ -88,7 +88,8 @@ module Rfm
     def password=(x); config :password=>x; end
     
     def config(*args)
-    	super(*args, :capture_strings_with=>[:database, :account_name, :password]) do |params|
+    	super(:capture_strings_with=>[:database, :account_name, :password])
+    	super(*args) do |params|
     		(self.server = params[:objects][0]) if params && params[:objects] && params[:objects][0] && params[:objects][0].is_a?(Rfm::Server)
     	end
     end

@@ -2,7 +2,7 @@ describe Rfm::Factory::ServerFactory do
 	subject {Rfm::Factory::ServerFactory.new}
 	describe '#[]' do
 		it "creates or retrieves server object, given host & options" do
-			server = subject['test-host', {:layout=>'test-layout-one'}]
+			server = subject['test-host', :layout=>'test-layout-one']
 			server.host_name.should == 'test-host'
 			server.state[:layout].should == 'test-layout-one'
 		end
