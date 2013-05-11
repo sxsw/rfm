@@ -133,7 +133,7 @@ module Rfm
 	  	options = config_extract_options!(*args)
 	  	# TODO: I think this line isn't quite right - It will ignore most of the list of symbols.
 	  	#options[:symbols].each{|a| @config.merge!(:use=>a.to_sym)}
-	  	(@config[:use] = options[:symbols]) if options[:symbols].any?
+	  	(@config[:use] ||= []).concat options[:symbols]  #if options[:symbols].any?
 	  	@config.merge!(options[:hash]).reject! {|k,v| CONFIG_DONT_STORE.include? k.to_s}
 	  	options[:hash][:capture_strings_with].rfm_force_array.each do |label|
 	  		string = options[:strings].delete_at(0)
