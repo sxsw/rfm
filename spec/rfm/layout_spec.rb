@@ -15,9 +15,9 @@ describe Rfm::Layout do
 	end
 		
 	describe "#initialze" do
-		it "should load instance variables" do
-			layout.name.should == name
-			layout.db.should == database
+		it "should set configuration" do
+			layout.config[:layout].should == name
+			layout.config[:parent].should == database
 			layout.instance_variable_get(:@loaded).should == false
 # 			layout.instance_variable_get(:@field_controls).class.should == Rfm::CaseInsensitiveHash
 # 			layout.instance_variable_get(:@value_lists).class.should == Rfm::CaseInsensitiveHash		
@@ -25,14 +25,21 @@ describe Rfm::Layout do
 	end # initialize
 	
 	describe "#get_records" do
-# 		it "calls server.connect(state[:account_name], state[:password], action, params.merge(extra_params), options)" do
-# 			server.should_receive(:connect) do |acnt, pass, actn, prms, opts|
-# 				actn.should == '-find'
-# 				prms[:prms].should == 'tst'
-# 				opts[:opts].should == 'tst'
-# 			end
-# 			layout.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'})
-# 		end
+
+		it "calls Connection.new with parameters" do
+			# Connection.new(action, extra_params = {}, options = {})
+			
+			Rfm::Connection.should_receive(:new) do |*args|
+				args[0].should == "-find"
+				args[1].should == {"-db" => nil, "-lay" => name, :prms=>'test'}
+				args[2].should == {:opts=>'test'}
+			end.and_return(Rfm::Connection.allocate)
+			Rfm::Connection.any_instance.stub(:parse)
+			layout.should_receive(:capture_resultset_meta)
+
+			layout.send :get_records, "-find", {:prms=>'test'}, {:opts=>'test'}
+		end
+		
 		
 # 		it "calls Rfm::Resultset.new(xml_response, self, include_portals)" do
 # 			Rfm::Resultset.should_receive(:new) do |xml, slf, incprt|
