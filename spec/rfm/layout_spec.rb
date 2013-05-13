@@ -6,8 +6,6 @@ describe Rfm::Layout do
   let(:name)     {'test_layout'}
   let(:layout)   {Rfm::Layout.new(name, database)}
 	before(:each) do
-# 		server.stub!(:connect).and_return(RESULTSET_XML)
-# 		server.stub!(:load_layout).and_return(LAYOUT_XML)
 		server.stub!(:state).and_return({})
 		database.stub!(:server).and_return(server)
 		#data.stub!(:body).and_return(RESULTSET_XML)
@@ -19,64 +17,69 @@ describe Rfm::Layout do
 			layout.config[:layout].should == name
 			layout.config[:parent].should == database
 			layout.instance_variable_get(:@loaded).should == false
-# 			layout.instance_variable_get(:@field_controls).class.should == Rfm::CaseInsensitiveHash
-# 			layout.instance_variable_get(:@value_lists).class.should == Rfm::CaseInsensitiveHash		
 		end
 	end # initialize
 	
 	describe "#get_records" do
+		before(:each) do
+			Rfm::Connection.stub(:new).and_return(Rfm::Connection.allocate)
+			Rfm::Connection.any_instance.stub(:parse).and_return(Rfm::Resultset.allocate)
+			Rfm::Layout.any_instance.stub(:capture_resultset_meta)
+		end
 
-		it "calls Connection.new with parameters" do
-			# Connection.new(action, extra_params = {}, options = {})
-			
+		it "calls Connection.new with action, params, and options" do
 			Rfm::Connection.should_receive(:new) do |*args|
 				args[0].should == "-find"
 				args[1].should == {"-db" => nil, "-lay" => name, :prms=>'test'}
 				args[2].should == {:opts=>'test'}
 			end.and_return(Rfm::Connection.allocate)
-			Rfm::Connection.any_instance.stub(:parse)
 			layout.should_receive(:capture_resultset_meta)
 
 			layout.send :get_records, "-find", {:prms=>'test'}, {:opts=>'test'}
 		end
 		
 		
-# 		it "calls Rfm::Resultset.new(xml_response, self, include_portals)" do
-# 			Rfm::Resultset.should_receive(:new) do |xml, slf, incprt|
-# 				xml[0..4].should == '<?xml'
-# 				slf.should == layout
-# 				incprt.should == true
-# 			end
-# 			layout.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'})
-# 		end
+		it "calls connection.parse with parameters" do
+			Rfm::Connection.any_instance.should_receive(:parse) do |*args|
+				args[0].should == :fmresultset
+				args[1].class.should == Rfm::Resultset
+			end
+			layout.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'})
+		end
 		
 		it "returns instance of Resultset" do
 			layout.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'}).class.should == Rfm::Resultset
 		end
 		
 		it "translates field names, given field-translation map" do
-			layout.instance_variable_set :@field_mapping, {'userName' => 'login'}
-			server.should_receive(:connect) do |acnt, pass, actn, prms, opts|
-				layout.field_mapping['userName'].should == 'login'
-				prms.has_key?('login').should be_false
-				prms.has_key?('userName').should be_true
-				prms['userName'].should == 'bill'
-			end
+			layout.config :field_mapping => {'userName' => 'login'}
+			
+			Rfm::Connection.should_receive(:new) do |*args|
+				args[1].has_key?('login').should be_false
+				args[1].has_key?('username').should be_true
+				args[1]['username'].should == 'bill'
+			end.and_return(Rfm::Connection.allocate)
+			layout.field_mapping['userName'].should == 'login'
+			
 			layout.send(:get_records, '-find', {'login'=>'bill'})
 		end
+		
 	end #get_records
 	
-	describe "#load" do
-# 		it "sets @field_controls and @value_lists from xml" do
-# 			layout.send(:load)
-# 			layout.instance_variable_get(:@field_controls).has_key?('stayid').should be_true
-# 			layout.instance_variable_get(:@value_lists).has_key?('employee unique id').should be_true
-# 		end
-	end
+		describe "#load_layout" do
+		
+			it "loads layout meta" do
+				Rfm::Connection.any_instance.stub(:connect).and_return LAYOUT_XML
+				layout.send(:load_layout)
+				layout.field_controls.has_key?('stayid').should be_true
+				layout.value_lists.has_key?('employee unique id').should be_true
+			end
+		end
 	
 	describe "#any" do
 		it "returns resultset containing instance of Rfm::Record" do
-			layout.send(:any)[0].class.should == Rfm::Record
+			Rfm::Connection.any_instance.stub(:connect).and_return(RESULTSET_XML)
+			layout.send(:any)[0].is_a?(Rfm::Record).should be_true
 		end
 	end
 	

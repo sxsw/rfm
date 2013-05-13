@@ -415,8 +415,6 @@ module Rfm
   	end
     
     def load_layout
-      #fmpxmllayout = db.server.load_layout(self)
-      #doc = Connection.new('-view', {'-db' => db.name, '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, state.merge(:parent=>self)).parse(:fmpxmllayout, self)
       connection = Connection.new('-view', {'-db' => state[:database], '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, self)
       rslt = connection.parse(:fmpxmllayout, self)
       #puts "Layout load result: #{rslt.class}"

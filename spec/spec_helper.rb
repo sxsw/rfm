@@ -35,6 +35,8 @@ LAYOUT_XML = File.read('spec/data/layout.xml')
 RESULTSET_XML = File.read('spec/data/resultset.xml')
 RESULTSET_PORTALS_XML = File.read('spec/data/resultset_with_portals.xml')
 
+[LAYOUT_XML, RESULTSET_XML, RESULTSET_PORTALS_XML].each{|c| class << c; def body; self; end; end}
+
 RSpec.configure do |config|
 	config.before(:each) do
 		Kernel.silence_warnings do
