@@ -438,16 +438,17 @@ module Rfm
     def modelize
     	@model ||= (
 	    	model_name = name.to_s.gsub(/\W|_/, ' ').title_case.gsub(/\s/,'')
-	    	model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
+	    	#model_class = eval("::" + model_name + "= Class.new(Rfm::Base)")
+	    	model_class = Rfm.const_defined?(model_name) ? Rfm.const_get(model_name) : Rfm.const_set(model_name, Class.new(Rfm::Base))
 	    	model_class.class_exec(self) do |layout_obj|
 	    		@layout = layout_obj
 	    	end
 	  		model_class.config :parent=>'@layout'
 		    model_class
 	    )
-    rescue StandardError, SyntaxError
-    	puts "Error in layout#modelize: #{$!}"
-    	nil
+#     rescue StandardError, SyntaxError
+#     	puts "Error in layout#modelize: #{$!}"
+#     	nil
   	end
   	
   	def models

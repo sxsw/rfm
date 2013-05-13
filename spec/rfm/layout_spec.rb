@@ -130,7 +130,8 @@ describe Rfm::Layout do
 		before(:each){layout.modelize}
 		
 		it "creates model subclassed from Rfm::Base" do
-			layout.models[0].class.should == Rfm::Base
+			layout.models[0].should == Rfm::TestLayout
+			layout.models[0].ancestors.include?(Rfm::Base).should be_true
 		end
 		
 		it "stores model in layout@model as constant based on layout name" do
