@@ -104,40 +104,44 @@ module Rfm
 			database.server
 		end
 		
+		def get_meta
+			meta || {}
+		end
+		
 		def field_meta
-			@meta['field_meta'] ||= Rfm::CaseInsensitiveHash.new
+			get_meta['field_meta'] ||= Rfm::CaseInsensitiveHash.new
 		end
 		
 		def portal_meta
-			@meta['portal_meta'] ||= Rfm::CaseInsensitiveHash.new
+			get_meta['portal_meta'] ||= Rfm::CaseInsensitiveHash.new
 		end
 		
 		def date_format
-			@meta['date_format']
+			get_meta['date_format']
 		end
 
 		def time_format
-			@meta['time_format']
+			get_meta['time_format']
 		end
 		
 		def timestamp_format
-			@meta['timestamp_format']
+			get_meta['timestamp_format']
 		end
 		
 		def total_count
-			@meta['total_count']
+			get_meta['total_count']
 		end		
 		
 		def foundset_count
-			@meta['count']
+			get_meta['count']
 		end
 		
 		def table
-			@meta['table']
+			get_meta['table']
 		end
 		
 		def error
-			@meta['error']
+			get_meta['error']
 		end
         
     def field_names

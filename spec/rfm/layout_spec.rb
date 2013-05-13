@@ -135,7 +135,7 @@ describe Rfm::Layout do
 		end
 		
 		it "stores model in layout@model as constant based on layout name" do
-			layout.models[0].should == TestLayout
+			layout.models[0].should == Rfm::TestLayout
 		end
 		
 		it "sets model@layout with layout object" do
