@@ -1,7 +1,7 @@
 describe Rfm::Record do
-	let(:resultset) {Rfm::Resultset.new}
+	let(:resultset) {Rfm::Resultset.allocate}
 	let(:record) {Rfm::Record.allocate}
-	let(:layout) {Rfm::Layout.new('Memo')}
+	let(:layout) {Rfm::Layout.allocate}
 	subject {record}
 
   before(:each) do
@@ -9,18 +9,13 @@ describe Rfm::Record do
   end
   
   describe ".new" do
-  	before(:all) do
-  		Kernel.silence_warnings do
-  			Rfm::Record.any_instance.stub(:initialize)
-  		end
-  	end
   	
-  	# TODO: Fix these !!!
 		context "when model exists" do
 			it "creates an instance of model" do
-# 				rs = Rfm::Resultset.new
-# 				rs.instance_variable_set(:@layout, Rfm::Layout.new('Memo'))
-				Rfm::Record.new(Rfm::Resultset.new(layout, layout)).class.name.should == 'Memo'
+				rs = Rfm::Resultset.new @Layout, @Layout
+				puts rs.layout
+				#puts rs.layout.model
+				Rfm::Record.new(rs).class.should == Memo
 			end
 		end
 		
