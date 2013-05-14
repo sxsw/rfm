@@ -1,7 +1,7 @@
 describe Rfm::Record do
-	let(:resultset) {Rfm::Resultset.allocate}
+	let(:resultset) {Rfm::Resultset.new}
 	let(:record) {Rfm::Record.allocate}
-	let(:layout) {mock('Rfm::Layout')}
+	let(:layout) {Rfm::Layout.new('Memo')}
 	subject {record}
 
   before(:each) do
@@ -9,24 +9,26 @@ describe Rfm::Record do
   end
   
   describe ".new" do
-  	before(:all) do 
-  		Rfm::Record.any_instance.stub(:initialize)
-  		Rfm::Resultset.any_instance.stub(:table).and_return('TestTable')
+  	before(:all) do
+  		Kernel.silence_warnings do
+  			Rfm::Record.any_instance.stub(:initialize)
+  		end
   	end
   	
   	# TODO: Fix these !!!
 		context "when model exists" do
 			it "creates an instance of model" do
-				Rfm::Record.new(resultset, Memo.layout).class.should == Memo
+# 				rs = Rfm::Resultset.new
+# 				rs.instance_variable_set(:@layout, Rfm::Layout.new('Memo'))
+				Rfm::Record.new(Rfm::Resultset.new(layout, layout)).class.name.should == 'Memo'
 			end
 		end
-		# 
-		# context "when no model exists" do
-		# 	it "creates an instance of Rfm::Record" do
-		# 		r = {}.extend Rfm::Fmresultset::Record
-		# 		Rfm::Record.new(r,[],'', @layout).class.should == Rfm::Record
-		# 	end
-		# end
+		
+		context "when no model exists" do
+			it "creates an instance of Rfm::Record" do
+				Rfm::Record.new.class == Rfm::Record
+			end
+		end
   end
 
   describe "#[]" do

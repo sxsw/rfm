@@ -112,34 +112,17 @@ module Rfm
     attr_reader :record_id, :mod_id, :portals
     def_delegators :layout, :db, :database, :server, :field_meta, :portal_meta, :field_names, :portal_names
     
+    # This is called during the parsing process, but only to allow creation of the correct type of model instance.
+    # This is also called by the end-user when constructing a new empty record, but it is called from the model subclass.
 		def self.new(*args) # resultset
-			#puts "Creating new record from Record. args: #{args.to_yaml}"
 			record = case
-				
-			# Allocate record from official model.
-			when args[0].is_a?(Resultset) && args[0].layout && args[0].layout.respond_to?(:model) && args[0].layout.model
-				#puts "New record from model '#{args[0].layout.model}'"
-				args[0].layout.model.allocate
-				
-			# Create model from layout, then allocate record.
+			
+			# Get model from layout, then allocate record.
 			when args[0].is_a?(Resultset) && args[0].layout
-				#puts "New record from layout-modelize '#{args[0].layout.name}'"
 				args[0].layout.modelize.allocate
-
-			# Create subclass of Rfm::Record, then allocate.
-			# I don't think this is necessary. Try it on a resultset loaded from disk.
-			when args[0].is_a?(Resultset) && args[0].table
-				#puts "New record from table-const '#{args[0].table}'"
-				klass = if self.class.const_defined?(args[0].table)
-					self.class.const_get(args[0].table)
-				else
-					self.class.const_set(args[0].table, Class.new(Record))
-				end
-				klass.allocate
 			
 			# Allocate instance of Rfm::Record.	
 			else
-				#puts "New record from generic '#{args[0].table}'"
 				self.allocate
 			end
 			record.send(:initialize, *args)

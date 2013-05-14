@@ -74,10 +74,8 @@ module Rfm
     # * *portals* is a hash (with table occurrence names for keys and Field objects for values). If your
     #   layout contains portals, you can find out what fields they contain here. Again, if it's the data you're
     #   after, you want to look at the Record object.
-    def initialize(*args) # connection or calling_object or hash
+    def initialize(*args) # parent, layout
 			config *args
-# 			@calling_object		= args[1] || options[:calling_object]
-#       @layout           = args[0] || options[:layout_object]
     end # initialize
 
     def config(*args)
@@ -85,9 +83,14 @@ module Rfm
     		(@layout = params[:objects][0]) if params &&
     			params[:objects] &&
     			params[:objects][0] &&
-    			#(params[:objects][0].class.ancestors & [Rfm::Layout, Rfm::Layout::LayoutModule]).any?
     			params[:objects][0].is_a?(Rfm::Layout)
     	end
+    end
+    
+    # This method was added for situations where a layout was not provided at resultset instantiation,
+    # such as when loading a resultset from an xml file.
+    def layout
+    	@layout ||= (Layout.new(meta.layout, self) if meta.respond_to? :layout)
     end
     
 		def state(*args)
@@ -104,44 +107,45 @@ module Rfm
 			database.server
 		end
 		
-		def get_meta
-			meta || {}
+		def meta
+			# Access the meta inst var here. This var may change name in the future (to resultset_meta)
+			@meta || {}
 		end
 		
 		def field_meta
-			get_meta['field_meta'] ||= Rfm::CaseInsensitiveHash.new
+			meta['field_meta'] ||= Rfm::CaseInsensitiveHash.new
 		end
 		
 		def portal_meta
-			get_meta['portal_meta'] ||= Rfm::CaseInsensitiveHash.new
+			meta['portal_meta'] ||= Rfm::CaseInsensitiveHash.new
 		end
 		
 		def date_format
-			get_meta['date_format']
+			meta['date_format']
 		end
 
 		def time_format
-			get_meta['time_format']
+			meta['time_format']
 		end
 		
 		def timestamp_format
-			get_meta['timestamp_format']
+			meta['timestamp_format']
 		end
 		
 		def total_count
-			get_meta['total_count']
+			meta['total_count']
 		end		
 		
 		def foundset_count
-			get_meta['count']
+			meta['count']
 		end
 		
 		def table
-			get_meta['table']
+			meta['table']
 		end
 		
 		def error
-			get_meta['error']
+			meta['error']
 		end
         
     def field_names
