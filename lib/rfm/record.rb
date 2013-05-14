@@ -236,7 +236,7 @@ module Rfm
     def replace_with_fresh_data(record)
 			self.replace record
 			[:@mod_id, :@record_id, :@portals, :@mods].each do |var|
-				self.instance_variable_set var, record.instance_variable_get(var)
+				self.instance_variable_set var, record.instance_variable_get(var) || {}
 			end
 			self
 		end

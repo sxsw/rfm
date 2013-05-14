@@ -182,8 +182,8 @@ describe Rfm::Record do
   		record.instance_variable_set(:@record_id, 1)
 	  	record.instance_variable_set(:@loaded, true)
 	  	record.instance_variable_set(:@layout, layout)
-	  	record.instance_variable_set(:@mods, {})	
-	  	layout.stub!(:edit).and_return{[record.instance_variable_get(:@mods)]}
+	  	record.instance_variable_set(:@mods, {})
+	  	layout.stub!(:edit).and_return{[record.dup.merge(record.instance_variable_get(:@mods))]}
     end
     
   	context "when not modified" do
