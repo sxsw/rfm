@@ -157,12 +157,14 @@ module Rfm
       # creates new special hash
       input_hash = Rfm::CaseInsensitiveHash.new
       # populate new hash with input, coercing keys to strings
-      new_attr.each{|k,v| input_hash.merge! k.to_s=>v}
+      #new_attr.each{|k,v| input_hash.merge! k.to_s=>v}
+      new_attr.each{|k,v| input_hash[k.to_s] = v}
       # loop thru each layout field, adding data to @mods
       self.class.field_controls.keys.each do |field| 
         field_name = field.to_s
         if input_hash.has_key?(field_name)
-          @mods.merge! field_name=>(input_hash[field_name] || '')
+          #@mods.merge! field_name=>(input_hash[field_name] || '')
+          @mods[field_name] = (input_hash[field_name] || '')
         end
       end
       # loop thru each input key-value,

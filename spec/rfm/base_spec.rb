@@ -36,6 +36,30 @@ describe Rfm::Base do
 		end
 	end
 	
+	describe '#update_attributes' do
+		before(:each) do
+			Rfm::Connection.any_instance.stub(:connect).and_return(LAYOUT_XML)
+			@m = Memo.new
+			@m.update_attributes :memotext=>'memotext test', :memosubject=>'memosubject test', :extra=>'extra field test'
+		end
+		
+		it "updates self with new data" do; #y Memo.layout.field_controls; end
+			@m.memotext.should == 'memotext test'
+			@m.memosubject.should == 'memosubject test'
+		end
+		
+		it "updates @mods with new data" do
+			@m.instance_variable_get(:@mods)[:memotext].should == 'memotext test'
+			@m.instance_variable_get(:@mods)[:memosubject].should == 'memosubject test'
+		end
+		
+		it "adds/updates instance_variables with keys that do not exist in field list" do
+			@m.instance_variable_get(:@extra).should == 'extra field test'
+			@m[:extra].should == nil
+			@m.instance_variable_get(:@mods)[:extra].should == nil
+		end
+	end
+	
 	# describe '.create_from_instance'
 	# 
 	# describe '#initialize'
@@ -43,8 +67,6 @@ describe Rfm::Base do
 	# describe '#new_record?'
 	# 
 	# describe '#reload'
-	# 
-	# describe '#update_attributes'
 	# 
 	# describe '#update_attributes!'
 	# 
