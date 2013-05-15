@@ -103,6 +103,7 @@ module Rfm
 			def portal_callback(cursor)
 				self.resultset = cursor.top.object
 				cursor.parent.object[get_mapped_name.split('::').last.to_s.downcase] = self
+				#puts ['FIELD_portal_callback', name, cursor.parent.object.object_id, cursor.parent.tag, cursor.parent.object[name.split('::').last.to_s.downcase]].join(', ')
 			end
       
     end # Field

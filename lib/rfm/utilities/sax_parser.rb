@@ -799,7 +799,13 @@ class Object
 			if delimiter
 				delimit_name = obj._get_attribute(delimiter, options[:shared_variable_name]).to_s.downcase
 				#puts ['_setting_with_delimiter', delimit_name]
-				instance_variable_set("@#{name}", instance_variable_get("@#{name}") || options[:default_class].new)[delimit_name]=obj
+				#instance_variable_set("@#{name}", instance_variable_get("@#{name}") || options[:default_class].new)[delimit_name]=obj
+				# This line is more efficient than the above line.
+				instance_variable_set("@#{name}", options[:default_class].new) unless instance_variable_get("@#{name}")
+				instance_variable_get("@#{name}")[delimit_name]=obj
+				# Trying to handle multiple portals with same table-occurance on same layout.
+				# In parsing terms, this is trying to handle multiple elements who's delimiter field contains the SAME delimiter data.
+				#instance_variable_get("@#{name}")._merge_object!(obj, delimit_name, nil, nil, nil)
 			else
 				#puts ['_setting_existing_instance_var', name]
 				instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
@@ -866,8 +872,12 @@ class Hash
 				#puts "MERGING delimited object with hash: self '#{self.class}' obj '#{obj.class}' name '#{name}' delim '#{delimiter}' delim_name '#{delimit_name}' options '#{options}'"
 				self[name] ||= options[:default_class].new
 				self[name][delimit_name]=obj
+				# This is supposed to handle multiple elements who's delimiter value is the SAME.
+				#obj.instance_variable_set(:@_index_, 0)
+				#self[name]._merge_object!(obj, delimit_name, nil, nil, nil)
 			else
 				self[name] = [self[name]].flatten
+				#obj.instance_variable_set(:@_index_, self[name].last.instance_variable_get(:@_index_).to_i + 1)
 				self[name] << obj
 			end
 		else

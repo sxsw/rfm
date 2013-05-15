@@ -19,9 +19,12 @@ module Rfm
 			def portal_callback(cursor)
 				resultset = cursor.top.object
 				table, name = @attributes['name'].to_s.split('::')
+				#puts ['DATUM_portal_callback_01', table, name].join(', ')
 				name = get_mapped_name(name, resultset)
 				field = resultset.portal_meta[table.downcase][name.downcase]
 				data = @attributes['data']
+				#puts ['DATUM_portal_callback_02', resultset.class, table, name, field, data].join(', ')
+				#(y resultset.portal_meta) unless field
 				cursor.parent.object[name.downcase] = field.coerce(data)
 			end
       

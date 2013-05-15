@@ -1,22 +1,21 @@
+#!/usr/bin/env ruby
 # YAML structure defining a SAX xml parsing scheme/fmp-grammar.
 
 ###################################################################
 ---
-ignore_unknown_attributes: true
-ignore_unknown_elements: true
+attach_attributes: none
+attach_elements: none
 elements:
-  relatedset:
-    class: RelatedSet
-    as_label: portals
-    delineate_with_hash: table
+- name: relatedset
+  class: RelatedSet
+  as_name: portals
+  delimiter: table
+  elements:
+  - name: record
+    class: Record
     elements:
-      record:
-        class: Record
-        #hide_attributes: true
-        elements:
-          field:
-            class: Field
-            hide: true
-            before_close: :build_record_data
-...
+    - name: field
+      class: Field
+      attach: cursor
+      before_close: :build_record_data
 ###################################################################

@@ -1,20 +1,21 @@
-require 'data/sax_models'
+# require 'data/sax_models'
 
 
 describe Rfm::SaxParser::Handler do
 	#subject {Rfm::SaxParser::Handler}
-	Rfm.get_backend :rexml
-	HANDLER = Rfm::SaxParser::RexmlHandler
+	#Rfm.get_backend :rexml
+	HANDLER = Rfm::SaxParser::Handler.get_backend :rexml
 
 	describe '#set_cursor' do
 		subject {HANDLER.allocate} #new('local_testing/sax_parse.yml')}
 		let(:input) { Rfm::SaxParser::Cursor.new({'elements'=>{'test'=>'True'}}, {:attribute=>'data'}, 'TEST') }
 		before(:each) do
+			Rfm::SaxParser.template_prefix = '.'
 			subject.stack = []
 		end
 		
-		it 'sends a cursor object to the stack' do
-			subject.set_cursor(input)._obj.should == input._obj
+		it 'sends a cursor object to the stack and returns object' do
+			subject.set_cursor(input).object.should == input.object
 			#subject.new(File.new('spec/data/resultset.xml'))['fmresultset']['datasource']['table'].should == 'Memo_'
 		end
 		
@@ -23,9 +24,9 @@ describe Rfm::SaxParser::Handler do
 	
 	describe "Functional Parse" do
 		it 'converts duplicate tags into appropriate hash or array' do
-			r = HANDLER.build('spec/data/resultset_with_portals.xml', 'spec/data/sax_portals.yml').result
+			rr = HANDLER.build('spec/data/resultset_with_portals.xml', 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new).result
 			#y r
-			r['portals']['ProjectLineItemsSubItems_PLI'][2]['ProjectLineItemsSubItems_PLI::producetotal'].should == "1"
+			rr[0].portals['ProjectLineItemsSubItems_PLI'][2]['producetotal'].to_i.should == 1
 		end
 	end
 	

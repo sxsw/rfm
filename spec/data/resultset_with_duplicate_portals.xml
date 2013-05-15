@@ -76,6 +76,10 @@
 			<field-definition auto-enter="yes" four-digit-year="no" global="no" max-repeat="1" name="Note_PRO::creatDate" not-empty="no" numeric-only="no" result="date" time-of-day="no" type="normal"/>
 			<field-definition auto-enter="yes" four-digit-year="no" global="no" max-repeat="1" name="Note_PRO::creatUser" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
 		</relatedset-definition>
+		<relatedset-definition table="Note_PRO">
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="Note_PRO::noteBody" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="Note_PRO::noteSubject" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
+		</relatedset-definition>
 		<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="zundnote" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
 		<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="CompletionDate" not-empty="no" numeric-only="no" result="date" time-of-day="no" type="normal"/>
 		<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="PreviewTime" not-empty="no" numeric-only="no" result="time" time-of-day="no" type="normal"/>
@@ -92,6 +96,23 @@
 			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::bleed" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
 			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::filetype" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
 			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::proofcycle" not-empty="no" numeric-only="no" result="number" time-of-day="no" type="normal"/>
+		</relatedset-definition>
+		<relatedset-definition table="ProjectLineItemsSubItems_PLI">
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::producetotal" not-empty="no" numeric-only="no" result="number" time-of-day="no" type="calculation"/>
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::imagedescription" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::FinishWidth" not-empty="no" numeric-only="no" result="number" time-of-day="no" type="normal"/>
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::FinishHeight" not-empty="no" numeric-only="no" result="number" time-of-day="no" type="normal"/>
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::Laminate" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::Mount" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::border" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
+		</relatedset-definition>
+		<relatedset-definition table="ProjectLineItemsSubItems_PLI">
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::producetotal" not-empty="no" numeric-only="no" result="number" time-of-day="no" type="calculation"/>
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::imagedescription" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::FinishWidth" not-empty="no" numeric-only="no" result="number" time-of-day="no" type="normal"/>
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::FinishHeight" not-empty="no" numeric-only="no" result="number" time-of-day="no" type="normal"/>
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::Mount" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
+			<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ProjectLineItemsSubItems_PLI::border" not-empty="no" numeric-only="no" result="text" time-of-day="no" type="normal"/>
 		</relatedset-definition>
 		<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ShipDate" not-empty="no" numeric-only="no" result="date" time-of-day="no" type="normal"/>
 		<field-definition auto-enter="no" four-digit-year="no" global="no" max-repeat="1" name="ShipTime" not-empty="no" numeric-only="no" result="time" time-of-day="no" type="normal"/>
@@ -813,6 +834,225 @@
 						<data/>
 					</field>
 					<field name="ProjectLineItemsSubItems_PLI::proofcycle">
+						<data/>
+					</field>
+				</record>
+			</relatedset>
+			<relatedset count="5" table="ProjectLineItemsSubItems_PLI">
+				<record mod-id="7" record-id="2880">
+					<field name="ProjectLineItemsSubItems_PLI::producetotal">
+						<data>1</data>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::imagedescription">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishWidth">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishHeight">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Laminate">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Mount">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::border">
+						<data/>
+					</field>
+				</record>
+				<record mod-id="7" record-id="2881">
+					<field name="ProjectLineItemsSubItems_PLI::producetotal">
+						<data>1</data>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::imagedescription">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishWidth">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishHeight">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Laminate">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Mount">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::border">
+						<data/>
+					</field>
+				</record>
+				<record mod-id="7" record-id="2882">
+					<field name="ProjectLineItemsSubItems_PLI::producetotal">
+						<data>1</data>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::imagedescription">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishWidth">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishHeight">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Laminate">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Mount">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::border">
+						<data/>
+					</field>
+				</record>
+				<record mod-id="7" record-id="2883">
+					<field name="ProjectLineItemsSubItems_PLI::producetotal">
+						<data>1</data>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::imagedescription">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishWidth">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishHeight">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Laminate">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Mount">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::border">
+						<data/>
+					</field>
+				</record>
+				<record mod-id="7" record-id="2884">
+					<field name="ProjectLineItemsSubItems_PLI::producetotal">
+						<data>1</data>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::imagedescription">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishWidth">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishHeight">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Laminate">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Mount">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::border">
+						<data/>
+					</field>
+				</record>
+			</relatedset>
+			<relatedset count="5" table="ProjectLineItemsSubItems_PLI">
+				<record mod-id="7" record-id="2880">
+					<field name="ProjectLineItemsSubItems_PLI::producetotal">
+						<data>1</data>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::imagedescription">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishWidth">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishHeight">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Mount">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::border">
+						<data/>
+					</field>
+				</record>
+				<record mod-id="7" record-id="2881">
+					<field name="ProjectLineItemsSubItems_PLI::producetotal">
+						<data>1</data>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::imagedescription">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishWidth">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishHeight">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Mount">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::border">
+						<data/>
+					</field>
+				</record>
+				<record mod-id="7" record-id="2882">
+					<field name="ProjectLineItemsSubItems_PLI::producetotal">
+						<data>1</data>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::imagedescription">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishWidth">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishHeight">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Mount">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::border">
+						<data/>
+					</field>
+				</record>
+				<record mod-id="7" record-id="2883">
+					<field name="ProjectLineItemsSubItems_PLI::producetotal">
+						<data>1</data>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::imagedescription">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishWidth">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishHeight">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Mount">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::border">
+						<data/>
+					</field>
+				</record>
+				<record mod-id="7" record-id="2884">
+					<field name="ProjectLineItemsSubItems_PLI::producetotal">
+						<data>1</data>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::imagedescription">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishWidth">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::FinishHeight">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::Mount">
+						<data/>
+					</field>
+					<field name="ProjectLineItemsSubItems_PLI::border">
 						<data/>
 					</field>
 				</record>
