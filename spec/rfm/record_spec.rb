@@ -13,7 +13,7 @@ describe Rfm::Record do
 		context "when model exists" do
 			it "creates an instance of model" do
 				rs = Rfm::Resultset.new @Layout, @Layout
-				puts rs.layout
+				#puts rs.layout
 				#puts rs.layout.model
 				Rfm::Record.new(rs).class.should == Memo
 			end
