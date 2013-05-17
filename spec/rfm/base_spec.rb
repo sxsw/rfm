@@ -49,14 +49,14 @@ describe Rfm::Base do
 		end
 		
 		it "updates @mods with new data" do
-			@m.instance_variable_get(:@mods)[:memotext].should == 'memotext test'
-			@m.instance_variable_get(:@mods)[:memosubject].should == 'memosubject test'
+			@m.instance_variable_get(:@mods)['memotext'].should == 'memotext test'
+			@m.instance_variable_get(:@mods)['memosubject'].should == 'memosubject test'
 		end
 		
 		it "adds/updates instance_variables with keys that do not exist in field list" do
 			@m.instance_variable_get(:@extra).should == 'extra field test'
-			@m[:extra].should == nil
-			@m.instance_variable_get(:@mods)[:extra].should == nil
+			lambda {@m[:extra]}.should raise_error(Rfm::ParameterError)
+			@m.instance_variable_get(:@mods)['extra'].should == nil
 		end
 	end
 	
