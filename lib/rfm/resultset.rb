@@ -163,6 +163,7 @@ module Rfm
   private
     
     def check_for_errors(code=@meta['error'].to_i, raise_401=get_config[:raise_401])
+    	#puts ["\nRESULTSET#check_for_errors", code, raise_401]
       raise Rfm::Error.getError(code) if code != 0 && (code != 401 || raise_401)
     end
 

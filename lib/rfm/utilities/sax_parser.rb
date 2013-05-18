@@ -309,7 +309,7 @@ module Rfm
 
 				def run_callback(_tag, _cursor=self, _model=_cursor.model, _object=_cursor.object )
 	    		callback = before_close?(_model)
-	    		#puts ['RUN_CALLBACK', _tag, _cursor.tag, _object.class, callback]
+	    		#puts ["\nRUN_CALLBACK", _tag, _cursor.tag, _object.class, callback]
 	      	if callback.is_a? Symbol
 	      		_object.send callback, _cursor
 	      	elsif callback.is_a?(String)
@@ -500,9 +500,9 @@ module Rfm
 		  
 		  # Finds a loadable backend and returns its symbol.
 		  def self.decide_backend
-		  	BACKENDS.find{|b| !Gem::Specification::find_all_by_name(b[1]).empty?}[0]
+		  	BACKENDS.find{|b| !Gem::Specification::find_all_by_name(b[1]).empty? || b[0]==:rexml}[0]
 		  rescue
-		  	raise "The xml parser could not find a loadable backend gem: #{$!}"
+		  	raise "The xml parser could not find a loadable backend library: #{$!}"
 		  end
 		  
 		  def initialize(_template=nil, initial_object=nil)

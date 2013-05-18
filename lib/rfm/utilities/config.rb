@@ -85,6 +85,7 @@ module Rfm
 		#    get_config :layout => 'my_layout
 		#
   	def get_config(*arguments)
+  		puts caller_locations(1,1)[0]
   		args = arguments.clone
   		@config ||= {}
   		options = config_extract_options!(*args)
@@ -160,7 +161,7 @@ module Rfm
       else
       	get_config_file.merge((defined?(RFM_CONFIG) and RFM_CONFIG.is_a?(Hash)) ? RFM_CONFIG : {})
       end.clone
-      
+            
       remote[:using] ||= []
       remote[:parents] ||= ['file', 'RFM_CONFIG']
 

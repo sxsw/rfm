@@ -321,7 +321,7 @@ module Rfm
 	    def name; state[:layout].to_s; end
 	    
 			def state(*args)
-				get_config(*args)
+				@state ||= get_config(*args)
 			end
 			
 			

@@ -51,7 +51,7 @@ module Rfm
     end
 
     def state(*args)
-    	@defaults.merge(get_config(*args))
+    	@state ||= @defaults.merge(get_config(*args))
     end
     
 	  def host_name; state[:host]; end
