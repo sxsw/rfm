@@ -170,7 +170,7 @@ module Rfm
     def initialize(*args) #name, db_obj
 #     	self.subs ||= []
 			config(*args)
-    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if get_config[:layout].to_s == ''         
+    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''         
       @loaded = false
       self
     end
@@ -188,167 +188,130 @@ module Rfm
   		db_orig || (self.db = Rfm::Database.new(state[:database], state[:account_name], state[:password], self))
   	end
     
-#     # These methods are to be inclulded in Layout and SubLayout, so that
-#     # they have their own discrete 'self' in the master class and the subclass.
-#     # This means these methods will not get forwarded, and will talk to the correct
-#     # variables & objects of the correct self.
-#     # Do not get or set instance variables in Layout from other objects directly,
-#     # always use getter & setter methods.
-#     # This all means that any chain of methods that want to refer ultimately to Sublayout, must all be defined or included in Sublayout
-#     module LayoutModule
+    # Returns a ResultSet object containing _every record_ in the table associated with this layout.
+    def all(options = {})
+      get_records('-findall', {}, options)
+    end
     
-	    # Returns a ResultSet object containing _every record_ in the table associated with this layout.
-	    def all(options = {})
-	      get_records('-findall', {}, options)
-	    end
+    # Returns a ResultSet containing a single random record from the table associated with this layout.
+    def any(options = {})
+      get_records('-findany', {}, options)
+    end
+  
+    # Finds a record. Typically you will pass in a hash of field names and values. For example:
+    #
+    #   myLayout.find({"First Name" => "Bill"})
+    #
+    # Values in the hash work just like value in FileMaker's Find mode. You can use any special
+    # symbols (+==+, +...+, +>+, etc...).
+    #
+		# Create a Filemaker 'omit' request by including an :omit key with a value of true.
+		# 
+		# 	myLayout.find :field1 => 'val1', :field2 => 'val2', :omit => true
+		# 
+		# Create multiple Filemaker find requests by passing an array of hashes to the #find method.
+		# 
+		# 	myLayout.find [{:field1 => 'bill', :field2 => 'admin'}, {:field3 => 'inactive', :omit => true}, ...]
+		# 
+		# If the value of a field in a find request is an array of strings, the string values will be logically OR'd in the query.
+		# 
+		# 	myLayout.find :fieldOne => ['bill','mike','bob'], :fieldTwo =>'staff'	    
+    #
+    # If you pass anything other than a hash or an array as the first parameter, it is converted to a string and
+    # assumed to be FileMaker's internal id for a record (the recid).
+    #
+    #   myLayout.find 54321
+    #
+    def find(find_criteria, options = {})
+    	#puts "layout.find-#{self.object_id}"
+    	options.merge!({:field_mapping => field_mapping.invert}) if field_mapping
+			get_records(*Rfm::CompoundQuery.new(find_criteria, options))
+    end
+    
+    # Access to raw -findquery command.
+    def query(query_hash, options = {})
+    	get_records('-findquery', query_hash, options)
+    end
+  
+    # Updates the contents of the record whose internal +recid+ is specified. Send in a hash of new
+    # data in the +values+ parameter. Returns a RecordSet containing the modified record. For example:
+    #
+    #   recid = myLayout.find({"First Name" => "Bill"})[0].record_id
+    #   myLayout.edit(recid, {"First Name" => "Steve"})
+    #
+    # The above code would find the first record with _Bill_ in the First Name field and change the 
+    # first name to _Steve_.
+    def edit(recid, values, options = {})
+      get_records('-edit', {'-recid' => recid}.merge(values), options)
+      #get_records('-edit', {'-recid' => recid}.merge(expand_repeats(values)), options) # attempt to set repeating fields.
+    end
+    
+    # Creates a new record in the table associated with this layout. Pass field data as a hash in the 
+    # +values+ parameter. Returns the newly created record in a RecordSet. You can use the returned
+    # record to, ie, discover the values in auto-enter fields (like serial numbers). 
+    #
+    # For example:
+    #
+    #   result = myLayout.create({"First Name" => "Jerry", "Last Name" => "Robin"})
+    #   id = result[0]["ID"]
+    #
+    # The above code adds a new record with first name _Jerry_ and last name _Robin_. It then
+    # puts the value from the ID field (a serial number) into a ruby variable called +id+.
+    def create(values, options = {})
+      get_records('-new', values, options)
+    end
+    
+    # Deletes the record with the specified internal recid. Returns a ResultSet with the deleted record.
+    #
+    # For example:
+    #
+    #   recid = myLayout.find({"First Name" => "Bill"})[0].record_id
+    #   myLayout.delete(recid)
+    # 
+    # The above code finds every record with _Bill_ in the First Name field, then deletes the first one.
+    def delete(recid, options = {})
+      get_records('-delete', {'-recid' => recid}, options)
+      return nil
+    end
+    
+    # Retrieves metadata only, with an empty resultset.
+    def view(options = {})
+    	get_records('-view', {}, options)
+    end
+    
+    def get_records(action, extra_params = {}, options = {})
+    	# TODO: The grammar stuff here won't work properly until you handle config between
+    	# models/sublayouts/layout/server (Is this done now?).
+    	grammar_option = state(options)[:grammar]
+    	options.merge!(:grammar=>grammar_option) if grammar_option
+    	template = options.delete :template
+    	
+    	# TODO: incorporate this into request.
+      #include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
+      include_portals = !options[:ignore_portals]
+      
+      # Apply mapping from :field_mapping, to send correct params in URL.
+      prms = params.merge(extra_params)
+      map = field_mapping.invert
+      options.merge!({:field_mapping => map}) if map && !map.empty?
+      # TODO: Make this part handle string AND symbol keys.
+      #map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
+      prms.dup.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
+
+			#c = Connection.new(action, prms, options, state.merge(:parent=>self))
+			c = Connection.new(action, prms, options, self)
+			rslt = c.parse(template || :fmresultset, Rfm::Resultset.new(self, self))
+			capture_resultset_meta(rslt) unless @resultset_meta
+			rslt
+    end
+    
+    def params
+      {"-db" => state[:database], "-lay" => self.name}
+    end
+
+    def name; state[:layout].to_s; end
 	    
-	    # Returns a ResultSet containing a single random record from the table associated with this layout.
-	    def any(options = {})
-	      get_records('-findany', {}, options)
-	    end
-	  
-	    # Finds a record. Typically you will pass in a hash of field names and values. For example:
-	    #
-	    #   myLayout.find({"First Name" => "Bill"})
-	    #
-	    # Values in the hash work just like value in FileMaker's Find mode. You can use any special
-	    # symbols (+==+, +...+, +>+, etc...).
-	    #
-			# Create a Filemaker 'omit' request by including an :omit key with a value of true.
-			# 
-			# 	myLayout.find :field1 => 'val1', :field2 => 'val2', :omit => true
-			# 
-			# Create multiple Filemaker find requests by passing an array of hashes to the #find method.
-			# 
-			# 	myLayout.find [{:field1 => 'bill', :field2 => 'admin'}, {:field3 => 'inactive', :omit => true}, ...]
-			# 
-			# If the value of a field in a find request is an array of strings, the string values will be logically OR'd in the query.
-			# 
-			# 	myLayout.find :fieldOne => ['bill','mike','bob'], :fieldTwo =>'staff'	    
-	    #
-	    # If you pass anything other than a hash or an array as the first parameter, it is converted to a string and
-	    # assumed to be FileMaker's internal id for a record (the recid).
-	    #
-	    #   myLayout.find 54321
-	    #
-	    def find(find_criteria, options = {})
-	    	#puts "layout.find-#{self.object_id}"
-	    	options.merge!({:field_mapping => field_mapping.invert}) if field_mapping
-				get_records(*Rfm::CompoundQuery.new(find_criteria, options))
-	    end
-	    
-	    # Access to raw -findquery command.
-	    def query(query_hash, options = {})
-	    	get_records('-findquery', query_hash, options)
-	    end
-	  
-	    # Updates the contents of the record whose internal +recid+ is specified. Send in a hash of new
-	    # data in the +values+ parameter. Returns a RecordSet containing the modified record. For example:
-	    #
-	    #   recid = myLayout.find({"First Name" => "Bill"})[0].record_id
-	    #   myLayout.edit(recid, {"First Name" => "Steve"})
-	    #
-	    # The above code would find the first record with _Bill_ in the First Name field and change the 
-	    # first name to _Steve_.
-	    def edit(recid, values, options = {})
-	      get_records('-edit', {'-recid' => recid}.merge(values), options)
-	      #get_records('-edit', {'-recid' => recid}.merge(expand_repeats(values)), options) # attempt to set repeating fields.
-	    end
-	    
-	    # Creates a new record in the table associated with this layout. Pass field data as a hash in the 
-	    # +values+ parameter. Returns the newly created record in a RecordSet. You can use the returned
-	    # record to, ie, discover the values in auto-enter fields (like serial numbers). 
-	    #
-	    # For example:
-	    #
-	    #   result = myLayout.create({"First Name" => "Jerry", "Last Name" => "Robin"})
-	    #   id = result[0]["ID"]
-	    #
-	    # The above code adds a new record with first name _Jerry_ and last name _Robin_. It then
-	    # puts the value from the ID field (a serial number) into a ruby variable called +id+.
-	    def create(values, options = {})
-	      get_records('-new', values, options)
-	    end
-	    
-	    # Deletes the record with the specified internal recid. Returns a ResultSet with the deleted record.
-	    #
-	    # For example:
-	    #
-	    #   recid = myLayout.find({"First Name" => "Bill"})[0].record_id
-	    #   myLayout.delete(recid)
-	    # 
-	    # The above code finds every record with _Bill_ in the First Name field, then deletes the first one.
-	    def delete(recid, options = {})
-	      get_records('-delete', {'-recid' => recid}, options)
-	      return nil
-	    end
-	    
-	    # Retrieves metadata only, with an empty resultset.
-	    def view(options = {})
-	    	get_records('-view', {}, options)
-	    end
-	    
-	    def get_records(action, extra_params = {}, options = {})
-	    	# TODO: The grammar stuff here won't work properly until you handle config between
-	    	# models/sublayouts/layout/server (Is this done now?).
-	    	grammar_option = state(options)[:grammar]
-	    	options.merge!(:grammar=>grammar_option) if grammar_option
-	    	template = options.delete :template
-	    	
-	    	# TODO: incorporate this into request.
-	      #include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
-	      include_portals = !options[:ignore_portals]
 	      
-	      # Apply mapping from :field_mapping, to send correct params in URL.
-	      prms = params.merge(extra_params)
-	      map = field_mapping.invert
-	      options.merge!({:field_mapping => map}) if map && !map.empty?
-	      # TODO: Make this part handle string AND symbol keys.
-	      #map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
-	      prms.dup.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
-
-				#c = Connection.new(action, prms, options, state.merge(:parent=>self))
-				c = Connection.new(action, prms, options, self)
-				rslt = c.parse(template || :fmresultset, Rfm::Resultset.new(self, self))
-				capture_resultset_meta(rslt) unless @resultset_meta
-				rslt
-	    end
-	    
-	    def params
-	      {"-db" => state[:database], "-lay" => self.name}
-	    end
-
-	    def name; state[:layout].to_s; end
-	    
-			def state(*args)
-				@state ||= get_config(*args)
-			end
-			
-			
-# 	    # Gets new sublayout or self if self is sublayout.
-# 	    def sublayout
-# 	    	if self.is_a?(Layout) && !self.is_a?(SubLayout)
-# 	    		sub = SubLayout.new(self); subs << sub; sub
-# 	    	else
-# 	    		self
-# 	    	end
-# 	    end
-# 
-# 	  end # LayoutModule
-# 	  
-# 	  include LayoutModule
-# 
-#   	class SubLayout < DelegateClass(Layout)
-# 			include Config  	
-#   		include Layout::LayoutModule
-# 
-#   		def initialize(master)
-#   			super(master)
-#   			self.parent_layout = master
-#   		end
-#   	end # SubLayout	  
-	  
-	  
 	  
     ###  Metadata from Resultset  ###
     
@@ -423,7 +386,7 @@ module Rfm
     end
     
 		def field_mapping
-			@field_mapping ||= load_field_mapping(get_config[:field_mapping])
+			@field_mapping ||= load_field_mapping(state[:field_mapping])
 		end
 		
 		def load_field_mapping(mapping={})

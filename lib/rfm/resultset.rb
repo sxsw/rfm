@@ -92,10 +92,6 @@ module Rfm
     def layout
     	@layout ||= (Layout.new(meta.layout, self) if meta.respond_to? :layout)
     end
-    
-		def state(*args)
-			get_config(*args)
-		end
 		
 		def database
 			layout.database
@@ -162,7 +158,7 @@ module Rfm
     
   private
     
-    def check_for_errors(code=@meta['error'].to_i, raise_401=get_config[:raise_401])
+    def check_for_errors(code=@meta['error'].to_i, raise_401=state[:raise_401])
     	#puts ["\nRESULTSET#check_for_errors", code, raise_401]
       raise Rfm::Error.getError(code) if code != 0 && (code != 401 || raise_401)
     end

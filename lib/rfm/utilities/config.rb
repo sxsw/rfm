@@ -85,7 +85,7 @@ module Rfm
 		#    get_config :layout => 'my_layout
 		#
   	def get_config(*arguments)
-  		puts caller_locations(1,1)[0]
+  		#puts caller_locations(1,1)[0]
   		args = arguments.clone
   		@config ||= {}
   		options = config_extract_options!(*args)
@@ -101,12 +101,12 @@ module Rfm
 			rslt.merge(:strings=>strings, :objects=>objects)
   	end
   	
-  	# Keep should be a list of strings representing keys to keep.
-  	def sanitize_config(conf={}, keep=[], dupe=false)
-  		(conf = conf.clone) if dupe
-  		conf.reject!{|k,v| (!CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v)) and !keep.include? k.to_s }
-  		conf
-  	end
+		def state(*args)
+			return @_state if args.empty? && !@state.nil? && (RUBY_VERSION[0,1].to_i > 1 ? (caller_locations(1,1) == @_last_state_caller) : false)
+			@_state = get_config(*args)
+			(@_last_state_caller = caller_locations(1,1)) if RUBY_VERSION[0,1].to_i > 1
+			@_state
+		end
   		  
 	protected
 	
@@ -125,16 +125,27 @@ module Rfm
 				end.inject({}){|h,a| h.merge(a)}
 			) || {}
 		end
-	  
+		
+		# Get the top-level configuration from yml file and RFM_CONFIG
+		def get_config_base
+			get_config_file.merge((defined?(RFM_CONFIG) and RFM_CONFIG.is_a?(Hash)) ? RFM_CONFIG : {})
+		end
+
+		# Get the parent configuration object according to @config[:parent]
+    def get_config_parent
+    	@config ||= {}
+	  	parent = case
+	  		when @config[:parent].is_a?(String); eval(@config[:parent])
+	  		when !@config[:parent].nil? && @config[:parent].is_a?(Rfm::Config); @config[:parent]
+	  		else eval('Rfm::Config')
+	  	end
+	  end	  
 	  
 		# Merge args into @config, as :use=>[arg1, arg2, ...]
 		# Then merge optional config hash into @config.
 		# Pass in a block to use with parsed config in args.
 	  def config_write(*args)   #(opt, args)
 	  	options = config_extract_options!(*args)
-	  	# TODO: I think this line isn't quite right - It will ignore most of the list of symbols.
-	  	#options[:symbols].each{|a| @config.merge!(:use=>a.to_sym)}
-	  	#(@config[:use] ||= []).concat options[:symbols]  #if options[:symbols].any?
 	  	options[:symbols].each{|a| @config.merge!(:use=>a.to_sym){|h,v1,v2| [v1].flatten << v2  }}
 	  	@config.merge!(options[:hash]).reject! {|k,v| CONFIG_DONT_STORE.include? k.to_s}
 	  	#options[:hash][:capture_strings_with].rfm_force_array.each do |label|
@@ -150,24 +161,22 @@ module Rfm
 	  # Get composite config from all levels, processing :use parameters at each level
 	  def config_merge_with_parent(filters=nil)
 	  	@config ||= {}
-      remote = if (self != Rfm::Config)
-      	parent = case
-      		when @config[:parent].is_a?(String); eval(@config[:parent])
-      		when !@config[:parent].nil? && @config[:parent].respond_to?(:config_merge_with_parent); @config[:parent]
-      		else eval('Rfm::Config')
-      	end
-      	parent.config_merge_with_parent
-      	#eval(@config[:parent] || 'Rfm::Config').config_merge_with_parent rescue {}
+	  	
+	  	# Get upstream compilation
+      upstream = if (self != Rfm::Config)
+      	#puts [self, @config[:parent], get_config_parent].join(', ')
+      	get_config_parent.config_merge_with_parent
       else
-      	get_config_file.merge((defined?(RFM_CONFIG) and RFM_CONFIG.is_a?(Hash)) ? RFM_CONFIG : {})
+      	get_config_base
       end.clone
             
-      remote[:using] ||= []
-      remote[:parents] ||= ['file', 'RFM_CONFIG']
+      upstream[:using] ||= []
+      upstream[:parents] ||= ['file', 'RFM_CONFIG']
 
 			filters = (@config[:use].rfm_force_array | filters.rfm_force_array).compact
-			rslt = config_filter(remote, filters).merge(config_filter(@config, filters))
-			
+
+			rslt = config_filter(upstream, filters).merge(config_filter(@config, filters))
+
 			rslt[:using].concat((@config[:use].rfm_force_array | filters).compact.flatten)   #.join
 			rslt[:parents] << @config[:parent].to_s
 			
@@ -188,6 +197,7 @@ module Rfm
 			conf
 		end
 		
+		# Extract arguments into strings, symbols, objects, hash.
 		def config_extract_options!(*args)
 			strings, symbols, objects = [], [], []
 			options = args.last.is_a?(Hash) ? args.pop : {}
@@ -201,10 +211,14 @@ module Rfm
 			{:strings=>strings, :symbols=>symbols, :objects=>objects, :hash=>options}
 		end
 		
-		    
-    # This loads RFM_CONFIG into @config. It is not necessary,
-    # as get_config will merge all configuration into RFM_CONFIG at runtime.
-    #config RFM_CONFIG if defined? RFM_CONFIG
+		# Remove un-registered keys from a configuration hash.
+  	# Keep should be a list of strings representing keys to keep.
+  	def sanitize_config(conf={}, keep=[], dupe=false)
+  		(conf = conf.clone) if dupe
+  		conf.reject!{|k,v| (!CONFIG_KEYS.include?(k.to_s) or [{},[],''].include?(v)) and !keep.include? k.to_s }
+  		conf
+  	end
+
 
 	end # module Config
 	

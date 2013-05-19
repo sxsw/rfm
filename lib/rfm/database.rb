@@ -99,9 +99,6 @@ module Rfm
   		server_orig || (self.server = Rfm::Server.new(state[:host], state[:account_name], state[:password], self))
   	end
     
-		def state(*args)
-			get_config(*args)
-		end
 
     # Access the Layout object representing a layout in this database. For example:
     #

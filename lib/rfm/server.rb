@@ -225,10 +225,7 @@ module Rfm
     	super(:capture_strings_with=>[:host, :account_name, :password]) 
     	super(*args)
     end
-    
-    def state(*args)
-    	get_config(*args)
-    end
+ 
     
 	  def host_name; state[:host]; end
 	  def scheme; state[:ssl] ? "https" : "http"; end
