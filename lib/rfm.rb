@@ -5,6 +5,7 @@ end
 
 #require 'thread' # some versions of ActiveSupport will raise error about Mutex unless 'thread' is loaded.
 
+require 'logger'
 require 'rfm/utilities/core_ext'
 require 'rfm/utilities/case_insensitive_hash'
 
@@ -26,10 +27,6 @@ module Rfm
   autoload :Factory,      'rfm/utilities/factory'
   autoload :CompoundQuery,'rfm/utilities/compound_query'
   autoload :VERSION,      'rfm/version'
-	# autoload :Fmresultset,	'rfm/utilities/fmresultset.rb'
-	# autoload :Fmpxmlresult,	'rfm/utilities/fmpxmlresult.rb'
-	# autoload :Fmpdsoresult,	'rfm/utilities/fmpdsoresult.rb'
-	# autoload :Fmpxmllayout,	'rfm/utilities/fmpxmllayout.rb'
   autoload :Connection,   'rfm/utilities/connection.rb'
 
 	module Metadata
@@ -46,9 +43,10 @@ module Rfm
       Version: #{VERSION}
       ActiveModel loadable? #{begin; Gem::Specification::find_all_by_name('activemodel')[0].version.to_s; rescue LoadError; $!; end}
       ActiveModel loaded? #{defined?(ActiveModel) ? 'true' : 'false'}
-      XML-parser: #{SaxParser::Handler.get_backend}
+      XML default parser: #{SaxParser::Handler.get_backend}
     EEOOFF
     rslt.gsub!(/^[ \t]*/, '')
+    logger.info rslt
   rescue
   	"Could not retrieve info: #{$!}"
 	end
@@ -60,7 +58,7 @@ module Rfm
 	def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout
 	def_delegators 'Rfm::SaxParser', :backend, :backend=
 	def_delegators 'Rfm::SaxParser::Handler', :get_backend
-	def_delegators 'Rfm::Config', :config, :get_config, :config_clear
+	def_delegators 'Rfm::Config', :config, :get_config, :config_clear, :logger
 	def_delegators 'Rfm::Resultset', :load_data
 	
 	def models(*args)

@@ -107,6 +107,15 @@ module Rfm
 			(@_last_state_caller = caller_locations(1,1)) if RUBY_VERSION[0,1].to_i > 1
 			@_state
 		end
+		
+	
+		def logger
+			@@logger ||= get_config[:logger] || Logger.new(STDOUT)
+		end
+		
+		def logger=(obj)
+			@@logger = obj
+		end
   		  
 	protected
 	
