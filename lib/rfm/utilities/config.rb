@@ -27,6 +27,7 @@ module Rfm
 		grammar
 		field_mapping
 		capture_strings_with
+		logger
 	)
 	
 	CONFIG_DONT_STORE = %w(strings using parents symbols objects)  #capture_strings_with)
@@ -110,11 +111,7 @@ module Rfm
 		
 	
 		def logger
-			@@logger ||= get_config[:logger] || Logger.new(STDOUT)
-		end
-		
-		def logger=(obj)
-			@@logger = obj
+			Rfm.logger
 		end
   		  
 	protected

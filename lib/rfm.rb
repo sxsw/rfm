@@ -58,7 +58,7 @@ module Rfm
 	def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout
 	def_delegators 'Rfm::SaxParser', :backend, :backend=
 	def_delegators 'Rfm::SaxParser::Handler', :get_backend
-	def_delegators 'Rfm::Config', :config, :get_config, :config_clear, :logger
+	def_delegators 'Rfm::Config', :config, :get_config, :config_clear
 	def_delegators 'Rfm::Resultset', :load_data
 	
 	def models(*args)
@@ -70,6 +70,14 @@ module Rfm
 		Rfm::Base
 		Rfm::Factory.modelize(*args)
 	end
+	
+	attr_accessor :logger
+	
+	def logger
+		@@logger ||= get_config[:logger] || Logger.new(STDOUT)
+	end
+	
+	
 	
 	extend self
 	

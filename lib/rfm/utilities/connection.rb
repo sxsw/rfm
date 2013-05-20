@@ -92,7 +92,7 @@ module Rfm
         #qs = post_data.collect{|key,val| "#{CGI::escape(key.to_s)}=#{CGI::escape(val.to_s)}"}.join("&")
         qs_unescaped = post_data.collect{|key,val| "#{key.to_s}=#{val.to_s}"}.join("&")
         #warn "#{@scheme}://#{@host_name}:#{@port}#{path}?#{qs}"
-        Rfm.logger.info "#{scheme}://#{host_name}:#{port}#{path}?#{qs_unescaped}"
+        logger.info "#{scheme}://#{host_name}:#{port}#{path}?#{qs_unescaped}"
       end
   
       request = Net::HTTP::Post.new(path)
@@ -114,8 +114,8 @@ module Rfm
   
       response = response.start { |http| http.request(request) }
       if state[:log_responses] == true
-        response.to_hash.each { |key, value| Rfm.logger.info "#{key}: #{value}" }
-        Rfm.logger.info response.body
+        response.to_hash.each { |key, value| logger.info "#{key}: #{value}" }
+        logger.info response.body
       end
   
       case response
@@ -123,7 +123,7 @@ module Rfm
         response
       when Net::HTTPRedirection
         if state[:warn_on_redirect]
-          Rfm.logger.info "The web server redirected to " + response['location'] + 
+          logger.info "The web server redirected to " + response['location'] + 
           ". You should revise your connection hostname or fix your server configuration if possible to improve performance."
         end
         newloc = URI.parse(response['location'])
