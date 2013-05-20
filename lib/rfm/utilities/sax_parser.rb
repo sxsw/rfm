@@ -272,7 +272,7 @@ module Rfm
 	      	begin
 						if _tag == self.tag
 		      		# Data cleaup
-							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact? #top.model && top.model['compact']
+							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact?
 						end
 	      	
 	      		# Create accessors is specified.
@@ -325,28 +325,26 @@ module Rfm
 		  	# Assign attributes to element.
 				def assign_attributes(_attributes, base_object, base_model, new_model)
 		      if _attributes && !_attributes.empty?
-		      	prefs_exist = model_attributes?(nil, new_model) || attach_attributes?(base_model) || delimiter?(base_model)
-		      	#puts ['ASSIGN_ATTRIBUTES', base_object.class, base_model, new_model]
-						#_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
-						# This is trying to merge element set as a whole, if possible.
-						case
-							when false && base_object.is_a?(Hash) && !prefs_exist
-								#puts "Loading attributes as whole."
-								base_object.merge! _attributes
-							when false && !prefs_exist
-								#puts "Loading attributes as shared on '#{base_object.class}'."
-								set_attr_accessor('attributes', _attributes, base_object)
-							else
-								#puts "Loading attributes individually."
-								_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
-						end
-						# 	if base_object.is_a?(Hash) && !prefs_exist
-						# 			#puts "Loading attributes as whole."
-						# 			base_object.merge! _attributes
-						# 		else
-						# 			#puts "Loading attributes individually."
-						# 			_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
-						# 	end
+
+		      	#puts ["\nASSIGN_ATTRIBUTES", base_object.class, base_model['name'], new_model['name']].join(', ')
+
+# 						# This is trying to merge element set as a whole, if possible.
+# 						# Experimental #
+# 						#
+# 		      	# OLD: prefs_exist = model_attributes?(nil, new_model) || attach_attributes?(base_model) || delimiter?(base_model)
+# 		      	attribute_prefs =  attach_attributes?(base_model)
+# 						case
+# 						when !model_attributes?(nil, base_model) && attribute_prefs.to_s[/shared|_/]
+# 							shared_var_name = shared_variable_name(attribute_prefs) || 'attributes'
+# 							#puts ["MASS", attribute_prefs, shared_var_name, _attributes.keys].join(', ')
+# 							#attach_new_object(base_object, _attributes, shared_var_name, base_model, new_model, 'attribute')
+# 							#base_object._attach_object!(_attributes, shared_var_name, nil, 'private', 'attribute', :default_class=>default_class, :create_accessors=>create_accessors?(base_model))
+# 							(var = ivg(shared_var_name, base_object)) ? var.merge!(_attributes) : ivs(shared_var_name, _attributes, base_object)
+# 						else
+# 							#puts "Loading attributes individually."
+# 							#puts ["INDIVIDUAL", attribute_prefs, _attributes.keys].join(', ')
+							_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
+# 						end
 		      end
 				end
 								
@@ -354,20 +352,18 @@ module Rfm
 					label = label_or_tag(name, new_model)
 					
 					prefs = attachment_prefs(base_model, new_model, type)
-					# 	prefs = case type
-					# 		when 'element'; attach?(new_model) || attach_elements?(base_model)
-					# 		when 'attribute'; attach?(new_model) || attach_attributes?(base_model)
+					
+					# 	shared_var_name = nil
+					# 	if prefs.to_s[0,1] == "_"
+					# 		shared_var_name = prefs.to_s[1,16]
+					# 		prefs = "shared"
 					# 	end
-					shared_variable_name = nil
-					
-					if prefs.to_s[0,1] == "_"
-						shared_variable_name = prefs.gsub(/^_/, '')
-						prefs = "shared"
-					end
+					shared_var_name = shared_variable_name prefs
+					(prefs = "shared") if shared_var_name
 					
 					
-					#puts ["\nATTACH_NEW_OBJECT", type, label, base_object.class, new_object.class, delimiter?(new_model), prefs, shared_variable_name, create_accessors?(base_model)].join(', ')
-					base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_variable_name, :create_accessors=>create_accessors?(base_model))
+					#puts ["\nATTACH_NEW_OBJECT", type, label, base_object.class, new_object.class, delimiter?(new_model), prefs, shared_var_name, create_accessors?(base_model)].join(', ')
+					base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors?(base_model))
 				end
 				
 				def attachment_prefs(base_model, new_model, type)
@@ -377,7 +373,12 @@ module Rfm
 					end
 				end
 
-
+				def shared_variable_name(prefs)
+					rslt = nil
+					if prefs.to_s[0,1] == "_"
+						rslt = prefs.to_s[1,16] #prefs.gsub(/^_/, '')
+					end
+				end
 
 
 		    #####  UTILITY  #####
