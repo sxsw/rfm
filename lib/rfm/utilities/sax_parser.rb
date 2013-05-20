@@ -186,22 +186,31 @@ module Rfm
 		    
 		    # Main get-constant method
 		    def self.get_constant(klass)
-		    	#puts "Getting constant '#{klass.to_s}'"
-		    	return default_class if klass.to_s == ''
-		    	#return klass unless klass.is_a?(String) || klass.is_a?(Symbol)
-		    	return klass if klass.is_a? Class
-		    	klass = klass.to_s
-		    	
-		    	# Added to evaluate fully-qualified class names
-		    	return eval(klass.to_s) if klass.to_s && klass.to_s[/::/]
-		    	
-		    	# TODO: This can surely be cleaned up.
-		    	case
-		    		# The 2nd condition as added to debug getting 'Array'. Try to get rid of it, extra computing!
-			    	when const_defined?(klass) || const_get(klass); const_get(klass)
+					# puts "Getting constant '#{klass.to_s}'"
+					#   	return default_class if klass.to_s == ''
+					#   	#return klass unless klass.is_a?(String) || klass.is_a?(Symbol)
+					#   	return klass if klass.is_a? Class
+					#   	klass = klass.to_s
+					#   	
+					#   	# Added to evaluate fully-qualified (namespaced) class names
+					#   	return eval(klass.to_s) if klass.to_s[/::/]
+					#   	
+					#   	if const_defined?(klass)
+					#   		const_get(klass)
+					#   	else
+					#   		puts "Could not find constant '#{klass.to_s}'"; default_class
+					#   	end
+			  	
+			  	case
+			  	when klass.is_a?(Class); klass
+			  	when (klass=klass.to_s) == ''; default_class
+			  	when klass[/::/]; eval(klass)
+			  	when defined?(klass); const_get(klass)
 			  	else
-			  		puts "Could not find constant '#{klass.to_s}'"; default_class
+			  		puts "Could not find constant '#{klass}'"
+			  		default_class
 			  	end
+
 			  end
 		    
 		    def initialize(_model, _obj, _tag)
@@ -292,10 +301,6 @@ module Rfm
 							# 	elsif before_close?.is_a?(String)
 							# 		object.send :eval, before_close?
 							# 	end
-							# 	# TODO: This is for hashes with array as value. It may be ilogical in this context. Is it needed?
-							# 	if each_before_close? && object.respond_to?('each')
-							# 	  object.each{|o| o.send(each_before_close?.to_s, object)}
-							#   end
 						end
 						
 						# return true only if matching tags
