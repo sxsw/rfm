@@ -109,9 +109,8 @@ module Rfm
 			@_state
 		end
 		
-	
-		def logger
-			Rfm.logger
+		def log
+			Rfm.log
 		end
   		  
 	protected

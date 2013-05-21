@@ -46,7 +46,7 @@ module Rfm
       XML default parser: #{SaxParser::Handler.get_backend}
     EEOOFF
     rslt.gsub!(/^[ \t]*/, '')
-    logger.info rslt
+    log.info rslt
   rescue
   	"Could not retrieve info: #{$!}"
 	end
@@ -71,10 +71,16 @@ module Rfm
 		Rfm::Factory.modelize(*args)
 	end
 	
-	attr_accessor :logger
+	#attr_accessor :log
 	
 	def logger
-		@@logger ||= get_config[:logger] || Logger.new(STDOUT)
+		@@logger ||= get_config[:logger] || Logger.new(STDOUT).tap {|l| l.formatter = proc {|severity, datetime, progname, msg| "#{datetime}: Rfm-#{severity} #{msg}\n"}}
+	end
+	
+	alias_method :log, :logger
+	
+	def logger=(obj)
+		@@logger = obj
 	end
 	
 	

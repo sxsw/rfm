@@ -207,7 +207,7 @@ module Rfm
 			  	when klass[/::/]; eval(klass)
 			  	when defined?(klass); const_get(klass)
 			  	else
-			  		puts "Could not find constant '#{klass}'"
+			  		Rfm.log.warn "Could not find constant '#{klass}'"
 			  		default_class
 			  	end
 
@@ -231,7 +231,7 @@ module Rfm
 			  	new_att = default_class.new.tap{|att| att[name]=value}
 			  	assign_attributes(new_att, object, model, model)
 			  rescue
-			  	puts "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
+			  	Rfm.log.warn "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
 		        
 		    def receive_start_element(_tag, _attributes)		
@@ -308,7 +308,7 @@ module Rfm
 							return true
 						end
 # 		      rescue
-# 		      	puts "Error: end_element tag '#{_tag}' failed: #{$!}"
+# 		      	Rfm.log.warn "Error: end_element tag '#{_tag}' failed: #{$!}"
 		      end
 		    end
 
@@ -479,7 +479,7 @@ module Rfm
 			def self.build(io, template=nil, initial_object=nil, parser=nil, options={})
 				parser = parser || options[:parser] || backend
 				parser = get_backend(parser)
-				(warn "Using backend parser: #{parser}") if options[:log_parser]
+				(Rfm.log.info "Using backend parser: #{parser}") if options[:log_parser]
 			  parser.build(io, template, initial_object)
 		  end
 		  
