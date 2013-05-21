@@ -12,6 +12,7 @@ if ENV['parser']; Rfm.backend = ENV['parser'].to_sym; end
 
 puts Rfm.info_short
 puts "RSpec #{RSpec::Version::STRING}"
+puts "Ruby #{RUBY_VERSION}"
 
 RFM_CONFIG = {
 	:ignore_bad_data => true,
