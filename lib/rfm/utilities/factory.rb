@@ -32,6 +32,10 @@ module Rfm
     
     class DbFactory < Rfm::CaseInsensitiveHash # :nodoc: all
     
+	  	extend Config
+	  	config :parent=>'@server'
+
+    
       def initialize(server)
         @server = server
         @loaded = false
@@ -39,7 +43,7 @@ module Rfm
       
       def [](*args)
       	# was: (dbname, acnt=nil, pass=nil)
-      	options = Factory.get_config(*args)
+      	options = get_config(*args)
       	name = options[:strings].delete_at(0) || options[:database]
       	#account_name = options[:strings].delete_at(0) || options[:account_name]
       	#password = options[:strings].delete_at(0) || options[:password]
@@ -68,6 +72,9 @@ module Rfm
     
     
     class LayoutFactory < Rfm::CaseInsensitiveHash # :nodoc: all
+
+	  	extend Config
+	  	config :parent=>'@database'
     	
       def initialize(server, database)
         @server = server
@@ -76,7 +83,7 @@ module Rfm
       end
       
       def [](*args) # was layout_name
-      	options = Factory.get_config(*args)
+      	options = get_config(*args)
       	name = options[:strings].delete_at(0) || options[:layout]
         super(name) || (self[name] = Rfm::Layout.new(@database, *args))   #(name, @database, options))
         # This part reconfigures the named layout, if you pass it new config in the [] method.
@@ -118,6 +125,9 @@ module Rfm
     
     
     class ScriptFactory < Rfm::CaseInsensitiveHash # :nodoc: all
+
+	  	extend Config
+	  	config :parent=>'@database'
     
       def initialize(server, database)
         @server = server
