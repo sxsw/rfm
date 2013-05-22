@@ -11,7 +11,7 @@ require 'rspec/core/rake_task'
 # Manual
 desc "Manually run rspec 2 - works but ugly"
 task :spec do
-	puts exec("rspec -O spec/spec.opts")
+	puts exec("rspec -O spec/spec.opts") #RUBYOPTS=W0  # silence ruby warnings.
 end
 
 #Spec::Rake::SpecTask

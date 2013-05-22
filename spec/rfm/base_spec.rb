@@ -1,9 +1,15 @@
-require 'active_model_lint'
 
 describe Rfm::Base do
-
-	describe TestModel do
-		it_should_behave_like "ActiveModel"
+	
+	# Only run these if ActiveModel present.
+	if Gem::Specification::find_all_by_name('activemodel').any?
+		
+		require 'active_model_lint'
+	
+		describe TestModel do
+			it_should_behave_like "ActiveModel"
+		end
+		
 	end
 			
 # 	describe 'Test stubbing' do

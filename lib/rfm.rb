@@ -39,14 +39,15 @@ module Rfm
 
 	def info
     rslt = <<-EEOOFF
-      Name: ginjo-rfm
+      Gem name: ginjo-rfm
       Version: #{VERSION}
-      ActiveModel loadable? #{begin; Gem::Specification::find_all_by_name('activemodel')[0].version.to_s; rescue LoadError; $!; end}
+      ActiveModel loadable? #{begin; Gem::Specification::find_all_by_name('activemodel')[0].version.to_s; rescue Exception; false; end}
       ActiveModel loaded? #{defined?(ActiveModel) ? 'true' : 'false'}
       XML default parser: #{SaxParser::Handler.get_backend}
+      Ruby: #{RUBY_VERSION}
     EEOOFF
     rslt.gsub!(/^[ \t]*/, '')
-    log.info rslt
+    rslt
   rescue
   	"Could not retrieve info: #{$!}"
 	end
