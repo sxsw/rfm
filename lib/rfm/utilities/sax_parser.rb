@@ -187,25 +187,13 @@ module Rfm
 		    # Main get-constant method
 		    def self.get_constant(klass)
 					# puts "Getting constant '#{klass.to_s}'"
-					#   	return default_class if klass.to_s == ''
-					#   	#return klass unless klass.is_a?(String) || klass.is_a?(Symbol)
-					#   	return klass if klass.is_a? Class
-					#   	klass = klass.to_s
-					#   	
-					#   	# Added to evaluate fully-qualified (namespaced) class names
-					#   	return eval(klass.to_s) if klass.to_s[/::/]
-					#   	
-					#   	if const_defined?(klass)
-					#   		const_get(klass)
-					#   	else
-					#   		puts "Could not find constant '#{klass.to_s}'"; default_class
-					#   	end
 			  	
 			  	case
 			  	when klass.is_a?(Class); klass
 			  	when (klass=klass.to_s) == ''; default_class
 			  	when klass[/::/]; eval(klass)
-			  	when defined?(klass); const_get(klass)
+			  	when defined?(klass); const_get(klass)  ## == 'constant'; const_get(klass)
+			  	#when defined?(klass); eval(klass) # This was for 'handler' pattern.
 			  	else
 			  		Rfm.log.warn "Could not find constant '#{klass}'"
 			  		default_class
@@ -243,8 +231,11 @@ module Rfm
 		    	# Acquire submodel definition.
 		      subm = model_elements?(@newtag) || default_class.new
 		      
+		      # Get attachment_prefs
+		      prefs = attachment_prefs(model, subm, 'element')
+		      
 		      # Clean-up and return if new element is not to be attached.
-		    	if attachment_prefs(model, subm, 'element')=='none'
+		    	if prefs == 'none'
 		    		# Set callbacks, since object & model of new element won't be stored.
 		    		callbacks[_tag] = lambda {run_callback(_tag, self, subm)}
 		    		#puts "Assigning attributes for attach:none on #{newtag}"
@@ -253,23 +244,28 @@ module Rfm
 		    		return
 		    	end		      
 		      
-		      # Create new element.
-		      const = get_constant(subm['class'])
-		      # Needs to be duped !!!
-		      init = initialize?(subm) ? initialize?(subm).dup : []
-		      #puts init.to_yaml
-		      init[0] ||= :allocate
-		      init[1] = eval(init[1].to_s)
-		      #puts "Current object: #{eval('object').class}"
-		      #puts "Creating new element '#{const}' with '#{init[0]}' and '#{init[1].class}'"
-		      new_element = const.send(*init.compact)
-		      #puts "Created new element of class '#{new_element.class}' for _tag '#{tag}'."
-		      
-		      # Assign attributes to new element.
-		      assign_attributes(_attributes, new_element, subm, subm)
-
-					# Attach new element to cursor _object
-					attach_new_object(object, new_element, newtag, model, subm, 'element')
+		      if handler?(subm)
+		      	new_element = eval(handler?(subm))
+		      	#puts ["\nIF_HANDLER", new_element.class, new_element]
+		      else
+			      # Create new element.
+			      const = get_constant(subm['class'])
+			      # Needs to be duped !!!
+			      init = initialize?(subm) ? initialize?(subm).dup : []
+			      #puts init.to_yaml
+			      init[0] ||= :allocate
+			      init[1] = eval(init[1].to_s)
+			      #puts "Current object: #{eval('object').class}"
+			      #puts "Creating new element '#{const}' with '#{init[0]}' and '#{init[1].class}'"
+			      new_element = const.send(*init.compact)
+			      #puts "Created new element of class '#{new_element.class}' for _tag '#{tag}'."
+			      
+			      # Assign attributes to new element.
+			      assign_attributes(_attributes, new_element, subm, subm) unless attach_attributes?(subm) == 'none'
+	
+						# Attach new element to cursor object
+						attach_new_object(object, new_element, newtag, model, subm, 'element') unless prefs == 'cursor'
+		  		end
 		  		
 		  		returntag = newtag
 		  		self.newtag = nil
@@ -408,6 +404,7 @@ module Rfm
 			  def as_name?(_model=model); _model && _model['as_name']; end
 			  def initialize?(_model=model); _model && _model['initialize']; end
 			  def create_accessors?(_model=model); _model && [_model['create_accessors']].flatten.compact; end
+			  def handler?(_model=model); _model && _model['handler']; end
 			  
 
 			  # Methods for submodel

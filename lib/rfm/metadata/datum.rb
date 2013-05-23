@@ -28,6 +28,18 @@ module Rfm
 				cursor.parent.object[name.downcase] = field.coerce(data)
 			end
       
+      # Should return value only.
+			def handler_callback(cursor)
+				record = cursor.parent.object
+				resultset = cursor.top.object
+
+				name = get_mapped_name(@attributes['name'].to_s, resultset)
+				field = resultset.field_meta[name]
+				data = @attributes['data']
+				#puts ["\nDATUM", name, record.class, resultset.class, data]
+				record[name] = field.coerce(data)
+			end
+      
     end # Field
   end # Metadata
 end # Rfm

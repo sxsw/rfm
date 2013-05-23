@@ -133,7 +133,7 @@ module Rfm
 		end
 
     # def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
-    def initialize(*args)    
+    def initialize(*args) # resultset, attributes
       @mods						||= {}
       @portals        ||= Rfm::CaseInsensitiveHash.new
       
@@ -152,7 +152,9 @@ module Rfm
         self.merge!(@mods) unless @mods == {}
         @loaded = true
       end
+      args[1].each{|k,v| instance_variable_set(:"@#{k}", v)} if args[1].is_a? Hash
 			#@loaded = true
+			self
     end
 
     # Saves local changes to the Record object back to Filemaker. For example:
@@ -240,6 +242,8 @@ module Rfm
 			end
 			self
 		end
+		
+		
 
   private
 
