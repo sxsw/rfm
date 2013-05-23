@@ -245,7 +245,12 @@ module Rfm
 		    	end		      
 		      
 		      if handler?(subm)
-		      	new_element = eval(handler?(subm))
+		      	code = handler?(subm)
+		      	obj = eval(code[0].to_s)
+		      	mthd = code[1].to_s
+		      	prms = eval(code[2].to_s)
+		      	#new_element = eval(handler?(subm))
+		      	new_element = obj.send(mthd, prms)
 		      	#puts ["\nIF_HANDLER", new_element.class, new_element]
 		      else
 			      # Create new element.
