@@ -222,7 +222,9 @@ module Rfm
 			  	Rfm.log.warn "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
 		        
-		    def receive_start_element(_tag, _attributes)		
+		    def receive_start_element(_tag, _attributes)
+		    # TODO: Use a case statement to separate the various tasks possible in this method
+		    	
 		    	#puts "receive_start_element: _tag '#{_tag}', current object '#{object.class}', cursor_submodel '#{submodel.to_yaml}'."
 		    	#puts ['START', _tag, object.class, model]
 		    	# Set newtag for other methods to use during the start_el run.
@@ -266,10 +268,10 @@ module Rfm
 			      #puts "Created new element of class '#{new_element.class}' for _tag '#{tag}'."
 			      
 			      # Assign attributes to new element.
-			      assign_attributes(_attributes, new_element, subm, subm) unless attach_attributes?(subm) == 'none'
+			      assign_attributes(_attributes, new_element, subm, subm) #unless attach_attributes?(subm) == 'none'
 	
 						# Attach new element to cursor object
-						attach_new_object(object, new_element, newtag, model, subm, 'element') unless prefs == 'cursor'
+						attach_new_object(object, new_element, newtag, model, subm, 'element') #unless prefs == 'cursor'
 		  		end
 		  		
 		  		returntag = newtag

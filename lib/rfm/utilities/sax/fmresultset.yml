@@ -47,7 +47,6 @@ elements:
 - name: resultset
   attach: none
 - name: record
-  #handler: object.new_record_handler(_attributes)
   handler: [object, new_record_handler, _attributes]
   before_close: '@loaded=true'
   elements:
