@@ -62,14 +62,10 @@ module Rfm
       attr_reader :name, :result, :type, :max_repeats, :global
       meta_attr_accessor :resultset
       # Initializes a field object. You'll never need to do this. Instead, get your Field objects from
-      # ResultSet::fields
-			# 	def initialize(field, options={})
-			# 	  @name        = options[:field_mapping][field.name] || field.name rescue field.name #['name']
-			# 	  @result      = field.result #['result']
-			# 	  @type        = field.type #['type']
-			# 	  @max_repeats = field.max_repeats #['max-repeats']
-			# 	  @global      = field.global #['global']
-			# 	end
+      # Resultset::field_meta
+			def initialize(attributes)
+				attributes.each{|k,v| instance_variable_set(:"@#{k}", v)} if attributes.is_a? Hash
+			end
     
       # Coerces the text value from an +fmresultset+ document into proper Ruby types based on the 
       # type of the field. You'll never need to do this: Rfm does it automatically for you when you

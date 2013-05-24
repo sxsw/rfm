@@ -35,6 +35,7 @@ module Rfm
 		autoload :FieldControl,   'rfm/metadata/field_control'
 		autoload :ValueListItem,  'rfm/metadata/value_list_item'
 		autoload :Datum,  				'rfm/metadata/datum'
+		autoload :ResultsetMeta,  'rfm/metadata/resultset_meta'
 	end
 
 	def info

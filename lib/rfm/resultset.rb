@@ -76,6 +76,7 @@ module Rfm
     #   after, you want to look at the Record object.
     def initialize(*args) # parent, layout
 			config *args
+			self.meta
     end # initialize
 
     def config(*args)
@@ -105,7 +106,7 @@ module Rfm
 		
 		def meta
 			# Access the meta inst var here. This var may change name in the future (to resultset_meta)
-			@meta || {}
+			@meta ||= Metadata::ResultsetMeta.new
 		end
 		
 		def field_meta
