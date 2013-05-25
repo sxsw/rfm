@@ -36,6 +36,7 @@ module Rfm
 		autoload :ValueListItem,  'rfm/metadata/value_list_item'
 		autoload :Datum,  				'rfm/metadata/datum'
 		autoload :ResultsetMeta,  'rfm/metadata/resultset_meta'
+		autoload :LayoutMeta,     'rfm/metadata/layout_meta'
 	end
 
 	def info

@@ -128,6 +128,8 @@ module Rfm
     def_delegator :db, :server
     alias_method :database, :db
     attr_accessor :model #, :parent_layout, :subs
+    def_delegators :meta, :field_controls, :value_lists
+    def_delegators :resultset_meta, :date_format, :time_format, :timestamp_format, :field_meta, :portal_meta, :table
 
 		# Methods that must be kept after rewrite!!!
 		# 	  
@@ -172,6 +174,7 @@ module Rfm
 			config(*args)
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''         
       @loaded = false
+      @meta = Metadata::LayoutMeta.new
       self
     end
 
@@ -279,6 +282,11 @@ module Rfm
     	get_records('-view', {}, options)
     end
     
+    # Get the foundset_count only given criteria & options.
+    def count(find_criteria, options={})
+    	find(find_criteria, options.merge({:max_records => 0})).foundset_count
+    end
+    
     def get_records(action, extra_params = {}, options = {})
     	# TODO: The grammar stuff here won't work properly until you handle config between
     	# models/sublayouts/layout/server (Is this done now?).
@@ -316,66 +324,49 @@ module Rfm
     ###  Metadata from Resultset  ###
     
 		def resultset_meta
-			@resultset_meta || view
+			@resultset_meta || view.meta
 		end
-		def date_format
-			resultset_meta.date_format
-		end
-		def time_format
-			resultset_meta.time_format
-		end		
-		def timestamp_format
-			resultset_meta.timestamp_format
-		end
-		def field_meta
-			resultset_meta.field_meta
-		end
+		
+  	# Should always refresh
+  	def total_count
+  		view.total_count
+  	end
 		
 		def capture_resultset_meta(resultset)
 			(@resultset_meta = resultset.clone.replace([])) #unless @resultset_meta
+			@resultset_meta = resultset.meta
 		end
-		###
+		
+  	def portal_names
+  		return 'UNDER-CONTSTRUCTION'
+  	end
     
     
     ###  Metadata from Layout  ###
     
-    def layout_meta
-    	@meta || (load_layout && @meta)
-    end
-    
-    def field_controls
-      layout_meta['field_controls']
+    def meta
+    	@loaded ? @meta : (load_layout && @meta)
     end
     
   	def field_names
-  		# Rescue [] if no field names.
-  		(@resultset_meta && @resultset_meta.field_names) || layout_meta['field_controls'].values.collect{|v| v.name} rescue []
-  	end
-    
-    def value_lists
-			layout_meta['value_lists']
-    end
-    
-    def count(find_criteria, options={})
-    	find(find_criteria, options.merge({:max_records => 0})).foundset_count
-    end
-    
-  	def total_count
-  		view.total_count
+  		case
+  		when @loaded; meta.field_names
+  		when @resultset_meta; resultset_meta.field_names
+  		else meta.field_names
+  		end
   	end
   	
-  	def portal_meta
-  		resultset_meta.portal_meta
+  	def field_keys
+  		case
+  		when @loaded; meta.field_keys
+  		when @resultset_meta; resultset_meta.field_keys
+  		else meta.field_keys
+  		end
   	end
   	
-  	def portal_names
-  		return 'UNDER-CONTSTRUCTION'
-  		@resultset_meta && @resultset_meta.portal_names || layout_meta.keys
-  	end
   	
-  	def table
-  		resultset_meta.table
-  	end
+  	
+  	###  Utility  ###
     
     def load_layout
       connection = Connection.new('-view', {'-db' => state[:database], '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, self)

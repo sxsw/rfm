@@ -50,8 +50,6 @@ RSpec.configure do |config|
 			@Layout = Memo.layout   #.parent_layout
 			@Server = Memo.server
 
-			# 			@Server.stub(:connect).and_return(RESULTSET_XML)
-			# 			@Server.stub(:load_layout).and_return(LAYOUT_XML)
 			@Layout.stub(:load_layout).and_return(Rfm::SaxParser.parse(LAYOUT_XML, 'fmpxmllayout.yml', @Layout))
 		# end
 	end

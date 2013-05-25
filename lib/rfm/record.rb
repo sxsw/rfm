@@ -127,32 +127,28 @@ module Rfm
 			end
 			record.send(:initialize, *args)
 			record
-# 		rescue
-# 			puts "Record.new bombed and is defaulting to super.new. Error: #{$!}"
-# 			super
+			# rescue
+			# 	puts "Record.new bombed and is defaulting to super.new. Error: #{$!}"
+			# 	super
 		end
 
-    # def initialize(record, resultset_obj, field_meta, layout_obj, portal=nil)
     def initialize(*args) # resultset, attributes
       @mods						||= {}
       @portals        ||= Rfm::CaseInsensitiveHash.new
-      
 			options = args.rfm_extract_options!
 			if args[0].is_a?(Resultset)
 				#@resultset			= args[0]
 				@layout = args[0].layout
 			elsif self.is_a?(Base)
 				@layout = self.class.layout
-        @layout.field_names.each do |field|
-          #field_name = field.to_s
-          #self[field_name] = nil
+        @layout.field_keys.each do |field|
           self[field] = nil
         end
         self.update_attributes(options) unless options == {}
         self.merge!(@mods) unless @mods == {}
         @loaded = true
       end
-      args[1].each{|k,v| instance_variable_set(:"@#{k}", v)} if args[1].is_a? Hash
+      _attach_as_instance_variables args[1]
 			#@loaded = true
 			self
     end

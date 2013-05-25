@@ -854,6 +854,11 @@ class Object
 			instance_variables.collect{|v| instance_variable_get(v)._create_accessors('hash')}
 		end
   end
+  
+	# Attach hash as individual instance variables
+	def _attach_as_instance_variables(hash)
+		hash.each{|k,v| instance_variable_set("@#{k}", v)} if hash.is_a? Hash
+	end
 
 end # Object
 

@@ -7,6 +7,9 @@ describe Rfm::Base do
 		require 'active_model_lint'
 	
 		describe TestModel do
+			before(:each) do
+				Rfm::Layout.any_instance.stub(:load_layout).and_return(Rfm::SaxParser.parse(LAYOUT_XML, 'fmpxmllayout.yml', @Layout))
+			end
 			it_should_behave_like "ActiveModel"
 		end
 		
@@ -33,7 +36,6 @@ describe Rfm::Base do
 	
 	describe '.find' do
 		it("passes parameters & options to Layout object") do
-			#puts "Memo.layout-#{Memo.layout.object_id}"
 			Memo.layout.should_receive(:find) do |*args|
 				args[0].should == {:field_one=>'test'}
 				args[1].should == {:max_records=>5}
@@ -105,6 +107,15 @@ describe Rfm::Base do
 			subject_test = Memo.new
 			subject_test.memosubject = 'test2'
 			subject_test.instance_variable_get(:@mods).size.should > 0
+		end
+		
+		it "creates a model instance with empty fields, translating according to field_mapping" do
+			# 	puts ["MEMO_LAYOUT", Memo.layout].join(', ')
+			# 	puts ["@LAYOUT", @Layout].join(', ')
+			Memo.config :field_mapping => {'memosubject' => 'subject', 'memotext'=>'text'}
+			new_record = Memo.new
+			puts new_record.layout.field_keys
+			(new_record.keys & ['subject', 'text']).size.should == 2
 		end
 
 # TODO: Fix these specs to work with newest Rfm.

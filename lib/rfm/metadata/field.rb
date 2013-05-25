@@ -64,7 +64,7 @@ module Rfm
       # Initializes a field object. You'll never need to do this. Instead, get your Field objects from
       # Resultset::field_meta
 			def initialize(attributes)
-				attributes.each{|k,v| instance_variable_set(:"@#{k}", v)} if attributes.is_a? Hash
+				_attach_as_instance_variables attributes
 			end
     
       # Coerces the text value from an +fmresultset+ document into proper Ruby types based on the 

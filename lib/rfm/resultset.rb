@@ -45,6 +45,8 @@ module Rfm
 #     attr_reader :total_count, :foundset_count, :table
     #def_delegators :layout, :db, :database
     # alias_method :db, :database
+		def_delegators :meta, :field_meta, :portal_meta, :date_format, :time_format, :timestamp_format, :total_count, :foundset_count, :table, :error, :field_names, :field_keys, :portal_names
+
     
     class << self
     	def load_data(data)
@@ -105,56 +107,12 @@ module Rfm
 		end
 		
 		def meta
-			# Access the meta inst var here. This var may change name in the future (to resultset_meta)
+			# Access the meta inst var here.
 			@meta ||= Metadata::ResultsetMeta.new
 		end
-		
-		def field_meta
-			meta['field_meta'] ||= Rfm::CaseInsensitiveHash.new
-		end
-		
-		def portal_meta
-			meta['portal_meta'] ||= Rfm::CaseInsensitiveHash.new
-		end
-		
-		def date_format
-			meta['date_format']
-		end
 
-		def time_format
-			meta['time_format']
-		end
-		
-		def timestamp_format
-			meta['timestamp_format']
-		end
-		
-		def total_count
-			meta['total_count']
-		end		
-		
-		def foundset_count
-			meta['count']
-		end
-		
-		def table
-			meta['table']
-		end
-		
-		def error
-			meta['error']
-		end
-        
-    def field_names
-    	field_meta ? field_meta.values.collect{|v| v.name} : []
-  	end
-  	
-  	def portal_names
-  		portal_meta ? portal_meta.keys : []
-  	end
-  	
   	def new_record_handler(attributes)
-  		r = Rfm::Record.new(self, attributes)
+  		r = Rfm::Record.new(self, attributes, {})
   		self << r
   		r
   	end
