@@ -17,6 +17,12 @@ module Rfm
 	    def value_lists
 				self['value_lists'] ||= CaseInsensitiveHash.new
 	    end
+	    
+			def new_field_handler(attributes)
+				name = attributes['name']
+				field_control = FieldControl.new(attributes)
+				field_controls[name] = field_control
+			end
 		
 		end
 	end

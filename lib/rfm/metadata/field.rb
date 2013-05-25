@@ -65,6 +65,7 @@ module Rfm
       # Resultset::field_meta
 			def initialize(attributes)
 				_attach_as_instance_variables attributes
+				self
 			end
     
       # Coerces the text value from an +fmresultset+ document into proper Ruby types based on the 

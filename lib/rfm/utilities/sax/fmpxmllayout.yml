@@ -30,14 +30,15 @@ elements:
   - name: NAME
     as_name: name
 - name: FIELD
-  class: Rfm::Metadata::FieldControl
-  as_name: field_controls
-  #attach: shared
-  delimiter: name
-  attach_attributes: private
-  attributes:
-  - name: NAME
-    as_name: name
+  handler: [object.meta, new_field_handler, _attributes]
+  #   class: Rfm::Metadata::FieldControl
+  #   as_name: field_controls
+  #   #attach: shared
+  #   delimiter: name
+  #   attach_attributes: private
+  #   attributes:
+  #   - name: NAME
+  #     as_name: name
   elements:
   - name: STYLE
     attach: none

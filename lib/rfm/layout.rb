@@ -369,10 +369,11 @@ module Rfm
   	###  Utility  ###
     
     def load_layout
+    	@loaded = true # This is first so parsing call to 'meta' wont cause infinite loop.
       connection = Connection.new('-view', {'-db' => state[:database], '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, self)
       rslt = connection.parse(:fmpxmllayout, self)
       #puts "Layout load result: #{rslt.class}"
-			@loaded = true
+			# @loaded = true
 			self #rslt
     end
     
