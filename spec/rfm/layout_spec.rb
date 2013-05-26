@@ -66,19 +66,20 @@ describe Rfm::Layout do
 		
 	end #get_records
 	
-		describe "#load_layout" do
-		
-			it "loads layout meta" do
-				Rfm::Connection.any_instance.stub(:connect).and_return LAYOUT_XML
-				layout.send(:load_layout)
-				layout.field_controls.has_key?('stayid').should be_true
-				layout.value_lists.has_key?('employee unique id').should be_true
-			end
+	describe "#load_layout" do
+		it "loads layout meta" do
+			# This is now handled in spec_helper
+			#Rfm::Connection.any_instance.stub(:connect).and_return LAYOUT_XML
+			layout.send(:load_layout)
+			layout.field_controls.has_key?('stayid').should be_true
+			layout.value_lists.has_key?('employee unique id').should be_true
 		end
+	end
 	
 	describe "#any" do
 		it "returns resultset containing instance of Rfm::Record" do
-			Rfm::Connection.any_instance.stub(:connect).and_return(RESULTSET_XML)
+			# This is now handled in spec_helper
+			#Rfm::Connection.any_instance.stub(:connect).and_return(RESULTSET_XML)
 			layout.send(:any)[0].is_a?(Rfm::Record).should be_true
 		end
 	end

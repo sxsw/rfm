@@ -50,7 +50,40 @@ RSpec.configure do |config|
 			@Layout = Memo.layout   #.parent_layout
 			@Server = Memo.server
 
-			@Layout.stub(:load_layout).and_return(Rfm::SaxParser.parse(LAYOUT_XML, 'fmpxmllayout.yml', @Layout))
+			#@Layout.stub(:load_layout).and_return(Rfm::SaxParser.parse(LAYOUT_XML, 'fmpxmllayout.yml', @Layout).result)
+			
+			Rfm::Connection.any_instance.stub(:connect) do |*args|
+				puts ["CONNECTION#connect args", args, self].flatten.join(', ')
+				case args[0].to_s
+				when /find/;
+					#puts "RESULTSET"
+					RESULTSET_XML
+				when /view/
+					#puts "LAYOUT"
+					LAYOUT_XML
+				end
+			end
+			
+			# Enhanced workaround for #any_instance.stub {self}
+			# See http://stackoverflow.com/questions/13893618/rspec-any-instance-return-self
+			# See http://stackoverflow.com/questions/5938049/rspec-stubbing-return-the-parameter
+			orig_new = Rfm::Connection.method(:new)
+			Rfm::Connection.stub(:new) do |*args, &block|
+			  orig_new.call(*args, &block).tap do |instance|
+			    instance.stub(:connect) do |*args2|
+						case instance.instance_variable_get(:@action)
+						when /find/;
+							puts "RESULTSET"
+							RESULTSET_XML
+						when /view/
+							puts "LAYOUT"
+							LAYOUT_XML
+						end
+					end
+			  end
+			end
+			
+			
 		# end
 	end
 end

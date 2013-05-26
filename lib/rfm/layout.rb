@@ -174,7 +174,7 @@ module Rfm
 			config(*args)
     	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Layout has no name. Attempted name '#{state[:layout]}'.") if state[:layout].to_s == ''         
       @loaded = false
-      @meta = Metadata::LayoutMeta.new
+      @meta = Metadata::LayoutMeta.new(self)
       self
     end
 
@@ -320,7 +320,33 @@ module Rfm
     def name; state[:layout].to_s; end
 	    
 	      
-	  
+    
+    
+    ###  Metadata from Layout  ###
+    
+    def meta
+    	@loaded ? @meta : load_layout
+    end
+    
+  	def field_names
+  		case
+  		when @loaded; meta.field_names
+  		when @resultset_meta; resultset_meta.field_names
+  		else meta.field_names
+  		end
+  	end
+  	
+  	def field_keys
+  		case
+  		when @loaded; @meta.field_keys
+  		when @resultset_meta; @resultset_meta.field_keys
+  		else meta.field_keys
+  		end
+  	end
+  	
+  	
+  	
+  		  
     ###  Metadata from Resultset  ###
     
 		def resultset_meta
@@ -340,29 +366,7 @@ module Rfm
   	def portal_names
   		return 'UNDER-CONTSTRUCTION'
   	end
-    
-    
-    ###  Metadata from Layout  ###
-    
-    def meta
-    	@loaded ? @meta : (load_layout && @meta)
-    end
-    
-  	def field_names
-  		case
-  		when @loaded; meta.field_names
-  		when @resultset_meta; resultset_meta.field_names
-  		else meta.field_names
-  		end
-  	end
-  	
-  	def field_keys
-  		case
-  		when @loaded; meta.field_keys
-  		when @resultset_meta; resultset_meta.field_keys
-  		else meta.field_keys
-  		end
-  	end
+
   	
   	
   	
@@ -372,9 +376,9 @@ module Rfm
     	@loaded = true # This is first so parsing call to 'meta' wont cause infinite loop.
       connection = Connection.new('-view', {'-db' => state[:database], '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, self)
       rslt = connection.parse(:fmpxmllayout, self)
-      #puts "Layout load result: #{rslt.class}"
+      #puts ["LAYOUT#load_layout result", rslt.class].join(', ')
 			# @loaded = true
-			self #rslt
+			@meta
     end
     
 		def field_mapping

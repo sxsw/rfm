@@ -251,9 +251,8 @@ module Rfm
 		      	obj = eval(code[0].to_s)
 		      	mthd = code[1].to_s
 		      	prms = eval(code[2].to_s)
-		      	#new_element = eval(handler?(subm))
 		      	new_element = obj.send(mthd, prms)
-		      	#puts ["\nIF_HANDLER", new_element.class, new_element]
+		      	#puts ["\nIF_HANDLER", code, new_element.class, new_element]
 		      else
 			      # Create new element.
 			      const = get_constant(subm['class'])

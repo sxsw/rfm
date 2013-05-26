@@ -2,6 +2,10 @@ module Rfm
 	module Metadata
 		class LayoutMeta < CaseInsensitiveHash
 			
+			def initialize(layout)
+				@layout = layout
+			end
+			
 	    def field_controls
 	      self['field_controls'] ||= CaseInsensitiveHash.new
 	    end
@@ -18,11 +22,16 @@ module Rfm
 				self['value_lists'] ||= CaseInsensitiveHash.new
 	    end
 	    
-			def new_field_handler(attributes)
+			def new_field_control_handler(attributes)
 				name = attributes['name']
 				field_control = FieldControl.new(attributes)
-				field_controls[name] = field_control
+				field_controls[get_mapped_name(name)] = field_control
 			end
+			
+			# Should this be in FieldControl object?
+      def get_mapped_name(name)
+      	(@layout.field_mapping[name]) || name
+      end
 		
 		end
 	end

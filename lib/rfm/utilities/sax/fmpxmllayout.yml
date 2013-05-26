@@ -30,7 +30,7 @@ elements:
   - name: NAME
     as_name: name
 - name: FIELD
-  handler: [object.meta, new_field_handler, _attributes]
+  handler: [object.meta, new_field_control_handler, _attributes]
   #   class: Rfm::Metadata::FieldControl
   #   as_name: field_controls
   #   #attach: shared

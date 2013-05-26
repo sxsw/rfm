@@ -7,9 +7,6 @@ describe Rfm::Base do
 		require 'active_model_lint'
 	
 		describe TestModel do
-			before(:each) do
-				Rfm::Layout.any_instance.stub(:load_layout).and_return(Rfm::SaxParser.parse(LAYOUT_XML, 'fmpxmllayout.yml', @Layout))
-			end
 			it_should_behave_like "ActiveModel"
 		end
 		
@@ -110,10 +107,9 @@ describe Rfm::Base do
 		end
 		
 		it "creates a model instance with empty fields, translating according to field_mapping" do
-			# 	puts ["MEMO_LAYOUT", Memo.layout].join(', ')
-			# 	puts ["@LAYOUT", @Layout].join(', ')
-			Memo.config :field_mapping => {'memosubject' => 'subject', 'memotext'=>'text'}
-			new_record = Memo.new
+			layout = Rfm::Layout.new(:base_test)
+			layout.config :field_mapping => {'memosubject' => 'subject', 'memotext'=>'text'}
+			new_record = layout.modelize.new
 			puts new_record.layout.field_keys
 			(new_record.keys & ['subject', 'text']).size.should == 2
 		end
