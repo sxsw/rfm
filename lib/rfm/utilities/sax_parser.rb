@@ -35,11 +35,11 @@
 #		attach:											string: shared, _shared_name, private, hash, array, cursor, none - attach this element or attribute to parent. 
 #		attach_elements:						string: same as 'attach' - for all subelements, unless they have their own 'attach' specification
 #		attach_attributes:					string: same as 'attach' - for all attributes, unless they have their own 'attach' specification
-#   before_close:								method-name-as-symbol: run a model method before closing tag
-#   each_before_close: NOT USED	method-name-as-symbol
+#   before_close:								symbol (method) or string (code): run a model method before closing tag, passing in #cursor. String is eval'd in context of object.
 #   as_name:										string: store element or attribute keyed as specified
 #   delimiter:									string: attribute/hash key to delineate objects with identical tags
 #		create_accessors:		UC			string or array: all, private, shared, hash
+#		handler:										array: call an object with any params [obj, method, params]. Default attach-prefs are 'cursor'.
 #
 #
 #gem('ox', '1.8.5') if RUBY_VERSION[2].to_i > 8
@@ -156,7 +156,7 @@ module Rfm
 		
 		(@text_label = 'text') unless defined? @text_label
 		
-		(@tag_translation = [/\-/, '_']) unless defined? @tag_translation
+		(@tag_translation = lambda {|txt| txt.gsub(/\-/, '_').downcase}) unless defined? @tag_translation
 		
 		(@shared_instance_var = 'attributes') unless defined? @shared_instance_var		
 			
@@ -333,25 +333,25 @@ module Rfm
 				def assign_attributes(_attributes, base_object, base_model, new_model)
 		      if _attributes && !_attributes.empty?
 
-		      	#puts ["\nASSIGN_ATTRIBUTES", base_object.class, base_model['name'], new_model['name']].join(', ')
+		      	#puts ["\nASSIGN_ATTRIBUTES", base_object.class, base_model, new_model].join(' **** ')
 
-# 						# This is trying to merge element set as a whole, if possible.
-# 						# Experimental #
-# 						#
-# 		      	# OLD: prefs_exist = model_attributes?(nil, new_model) || attach_attributes?(base_model) || delimiter?(base_model)
-# 		      	attribute_prefs =  attach_attributes?(base_model)
-# 						case
-# 						when !model_attributes?(nil, base_model) && attribute_prefs.to_s[/shared|_/]
-# 							shared_var_name = shared_variable_name(attribute_prefs) || 'attributes'
-# 							#puts ["MASS", attribute_prefs, shared_var_name, _attributes.keys].join(', ')
-# 							#attach_new_object(base_object, _attributes, shared_var_name, base_model, new_model, 'attribute')
-# 							#base_object._attach_object!(_attributes, shared_var_name, nil, 'private', 'attribute', :default_class=>default_class, :create_accessors=>create_accessors?(base_model))
-# 							(var = ivg(shared_var_name, base_object)) ? var.merge!(_attributes) : ivs(shared_var_name, _attributes, base_object)
-# 						else
-# 							#puts "Loading attributes individually."
-# 							#puts ["INDIVIDUAL", attribute_prefs, _attributes.keys].join(', ')
-							_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
-# 						end
+						# 	# This is trying to merge element set as a whole, if possible.
+						# 	# Experimental #
+						# 	#
+						# 	# OLD: prefs_exist = model_attributes?(nil, new_model) || attach_attributes?(base_model) || delimiter?(base_model)
+						# 	attribute_prefs =  attach_attributes?(base_model)
+						# 	case
+						# 	when !model_attributes?(nil, base_model) && attribute_prefs.to_s[/shared|_/]
+						# 		shared_var_name = shared_variable_name(attribute_prefs) || 'attributes'
+						# 		#puts ["MASS", attribute_prefs, shared_var_name, _attributes.keys].join(', ')
+						# 		#attach_new_object(base_object, _attributes, shared_var_name, base_model, new_model, 'attribute')
+						# 		#base_object._attach_object!(_attributes, shared_var_name, nil, 'private', 'attribute', :default_class=>default_class, :create_accessors=>create_accessors?(base_model))
+						# 		(var = ivg(shared_var_name, base_object)) ? var.merge!(_attributes) : ivs(shared_var_name, _attributes, base_object)
+						# 	else
+						# 		#puts "Loading attributes individually."
+						# 		#puts ["INDIVIDUAL", attribute_prefs, _attributes.keys].join(', ')
+						_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
+	 					#		end
 		      end
 				end
 								
@@ -414,7 +414,7 @@ module Rfm
 			  
 
 			  # Methods for submodel
-				def label_or_tag(_tag=newtag, _model=submodel); as_name?(_model) || _tag; end
+				def label_or_tag(_tag=newtag, new_model=submodel); as_name?(new_model) || _tag; end
 
 				
 		    def clean_members(obj=object)
@@ -582,8 +582,9 @@ module Rfm
 			end
 			
 			def transform(name)
-				return name unless @tag_translation.is_a?(Array)
-				name.to_s.gsub(*@tag_translation)
+				return name unless @tag_translation.is_a?(Proc)
+				#name.to_s.gsub(*@tag_translation)
+				@tag_translation.call(name.to_s)
 			end
 			
 			def init_element_buffer
@@ -611,7 +612,10 @@ module Rfm
 				if attributes
 					# This crazy thing transforms attribute keys to underscore (or whatever).
 					#attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
+					# This works but downcases all attribute names - not good.
 					attributes = default_class.new.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}
+					# This doesn't work yet, but at least it wont downcase hash keys.
+					#attributes = Hash.new.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}
 				end
 				@element_buffer.merge!({:tag=>tag, :attributes => attributes || default_class.new})
 			end

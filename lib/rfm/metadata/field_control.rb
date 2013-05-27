@@ -29,6 +29,10 @@ module Rfm
 	  		_attach_as_instance_variables attributes
 	  		self
 	  	end
+	  	
+	  	def handle_style(attributes)
+	  		_attach_as_instance_variables attributes
+	  	end
 	  
 			#   def initialize(name, style, value_list_name, value_list)
 			#     @name = name

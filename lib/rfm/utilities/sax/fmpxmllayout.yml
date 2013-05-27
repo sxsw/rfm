@@ -10,55 +10,46 @@ elements:
   attributes:
   - name: value
     as_name: doctype
-- name: FMPXMLLAYOUT
+- name: fmpxmllayout
   attach: none
-- name: ERRORCODE
+- name: errorcode
   attach: none
   # TODO: Build check_for_errors method in Layout class.
   #before_close: 'check_for_errors'
   attributes:
   - name: text
     as_name: error
-- name: PRODUCT
+- name: product
   as_name: product
-- name: LAYOUT
+- name: layout
   attach: none
   attributes:
-  - name: DATABASE
+  - name: database
     as_name: database
   - name: NAME
     as_name: name
-- name: FIELD
+- name: field
   handler: [object.meta, new_field_control_handler, _attributes]
   attach_attributes: private
-  attributes:
-  - name: NAME
-    as_name: name
   elements:
-  - name: STYLE
+  - name: style
     attach: none
-    # Add logic for 3rd level of prefs, so FieldControl pref captures this attach_attributes instead having to explicitly define here.
-    attach_attributes: private
     attributes:
-    - name: TYPE
-      as_name: type
-    - name: VALUELIST
-      as_name: valuelist
-- name: VALUELISTS
+    - name: valuelist
+      as_name: value_list_name
+- name: valuelists
   attach: none
-- name: VALUELIST
-  # TODO: Disabling this breaks the delimiter.
-  #attach: shared
+- name: valuelist
   class: Array
   as_name: value_lists
-  delimiter: NAME
+  delimiter: name
   elements:
-  - name: VALUE
+  - name: value
     class: Rfm::Metadata::ValueListItem
     before_close: replace(@value.to_s)
     attach_attributes: private
     attributes:
-    - name: DISPLAY
+    - name: display
       as_name: display
     - name: text
       as_name: value
