@@ -137,7 +137,6 @@ module Rfm
       @portals        ||= Rfm::CaseInsensitiveHash.new
 			options = args.rfm_extract_options!
 			if args[0].is_a?(Resultset)
-				#@resultset			= args[0]
 				@layout = args[0].layout
 			elsif self.is_a?(Base)
 				@layout = self.class.layout
