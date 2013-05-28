@@ -137,7 +137,7 @@ module Rfm
 		PARSERS = {}
 		BACKENDS = [[:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:ox, 'ox'], [:rexml, 'rexml/document']]
 		OPTIONS = [:name, :elements, :attributes, :attach, :attach_elements, :attach_attributes, :compact,
-							:depth, :before_close, :each_before_close, :delimiter, :as_name, :initialize
+							:depth, :before_close, :each_before_close, :delimiter, :as_name, :initialize, :handler
 							]
 		DEFAULTS = [:default_class, :backend, :text_label, :tag_translation, :shared_instance_var, :templates, :template_prefix]
 		
@@ -496,7 +496,7 @@ module Rfm
 		  end # self.included
 		  
 		  # Takes backend symbol and returns custom Handler class for specified backend.
-		  def self.get_backend(parser=nil)
+		  def self.get_backend(parser=backend)
 				(parser = decide_backend) unless parser
 				if parser.is_a?(String) || parser.is_a?(Symbol)
 					parser_proc = PARSERS[parser.to_sym]

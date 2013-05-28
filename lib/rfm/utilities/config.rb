@@ -1,37 +1,5 @@
 module Rfm
-
-	# Should these go in Rfm module?
-	CONFIG_KEYS = %w(
-		file_name
-		file_path
-		parser
-		host
-		port
-		account_name
-		password
-		database
-		layout
-		ignore_bad_data
-		ssl
-		root_cert
-		root_cert_name
-		root_cert_path
-		warn_on_redirect
-		raise_on_401
-		timeout
-		log_actions
-		log_responses
-		log_parser
-		use
-		parent
-		grammar
-		field_mapping
-		capture_strings_with
-		logger
-	)
-	
-	CONFIG_DONT_STORE = %w(strings using parents symbols objects)  #capture_strings_with)
-
+	#
 	# Top level config hash accepts any defined config parameters,
 	# or group-name keys pointing to config subsets.
 	# The subsets can be any grouping of defined config parameters, as a hash.
@@ -39,6 +7,37 @@ module Rfm
 	#
   module Config
   	require 'yaml'
+  	
+		CONFIG_KEYS = %w(
+			file_name
+			file_path
+			parser
+			host
+			port
+			account_name
+			password
+			database
+			layout
+			ignore_bad_data
+			ssl
+			root_cert
+			root_cert_name
+			root_cert_path
+			warn_on_redirect
+			raise_on_401
+			timeout
+			log_actions
+			log_responses
+			log_parser
+			use
+			parent
+			grammar
+			field_mapping
+			capture_strings_with
+			logger
+		)
+		
+		CONFIG_DONT_STORE = %w(strings using parents symbols objects)  #capture_strings_with)
   	
     extend self
     @config = {}
