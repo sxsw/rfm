@@ -26,7 +26,7 @@ elements:
 - name:  metadata
   attach: none
 - name: field_definition
-  handler: [object.meta, new_field_handler, _attributes]
+  handler: [object.meta, handle_new_field, _attributes]
   before_close: :main_callback
 - name: relatedset_definition
   delimiter: table
@@ -43,7 +43,7 @@ elements:
 - name: resultset
   attach: none
 - name: record
-  handler: [object, new_record_handler, _attributes]
+  handler: [object, handle_new_record, _attributes]
   before_close: '@loaded=true'
   elements:
   - name: field

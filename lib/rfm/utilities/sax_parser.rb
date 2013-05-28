@@ -858,9 +858,21 @@ class Object
 		end
   end
   
-	# Attach hash as individual instance variables
-	def _attach_as_instance_variables(hash)
-		hash.each{|k,v| instance_variable_set("@#{k}", v)} if hash.is_a? Hash
+	# Attach hash as individual instance variables.
+	# This is for manually attaching a hash of attributes to the current object.
+	# Pass in translation procs to alter the keys or values.
+	def _attach_as_instance_variables(hash, options={})
+		#hash.each{|k,v| instance_variable_set("@#{k}", v)} if hash.is_a? Hash
+		key_translator = options[:key_translator]
+		value_translator = options[:value_translator]
+		#puts ["ATTACH_AS_INSTANCE_VARIABLES", key_translator, value_translator].join(', ')
+		if hash.is_a? Hash
+			hash.each do |k,v|
+				(k = key_translator.call(k)) if key_translator
+				(v = value_translator.call(v)) if value_translator
+				instance_variable_set("@#{k}", v)
+			end
+		end
 	end
 
 end # Object

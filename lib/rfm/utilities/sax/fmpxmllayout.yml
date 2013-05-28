@@ -29,14 +29,15 @@ elements:
   - name: NAME
     as_name: name
 - name: field
-  handler: [object.meta, new_field_control_handler, _attributes]
+  handler: [object.meta, handle_new_field_control, _attributes]
   attach_attributes: private
   elements:
   - name: style
-    attach: none
-    attributes:
-    - name: valuelist
-      as_name: value_list_name
+    handler: [object, handle_style_element, _attributes]
+    # attach: none
+    # attributes:
+    # - name: valuelist
+    #   as_name: value_list_name
 - name: valuelists
   attach: none
 - name: valuelist

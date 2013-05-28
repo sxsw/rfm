@@ -111,7 +111,7 @@ module Rfm
 			@meta ||= Metadata::ResultsetMeta.new
 		end
 
-  	def new_record_handler(attributes)
+  	def handle_new_record(attributes)
   		r = Rfm::Record.new(self, attributes, {})
   		self << r
   		r

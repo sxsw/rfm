@@ -23,15 +23,38 @@ module Rfm
 	  #   if this field has no attached value list
 	  class FieldControl
 	    attr_reader :name, :style, :value_list_name
-	    meta_attr_reader :value_list
+	    meta_attr_accessor :layout_meta
 	  
-	  	def initialize(attributes)
+	  	def initialize(attributes, meta)
+	  		self.layout_meta = meta
 	  		_attach_as_instance_variables attributes
 	  		self
 	  	end
 	  	
-	  	def handle_style(attributes)
-	  		_attach_as_instance_variables attributes
+	  	# Handle manual attachment of STYLE element.
+	  	def handle_style_element(attributes)
+	  		_attach_as_instance_variables attributes, :key_translator=>method(:translate_value_list_key), :value_translator=>method(:translate_style_value)
+	  	end
+	  	
+	  	def translate_style_value(raw)
+	  		#puts ["TRANSLATE_STYLE", raw].join(', ')
+	  		{
+	  			'EDITTEXT'	=>	:edit_box,
+					'POPUPMENU'	=>	:popup_menu,
+					'CHECKBOX'	=>	:checkbox_set,
+					'RADIOBUTTONS'	=>	:radio_button_set,
+					'POPUPLIST'	=>	:popup_list,
+					'CALENDAR'	=>	:calendar,
+					'SCROLLTEXT'	=>	:scrollable,
+	  		}[raw] || raw
+	  	end
+	  	
+	  	def translate_value_list_key(raw)
+				{'valuelist'=>'value_list_name'}[raw] || raw	  	
+	  	end
+	  	
+	  	def value_list
+	  		layout_meta.field_controls[value_list_name]
 	  	end
 	  
 			#   def initialize(name, style, value_list_name, value_list)

@@ -22,9 +22,9 @@ module Rfm
 				self['value_lists'] ||= CaseInsensitiveHash.new
 	    end
 	    
-			def new_field_control_handler(attributes)
+			def handle_new_field_control(attributes)
 				name = attributes['name']
-				field_control = FieldControl.new(attributes)
+				field_control = FieldControl.new(attributes, self)
 				field_controls[get_mapped_name(name)] = field_control
 			end
 			
