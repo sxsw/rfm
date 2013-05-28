@@ -110,7 +110,7 @@ describe Rfm::Base do
 			layout = Rfm::Layout.new(:base_test)
 			layout.config :field_mapping => {'memosubject' => 'subject', 'memotext'=>'text'}
 			new_record = layout.modelize.new
-			puts new_record.layout.field_keys
+			#puts new_record.layout.field_keys
 			(new_record.keys & ['subject', 'text']).size.should == 2
 		end
 

@@ -53,7 +53,7 @@ RSpec.configure do |config|
 			#@Layout.stub(:load_layout).and_return(Rfm::SaxParser.parse(LAYOUT_XML, 'fmpxmllayout.yml', @Layout).result)
 			
 			Rfm::Connection.any_instance.stub(:connect) do |*args|
-				puts ["CONNECTION#connect args", args, self].flatten.join(', ')
+				#puts ["CONNECTION#connect args", args, self].flatten.join(', ')
 				case args[0].to_s
 				when /find/;
 					#puts "RESULTSET"
@@ -73,10 +73,10 @@ RSpec.configure do |config|
 			    instance.stub(:connect) do |*args2|
 						case instance.instance_variable_get(:@action)
 						when /find/;
-							puts "RESULTSET"
+							#puts "RESULTSET"
 							RESULTSET_XML
 						when /view/
-							puts "LAYOUT"
+							#puts "LAYOUT"
 							LAYOUT_XML
 						end
 					end
