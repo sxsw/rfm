@@ -54,7 +54,7 @@ module Rfm
 	  	end
 	  	
 	  	def value_list
-	  		layout_meta.field_controls[value_list_name]
+	  		layout_meta.value_lists[value_list_name]
 	  	end
 	  
 			#   def initialize(name, style, value_list_name, value_list)
