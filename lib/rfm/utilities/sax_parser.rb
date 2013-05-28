@@ -2,7 +2,7 @@
 #
 # Use:
 #   irb -rubygems -I./  -r  lib/rfm/utilities/sax_parser.rb
-#   Handler.build(
+#   SaxParser.parse(
 #     <xml-string or xml-file-path or file-io or string-io>,
 #     <optional: parsing-backend-lable or custom-backend-handler>,
 #     <optional: configuration-yml-file or yml-string or config-hash>
@@ -12,16 +12,12 @@
 #       'attach: none' prevents the object from entering the cursor or stack.
 #				Both of these will still allow processing of attributes and subelements.
 #   
-# TODO: Update the examples.
 # Examples:
-#   r = Rfm::SaxParser::Handler.build('some/file.xml')  # => defaults to best xml backend with no parsing configuration.
-#   r = Rfm::SaxParser::Handler.build('some/file.xml', :ox)  # => uses ox backend or throws error.
-#   r = Rfm::SaxParser::Handler.build('some/file.xml', :rexml, {:compact=>true})  # => uses inline configuration.
-#   r = Rfm::SaxParser::Handler.build('some/file.xml', :nokogiri, 'path/to/config.yml')  # => loads config from yml file.
+#   r = Rfm::SaxParser.parse('some/file.xml')  # => defaults to best xml backend with no parsing configuration.
+#   r = Rfm::SaxParser.parse('some/file.xml', :ox)  # => uses ox backend or throws error.
+#   r = Rfm::SaxParser.parse('some/file.xml', :rexml, {:compact=>true})  # => uses inline configuration.
+#   r = Rfm::SaxParser.parse('some/file.xml', :nokogiri, 'path/to/config.yml')  # => loads config from yml file.
 #
-# Sandbox:
-#   irb -rubygems -I./  -r  local_testing/sax_parser_sandbox.rb
-#   > r = Sandbox.parse(:fm <optional: , :rexml, {:compact=>true} >)
 #
 # ####  CONFIGURATION  #####
 #
@@ -39,19 +35,11 @@
 #   as_name:										string: store element or attribute keyed as specified
 #   delimiter:									string: attribute/hash key to delineate objects with identical tags
 #		create_accessors:		UC			string or array: all, private, shared, hash
-#		handler:										array: call an object with any params [obj, method, params]. Default attach-prefs are 'cursor'.
+#		handler:										array: call an object with any params [obj, method, params]. Default attach prefs are 'cursor'.
 #
 #
-#gem('ox', '1.8.5') if RUBY_VERSION[2].to_i > 8
-require 'yaml'
-require 'forwardable'
-require 'stringio'
-# require 'rexml/streamlistener'
-# require 'rexml/document'
-# require 'ox'
-# require 'libxml'
-# require 'nokogiri'
-
+# ####  NOTES  ####
+#
 # done: Move test data & user models to spec folder and local_testing.
 # done: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
 # done: Add option to 'compact' unnecessary or empty elements/attributes - maybe - should this should be handled at Model level?
@@ -125,10 +113,13 @@ require 'stringio'
 # TODO: Handle check-for-errors in non-resultset loads.
 # abrt: Figure out way to get doctype from nokogiri. Tried, may be practically impossible.
 # TODO: Clean up sax code so that no 'rescue' is needed - if an error happens it should be a legit error outside of SaxParser.
+# TODO: Allow attach:none when using handler.
 
 
 
-
+require 'yaml'
+require 'forwardable'
+require 'stringio'
 
 module Rfm
 	module SaxParser
