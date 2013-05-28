@@ -80,7 +80,12 @@ module Rfm
         when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{resultset.time_format}")
         when "timestamp" then DateTime.strptime(value, resultset.timestamp_format)
         when "container" then
-        	URI.parse(resultset.instance_variable_get(:@meta)['doctype'].last.to_s).tap{|uri| uri.path, uri.query = value.split('?')}
+        	resultset_meta = resultset.instance_variable_get(:@meta)
+        	if resultset_meta && resultset_meta['doctype']
+        		URI.parse(resultset_meta['doctype'].last.to_s).tap{|uri| uri.path, uri.query = value.split('?')}
+        	else
+        		value
+        	end
         else nil
         end
 #       rescue

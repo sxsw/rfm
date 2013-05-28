@@ -135,7 +135,6 @@ module Rfm
 		extend Forwardable
 
 		PARSERS = {}
-		BACKENDS = [[:libxml, 'libxml-ruby'], [:nokogiri, 'nokogiri'], [:ox, 'ox'], [:rexml, 'rexml/document']]
 		OPTIONS = [:name, :elements, :attributes, :attach, :attach_elements, :attach_attributes, :compact,
 							:depth, :before_close, :each_before_close, :delimiter, :as_name, :initialize, :handler
 							]
@@ -478,6 +477,9 @@ module Rfm
 			
 			SaxParser.install_defaults(self)
 
+
+			###  Class Methods  ###
+
 			# Main parsing interface (also aliased at SaxParser.parse)
 			def self.build(io, template=nil, initial_object=nil, parser=nil, options={})
 				parser = parser || options[:parser] || backend
@@ -499,7 +501,7 @@ module Rfm
 		  def self.get_backend(parser=backend)
 				(parser = decide_backend) unless parser
 				if parser.is_a?(String) || parser.is_a?(Symbol)
-					parser_proc = PARSERS[parser.to_sym]
+					parser_proc = PARSERS[parser.to_sym][:proc]
 					parser_proc.call unless parser_proc.nil? || const_defined?((parser.to_s.capitalize + 'Handler').to_sym)
 					SaxParser.const_get(parser.to_s.capitalize + "Handler")
 				end
@@ -509,10 +511,15 @@ module Rfm
 		  
 		  # Finds a loadable backend and returns its symbol.
 		  def self.decide_backend
-		  	BACKENDS.find{|b| !Gem::Specification::find_all_by_name(b[1]).empty? || b[0]==:rexml}[0]
+		  	#BACKENDS.find{|b| !Gem::Specification::find_all_by_name(b[1]).empty? || b[0]==:rexml}[0]
+		  	PARSERS.find{|k,v| !Gem::Specification::find_all_by_name(v[:file]).empty? || k == :rexml}[0]
 		  rescue
 		  	raise "The xml parser could not find a loadable backend library: #{$!}"
 		  end
+		  
+		  
+		  
+		  ###  Instance Methods  ###
 		  
 		  def initialize(_template=nil, initial_object=nil)
 		  	initial_object = case
@@ -655,7 +662,7 @@ module Rfm
 		
 		#####  SAX PARSER BACKEND HANDLERS  #####
 		
-		PARSERS[:libxml] = proc do
+		PARSERS[:libxml] = {:file=>'libxml-ruby', :proc => proc do
 			require 'libxml'
 			class LibxmlHandler
 				include LibXML
@@ -682,9 +689,9 @@ module Rfm
 				alias_method :on_characters, :_text
 				alias_method :on_internal_subset, :_doctype
 			end # LibxmlSax	
-		end
+		end}
 		
-		PARSERS[:nokogiri] = proc do
+		PARSERS[:nokogiri] = {:file=>'nokogiri', :proc => proc do
 			require 'nokogiri'
 			class NokogiriHandler < Nokogiri::XML::SAX::Document
 			  include Handler
@@ -702,9 +709,9 @@ module Rfm
 				alias_method :end_element, :_end_element
 				alias_method :characters, :_text
 			end # NokogiriSax	
-		end
+		end}
 		
-		PARSERS[:ox] = proc do
+		PARSERS[:ox] = {:file=>'ox', :proc => proc do
 			require 'ox'
 			class OxHandler < ::Ox::Sax
 			  include Handler
@@ -723,9 +730,9 @@ module Rfm
 				alias_method :text, :_text		
 				alias_method :doctype, :_doctype  
 			end # OxFmpSax
-		end
+		end}
 
-		PARSERS[:rexml] = proc do
+		PARSERS[:rexml] = {:file=>'rexml/document', :proc => proc do
 			require 'rexml/document'
 			require 'rexml/streamlistener'
 			class RexmlHandler
@@ -750,7 +757,7 @@ module Rfm
 				alias_method :text, :_text
 				alias_method :doctype, :_doctype
 			end # RexmlStream
-		end
+		end}
 		
 
 	end # SaxParser
