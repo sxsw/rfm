@@ -475,7 +475,7 @@ module Rfm
 			def self.build(io, template=nil, initial_object=nil, parser=nil, options={})
 				parser = parser || options[:parser] || backend
 				parser = get_backend(parser)
-				(Rfm.log.info "Using backend parser: #{parser}") if options[:log_parser]
+				(Rfm.log.info "Using backend parser: #{parser}, with template: #{template}") if options[:log_parser]
 			  parser.build(io, template, initial_object)
 		  end
 		  
@@ -531,16 +531,18 @@ module Rfm
 		  
 		  # Takes string, symbol, hash, and returns a (possibly cached) parsing template.
 		  # String can be a file name, yaml, xml.
-		  # Symbol is a name of a template stored in SaxParser@templates (you would set the templates when your app loads).
+		  # Symbol is a name of a template stored in SaxParser@templates (you would set the templates when your app or gem loads).
 		  # Templates stored in the SaxParser@templates var can be strings of code, file specs, or hashes.
 			def get_template(name)
-				dat = templates[name]
-				if dat
-					rslt = load_template(dat)
-				else
-					rslt = load_template(name)
-				end
-				(templates[name] = rslt) #unless dat == rslt
+				# 	dat = templates[name]
+				# 	if dat
+				# 		rslt = load_template(dat)
+				# 	else
+				# 		rslt = load_template(name)
+				# 	end
+				# 	(templates[name] = rslt) #unless dat == rslt
+				# The above works, but this is cleaner.
+				templates[name] = templates[name] && load_template(templates[name]) || load_template(name)
 			end
 			
 			# Does the heavy-lifting of template retrieval.

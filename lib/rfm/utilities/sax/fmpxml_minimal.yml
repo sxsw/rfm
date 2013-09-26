@@ -34,7 +34,7 @@
 attach_elements: none
 attach_attributes: none
 elements:
-- name: DATA
+- name: data
   compact: true
   attach: hash
   attach_attributes: hash
