@@ -105,26 +105,27 @@ task :sample do
 	puts r.field_meta.to_yaml
 end	
 
-desc "run specs with all parser backends"	
-task :spec_multi do
-	require 'benchmark'
-	require 'yaml'
-	@records = File.read('spec/data/resultset.xml')
-	@layout = File.read('spec/data/layout.xml')
-	Benchmark.bm do |b|
-		[:oxsax, :libxml, :libxmlsax, :nokogirisax, :nokogiri, :hpricot, :rexml, :rexmlsax].each do |backend|
-			#Rfm.backend = backend
-			ENV['parser'] = backend.to_s
-			b.report("#{backend.to_s.upcase}\n") do
-				begin
-					Rake::Task["spec"].execute
-				rescue
-					#puts $1
-				end
-			end
-		end
-	end
-end
+# Has not been updated to work with new parser in Rfm 3.0
+# desc "run specs with all parser backends"	
+# task :spec_multi do
+# 	require 'benchmark'
+# 	require 'yaml'
+# 	@records = File.read('spec/data/resultset.xml')
+# 	@layout = File.read('spec/data/layout.xml')
+# 	Benchmark.bm do |b|
+# 		[:oxsax, :libxml, :libxmlsax, :nokogirisax, :nokogiri, :hpricot, :rexml, :rexmlsax].each do |backend|
+# 			#Rfm.backend = backend
+# 			ENV['parser'] = backend.to_s
+# 			b.report("#{backend.to_s.upcase}\n") do
+# 				begin
+# 					Rake::Task["spec"].execute
+# 				rescue
+# 					#puts $1
+# 				end
+# 			end
+# 		end
+# 	end
+# end
 
 
 
