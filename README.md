@@ -1,6 +1,6 @@
 # ginjo-rfm
 
-Rfm is a Ruby-Filemaker adapter, a Ruby gem that allows scripts and applications to exchange commands and data with Filemaker Pro using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 2.0 adds some major enhancements, while remaining compatible with ginjo-rfm 1.4.x and lardawge-rfm 1.4.x. 
+Rfm is a Ruby-Filemaker adapter, a Ruby gem that allows Ruby scripts and applications to exchange commands and data with Filemaker Server using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 2.0 adds some major enhancements, while remaining compatible with ginjo-rfm 1.4.x and lardawge-rfm 1.4.x. 
 
 
 ## Documentation & Links
