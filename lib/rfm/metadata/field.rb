@@ -81,7 +81,7 @@ module Rfm
         when "timestamp" then DateTime.strptime(value, resultset.timestamp_format)
         when "container" then
         	resultset_meta = resultset.instance_variable_get(:@meta)
-        	if resultset_meta && resultset_meta['doctype']
+        	if resultset_meta && resultset_meta['doctype'] && value.to_s[/\?/]
         		URI.parse(resultset_meta['doctype'].last.to_s).tap{|uri| uri.path, uri.query = value.split('?')}
         	else
         		value
