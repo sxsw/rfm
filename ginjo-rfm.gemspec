@@ -30,7 +30,7 @@ Gem::Specification.new do |s|
     "lib/rfm/VERSION"
   ]
 
-  s.add_runtime_dependency('activesupport', '>= 2.3.5')
+  # s.add_runtime_dependency('activesupport', '>= 2.3.5')
   s.add_development_dependency(%q<activemodel>, [">= 0"])
   s.add_development_dependency(%q<rake>, [">= 0"])
   s.add_development_dependency(%q<rdoc>, [">= 0"])
