@@ -91,7 +91,7 @@ module Rfm
 	extend self
 	
 	SaxParser.default_class = CaseInsensitiveHash
-	SaxParser.template_prefix = File.join(File.dirname(__FILE__), './rfm/utilities/sax/')
+	SaxParser.template_prefix = File.join(File.dirname(__FILE__), 'rfm/utilities/sax/')
 	SaxParser.templates.merge!({
 		:fmpxmllayout => 'fmpxmllayout.yml',
 		:fmresultset => 'fmresultset.yml',

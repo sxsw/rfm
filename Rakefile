@@ -55,7 +55,8 @@ task :benchmark do
 	require 'yaml'
 	#load "spec/data/sax_models.rb"
 	@records = File.read 'spec/data/resultset_large.xml'
-	@template = 'lib/rfm/utilities/sax/fmresultset.yml'
+	#@template = 'lib/rfm/utilities/sax/fmresultset.yml'
+	@template = 'fmresultset.yml'
 	@base_class = Rfm::Resultset
 	@layout = 'spec/data/layout.xml'
 	Benchmark.bm do |b|
