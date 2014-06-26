@@ -1,6 +1,8 @@
 # ginjo-rfm
 
-Rfm is a Ruby-Filemaker adapter, a Ruby gem that allows Ruby scripts and applications to exchange commands and data with Filemaker Server using Filemaker's XML interface. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 2.0 adds some major enhancements, while remaining compatible with ginjo-rfm 1.4.x and lardawge-rfm 1.4.x. 
+Rfm is a Ruby-Filemaker adapter, a Ruby Gem that provides an interface between Filemaker Server and Ruby. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 3 removes the dependency on ActiveSupport and is now a completely independent Gem, able to run most of its core features without requiring any other supporting Gems (If you want the ActiveModel features of callbacks, validations, etc, you will need to require ActiveModel, which of course still depends on ActiveSupport).
+
+Ginjo-rfm has been tested successfully on Ruby 1.8.7, 1.9.3, 2.0.0, and 2.1.2.
 
 
 ## Documentation & Links
@@ -12,12 +14,28 @@ Rfm is a Ruby-Filemaker adapter, a Ruby gem that allows Ruby scripts and applica
 * Original homepage   <http://sixfriedrice.com/wp/products/rfm/>
 * Lardawge at github  <https://github.com/lardawge/rfm>
 
+## New in version  3.0
+
+There are a ton of changes in version 3, but most of them are under the hood.
+
+* Compatibility with Ruby 2.1 (and 2.0, 1.9.3, 1.8.7).
+
+* Sax parsing rewrite.
+The entire XML parsing engine of Rfm has been rewritten to use only the sax/stream parsing schemes of the supported backend XML parsers (libxml-ruby, nokogiri, ox, rexml). There were two main goals in this rewrite: 1, to separate the xml parsing code from the Rfm objects, and 2, to remove the hard dependency on ActiveSupport.
+
+* Better logging capabilities.
+Added Rfm.logger, Rfm.logger=, Config.logger, Config#logger, and config(:logger=>(...)).
+
+* Added field-mapping awareness to :sort_field query option.
+
+* Relaxed requirement that query option keys be symbols - can now be strings or symbols.
+
+* Detached resultset from record, so record doesn't drag resultset around with it.
+
+* Bug fixes and refinements in modeling, configuration, metadata access, and Rfm object instanciation.
+
 
 ## New in version  2.1
-
-Ginjo-rfm 2.1 has a combination of new features, bug fixes, and a lot of code refactoring.
-Most api calls remain the same, but a good deal of underlying code has been transformed
-to support and take advantage of the progress of technologies surrounding Ruby.
 
 * Portals are now included by default.
 	Removed `:include_portals` query option in favor of `:ignore_portals`.
@@ -47,13 +65,8 @@ to support and take advantage of the progress of technologies surrounding Ruby.
 * Compatibility fixes for ruby 1.9.
 * Configuration `:use` option now works for all Rfm objects that respond to `config`.
 
-Some issues still to be addressed (some longstanding and some more recent) are repeating field writes, some of the
-object management & introspection calls, pull requests, more coverage of Filemaker's query syntax, more error classes, more specs, and more documentation.
-
 
 ## New in version 2.0
-
-Ginjo-rfm 2.0 brings new features to Rfm, making it easier than ever to work with Filemaker data from your Ruby scripts.
 
 * Rails-like modeling with ActiveModel
 * Support for multiple XML Parsers
@@ -81,6 +94,8 @@ data modeling with easy configuration and CRUD features.
 
 
 ### Choice of XML Parsers
+
+Note that this section is obsolete for ginjo-rfm version 3.
 
 Ginjo-rfm 2.0 uses ActiveSupport's XmlMini parsing interface, which has built-in support for
 LibXML, Nokogiri, and REXML. Additionally, ginjo-rfm includes adapters for Ox and Hpricot parsing.
@@ -111,27 +126,6 @@ The current parsing options are
 	  :rexml        ->  REXML Tree
 	  :rexmlsax     ->  REXML SAX
 	
-If you're wondering about performance, here are some preliminary benchmark results. Each backend parsed a fmresultset.xml and a FMPXMLLAYOUT.xml 30 times each. Results have differed across environments with different test data, so this data is by no means definitive. Also note that earlier versions of ActiveSupport did not contain all of the parsing backend options mentioned here.
-
-		      user     system      total        real
-		ActiveSupport::XmlMini_OxSAX
-		  0.200000   0.010000   0.210000 (  0.211842)
-		ActiveSupport::XmlMini_LibXML
-		  0.400000   0.010000   0.410000 (  0.411823)
-		ActiveSupport::XmlMini_LibXMLSAX
-		  0.400000   0.010000   0.410000 (  0.411360)
-		ActiveSupport::XmlMini_NokogiriSAX
-		  0.670000   0.010000   0.680000 (  0.682885)
-		ActiveSupport::XmlMini_Nokogiri
-		  0.970000   0.030000   1.000000 (  0.998673)
-		ActiveSupport::XmlMini_Hpricot
-		  1.950000   0.060000   2.010000 (  2.011355)
-		ActiveSupport::XmlMini_REXML
-		  8.710000   0.180000   8.890000 (  9.015836)
-		ActiveSupport::XmlMini_REXMLSAX
-		  6.320000   0.040000   6.360000 (  6.377179)
-
-
 
 ### Configuration API
 
@@ -203,6 +197,7 @@ Get the names of fields on the current layout
 
 	  my_record.field_names
 	
+	
 ### From ginjo-rfm 1.4.x
 
 From ginjo-rfm 1.4.x, the following features are also included.
@@ -218,63 +213,12 @@ Value-list alternate display
 	   i.display                         # => '8765 Amy'
 
 
-### Compatibility
-
-Ginjo-rfm 2.0 is compatible with previous versions of Rfm - Ginjo, Lardawge, and SFR. However, much has been changed in the low-level workings of the code. If you have scripts that reach deep into the guts of Rfm 1.0 thru 1.4.x, you may find that some things are slightly different in 2.0. Additionally, some long-standing bugs have been fixed that may have been so de rigeur, that the "correct behavior" in Rfm 2.0 may break scripts that relied on the previously buggy functions. These low level changes, and the addition of major new functionality, led the decision to release this version of Rfm as 2.0, instead of 1.5.
-
-
 ## Download & Installation
 
-There are at least 4 ways to download ginjo-rfm.
+* With Bundler: gem 'ginjo-rfm', :require=>'rfm'
 
-* With Bundler: gem 'ginjo-rfm'
-* With the command line: gem install ginjo-rfm
-* From https://rubygems.org/gems/ginjo-rfm
-* From https://github.com/ginjo/rfm
+Ginjo-rfm v3 can be run without any other gems, allowing you to create models to interact with your Filemaker servers, layouts, tables, records, and data. If you want the added features provided by ActiveModel, just add active-model to your Gemfile (or require it manually). Ginjo-rfm v3 will use the built-in Ruby XML parser REXML by default. If you want to use one of the 3 other supported parsers (libxml-ruby, nokogiri, ox), just add it to your Gemfile or require it manually.
 
-Ginjo-rfm requires the ActiveSupport gem for several features, including XML parsing. Rfm has been tested and works with ActiveSupport 2.3.5 thru 3.1.3, on both ruby 1.8.7 and ruby 1.9.2. ActiveModel requires ActiveSupport 3+ and is not compatible with ActiveSupport 2.3.x. So while you CAN use ginjo-rfm with Rails 2.3, you will not have ActiveModel features like callbacks and validations. Basic modeling functionality and Filemaker interaction will continue to work, unaffected by the presence or absence of ActiveModel.
-
-For the best performance, it is recommended that you use the Ox, Libxml-ruby, Nokogiri, or Hpricot parser. Ginjo-rfm does not require these gems by dependency, so you will have to make sure they are installed on your machine and/or specified in your Gemfile, if you wish to use them. If you don't want to install any of these parsers, Rfm will use the REXML parser included with the Ruby standard library. Similarly, ginjo-rfm does not require ActiveModel by dependency, so also make sure that is installed and/or specified in your Gemfile if you wish to use ActiveModel features.
-
-Note that the installation of Ox, Libxml-ruby, Nokogiri, or Hpricot gems will require further dependencies. Please see the install instructions for each parser to get them installed and running on your system.
-
-
-### Using Bundler and/or Rails >= 3.0
-
-In your Gemfile:
-
-	   gem 'ginjo-rfm'
-	   gem 'ox'          # optional
-	   gem 'libxml-ruby' # optional
-	   gem 'nokogiri'    # optional
-	   gem 'hpricot'     # optional
-	   gem 'activemodel' # optional
-
-In your shell:
-
-	   bundle install
-
-In your project, you may or may not have to require 'rfm', depending on Bundler's configuration:
-
-	   require 'rfm'
-
-### Without Bundler
-
-If you are not using Bundler, Rfm will pick up the XML parsers and ActiveModel as long as they are available in your current rubygems installation.
-
-In your shell:
-
-	   gem install ginjo-rfm
-	   gem install ox           # optional
-	   gem install nokogiri     # optional
-	   gem install libxml-ruby  # optional
-	   gem install hpricot      # optional
-	   gem install activemodel  # optional
-
-Once the gem is installed, you can use rfm in your ruby scripts by requiring it:
-
-	   require 'rubygems'
-	   require 'rfm'
 
 
 ## Ginjo-rfm Basic Usage
@@ -840,6 +784,10 @@ So, for an annoying, but detailed load of output, make a connection like this:
 ### Source Code
 
 If you were tracking ginjo-rfm on github before the switch to version 2.0.0, please accept my humblest apologies for making a mess of the branching. The pre 2.0.0 edge branch has become master, and the pre 2.0.0 master branch has become ginjo-1-4-stable. I don't intend to make that kind of hard reset again, at least not on public branches. Master will be the branch to find the latest-greatest public source, and 'stable' branches will emerge as necessary to preserve historical releases.
+
+### To Do
+
+Repeating field compatibility, more coverage of Filemaker's query syntax, more error classes, more specs, and more documentation.
 
 
 ## Credits
