@@ -32,11 +32,13 @@ module Rfm
     
     class DbFactory < Rfm::CaseInsensitiveHash # :nodoc: all
     
-	  	extend Config
-	  	config :parent=>'@server'
+# 	  	extend Config
+# 	  	config :parent=>'@server'
 
     
       def initialize(server)
+	  	extend Config
+	  	config :parent=>'@server'
         @server = server
         @loaded = false
       end
@@ -73,10 +75,12 @@ module Rfm
     
     class LayoutFactory < Rfm::CaseInsensitiveHash # :nodoc: all
 
-	  	extend Config
-	  	config :parent=>'@database'
+# 	  	extend Config
+# 	  	config :parent=>'@database'
     	
       def initialize(server, database)
+	  	extend Config
+	  	config :parent=>'@database'
         @server = server
         @database = database
         @loaded = false
@@ -126,10 +130,12 @@ module Rfm
     
     class ScriptFactory < Rfm::CaseInsensitiveHash # :nodoc: all
 
-	  	extend Config
-	  	config :parent=>'@database'
+# 	  	extend Config
+# 	  	config :parent=>'@database'
     
       def initialize(server, database)
+	  	extend Config
+	  	config :parent=>'@database'
         @server = server
         @database = database
         @loaded = false
