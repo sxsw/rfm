@@ -148,6 +148,9 @@ module Rfm
         when :max_portal_rows
         	result['-relatedsets.max'] = value
         	result['-relatedsets.filter'] = 'layout'
+        when :ignore_portals
+        	result['-relatedsets.max'] = 0
+        	result['-relatedsets.filter'] = 'layout'
         when :max_records
           result['-max'] = value
         when :skip_records

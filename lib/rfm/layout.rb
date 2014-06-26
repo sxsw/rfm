@@ -294,9 +294,9 @@ module Rfm
     	options.merge!(:grammar=>grammar_option) if grammar_option
     	template = options.delete :template
     	
-    	# TODO: incorporate this into request.
-      #include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
-      include_portals = !options[:ignore_portals]
+			# # TODO: Remove this code it is no longer used.
+			# #include_portals = options[:include_portals] ? options.delete(:include_portals) : nil
+			# include_portals = !options[:ignore_portals]
       
       # Apply mapping from :field_mapping, to send correct params in URL.
       prms = params.merge(extra_params)
