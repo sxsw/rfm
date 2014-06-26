@@ -31,7 +31,7 @@ module Rfm
       
       @defaults = {
         :host => 'localhost',
-        :port => 80,
+        #:port => 80,
         :ssl => true,
         :root_cert => true,
         :root_cert_name => '',
@@ -99,20 +99,20 @@ module Rfm
       request.basic_auth(account_name, password)
       request.set_form_data(post_data)
   
-      response = Net::HTTP.new(host_name, port)
+      connection = Net::HTTP.new(host_name, port)
       #ADDED LONG TIMEOUT TIMOTHY TING 05/12/2011
-      response.open_timeout = response.read_timeout = state[:timeout]
+      connection.open_timeout = connection.read_timeout = state[:timeout]
       if state[:ssl]
-        response.use_ssl = true
+        connection.use_ssl = true
         if state[:root_cert]
-          response.verify_mode = OpenSSL::SSL::VERIFY_PEER
-          response.ca_file = File.join(state[:root_cert_path], state[:root_cert_name])
+          connection.verify_mode = OpenSSL::SSL::VERIFY_PEER
+          connection.ca_file = File.join(state[:root_cert_path], state[:root_cert_name])
         else
-          response.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          connection.verify_mode = OpenSSL::SSL::VERIFY_NONE
         end
       end
   
-      response = response.start { |http| http.request(request) }
+      response = connection.start { |http| http.request(request) }
       if state[:log_responses] == true
         response.to_hash.each { |key, value| log.info "#{key}: #{value}" }
         log.info response.body
