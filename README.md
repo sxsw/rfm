@@ -18,7 +18,7 @@ Ginjo-rfm has been tested successfully on Ruby 1.8.7, 1.9.3, 2.0.0, and 2.1.2.
 
 There are a ton of changes in version 3, but most of them are under the hood.
 
-* Compatibility with Ruby 2.1 (and 2.0, 1.9.3, 1.8.7).
+* Compatibility with Ruby 2.1.2 (and 2.0.0, 1.9.3, 1.8.7).
 
 * Sax parsing rewrite.
 The entire XML parsing engine of Rfm has been rewritten to use only the sax/stream parsing schemes of the supported backend XML parsers (libxml-ruby, nokogiri, ox, rexml). There were two main goals in this rewrite: 1, to separate the xml parsing code from the Rfm objects, and 2, to remove the hard dependency on ActiveSupport.
@@ -34,190 +34,11 @@ Added Rfm.logger, Rfm.logger=, Config.logger, Config#logger, and config(:logger=
 
 * Bug fixes and refinements in modeling, configuration, metadata access, and Rfm object instanciation.
 
-
-## New in version  2.1
-
-* Portals are now included by default.
-	Removed `:include_portals` query option in favor of `:ignore_portals`.
-	Added `:max_portal_rows` query option.
-* Added field-remapping framework to allow model fields with different names than Filemaker fields.
-
-        class User < Rfm::Base
-          config :field_mapping => {
-            #<filemaker-field-name>  =>  <rfm-field-name>
-            'userName'               => 'login',
-            'First Name'             => 'first_name',
-            'Last Name'              => 'last_name',
-            'IDperson'               => 'person_id'     
-          }
-        end
-
-        User.find(:login=>'bill')    # => [{'login' => 'bill', 'first_name' => 'Bill', ...}, ...]
-
-* Fixed date/time/timestamp translations when writing data to Filemaker.
-* Detached new Server objects from Factory.servers hash, so wont reuse or stack-up servers.
-* Added grammar translation layer between xml parser and Rfm, allowing all supported xml grammars to be used with Rfm.
-  This will also streamline changes/additions to Filemaker's xml grammar(s).
-* Added ability to manually import fmpresultset and fmpxmlresult data (from file, variable, etc.).
-
-        Rfm::Resultset.load_data(file_or_string).
-
-* Compatibility fixes for ruby 1.9.
-* Configuration `:use` option now works for all Rfm objects that respond to `config`.
-
-
-## New in version 2.0
-
-* Rails-like modeling with ActiveModel
-* Support for multiple XML Parsers
-* Configuration API
-* Compound Filemaker queries with omitable requests
-* Full metadata support
-
-
-### Data Modeling with ActiveModel
-	
-If you can load ActiveModel in your project, you can have model callbacks, validations, and other ActiveModel features.
-If you can't load ActiveModel (because you're using something incompatible, like Rails 2),
-you can still use Rfm models... minus the ActiveModel-specific features like callbacks and validations. Rfm models give you basic
-data modeling with easy configuration and CRUD features.
-
-	  class User < Rfm::Base
-	    config      :layout=>'user_layout'
-	    before_save :encrypt_password
-	    validate    :valid_email_address
-	  end
-	
-	  @user = User.new :username => 'bill', :password => 'pass'
-	  @user.email = 'my@email.com'
-	  @user.save!
-
-
-### Choice of XML Parsers
-
-Note that this section is obsolete for ginjo-rfm version 3.
-
-Ginjo-rfm 2.0 uses ActiveSupport's XmlMini parsing interface, which has built-in support for
-LibXML, Nokogiri, and REXML. Additionally, ginjo-rfm includes adapters for Ox and Hpricot parsing.
-You can specifiy which parser to use or let Rfm decide.
-
-	  Rfm.config :parser => :libxml
-
-If you're not able to install one of the faster parsers, ginjo-rfm will fall back to
-ruby's built-in REXML. Want to roll your own XML adapter? Just pass it to Rfm as a module.
-
-	  Rfm.config :parser => MyHomeGrownAdapter
-
-Choose your preferred parser globaly, as in the above example, or set a different parser for each model.
-		
-	  class Order < Rfm::Base
-	    config :parser => :hpricot
-	  end
-	
-The current parsing options are
-
-	  :jdom         ->  JDOM (for JRuby)
-	  :oxsax        ->  Ox SAX
-	  :libxml       ->  LibXML Tree
-	  :libxmlsax    ->  LibXML SAX
-	  :nokogirisax  ->  Nokogiri SAX
-	  :nokogiri     ->  Nokogiri Tree
-	  :hpricot      ->  Hpricot Tree
-	  :rexml        ->  REXML Tree
-	  :rexmlsax     ->  REXML SAX
-	
-
-### Configuration API
-
-The ginjo-rfm configuration module lets you store your settings in several different ways. Store some, or all, of your project-specific settings in a rfm.yml file at the root of your project, or in your Rails config/ directory. Settings can also be put in a RFM_CONFIG constant at the top level of your project.  Configuration settings can be simple key=>values, or they can be named groups of key=>values. Configuration can also be passed to various Rfm methods during load and runtime, as individual settings or as groups.
-
-rfm.yml
-
-	   :ssl: true
-	   :root_cert: false
-	   :timeout: 10
-	   :port: 443
-	   :host: live.mydomain.com
-	   :account_name: admin
-	   :password: pass
-	   :database: MyFmDb
-
-Set a model's configuration.
-	
-	   class MyModel < Rfm::Base
-	     config :layout => 'mylayout'
-	   end
-
-
-### Compound Filemaker Queries, with Omitable FMP Find Requests
-
-Create a Filemaker 'omit' request by including an :omit key with a value of true.
-
-	   my_layout.find :field1 => 'val1', :field2 => 'val2', :omit => true
-
-Create multiple Filemaker find requests by passing an array of hashes to the #find method.
-
-	   my_layout.find [{:field1 => 'bill', :field2 => 'admin'}, {:field2 => 'staff', :field3 => 'inactive', :omit => true}, ...]
-
-If the value of a field in a find request is an array of strings, the string values will be logically OR'd in the query.
-
-	   my_layout.find :fieldOne => ['bill','mike','bob'], :fieldTwo =>'staff'
-
-
-### Full Metadata Support
-	
-* Server databases
-* Database layouts
-* Database scripts
-* Layout fields
-* Layout portals
-* Resultset meta
-* Field definition meta
-* Portal definition meta
-
-There are also many enhancements to make it easier to get the objects or data you want. Some examples:
-
-Get a database object using default config
-
-	  Rfm.db 'my_db'
-
-Get a layout object using config grouping :my_group
-	
-	  Rfm.layout :my_group
-
-Get the total count of all records in the table
-
-	  MyModel.total_count
-
-Get the portal names (table-occurrence names) on the current layout
-
-	  MyModel.portal_names
-
-Get the names of fields on the current layout
-
-	  my_record.field_names
-	
-	
-### From ginjo-rfm 1.4.x
-
-From ginjo-rfm 1.4.x, the following features are also included.
-
-Connection timeout settings
-
-	  Rfm.config :timeout => 10
-
-Value-list alternate display
-
-	   i = array_of_value_list_items[3]  # => '8765'
-	   i.value                           # => '8765'
-	   i.display                         # => '8765 Amy'
-
-
 ## Download & Installation
 
-* With Bundler: gem 'ginjo-rfm', :require=>'rfm'
+* In your Gemfile: gem 'ginjo-rfm', :require=>'rfm'
 
-Ginjo-rfm v3 can be run without any other gems, allowing you to create models to interact with your Filemaker servers, layouts, tables, records, and data. If you want the added features provided by ActiveModel, just add active-model to your Gemfile (or require it manually). Ginjo-rfm v3 will use the built-in Ruby XML parser REXML by default. If you want to use one of the 3 other supported parsers (libxml-ruby, nokogiri, ox), just add it to your Gemfile or require it manually.
+Ginjo-rfm v3 can be run without any other gems, allowing you to create models to interact with your Filemaker servers, layouts, tables, records, and data. If you want the additional features provided by ActiveModel, just add activemodel to your Gemfile (or require it manually). Ginjo-rfm v3 will use the built-in Ruby XML parser REXML by default. If you want to use one of the other supported parsers (libxml-ruby, nokogiri, ox), just add it to your Gemfile or require it manually.
 
 
 
@@ -457,7 +278,7 @@ When using Models to retrieve records using the `any` method or the `find(record
 
 ### Getting Rfm Server, Database, and Layout Objects Manually
 
-Well... not entirely manually. To get server, db, and layout objects as in previous versions of Rfm, see the section "Working with classic Rfm features". Ginjo-rfm 2.0 has some new methods to create/locate Filemaker objects and meta data. Many of these new methods are configuration-aware.
+Well... not entirely manually. To get server, db, and layout objects as in previous versions of Rfm, see the section "Working with classic Rfm features". Newer versions of ginjo-rfm can use the configuration options to build these objects.
 
 Create a layout object using default configuration settings.
 
@@ -785,9 +606,190 @@ So, for an annoying, but detailed load of output, make a connection like this:
 
 If you were tracking ginjo-rfm on github before the switch to version 2.0.0, please accept my humblest apologies for making a mess of the branching. The pre 2.0.0 edge branch has become master, and the pre 2.0.0 master branch has become ginjo-1-4-stable. I don't intend to make that kind of hard reset again, at least not on public branches. Master will be the branch to find the latest-greatest public source, and 'stable' branches will emerge as necessary to preserve historical releases.
 
-### To Do
+### Still To Do
 
 Repeating field compatibility, more coverage of Filemaker's query syntax, more error classes, more specs, and more documentation.
+
+
+
+
+## Version 2.1 Highlights
+
+* Portals are now included by default.
+	Removed `:include_portals` query option in favor of `:ignore_portals`.
+	Added `:max_portal_rows` query option.
+* Added field-remapping framework to allow model fields with different names than Filemaker fields.
+
+        class User < Rfm::Base
+          config :field_mapping => {
+            #<filemaker-field-name>  =>  <rfm-field-name>
+            'userName'               => 'login',
+            'First Name'             => 'first_name',
+            'Last Name'              => 'last_name',
+            'IDperson'               => 'person_id'     
+          }
+        end
+
+        User.find(:login=>'bill')    # => [{'login' => 'bill', 'first_name' => 'Bill', ...}, ...]
+
+* Fixed date/time/timestamp translations when writing data to Filemaker.
+* Detached new Server objects from Factory.servers hash, so wont reuse or stack-up servers.
+* Added grammar translation layer between xml parser and Rfm, allowing all supported xml grammars to be used with Rfm.
+  This will also streamline changes/additions to Filemaker's xml grammar(s).
+* Added ability to manually import fmpresultset and fmpxmlresult data (from file, variable, etc.).
+
+        Rfm::Resultset.load_data(file_or_string).
+
+* Compatibility fixes for ruby 1.9.
+* Configuration `:use` option now works for all Rfm objects that respond to `config`.
+
+
+## Version 2.0 Highlights
+
+* Rails-like modeling with ActiveModel
+* Support for multiple XML Parsers
+* Configuration API
+* Compound Filemaker queries with omitable requests
+* Full metadata support
+
+
+### Data Modeling with ActiveModel
+	
+If you can load ActiveModel in your project, you can have model callbacks, validations, and other ActiveModel features.
+If you can't load ActiveModel (because you're using something incompatible, like Rails 2),
+you can still use Rfm models... minus the ActiveModel-specific features like callbacks and validations. Rfm models give you basic
+data modeling with easy configuration and CRUD features.
+
+	  class User < Rfm::Base
+	    config      :layout=>'user_layout'
+	    before_save :encrypt_password
+	    validate    :valid_email_address
+	  end
+	
+	  @user = User.new :username => 'bill', :password => 'pass'
+	  @user.email = 'my@email.com'
+	  @user.save!
+
+
+### Choice of XML Parsers
+
+Note that this section is obsolete for ginjo-rfm version 3.
+
+Ginjo-rfm 2.0 uses ActiveSupport's XmlMini parsing interface, which has built-in support for
+LibXML, Nokogiri, and REXML. Additionally, ginjo-rfm includes adapters for Ox and Hpricot parsing.
+You can specifiy which parser to use or let Rfm decide.
+
+	  Rfm.config :parser => :libxml
+
+If you're not able to install one of the faster parsers, ginjo-rfm will fall back to
+ruby's built-in REXML. Want to roll your own XML adapter? Just pass it to Rfm as a module.
+
+	  Rfm.config :parser => MyHomeGrownAdapter
+
+Choose your preferred parser globaly, as in the above example, or set a different parser for each model.
+		
+	  class Order < Rfm::Base
+	    config :parser => :hpricot
+	  end
+	
+The current parsing options are
+
+	  :jdom         ->  JDOM (for JRuby)
+	  :oxsax        ->  Ox SAX
+	  :libxml       ->  LibXML Tree
+	  :libxmlsax    ->  LibXML SAX
+	  :nokogirisax  ->  Nokogiri SAX
+	  :nokogiri     ->  Nokogiri Tree
+	  :hpricot      ->  Hpricot Tree
+	  :rexml        ->  REXML Tree
+	  :rexmlsax     ->  REXML SAX
+	
+
+### Configuration API
+
+The ginjo-rfm configuration module lets you store your settings in several different ways. Store some, or all, of your project-specific settings in a rfm.yml file at the root of your project, or in your Rails config/ directory. Settings can also be put in a RFM_CONFIG constant at the top level of your project.  Configuration settings can be simple key=>values, or they can be named groups of key=>values. Configuration can also be passed to various Rfm methods during load and runtime, as individual settings or as groups.
+
+rfm.yml
+
+	   :ssl: true
+	   :root_cert: false
+	   :timeout: 10
+	   :port: 443
+	   :host: live.mydomain.com
+	   :account_name: admin
+	   :password: pass
+	   :database: MyFmDb
+
+Set a model's configuration.
+	
+	   class MyModel < Rfm::Base
+	     config :layout => 'mylayout'
+	   end
+
+
+### Compound Filemaker Queries, with Omitable FMP Find Requests
+
+Create a Filemaker 'omit' request by including an :omit key with a value of true.
+
+	   my_layout.find :field1 => 'val1', :field2 => 'val2', :omit => true
+
+Create multiple Filemaker find requests by passing an array of hashes to the #find method.
+
+	   my_layout.find [{:field1 => 'bill', :field2 => 'admin'}, {:field2 => 'staff', :field3 => 'inactive', :omit => true}, ...]
+
+If the value of a field in a find request is an array of strings, the string values will be logically OR'd in the query.
+
+	   my_layout.find :fieldOne => ['bill','mike','bob'], :fieldTwo =>'staff'
+
+
+### Full Metadata Support
+	
+* Server databases
+* Database layouts
+* Database scripts
+* Layout fields
+* Layout portals
+* Resultset meta
+* Field definition meta
+* Portal definition meta
+
+There are also many enhancements to make it easier to get the objects or data you want. Some examples:
+
+Get a database object using default config
+
+	  Rfm.db 'my_db'
+
+Get a layout object using config grouping :my_group
+	
+	  Rfm.layout :my_group
+
+Get the total count of all records in the table
+
+	  MyModel.total_count
+
+Get the portal names (table-occurrence names) on the current layout
+
+	  MyModel.portal_names
+
+Get the names of fields on the current layout
+
+	  my_record.field_names
+	
+	
+### From Version 1.4.x
+
+From ginjo-rfm 1.4.x, the following features are also included.
+
+Connection timeout settings
+
+	  Rfm.config :timeout => 10
+
+Value-list alternate display
+
+	   i = array_of_value_list_items[3]  # => '8765'
+	   i.value                           # => '8765'
+	   i.display                         # => '8765 Amy'
+
 
 
 ## Credits
@@ -800,5 +802,6 @@ Other lead contributors:
 * Atsushi Matsuo was an early Rfm tester, and provided outstanding feedback, critical code fixes, and a lot of web exposure.
 * Jesse Antunes helped ensure that Rfm is stable and functional.
 * Larry Sprock added ssl support, switched the xml parser to a much faster Nokogiri, added the rspec testing framework, and refined code architecture.
+* William Richardson is the current maintainer of the ginjo-rfm fork and added support for multiple xml parsers, ActiveModel integration, field mapping, compound queries, and a configuration framework.
 
 
