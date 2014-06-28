@@ -613,7 +613,9 @@ Repeating field compatibility, more coverage of Filemaker's query syntax, more e
 
 
 
-## Version 2.1 Highlights
+## Previous Version Highlights
+
+### Version 2.1
 
 * Portals are now included by default.
 	Removed `:include_portals` query option in favor of `:ignore_portals`.
@@ -644,7 +646,7 @@ Repeating field compatibility, more coverage of Filemaker's query syntax, more e
 * Configuration `:use` option now works for all Rfm objects that respond to `config`.
 
 
-## Version 2.0 Highlights
+### Version 2.0
 
 * Rails-like modeling with ActiveModel
 * Support for multiple XML Parsers
@@ -653,7 +655,7 @@ Repeating field compatibility, more coverage of Filemaker's query syntax, more e
 * Full metadata support
 
 
-### Data Modeling with ActiveModel
+#### Data Modeling with ActiveModel
 	
 If you can load ActiveModel in your project, you can have model callbacks, validations, and other ActiveModel features.
 If you can't load ActiveModel (because you're using something incompatible, like Rails 2),
@@ -671,7 +673,7 @@ data modeling with easy configuration and CRUD features.
 	  @user.save!
 
 
-### Choice of XML Parsers
+#### Choice of XML Parsers
 
 Note that this section is obsolete for ginjo-rfm version 3.
 
@@ -705,7 +707,7 @@ The current parsing options are
 	  :rexmlsax     ->  REXML SAX
 	
 
-### Configuration API
+#### Configuration API
 
 The ginjo-rfm configuration module lets you store your settings in several different ways. Store some, or all, of your project-specific settings in a rfm.yml file at the root of your project, or in your Rails config/ directory. Settings can also be put in a RFM_CONFIG constant at the top level of your project.  Configuration settings can be simple key=>values, or they can be named groups of key=>values. Configuration can also be passed to various Rfm methods during load and runtime, as individual settings or as groups.
 
@@ -727,7 +729,7 @@ Set a model's configuration.
 	   end
 
 
-### Compound Filemaker Queries, with Omitable FMP Find Requests
+#### Compound Filemaker Queries, with Omitable FMP Find Requests
 
 Create a Filemaker 'omit' request by including an :omit key with a value of true.
 
@@ -742,7 +744,7 @@ If the value of a field in a find request is an array of strings, the string val
 	   my_layout.find :fieldOne => ['bill','mike','bob'], :fieldTwo =>'staff'
 
 
-### Full Metadata Support
+#### Full Metadata Support
 	
 * Server databases
 * Database layouts
@@ -802,6 +804,6 @@ Other lead contributors:
 * Atsushi Matsuo was an early Rfm tester, and provided outstanding feedback, critical code fixes, and a lot of web exposure.
 * Jesse Antunes helped ensure that Rfm is stable and functional.
 * Larry Sprock added ssl support, switched the xml parser to a much faster Nokogiri, added the rspec testing framework, and refined code architecture.
-* William Richardson is the current maintainer of the ginjo-rfm fork and added support for multiple xml parsers, ActiveModel integration, field mapping, compound queries, and a configuration framework.
+* William Richardson is the current maintainer of the ginjo-rfm fork and added support for multiple xml parsers, ActiveModel integration, field mapping, compound queries, logging, and a configuration framework.
 
 

@@ -1,5 +1,39 @@
 # Changelog
 
+## Ginjo-Rfm 3.0.0
+
+* Disabled default port in Connection (was 80), as it was tripping up connections where the port wasn't specified for a :use\_ssl connection on older Rubies.
+* Enabled :ignore\_portals option.
+* Removed runtime dependency on activesupport from gemspec.
+* Added check in Field#coerce to make sure a '?' is in a string before splitting on '?'. This was breaking repeating container fields.
+* Fixed case mismatch in hash key in Factory classes. Added logging of parsing template to logging of parsing backend.
+* Fixed bug in field\_control#value\_list.
+* Added layout\_meta and resultset\_meta objects.
+* Added fmpxmlresult.xml.builder for future use.
+* Added Rfm.logger, Rfm.logger=, Config.logger, Config#logger, and config(:logger=>(...)).
+* Added logging facility.
+* Moved #state method from individual classes to Config class.
+* Fixes to Base#update\_attributes.
+* Refined multiple :use handling in Config.
+* Using rspec 2
+* Removed SubLayout.
+* Added field-mapping awareness to :sort\_field query option.
+*	Relaxed requirement that query option keys be symbols - can now be strings.
+* Record.new now automatically creats models based on layout name. Should there be an option to disable this?
+* Removed ActiveSupport requirement (of course, ActiveSupport will load if ActiveModle is used, but that is the users' choice).
+* Removed XmlMini, XmlParser, and related code & specs.
+*	Detached resultset from record, so record doesn't drag resultset around with it.
+* Disabled automatic model creation from a table-name in a new Rfm::Record when initializing.
+*	Consolidated Base.new, Base#inititalize into Rfm::Record.
+*	Fixed validation callbacks issue.
+* Fixed: Resultset will politely return [] when asked for non-existent portal\_names.
+* Mods to rakefile benchmarking/profiling.
+* Refactored Resultset metadata methods.
+* Refactored Layout metadata methods.
+* Fixed bug in Config#get\_config\_file where a single file path might not be recognized.
+* Added connection.rb and moved some methods from Server to Connection.
+* Sax parsing rewrite.
+
 ## Ginjo-Rfm 2.1.6
 
 * Fixed typo in Rfm::Record#[]=
@@ -20,7 +54,7 @@
 
 ## Ginjo-Rfm 2.1.2
 
-* Fixed config.rb so that :file_path (to user-defined yml config file) can be specified as a single path string
+* Fixed config.rb so that :file\_path (to user-defined yml config file) can be specified as a single path string
 	or as an array of path strings.
 
 ## Ginjo-Rfm 2.1.1
@@ -31,9 +65,9 @@
 
 ## Ginjo-Rfm 2.1.0
 
-* Removed `:include_portals` query option in favor of `:ignore_portals`.
+* Removed `:include\_portals` query option in favor of `:ignore\_portals`.
 
-* Added `:max_portal_rows` query option.
+* Added `:max\_portal\_rows` query option.
 
 * Added field-remapping framework to allow model fields with different names than Filemaker fields.
 
@@ -50,9 +84,9 @@
 
 ## Ginjo-Rfm 2.0.2
 
-* Added configuration parameter ignore_bad_data to silence data mismatch errors when loading resultset into records.
+* Added configuration parameter ignore\_bad\_data to silence data mismatch errors when loading resultset into records.
 
-* Added method to load a resultset from file or string. Rfm::Resultset.load_data(file_or_string).
+* Added method to load a resultset from file or string. Rfm::Resultset.load\_data(file\_or\_string).
 
 * Added more specs for the above features and for the XmlParser module.
 
@@ -96,9 +130,9 @@
 
 * Re-implemented:  
   
-	Layout#field_controls
+	Layout#field\_controls
 
-	Layout#value_lists  
+	Layout#value\_lists  
   
 * Enhanced:  
 
@@ -144,21 +178,21 @@
 
 ## Lardawge-Rfm 1.4.1.1
 
-* [Bug] Inadvertently left out an attr_reader for server from resultset effecting container urls.
+* [Bug] Inadvertently left out an attr\_reader for server from resultset effecting container urls.
 
 ## Lardawge-Rfm 1.4.1*
 
-* Changed Server#do_action to Server#connect.
+* Changed Server#do\_action to Server#connect.
 
 * XML Parsing is now done via xpath which significantly speeds up parsing.
 
-* Changes to accessor method names for Resultset#portals Resultset#fields to Resultset#portal_meta and Resultset#field_meta to better describe what you get back.
+* Changes to accessor method names for Resultset#portals Resultset#fields to Resultset#portal\_meta and Resultset#field\_meta to better describe what you get back.
 
 * Added an option to load portal records which defaults to false. This significantly speeds up load time when portals are present on the layout.
 
 	Example:  
   
-	    result = fm_server('layout').find({:username => "==#{username}"}, {:include_portals => true})
+	    result = fm\_server('layout').find({:username => "==#{username}"}, {:include\_portals => true})
 	    # => This will fetch all records with portal records attached.
   
 	    result.first.portals
@@ -166,4 +200,4 @@
     
 * Internal file restructuring. Some classes have changed but it should be nothing a developer would use API wise. Please let me know if it is.
 
-* Removed Layout#value_lists && Layout#field_controls. Will put back in if the demand is high. Needs a major refactor and different placement if it goes back in. Was broken so it didn't seem to be used by many devs.
+* Removed Layout#value\_lists && Layout#field\_controls. Will put back in if the demand is high. Needs a major refactor and different placement if it goes back in. Was broken so it didn't seem to be used by many devs.
