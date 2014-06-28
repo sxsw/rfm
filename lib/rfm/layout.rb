@@ -126,7 +126,8 @@ module Rfm
     attr_reader :field_mapping
     attr_writer :resultset_meta
     def_delegator :db, :server
-    alias_method :database, :db
+    #alias_method :database, :db  # This fails if db object hasn't been set yet with meta_attr_accessor
+    def database; db; end
     attr_accessor :model #, :parent_layout, :subs
     def_delegators :meta, :field_controls, :value_lists
     def_delegators :resultset_meta, :date_format, :time_format, :timestamp_format, :field_meta, :portal_meta, :table
