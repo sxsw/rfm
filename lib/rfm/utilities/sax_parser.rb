@@ -1,22 +1,40 @@
 # ####  A declarative SAX parser, written by William Richardson  #####
 #
-# Use:
+# This XML parser uses a configuration hash to build a result object from a sax/stream parsing
+# engine. The engine can be any ruby xml parser that offers a sax or streaming parsing scheme.
+# The currently supported parsers are the Ruby gems libxml-ruby, nokogiri, ox, and rexml.
+#
+# Without a configuration template, this parser will return a generic tree of hashes and arrays,
+# representing the xml structure & data that was fed into the parser. With a configuration template,
+# this parser can create resulting objects that are completely transformed from the input xml.
+#
+# The goal in writing this parser was to build custom objects from xml, in a single pass,
+# without having to build a generic tree first and then pick it apart with ugly code scattered all over
+# our project classes.
+#
+# The primaray use case that motivated this parser's construction was parsing Filemaker Server's
+# xml response documents into Ruby result-set arrays containing record hashes... [more]
+#  
+#
+# Useage:
 #   irb -rubygems -I./  -r  lib/rfm/utilities/sax_parser.rb
-#   SaxParser.parse(
-#     <xml-string or xml-file-path or file-io or string-io>,
-#     <optional: parsing-backend-lable or custom-backend-handler>,
-#     <optional: configuration-yml-file or yml-string or config-hash>
-#   )
+#   SaxParser.parse(io, template=nil, initial_object=nil, parser=nil, options={})
+#     io: xml-string or xml-file-path or file-io or string-io
+#			template: file-name, yaml, xml, symbol, or hash
+#			initial_object: any object to attach the resulting build to
+#     parser: backend parser symbol or custom backend handler instance
+#     options: extra options
+#   
 #
 # Note: 'attach: cursor' puts the object in the cursor & stack but does not attach it to the parent.
 #       'attach: none' prevents the object from entering the cursor or stack.
 #				Both of these will still allow processing of attributes and subelements.
 #   
 # Examples:
-#   r = Rfm::SaxParser.parse('some/file.xml')  # => defaults to best xml backend with no parsing configuration.
-#   r = Rfm::SaxParser.parse('some/file.xml', :ox)  # => uses ox backend or throws error.
-#   r = Rfm::SaxParser.parse('some/file.xml', :rexml, {:compact=>true})  # => uses inline configuration.
-#   r = Rfm::SaxParser.parse('some/file.xml', :nokogiri, 'path/to/config.yml')  # => loads config from yml file.
+#   Rfm::SaxParser.parse('some/file.xml')  # => defaults to best xml backend with no parsing configuration.
+#   Rfm::SaxParser.parse('some/file.xml', nil, nil, :ox)  # => uses ox backend or throws error.
+#   Rfm::SaxParser.parse('some/file.xml', {:compact=>true}, :rexml)  # => uses inline configuration with rexml parser.
+#   Rfm::SaxParser.parse('some/file.xml', 'path/to/config.yml', SomeClass.new)  # => loads config template from yml file and builds on top of instance of SomeClass.
 #
 #
 # ####  CONFIGURATION  #####
@@ -167,7 +185,17 @@ module Rfm
 		end
 
 
-		
+		# A Cursor instance is created for each element encountered in the parsing run
+		# and is where the parsing result is constructed from the custom parsing template.
+		# The cursor is the glue between the handler and the resulting object build. The
+		# cursor receives input from the handler, loads the corresponding template data,
+		# and manipulates the incoming xml data to build the resulting object.
+		#
+		# Each cursor is added to the stack when its element begins, and removed from
+		# the stack when its element ends. The cursor tracks all the important objects
+		# necessary to build the resulting object. If you call #cursor on the handler,
+		# you will always get the last object added to the stack. Think of a cursor as
+		# a framework of tools that accompany each element's build process.
 		class Cursor
 		
 		    attr_accessor :model, :object, :tag, :parent, :top, :stack, :newtag, :callbacks
@@ -462,6 +490,18 @@ module Rfm
 		
 		#####  SAX HANDLER  #####
 		
+		
+		# A handler instance is created for each parsing run. The handler has several important functions:
+		# 1. Receive callbacks from the sax/stream parsing engine (start_element, end_element, attribute...).
+		# 2. Maintain a stack of cursors, growing & shrinking, throughout the parsing run.
+		# 3. Maintain a Cursor instance throughout the parsing run.
+		# 3. Hand over parser callbacks & data to the Cursor instance for refined processing.
+		#
+		# The handler instance is unique to each different parsing gem but inherits generic
+		# methods from this Handler module. During each parsing run, the Hander module creates
+		# a new instance of the spcified parer's handler class and runs the handler's main parsing method.
+		# At the end of the parsing run the handler instance, along with it's newly parsed object,
+		# is returned to the object that originally called for the parsing run (your script/app/whatever).
 		module Handler
 		
 			attr_accessor :stack, :template
@@ -567,7 +607,7 @@ module Rfm
 				stack.last
 			end
 			
-			def set_cursor(args) # cursor-_object
+			def set_cursor(args) # cursor_object
 				if args.is_a? Cursor
 					stack.push(args)
 					cursor.parent = stack[-2] || stack[0] #_stack[0] so methods called on parent won't bomb.
@@ -759,7 +799,7 @@ end # Rfm
 
 
 
-#####  CORE PATCHES  #####
+#####  CORE ADDITIONS  #####
 
 class Object
 

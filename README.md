@@ -32,7 +32,7 @@ Added Rfm.logger, Rfm.logger=, Config.logger, Config#logger, and config(:logger=
 
 * Detached resultset from record, so record doesn't drag resultset around with it.
 
-* Bug fixes and refinements in modeling, configuration, metadata access, and Rfm object instanciation.
+* Bug fixes and refinements in modeling, configuration, metadata access, and Rfm object instantiation.
 
 ## Download & Installation
 
