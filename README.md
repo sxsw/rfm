@@ -20,8 +20,8 @@ There are a ton of changes in version 3, but most of them are under the hood.
 
 * Compatibility with Ruby 2.1.2 (and 2.0.0, 1.9.3, 1.8.7).
 
-* Sax parsing rewrite.
-The entire XML parsing engine of Rfm has been rewritten to use only the sax/stream parsing schemes of the supported backend XML parsers (libxml-ruby, nokogiri, ox, rexml). There were two main goals in this rewrite: 1, to separate the xml parsing code from the Rfm objects, and 2, to remove the hard dependency on ActiveSupport.
+* XML parsing rewrite.
+The entire XML parsing engine of Rfm has been rewritten to use only the sax/stream parsing schemes of the supported backend XML parsers (libxml-ruby, nokogiri, ox, rexml). There were two main goals in this rewrite: 1, to separate the xml parsing code from the Rfm objects, and 2, to remove the hard dependency on ActiveSupport. See below for parsing configuration options.
 
 * Better logging capabilities.
 Added Rfm.logger, Rfm.logger=, Config.logger, Config#logger, and config(:logger=>(...)).
@@ -150,12 +150,13 @@ Use `get_config` to view the compiled configuration settings for any object. Con
 	          :account_name => 'name', :password => 'pass'
 	         }
 	
-**Possible Configuration Options**
+#### Configuration Options
 
 Following are all of the recognized configuration options, including defaults if applicable.
+See `Rfm::Config::CONFIG_KEYS` for a list of currently allowed configuration options.
 
 	   :host             => 'localhost'
-	   :port             => 80
+	   :port             
 	   :ssl              => true
 	   :root_cert        => true
 	   :root_cert_name   => ''
@@ -174,7 +175,7 @@ Following are all of the recognized configuration options, including defaults if
 	   :parent           => 'Rfm::Config'                 # the parent configuration object of the current configuration object, as string
 	   :file_name        => 'rfm.yml                      # name of configuration file to load yaml from
 	   :file_path        => ['', 'config/']               # array of additional file paths to look for configuration file
-	   :parser           => :ox                           # Prefferred XML parser (you must require the parsing gem, or specify it in your gemfile)
+	   :parser                                            # Prefferred XML parser (you must also require the parsing gem, or specify it in your gemfile). Can be :libxml, :nokogiri, :ox, :rexml.
 	   :ignore_bad_data  => nil                           # Instruct Rfm to ignore data mismatch errors when loading a resultset
 	
 
@@ -237,7 +238,7 @@ Or create models for an entire database, all at once.
 	   # The regex in the first parameter is optional and filters the layout names in the specified database.
 	   # Omit the regex parameter to modelize all possible layouts in the specified database.
 
-With ActiveModel loaded, you get callbacks, validations, errors, serialization, and a handful of other features extracted from Rails ActiveRecord.
+With ActiveModel loaded, you get callbacks, validations, errors, serialization, and a handful of other features extracted from Rails ActiveRecord. Not all ActiveModel features are supported (yet) in ginjo-rfm, but adapters can be hand-rolled in the meantime.
 
 In your Gemfile
 
@@ -268,7 +269,7 @@ To learn more about ActiveModel, see the ActiveModel or RubyOnRails documentatio
 
 Once you have an Rfm model or layout, you can use any of the standard Rfm commands to create, search, edit, and delete records. To learn more about these commands, see below for Databases, Layouts, Resultsets, and Records. Or checkout the API documentation for Rfm::Server, Rfm::Database, Rfm::Layout, Rfm::Record, and Rfm::Base.
 
-**Two Small Changes in Rfm Return Values**
+#### Two Small Changes in Rfm Return Values
 
 When using Models to retrieve records using the `any` method or the `find(record_id)` method, the return values will be single Rfm::Record objects. This differs from the traditional Rfm behavior of these methods when accessed directly from the the Rfm::Layout instance, where the return value is always a Rfm::Resultset.
 
@@ -675,7 +676,7 @@ data modeling with easy configuration and CRUD features.
 
 #### Choice of XML Parsers
 
-Note that this section is obsolete for ginjo-rfm version 3.
+Note that this section only applies to ginjo-rfm v2. See notes for ginjo-rfm v3 for v3 parsing options. 
 
 Ginjo-rfm 2.0 uses ActiveSupport's XmlMini parsing interface, which has built-in support for
 LibXML, Nokogiri, and REXML. Additionally, ginjo-rfm includes adapters for Ox and Hpricot parsing.

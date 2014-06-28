@@ -25,6 +25,8 @@ elements:
   before_close: :end_datasource_element_callback
 - name:  metadata
   attach: none
+  # this doesn't stop creation of attribute accessors
+  #create_accessors: none
 - name: field_definition
   handler: [object.meta, handle_new_field, _attributes]
   before_close: :main_callback

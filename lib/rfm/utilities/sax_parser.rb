@@ -24,7 +24,7 @@
 # YAML structure defining a SAX xml parsing template.
 # Options:
 #   initialize:									array: initialize new objects with this code [:method, params] instead of defaulting to 'allocate'
-#   elements:										array of element hashes {'name'=>'element-tag'}
+#   elements:										array of element hashes [{'name'=>'element-tag'},...]
 #   attributes:									array of attribute hashes {'name'=>'attribute-name'} UC
 #   class: NOT USED							string-or-class: class name for new element
 #   depth:											integer: depth-of-default-class UC

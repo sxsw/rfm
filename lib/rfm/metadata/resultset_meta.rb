@@ -23,11 +23,11 @@ module Rfm
 			end
 			
 			def total_count
-				self['total_count']
+				self['total_count'].to_i
 			end		
 			
 			def foundset_count
-				self['count']
+				self['count'].to_i
 			end
 			
 			def table
