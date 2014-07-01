@@ -52,7 +52,8 @@
 #   before_close:								symbol (method) or string (code): run a model method before closing tag, passing in #cursor. String is eval'd in context of object.
 #   as_name:										string: store element or attribute keyed as specified
 #   delimiter:									string: attribute/hash key to delineate objects with identical tags
-#		create_accessors:		UC			string or array: all, private, shared, hash
+#		create_accessors: UC				string or array: all, private, shared, hash, none
+#		accessor:	UC								string: all, private, shared, hash, none
 #		handler:										array: call an object with any params [obj, method, params]. Default attach prefs are 'cursor'.
 #
 #
@@ -204,7 +205,7 @@ module Rfm
 		    
 		    # Main get-constant method
 		    def self.get_constant(klass)
-					# puts "Getting constant '#{klass.to_s}'"
+					#puts "Getting constant '#{klass.to_s}'"
 			  	
 			  	case
 			  	when klass.is_a?(Class); klass
@@ -299,21 +300,21 @@ module Rfm
 		    end # start_el
 		
 		    def receive_end_element(_tag)
-		    	puts ["\nEND_ELEMENT #{_tag}", "CurrentObject: #{object.class}", "CurrentTag: #{self.tag}", "BeforeClose: #{before_close?}"]
+		    	#puts ["\nEND_ELEMENT #{_tag}", "CurrentObject: #{object.class}", "CurrentTag: #{self.tag}", "BeforeClose: #{before_close?}"]
 	      	begin
 						if _tag == self.tag
 		      		# Data cleaup
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact?
 						end
 	      	
-	      		# EXPERIMENTAL: sending modle PLUS submodel prefs to _create_accessors
-			    	# Acquire submodel definition for create accessors (EXPERIMENTAL)
-			      subm = model_elements?(_tag) || default_class.new
-	      		accessor_options = (create_accessors? | create_accessors?(subm))
-						if accessor_options.any?
-							puts ["CREATING_ACCESSORS #{accessor_options}"]
-				    	object._create_accessors(accessor_options)
-				    end	      		
+						# 	# EXPERIMENTAL: sending modle PLUS submodel prefs to _create_accessors
+						# 	# Acquire submodel definition for create accessors (EXPERIMENTAL)
+						#   subm = model_elements?(_tag) || default_class.new
+						# 	accessor_options = (create_accessors? | create_accessors?(subm))
+						# 	if accessor_options.any?
+						# 		#puts ["CREATING_ACCESSORS #{accessor_options}"]
+						#   	object._create_accessors(accessor_options)
+						#   end	      		
 	      		
 						# 		# Create accessors is specified.
 						# 		# TODO: This creates redundant calls when elements close with the same model as current. But how to get the correct model when elements close that are attach:none  ???
@@ -397,9 +398,14 @@ module Rfm
 					shared_var_name = shared_variable_name prefs
 					(prefs = "shared") if shared_var_name
 					
+					# Use local create_accessors prefs first, then more general ones.
+					create_accessors = accessor?(new_model)
+					(create_accessors = create_accessors?(base_model)) unless create_accessors && create_accessors.any?
 					
-					#puts ["\nATTACH_NEW_OBJECT", type, label, base_object.class, new_object.class, delimiter?(new_model), prefs, shared_var_name, create_accessors?(base_model)].join(', ')
-					base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors?(base_model))
+					
+					#puts ["\nCURSOR.attach_new_object 1", type, label, base_object.class, new_object.class, delimiter?(new_model), prefs, shared_var_name, create_accessors].join(', ')
+					base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
+					#puts ["\nCURSOR.attach_new_object 2: #{base_object.class} with ", label, delimiter?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors]
 				end
 				
 				def attachment_prefs(base_model, new_model, type)
@@ -439,6 +445,7 @@ module Rfm
 			  def as_name?(_model=model); _model && _model['as_name']; end
 			  def initialize?(_model=model); _model && _model['initialize']; end
 			  def create_accessors?(_model=model); _model && [_model['create_accessors']].flatten.compact; end
+			  def accessor?(_model=model); _model && [_model['accessor']].flatten.compact; end
 			  def handler?(_model=model); _model && _model['handler']; end
 			  
 
@@ -816,6 +823,7 @@ class Object
 
 	# Master method to attach any object to this object.
 	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
+		#puts ["OBJECT._attach_object", self.class, obj.class, obj.to_s, args].to_yaml
 		default_options = {
 			:shared_variable_name => 'attributes',
 			:default_class => Hash,
@@ -826,7 +834,7 @@ class Object
 		delimiter = (args[1] || options[:delimiter])
 		prefs = (args[2] || options[:prefs])
 		type = (args[3] || options[:type])
-		#puts ['OBJECT_attach_object', type, name, self.class, obj.class, delimiter, prefs, options[:shared_variable_name], options[:default_class], options[:create_accessors]].join(', ')
+		#puts ['OBJECT.attach_object', type, name, self.class, obj.class, delimiter, prefs, options[:shared_variable_name], options[:default_class], options[:create_accessors]].join(', ')
 		case
 		when prefs=='none' || prefs=='cursor'; nil
 		when name
@@ -838,7 +846,7 @@ class Object
 	
 	# Master method to merge any object with this object
 	def _merge_object!(obj, name, delimiter, prefs, type, options={})
-		#puts ["-----OBJECT._merge_object", self.class, (obj.to_s rescue obj.class), name, delimiter, prefs, type.titleize, options].join(', ')
+		#puts ["-----OBJECT._merge_object", self.class, (obj.to_s rescue obj.class), name, delimiter, prefs, type.capitalize, options].join(', ')
 		if prefs=='private'
 			_merge_instance!(obj, name, delimiter, prefs, type, options)
 		else
@@ -878,6 +886,10 @@ class Object
 			#puts ['_setting_new_instance_var', name]
 			instance_variable_set("@#{name}", obj)
 		end
+		
+		# NEW
+		_create_accessor(name) if (options[:create_accessors] & ['all','private']).any?
+		
 	end
 	
 	# Get an instance variable, a member of a shared instance variable, or a hash value of self.
@@ -896,20 +908,27 @@ class Object
 		rslt
   end
   
-  # We don't know which attributes are shared, so this isn't really accurate per the options.
-  def _create_accessors options=[]
-  	options=[options].flatten.compact
-  	#puts ['CREATE_ACCESSORS', self.class, options, ""]
-  	return false if (options & ['none']).any?
-		if (options & ['all', 'private']).any?
-			meta = (class << self; self; end)
-			meta.send(:attr_reader, *instance_variables.collect{|v| v.to_s[1,99].to_sym})
-		end
-		if (options & ['all', 'shared']).any?
-			instance_variables.collect{|v| instance_variable_get(v)._create_accessors('hash')}
-		end
-		return true
-  end
+	#   # We don't know which attributes are shared, so this isn't really accurate per the options.
+	#   def _create_accessors options=[]
+	#   	options=[options].flatten.compact
+	#   	#puts ['CREATE_ACCESSORS', self.class, options, ""]
+	#   	return false if (options & ['none']).any?
+	# 		if (options & ['all', 'private']).any?
+	# 			meta = (class << self; self; end)
+	# 			meta.send(:attr_reader, *instance_variables.collect{|v| v.to_s[1,99].to_sym})
+	# 		end
+	# 		if (options & ['all', 'shared']).any?
+	# 			instance_variables.collect{|v| instance_variable_get(v)._create_accessors('hash')}
+	# 		end
+	# 		return true
+	#   end
+  
+  # NEW
+  def _create_accessor(name)
+	  #puts "OBJECT._create_accessor '#{name}' for Object '#{self.class}'"
+  	meta = (class << self; self; end)
+		meta.send(:attr_reader, name.to_sym)
+	end
   
 	# Attach hash as individual instance variables.
 	# This is for manually attaching a hash of attributes to the current object.
@@ -963,22 +982,32 @@ class Hash
 				#obj.instance_variable_set(:@_index_, self[name].last.instance_variable_get(:@_index_).to_i + 1)
 				self[name] << obj
 			end
+			_create_accessor(name) if (options[:create_accessors] & ['all','shared','hash']).any?
 		else
 			self[name] = obj
+			_create_accessor(name) if (options[:create_accessors] & ['all','shared','hash']).any?
 		end
 	end
 	
-	def _create_accessors options=[]
-		#puts ['CREATE_ACCESSORS_for_HASH', self.class, options]
-		options=[options].flatten.compact
-		super and
-		if (options & ['all', 'hash']).any?
-			meta = (class << self; self; end)
-			keys.each do |k|
-				meta.send(:define_method, k) do
-					self[k]
-				end
-			end
+	# 	def _create_accessors options=[]
+	# 		#puts ['CREATE_ACCESSORS_for_HASH', self.class, options]
+	# 		options=[options].flatten.compact
+	# 		super and
+	# 		if (options & ['all', 'hash']).any?
+	# 			meta = (class << self; self; end)
+	# 			keys.each do |k|
+	# 				meta.send(:define_method, k) do
+	# 					self[k]
+	# 				end
+	# 			end
+	# 		end
+	# 	end
+	
+	def _create_accessor(name)
+		#puts "HASH._create_accessor '#{name}' for Hash '#{self.class}'"
+		meta = (class << self; self; end)
+		meta.send(:define_method, name) do
+			self[name]
 		end
 	end
 	

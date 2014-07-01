@@ -45,7 +45,7 @@ module Rfm
 #     attr_reader :total_count, :foundset_count, :table
     #def_delegators :layout, :db, :database
     # alias_method :db, :database
-		def_delegators :meta, :field_meta, :portal_meta, :date_format, :time_format, :timestamp_format, :total_count, :foundset_count, :table, :error, :field_names, :field_keys, :portal_names
+		def_delegators :meta, :field_meta, :portal_meta, :date_format, :time_format, :timestamp_format, :total_count, :foundset_count, :fetch_size, :table, :error, :field_names, :field_keys, :portal_names
 
     
     class << self

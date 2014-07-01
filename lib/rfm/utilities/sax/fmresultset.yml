@@ -22,6 +22,9 @@ elements:
     as_name: error
 - name: datasource
   attach: none
+  attributes:
+  - name: total_count
+    accessor: none
   before_close: :end_datasource_element_callback
 - name:  metadata
   attach: none
@@ -42,7 +45,11 @@ elements:
     before_close: :portal_callback
 - name: resultset
   attach: none
-  create_accessors: none
+  attributes:
+  - name: count
+    accessor: none
+  - name: fetch_size
+    accessor: none
 - name: record
   handler: [object, handle_new_record, _attributes]
   before_close: '@loaded=true'

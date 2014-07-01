@@ -30,6 +30,10 @@ module Rfm
 				self['count'].to_i
 			end
 			
+			def fetch_size
+				self['fetch_size'].to_i
+			end
+			
 			def table
 				self['table']
 			end
