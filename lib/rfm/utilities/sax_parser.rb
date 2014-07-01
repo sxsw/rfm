@@ -1,19 +1,21 @@
 # ####  A declarative SAX parser, written by William Richardson  #####
 #
-# This XML parser uses a configuration hash to build a result object from a sax/stream parsing
-# engine. The engine can be any ruby xml parser that offers a sax or streaming parsing scheme.
-# The currently supported parsers are the Ruby gems libxml-ruby, nokogiri, ox, and rexml.
+# This XML parser builds a result object from callbacks sent by any ruby sax/stream parsing
+# engine. The engine can be any ruby xml parser that offers a sax or streaming parsing scheme
+# that sends callbacks to a handler object for the various node events encountered in the xml stream.
+# The currently supported parsers are the Ruby librarys libxml-ruby, nokogiri, ox, and rexml.
 #
 # Without a configuration template, this parser will return a generic tree of hashes and arrays,
 # representing the xml structure & data that was fed into the parser. With a configuration template,
-# this parser can create resulting objects that are completely transformed from the input xml.
+# this parser can create resulting objects that are custom transformations of the input xml.
 #
 # The goal in writing this parser was to build custom objects from xml, in a single pass,
 # without having to build a generic tree first and then pick it apart with ugly code scattered all over
-# our project classes.
+# our projects' classes.
 #
-# The primaray use case that motivated this parser's construction was parsing Filemaker Server's
-# xml response documents into Ruby result-set arrays containing record hashes... [more]
+# The primaray use case that motivated this parser's construction was converting Filemaker Server's
+# xml response documents into Ruby result-set arrays containing record hashes. A primary example of
+# this use can be seen in the Ruby gem 'ginjo-rfm' (a Ruby-Filemaker adapter).
 #  
 #
 # Useage:
@@ -21,7 +23,7 @@
 #   SaxParser.parse(io, template=nil, initial_object=nil, parser=nil, options={})
 #     io: xml-string or xml-file-path or file-io or string-io
 #			template: file-name, yaml, xml, symbol, or hash
-#			initial_object: any object to attach the resulting build to
+#			initial_object: the parent object - any object to which the resulting build will be attached to.
 #     parser: backend parser symbol or custom backend handler instance
 #     options: extra options
 #   
@@ -57,83 +59,7 @@
 #		handler:										array: call an object with any params [obj, method, params]. Default attach prefs are 'cursor'.
 #
 #
-# ####  NOTES  ####
-#
-# done: Move test data & user models to spec folder and local_testing.
-# done: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
-# done: Add option to 'compact' unnecessary or empty elements/attributes - maybe - should this should be handled at Model level?
-# na  : Separate all attribute options in yml into 'attributes:' hash, similar to 'elements:' hash.
-# done: Handle multiple 'text' callbacks for a single element.
-# done: Add options for text handling (what to name, where to put).
-# done: Fill in other configuration options in yml
-# done: Clean_elements doesn't work if elements are non-hash/array objects. Make clean_elements work with object attributes.
-# TODO: Clean_elements may not work for non-hash/array objecs with multiple instance-variables.
-# na  : Clean_elements may no longer work with a globally defined 'compact'.
-# TODO: Do we really need Cursor#top and Cursor#stack ? Can't we get both from stack?
-# TODO: When using a non-hash/array object as the initial object, things get kinda srambled.
-#       See Rfm::Connection, when sending self (the connection object) as the initial_object.
-# done: 'compact' breaks badly with fmpxmllayout data.
-# na  : Do the same thing with 'ignore' as you did with 'attach', so you can enable using the 'attributes' array of the yml model.
-# done: Double-check that you're pointing to the correct model/submodel, since you changed all helper-methods to look at curent-model by default.
-# done: Make sure all method calls are passing the model given by the calling-method.
-# abrt: Give most of the config options a global possibility. (no true global config, but top-level acts as global for all immediate submodels).
-# na  : Block attachment methods from seeing parent if parent isn't the current objects true parent (how?).
-# done: Handle attach: hash better (it's not specifically handled, but declaring it will block a parents influence).
-# done: CaseInsensitiveHash/IndifferentAccess is not working for sax parser.
-# na  : Give the yml (and xml) doc the ability to have a top-level hash like "fmresultset" or "fmresultset_yml" or "fmresultset_xml",
-#       then you have a label to refer to it if you load several config docs at once (like into a Rfm::SaxParser::TEMPLATES constant).
-#       Use an array of accepted model-keys  to filter whether loaded template is a named-model or actual model data.
-# done: Load up all template docs when Rfm loads, or when Rfm::SaxParser loads. For RFM only, not for parser module.
-# done: Move SaxParser::Handler class methods to SaxParser, so you can do Rfm::SaxParser.parse(io, backend, template, initial_object)
-# done: Switch args order in .build methods to (io, template, initial_object, backend)
-# done: Change "grammar" to "template" in all code
-# done: Change 'cursor._' methods to something more readable, since they will be used in Rfm and possibly user models.
-# done: Split off template loading into load_templates and/or get_templates methods.
-# TODO: Something is downcasing somewhere - see the fmpxmllayout response. Looks like 'compact' might have something to do with it.
-# done: Make attribute attachment default to individual.
-# done: 'attach: shared' doesnt work yet for elements.
-# na  : Arrays should always get elements attached to their records and attributes attached to their instance variables. 
-# done: Merge 'ignore: self, elements, attributes' config into 'attach: ignore, attach_elements: ignore, attach_attributes: ignore'.
-# done: Consider having one single group of methods to attach all objects (elements OR attributes OR text) to any given parent object.
-# na  : May need to store 'ignored' models in new cursor, with the parent object instead of the new object. Probably not a good idea
-# done: Fix label_or_tag for object-attachment.
-# done: Fix delineate_with_hash in parsing of resultset field_meta (should be hash of hashes, not array of hashes).
-# done: Test new parser with raw data from multiple sources, make sure it works as raw.
-# done: Make sure single-attribute (or text) handler has correct objects & models to work with.
-# na  : Rewrite attach_to_what? logic to start with base_object type, then have sub-case statements for the rest.
-# done: Build backend-gem loading scheme. Eliminate gem 'require'. Use catch/throw like in XmlParser.
-# done: Splash_sax.rb is throwing error when loading User.all when SaxParser.backend is anything other than :ox.
-#       This is probably related to the issue of incomming attributes (that are after the incoming start_element) not knowing their model.
-#       Some multiple-text attributes were tripping up delineate_with_hash, so I added some fault-tollerance to that method.
-#       But those multi-text attributes are still way ugly when passed by libxml or nokogiri. Ox & Rexml are fine and pass them as one chunk.
-#       Consider buffering all attributes & text until start of new element.
-# YAY :  I bufffered all attributes & text, and the problem is solved.
-# na  : Can't configure an attribute (in template) if it is used in delineate_with_hash. (actually it works if you specifiy the as_name: correctly).
-# TODO: Some configurations in template cause errors - usually having to do with nil. See below about eliminating all 'rescue's .
-# done: Can't supply custom class if it's a String (but an unspecified subclass of plain Object works fine!?).
-# TODO: Attaching non-hash/array object to Array will thro error. Is this actually fixed?
-# done?: Sending elements with subelements to Shared results in no data attached to the shared var.
-# TODO: compact is not working for fmpxmllayout-error. Consider rewrite of 'compact' method, or allow compact to work on end_element with no matching tag.
-# mabe: Add ability to put a regex in the as_name parameter, that will operate on the tag/label/name.
-# TODO: Optimize:
-#				Use variables, not methods.
-#				Use string interpolation not concatenation.
-#				Use destructive! operations (carefully). Really?
-#				Get this book: http://my.safaribooksonline.com/9780321540034?portal=oreilly
-#				See this page: http://www.igvita.com/2008/07/08/6-optimization-tips-for-ruby-mri/
-# done: Consider making default attribute-attachment shared, instead of instance.
-# done: Find a way to get SaxParser defaults into core class patches.
-# done: Check resultset portal_meta in Splash Asset model for field-definitions coming out correct according to sax template.
-# done: Make sure Rfm::Metadata::Field is being used in portal-definitions.
-# done: Scan thru Rfm classes and use @instance variables instead of their accessors, so sax-parser does less work.
-# done: Change 'instance' option to 'private'. Change 'shared' to <whatever>.
-# done: Since unattached elements won't callback, add their callback to an array of procs on the current cursor at the beginning
-#				of the non-attached tag.
-# TODO: Handle check-for-errors in non-resultset loads.
-# abrt: Figure out way to get doctype from nokogiri. Tried, may be practically impossible.
-# TODO: Clean up sax code so that no 'rescue' is needed - if an error happens it should be a legit error outside of SaxParser.
-# TODO: Allow attach:none when using handler.
-
+# ####  See below for notes & todos  ####
 
 
 require 'yaml'
@@ -1012,5 +938,85 @@ class Hash
 	end
 	
 end # Hash
+
+
+
+
+# ####  NOTES and TODOs  ####
+#
+# done: Move test data & user models to spec folder and local_testing.
+# done: Create special file in local_testing for experimentation & testing - will have user models, grammar-yml, calling methods.
+# done: Add option to 'compact' unnecessary or empty elements/attributes - maybe - should this should be handled at Model level?
+# na  : Separate all attribute options in yml into 'attributes:' hash, similar to 'elements:' hash.
+# done: Handle multiple 'text' callbacks for a single element.
+# done: Add options for text handling (what to name, where to put).
+# done: Fill in other configuration options in yml
+# done: Clean_elements doesn't work if elements are non-hash/array objects. Make clean_elements work with object attributes.
+# TODO: Clean_elements may not work for non-hash/array objecs with multiple instance-variables.
+# na  : Clean_elements may no longer work with a globally defined 'compact'.
+# TODO: Do we really need Cursor#top and Cursor#stack ? Can't we get both from stack?
+# TODO: When using a non-hash/array object as the initial object, things get kinda srambled.
+#       See Rfm::Connection, when sending self (the connection object) as the initial_object.
+# done: 'compact' breaks badly with fmpxmllayout data.
+# na  : Do the same thing with 'ignore' as you did with 'attach', so you can enable using the 'attributes' array of the yml model.
+# done: Double-check that you're pointing to the correct model/submodel, since you changed all helper-methods to look at curent-model by default.
+# done: Make sure all method calls are passing the model given by the calling-method.
+# abrt: Give most of the config options a global possibility. (no true global config, but top-level acts as global for all immediate submodels).
+# na  : Block attachment methods from seeing parent if parent isn't the current objects true parent (how?).
+# done: Handle attach: hash better (it's not specifically handled, but declaring it will block a parents influence).
+# done: CaseInsensitiveHash/IndifferentAccess is not working for sax parser.
+# na  : Give the yml (and xml) doc the ability to have a top-level hash like "fmresultset" or "fmresultset_yml" or "fmresultset_xml",
+#       then you have a label to refer to it if you load several config docs at once (like into a Rfm::SaxParser::TEMPLATES constant).
+#       Use an array of accepted model-keys  to filter whether loaded template is a named-model or actual model data.
+# done: Load up all template docs when Rfm loads, or when Rfm::SaxParser loads. For RFM only, not for parser module.
+# done: Move SaxParser::Handler class methods to SaxParser, so you can do Rfm::SaxParser.parse(io, backend, template, initial_object)
+# done: Switch args order in .build methods to (io, template, initial_object, backend)
+# done: Change "grammar" to "template" in all code
+# done: Change 'cursor._' methods to something more readable, since they will be used in Rfm and possibly user models.
+# done: Split off template loading into load_templates and/or get_templates methods.
+# TODO: Something is downcasing somewhere - see the fmpxmllayout response. Looks like 'compact' might have something to do with it.
+# done: Make attribute attachment default to individual.
+# done: 'attach: shared' doesnt work yet for elements.
+# na  : Arrays should always get elements attached to their records and attributes attached to their instance variables. 
+# done: Merge 'ignore: self, elements, attributes' config into 'attach: ignore, attach_elements: ignore, attach_attributes: ignore'.
+# done: Consider having one single group of methods to attach all objects (elements OR attributes OR text) to any given parent object.
+# na  : May need to store 'ignored' models in new cursor, with the parent object instead of the new object. Probably not a good idea
+# done: Fix label_or_tag for object-attachment.
+# done: Fix delineate_with_hash in parsing of resultset field_meta (should be hash of hashes, not array of hashes).
+# done: Test new parser with raw data from multiple sources, make sure it works as raw.
+# done: Make sure single-attribute (or text) handler has correct objects & models to work with.
+# na  : Rewrite attach_to_what? logic to start with base_object type, then have sub-case statements for the rest.
+# done: Build backend-gem loading scheme. Eliminate gem 'require'. Use catch/throw like in XmlParser.
+# done: Splash_sax.rb is throwing error when loading User.all when SaxParser.backend is anything other than :ox.
+#       This is probably related to the issue of incomming attributes (that are after the incoming start_element) not knowing their model.
+#       Some multiple-text attributes were tripping up delineate_with_hash, so I added some fault-tollerance to that method.
+#       But those multi-text attributes are still way ugly when passed by libxml or nokogiri. Ox & Rexml are fine and pass them as one chunk.
+#       Consider buffering all attributes & text until start of new element.
+# YAY :  I bufffered all attributes & text, and the problem is solved.
+# na  : Can't configure an attribute (in template) if it is used in delineate_with_hash. (actually it works if you specifiy the as_name: correctly).
+# TODO: Some configurations in template cause errors - usually having to do with nil. See below about eliminating all 'rescue's .
+# done: Can't supply custom class if it's a String (but an unspecified subclass of plain Object works fine!?).
+# TODO: Attaching non-hash/array object to Array will thro error. Is this actually fixed?
+# done?: Sending elements with subelements to Shared results in no data attached to the shared var.
+# TODO: compact is not working for fmpxmllayout-error. Consider rewrite of 'compact' method, or allow compact to work on end_element with no matching tag.
+# mabe: Add ability to put a regex in the as_name parameter, that will operate on the tag/label/name.
+# TODO: Optimize:
+#				Use variables, not methods.
+#				Use string interpolation not concatenation.
+#				Use destructive! operations (carefully). Really?
+#				Get this book: http://my.safaribooksonline.com/9780321540034?portal=oreilly
+#				See this page: http://www.igvita.com/2008/07/08/6-optimization-tips-for-ruby-mri/
+# done: Consider making default attribute-attachment shared, instead of instance.
+# done: Find a way to get SaxParser defaults into core class patches.
+# done: Check resultset portal_meta in Splash Asset model for field-definitions coming out correct according to sax template.
+# done: Make sure Rfm::Metadata::Field is being used in portal-definitions.
+# done: Scan thru Rfm classes and use @instance variables instead of their accessors, so sax-parser does less work.
+# done: Change 'instance' option to 'private'. Change 'shared' to <whatever>.
+# done: Since unattached elements won't callback, add their callback to an array of procs on the current cursor at the beginning
+#				of the non-attached tag.
+# TODO: Handle check-for-errors in non-resultset loads.
+# abrt: Figure out way to get doctype from nokogiri. Tried, may be practically impossible.
+# TODO: Clean up sax code so that no 'rescue' is needed - if an error happens it should be a legit error outside of SaxParser.
+# TODO: Allow attach:none when using handler.
 
 
