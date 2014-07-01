@@ -233,7 +233,7 @@ module Rfm
 		    
 		    # Not sure if this is still used.
 			  def receive_attribute(name, value)
-			  	#puts "Indiv attrb name '#{name}' value '#{value}' object '#{object.class}' model '#{model.keys}' subm '#{submodel.keys}' tag '#{tag}' newtag '#{newtag}'"
+			  	#puts "\nRECEIVE_ATTR '#{name}' value '#{value}' object '#{object.class}' model '#{model.keys}' subm '#{submodel.keys}' tag '#{tag}' newtag '#{newtag}'"
 			  	new_att = default_class.new.tap{|att| att[name]=value}
 			  	assign_attributes(new_att, object, model, model)
 			  rescue
@@ -243,7 +243,7 @@ module Rfm
 		    def receive_start_element(_tag, _attributes)
 		    # TODO: Use a case statement to separate the various tasks possible in this method
 		    	
-		    	#puts "receive_start_element: _tag '#{_tag}', current object '#{object.class}', cursor_submodel '#{submodel.to_yaml}'."
+		    	
 		    	#puts ['START', _tag, object.class, model]
 		    	# Set newtag for other methods to use during the start_el run.
 					@newtag = _tag
@@ -253,6 +253,8 @@ module Rfm
 		      
 		      # Get attachment_prefs
 		      prefs = attachment_prefs(model, subm, 'element')
+		      
+		      #puts "RECEIVE_START_ELEMENT: _tag '#{_tag}'\ncurrent object '#{object.class}'\ncursor_model '#{model}'\ncursor_submodel '#{subm.to_yaml}', attributes '#{_attributes.to_a}'"
 		      
 		      # Clean-up and return if new element is not to be attached.
 		    	if prefs == 'none'
@@ -297,19 +299,28 @@ module Rfm
 		    end # start_el
 		
 		    def receive_end_element(_tag)
-		    	#puts ["\nEND_ELEMENT", object.class, _tag, self.tag, before_close?]
+		    	puts ["\nEND_ELEMENT #{_tag}", "CurrentObject: #{object.class}", "CurrentTag: #{self.tag}", "BeforeClose: #{before_close?}"]
 	      	begin
 						if _tag == self.tag
 		      		# Data cleaup
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact?
 						end
 	      	
-	      		# Create accessors is specified.
-	      		# TODO: This creates redundant calls when elements close with the same model as current. But how to get the correct model when elements close that are attach:none  ???
-	      		if create_accessors?.any?
-	      			#puts ['CREATING_ACCESSORS', create_accessors?]
-			      	object._create_accessors(create_accessors?)
-			      end
+	      		# EXPERIMENTAL: sending modle PLUS submodel prefs to _create_accessors
+			    	# Acquire submodel definition for create accessors (EXPERIMENTAL)
+			      subm = model_elements?(_tag) || default_class.new
+	      		accessor_options = (create_accessors? | create_accessors?(subm))
+						if accessor_options.any?
+							puts ["CREATING_ACCESSORS #{accessor_options}"]
+				    	object._create_accessors(accessor_options)
+				    end	      		
+	      		
+						# 		# Create accessors is specified.
+						# 		# TODO: This creates redundant calls when elements close with the same model as current. But how to get the correct model when elements close that are attach:none  ???
+						# 		if create_accessors?.any?
+						# 			#puts ['CREATING_ACCESSORS', create_accessors?]
+						#     	object._create_accessors(create_accessors?)
+						#     end
 	      	
 	      		# Run callback of non-stored element.
 	      		callbacks[_tag].call if callbacks[_tag]
@@ -888,7 +899,8 @@ class Object
   # We don't know which attributes are shared, so this isn't really accurate per the options.
   def _create_accessors options=[]
   	options=[options].flatten.compact
-  	#puts ['CREATE_ACCESSORS', self.class, options]
+  	#puts ['CREATE_ACCESSORS', self.class, options, ""]
+  	return false if (options & ['none']).any?
 		if (options & ['all', 'private']).any?
 			meta = (class << self; self; end)
 			meta.send(:attr_reader, *instance_variables.collect{|v| v.to_s[1,99].to_sym})
@@ -896,6 +908,7 @@ class Object
 		if (options & ['all', 'shared']).any?
 			instance_variables.collect{|v| instance_variable_get(v)._create_accessors('hash')}
 		end
+		return true
   end
   
 	# Attach hash as individual instance variables.
@@ -958,7 +971,7 @@ class Hash
 	def _create_accessors options=[]
 		#puts ['CREATE_ACCESSORS_for_HASH', self.class, options]
 		options=[options].flatten.compact
-		super
+		super and
 		if (options & ['all', 'hash']).any?
 			meta = (class << self; self; end)
 			keys.each do |k|
