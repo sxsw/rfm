@@ -1,6 +1,6 @@
 # ginjo-rfm
 
-Rfm is a Ruby-Filemaker adapter, a Ruby Gem that provides an interface between Filemaker Server and Ruby. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 3 removes the dependency on ActiveSupport and is now a completely independent Gem, able to run most of its core features without requiring any other supporting Gems (If you want the ActiveModel features of callbacks, validations, etc, you will need to require ActiveModel, which of course still depends on ActiveSupport).
+Rfm is a Ruby-Filemaker adapter, a Ruby Gem that provides an interface between Filemaker Server and Ruby. Query your Filemaker database, browse result records as persistent objects, and create/update/delete records with a syntax similar to ActiveRecord. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 3 removes the dependency on ActiveSupport and is now a completely independent Gem, able to run most of its core features without requiring any other supporting Gems (If you want the ActiveModel features of callbacks, validations, etc, you will need to require ActiveModel, which of course still depends on ActiveSupport).
 
 Ginjo-rfm has been tested successfully on Ruby 1.8.7, 1.9.3, 2.0.0, and 2.1.2.
 
@@ -16,12 +16,12 @@ Ginjo-rfm has been tested successfully on Ruby 1.8.7, 1.9.3, 2.0.0, and 2.1.2.
 
 ## New in version  3.0
 
-There are a ton of changes in version 3, but most of them are under the hood.
+There are many changes in version 3, but most of them are under the hood.
 
 * Compatibility with Ruby 2.1.2 (and 2.0.0, 1.9.3, 1.8.7).
 
 * XML parsing rewrite.
-The entire XML parsing engine of Rfm has been rewritten to use only the sax/stream parsing schemes of the supported backend XML parsers (libxml-ruby, nokogiri, ox, rexml). There were two main goals in this rewrite: 1, to separate the xml parsing code from the Rfm objects, and 2, to remove the hard dependency on ActiveSupport. See below for parsing configuration options.
+The entire XML parsing engine of Rfm has been rewritten to use only the sax/stream parsing schemes of the supported ruby XML parsers (libxml-ruby, nokogiri, ox, rexml). There were two main goals in this rewrite: 1, to separate the xml parsing code from the Rfm/Filemaker objects, and 2, to remove the hard dependency on ActiveSupport. See below for parsing configuration options.
 
 * Better logging capabilities.
 Added Rfm.logger, Rfm.logger=, Config.logger, Config#logger, and config(:logger=>(...)).
@@ -34,17 +34,42 @@ Added Rfm.logger, Rfm.logger=, Config.logger, Config#logger, and config(:logger=
 
 * Bug fixes and refinements in modeling, configuration, metadata access, and Rfm object instantiation.
 
+See the changelog or the commit history for more details on changes in ginjo-rfm v3.
+
 ## Download & Installation
 
 * In your Gemfile: gem 'ginjo-rfm', :require=>'rfm'
 
-Ginjo-rfm v3 can be run without any other gems, allowing you to create models to interact with your Filemaker servers, layouts, tables, records, and data. If you want the additional features provided by ActiveModel, just add activemodel to your Gemfile (or require it manually). Ginjo-rfm v3 will use the built-in Ruby XML parser REXML by default. If you want to use one of the other supported parsers (libxml-ruby, nokogiri, ox), just add it to your Gemfile or require it manually.
+* Manually: gem install 'ginjo-rfm'
+
+Ginjo-rfm v3 can be run without any other gems, allowing you to create models to interact with your Filemaker servers, layouts, tables, records, and data. If you want the additional features provided by ActiveModel, just add activemodel to your Gemfile (or require it manually). Ginjo-rfm v3 will use the built-in Ruby XML parser REXML by default. If you want to use one of the other supported parsers (libxml-ruby, nokogiri, ox), just add it to your Gemfile or require it manually. If you have several Ruby XML parsers installed, you can specify which one you want Rfm to use by setting the configuration option :parser with one of the supported options (:libxml, :nokogiri, :ox, :rexml).
 
 
 
 ## Ginjo-rfm Basic Usage
 
-The first step in getting connected to your Filemaker databases with Rfm is to store your configuration settings in a yaml file or in the RFM_CONFIG hash. The second step is creating a model that represents a layout from one of your Filemaker databases. 
+The first step in getting connected to your Filemaker databases with Rfm is to store your configuration settings in a yaml file or in the RFM_CONFIG hash. The second step is creating models that represent layouts in your Filemaker database, each layout pointing to a table-occurrence that you want to work with. The third step is using your new models to query, create, update, and delete records in your Filemaker database. Here's an example setup for a simple order-item table.
+
+rfm.yml
+
+		:host: my.host.com
+		:account_name: myname
+		:password: somepass
+		:database: MyFmDb
+	
+app/models/order\_item.rb
+
+		class OrderItem < Rfm::Base
+		  config :layout => 'order_item_layout'
+		end
+			
+app/controllers/order\_item\_controller.rb
+
+		def show
+			@record = OrderItem.find params[:id]
+		end
+
+	
 
 ### Configuration
 
@@ -74,7 +99,7 @@ Or put your configuration settings in a hash called RFM_CONFIG. Rfm will pick th
 	     :timeout       => 10
 	     }
 
-You can use configuration subgroups to seperate global settings from environment-specific settings.
+You can use configuration subgroups to separate global settings from environment-specific settings.
 
 	   :ssl: true
 	   :root_cert: false
@@ -113,7 +138,7 @@ You can use configuration subgroups to contain any arbitrary groups of settings.
 	     :password: pass
 	     :database: custTwoFmDb
 
-Use the configuration setting method `config` to set configuration for specific objects, like Rfm models. When you pass a `:use => :subgroup` to the `config` method, you're saying use that subgroup of settings.
+Use the configuration setting method `config` to set configuration for specific objects, like Rfm models. When you pass a `:use => :subgroup` to the `config` method, you're saying use that subgroup of settings (on top of any existing upstream configuration).
 
 	   class MyModel < Rfm::Base
 	     config :use => :customer1, :layout => 'some_layout'
@@ -175,13 +200,13 @@ See `Rfm::Config::CONFIG_KEYS` for a list of currently allowed configuration opt
 	   :parent           => 'Rfm::Config'                 # the parent configuration object of the current configuration object, as string
 	   :file_name        => 'rfm.yml                      # name of configuration file to load yaml from
 	   :file_path        => ['', 'config/']               # array of additional file paths to look for configuration file
-	   :parser                                            # Prefferred XML parser (you must also require the parsing gem, or specify it in your gemfile). Can be :libxml, :nokogiri, :ox, :rexml.
+	   :parser                                            # Prefferred XML parser (you must also require the parsing gem or specify it in your gemfile, if not using the built-in Ruby XML parser REXML). Can be :libxml, :nokogiri, :ox, :rexml.
 	   :ignore_bad_data  => nil                           # Instruct Rfm to ignore data mismatch errors when loading a resultset
 	
 
 ### Using Models
 
-Rfm models provide easy access, modeling, and persistence of your Filemaker data.h
+Rfm models provide easy access, modeling, and persistence of your Filemaker data.
 
 	   class User < Rfm::Base
 	     config :layout => 'my_user_layout'
@@ -205,24 +230,13 @@ Rfm models provide easy access, modeling, and persistence of your Filemaker data
 	   @user.update_attributes(:login => 'william', :email => 'myother@email.com')
 	   @user.save!
 	
-Put your model code anywhere at the top level of your script/application. In Rails, this could be your initialization file(s), your environment file(s), or in a file in your Models directory called something like `rfm_models.rb`. Then require 'rfm_models' in your initialization or environment.  
+If using Rails, put your model code in files within your models/ directory.
 
-rfm_models.rb
+app/models/user.rb
 
-	   require 'rfm'
-	   
 	   class User < Rfm::Base
 	     config :layout => 'user_layout'
 	   end
-	
-	   class Order < Rfm::Base
-	     config :layout => 'order_layout'
-	   end
-	
-main_initializer.rb
-
-	   require 'rfm_models'
-
 
 If you prefer, you can create models on-the-fly from any layout.
 
@@ -236,7 +250,7 @@ Or create models for an entire database, all at once.
 
 	   # => [MyLayoutXml, AnotherLayoutXml, ThirdLayoutXml, AndSoOnXml, ...]
 	   # The regex in the first parameter is optional and filters the layout names in the specified database.
-	   # Omit the regex parameter to modelize all possible layouts in the specified database.
+	   # Omit the regex parameter to modelize all possible layouts in the specified database (careful with this one!).
 
 With ActiveModel loaded, you get callbacks, validations, errors, serialization, and a handful of other features extracted from Rails ActiveRecord. Not all ActiveModel features are supported (yet) in ginjo-rfm, but adapters can be hand-rolled in the meantime.
 

@@ -63,6 +63,8 @@ module Rfm
 	def_delegators 'Rfm::SaxParser::Handler', :get_backend
 	def_delegators 'Rfm::Config', :config, :get_config, :config_clear
 	def_delegators 'Rfm::Resultset', :load_data
+	alias_method		:parser, :backend
+	alias_method		:parser=, :backend=
 	
 	def models(*args)
 		Rfm::Base
