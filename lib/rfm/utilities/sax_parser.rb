@@ -35,7 +35,7 @@
 # Examples:
 #   Rfm::SaxParser.parse('some/file.xml')  # => defaults to best xml backend with no parsing configuration.
 #   Rfm::SaxParser.parse('some/file.xml', nil, nil, :ox)  # => uses ox backend or throws error.
-#   Rfm::SaxParser.parse('some/file.xml', {:compact=>true}, :rexml)  # => uses inline configuration with rexml parser.
+#   Rfm::SaxParser.parse('some/file.xml', {'compact'=>true}, :rexml)  # => uses inline configuration with rexml parser.
 #   Rfm::SaxParser.parse('some/file.xml', 'path/to/config.yml', SomeClass.new)  # => loads config template from yml file and builds on top of instance of SomeClass.
 #
 #
@@ -71,9 +71,10 @@ module Rfm
 		extend Forwardable
 
 		PARSERS = {}
-		OPTIONS = [:name, :elements, :attributes, :attach, :attach_elements, :attach_attributes, :compact,
-							:depth, :before_close, :each_before_close, :delimiter, :as_name, :initialize, :handler
-							]
+		# OPTIONS constant not yet used.
+		# 	OPTIONS = [:name, :elements, :attributes, :attach, :attach_elements, :attach_attributes, :compact,
+		# 						:depth, :before_close, :each_before_close, :delimiter, :as_name, :initialize, :handler
+		# 						]
 		DEFAULTS = [:default_class, :backend, :text_label, :tag_translation, :shared_instance_var, :templates, :template_prefix]
 		
 
@@ -125,9 +126,12 @@ module Rfm
 		# a framework of tools that accompany each element's build process.
 		class Cursor
 		
-		    attr_accessor :model, :object, :tag, :parent, :top, :stack, :newtag, :callbacks
+		    #attr_accessor :model, :object, :tag, :parent, :top, :stack, :newtag, :callbacks
+		    attr_accessor :model, :object, :tag, :newtag, :callbacks, :handler, :parent  #, :top, :stack,
 		    
 				SaxParser.install_defaults(self)
+				
+				def_delegators :handler, :top, :stack
 		    
 		    # Main get-constant method
 		    def self.get_constant(klass)
@@ -146,12 +150,17 @@ module Rfm
 
 			  end
 		    
-		    def initialize(_model, _obj, _tag)
+		    def initialize(_model, _obj, _tag, _handler)
 		    	@tag     = _tag
 		    	@model   = _model
 		    	@object  = _obj       #_obj.is_a?(String) ? get_constant(_obj).new : _obj
 		    	@callbacks = {}
+		    	@handler = _handler
 		    	self
+		    end
+		    
+		    def handler
+		    	@handler
 		    end
 		    
 		    
@@ -222,15 +231,17 @@ module Rfm
 		  		
 		  		returntag = newtag
 		  		self.newtag = nil
-		      Cursor.new(subm, new_element, returntag)
+		      Cursor.new(subm, new_element, returntag, handler)
 		    end # start_el
 		
 		    def receive_end_element(_tag)
-		    	#puts ["\nEND_ELEMENT #{_tag}", "CurrentObject: #{object.class}", "CurrentTag: #{self.tag}", "BeforeClose: #{before_close?}"]
+		    	#puts ["\nEND_ELEMENT #{_tag}", "CurrentObject: #{object.class}", "CurrentTag: #{self.tag}", "CurrentModel: #{model}", "BeforeClose: #{before_close?}", "Compact: #{compact?}"]
 	      	begin
 						if _tag == self.tag
 		      		# Data cleaup
-							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compact?
+							compactor_settings = compact?
+							(compactor_settings = compact?(top.model)) unless compactor_settings # prefer local settings, or use top settings.
+							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compactor_settings
 						end
 	      	
 						# 	# EXPERIMENTAL: sending modle PLUS submodel prefs to _create_accessors
@@ -380,6 +391,7 @@ module Rfm
 
 				
 		    def clean_members(obj=object)
+		    	#puts ["CURSOR.clean_members: #{object.class}", "tag: #{tag}", "model-name: #{model[:name]}"]
 					# 	cursor.object = clean_member(cursor.object)
 					# 	clean_members(ivg(shared_attribute_var, obj))
 	    		if obj.is_a?(Hash)
@@ -510,7 +522,7 @@ module Rfm
 		  	#(@template = @template.values[0]) if @template.size == 1
 		  	#y @template
 		  	init_element_buffer
-		    set_cursor Cursor.new(@template, initial_object, 'top')
+		    set_cursor Cursor.new(@template, initial_object, 'top', self)
 		  end
 		  
 		  # Takes string, symbol, hash, and returns a (possibly cached) parsing template.
@@ -555,14 +567,19 @@ module Rfm
 				if args.is_a? Cursor
 					stack.push(args)
 					cursor.parent = stack[-2] || stack[0] #_stack[0] so methods called on parent won't bomb.
-					cursor.top = stack[0]
-					cursor.stack = stack
+					# Cursor is no longer storing top or stack, it is delegating those mehthods to main handler.
+					#cursor.top = stack[0]
+					#cursor.stack = stack
 				end
 				cursor
 			end
 			
 			def dump_cursor
 				stack.pop
+			end
+			
+			def top
+				stack[0]
 			end
 			
 			def transform(name)
@@ -954,7 +971,7 @@ end # Hash
 # done: Clean_elements doesn't work if elements are non-hash/array objects. Make clean_elements work with object attributes.
 # TODO: Clean_elements may not work for non-hash/array objecs with multiple instance-variables.
 # na  : Clean_elements may no longer work with a globally defined 'compact'.
-# TODO: Do we really need Cursor#top and Cursor#stack ? Can't we get both from stack?
+# TODO: Do we really need Cursor#top and Cursor#stack ? Can't we get both from handler.stack. Should we store handler in cursor inst var @handler?
 # TODO: When using a non-hash/array object as the initial object, things get kinda srambled.
 #       See Rfm::Connection, when sending self (the connection object) as the initial_object.
 # done: 'compact' breaks badly with fmpxmllayout data.
