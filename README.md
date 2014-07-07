@@ -1,12 +1,8 @@
 # ginjo-rfm
 
-Rfm is a Ruby-Filemaker adapter, a Ruby Gem that provides an interface between Filemaker Server and Ruby. Query your Filemaker database, browse result records as persistent objects, and create/update/delete records with a syntax similar to ActiveRecord. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 3 removes the dependency on ActiveSupport and is now a completely independent Gem, able to run most of its core features without requiring any other supporting Gems (If you want the ActiveModel features of callbacks, validations, etc, you will need to require ActiveModel, which of course still depends on ActiveSupport).
+Rfm is a Ruby-Filemaker adapter, a Ruby Gem that provides an interface between Filemaker Server and Ruby. Query your Filemaker database, browse result records as persistent objects, and create/update/delete records with a syntax similar to ActiveRecord. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 3 removes the dependency on ActiveSupport and is now a completely independent Gem, able to run most of its core features without requiring any other supporting Gems. ActiveModel features can be activated by adding activemodel to your Gemfile (or requiring activemodel manually).
 
 Ginjo-rfm version 3 has been tested successfully on Ruby 1.8.7, 1.9.3, 2.0.0, and 2.1.2.
-
-Ginjo-rfm version 3 has not yet been released as a gem on RubyGems.org, but feel free to use the github master branch in the meantime.
-
-    gem 'ginjo-rfm', :git=>'https://github.com/ginjo/rfm.git', :branch=>'master'
 
 
 ## Documentation & Links
@@ -20,12 +16,12 @@ Ginjo-rfm version 3 has not yet been released as a gem on RubyGems.org, but feel
 
 ## New in version  3.0
 
-There are many changes in version 3, but most of them are under the hood.
+There are many changes in version 3, but most of them are under the hood. Here are some highlights.
 
 * Compatibility with Ruby 2.1.2 (and 2.0.0, 1.9.3, 1.8.7).
 
 * XML parsing rewrite.
-The entire XML parsing engine of Rfm has been rewritten to use only the sax/stream parsing schemes of the supported ruby XML parsers (libxml-ruby, nokogiri, ox, rexml). There were two main goals in this rewrite: 1, to separate the xml parsing code from the Rfm/Filemaker objects, and 2, to remove the hard dependency on ActiveSupport. See below for parsing configuration options.
+The entire XML parsing engine of Rfm has been rewritten to use only the sax/stream parsing schemes of the supported Ruby XML parsers (libxml-ruby, nokogiri, ox, rexml). There were two main goals in this rewrite: 1, to separate the xml parsing code from the Rfm/Filemaker objects, and 2, to remove the hard dependency on ActiveSupport. See below for parsing configuration options.
 
 * Better logging capabilities.
 Added Rfm.logger, Rfm.logger=, Config.logger, Config#logger, and config(:logger=>(...)).
@@ -42,17 +38,29 @@ See the changelog or the commit history for more details on changes in ginjo-rfm
 
 ## Download & Installation
 
-* In your Gemfile: gem 'ginjo-rfm', :require=>'rfm'
+Find the latest stable release at Rubygems.org.
 
-* Manually: gem install 'ginjo-rfm'
+In your Gemfile.
+
+    gem 'ginjo-rfm', :require=>'rfm'
+
+Or manually.
+
+    gem install 'ginjo-rfm'
+
+You can find the latest development release on github.
+
+    gem 'ginjo-rfm', :git=>'https://github.com/ginjo/rfm.git', :branch=>'master'
 
 Ginjo-rfm v3 can be run without any other gems, allowing you to create models to interact with your Filemaker servers, layouts, tables, records, and data. If you want the additional features provided by ActiveModel, just add activemodel to your Gemfile (or require it manually). Ginjo-rfm v3 will use the built-in Ruby XML parser REXML by default. If you want to use one of the other supported parsers (libxml-ruby, nokogiri, ox), just add it to your Gemfile or require it manually. If you have several Ruby XML parsers installed, you can specify which one you want Rfm to use by setting the configuration option :parser with one of the supported options (:libxml, :nokogiri, :ox, :rexml).
+
+Note that while this gem is officially named "ginjo-rfm", you require/load it into your Ruby scripts as simply "rfm". This is in keeping with the original rfm gem from Sixfriedrice and with other forks of the rfm gem.
 
 
 
 ## Ginjo-rfm Basic Usage
 
-The first step in getting connected to your Filemaker databases with Rfm is to store your configuration settings in a yaml file or in the RFM_CONFIG hash. The second step is creating models that represent layouts in your Filemaker database, each layout pointing to a table-occurrence that you want to work with. The third step is using your new models to query, create, update, and delete records in your Filemaker database. Here's an example setup for a simple order-item table.
+The first step in getting connected to your Filemaker databases with Rfm is to store your configuration settings in a yaml file or in the RFM_CONFIG hash. The second step is creating a Ruby class (often referred to as a "model" in this documentation) that represent a layout in your Filemaker database. Create as many models as you wish, each pointing to a layout/table-occurrence that you want to work with. The third step is using your new models to query, create, update, and delete records in your Filemaker database. Here's an example setup for a simple order-item table.
 
 rfm.yml
 
@@ -81,7 +89,6 @@ In previous versions of Rfm, you may have stored your configuration settings in 
 rfm.yml
 
 	   :ssl: true
-	   :root_cert: false
 	   :timeout: 10
 	   :port: 443
 	   :host: my.host.com
@@ -97,7 +104,6 @@ Or put your configuration settings in a hash called RFM_CONFIG. Rfm will pick th
 	     :account_name  => 'myname',
 	     :password      => 'somepass',
 	     :ssl           => true,
-	     :root_cert     => false,
 	     :port          => 443,
 	     :timeout       => 10
 	     }
@@ -119,7 +125,7 @@ You can use configuration subgroups to separate global settings from environment
 	     :password: pass
 	     :database: LiveFmDb
 
-Then in your environment files (or wherever you put environment-specific configuration in your ruby project),
+Then in your environment files (or wherever you put environment-specific configuration in your Ruby project),
 specifiy which subgroup to use.
 
      RFM_CONFIG = {:use => :development}
@@ -288,7 +294,7 @@ Once you have an Rfm model or layout, you can use any of the standard Rfm comman
 
 #### Two Small Changes in Rfm Return Values
 
-When using Models to retrieve records using the `any` method or the `find(record_id)` method, the return values will be single Rfm::Record objects. This differs from the traditional Rfm behavior of these methods when accessed directly from the the Rfm::Layout instance, where the return value is always a Rfm::Resultset.
+(From Rfm v2 onward) When using Models to retrieve records using the `any` method or the `find(record_id)` method, the return values will be single Rfm::Record objects. This differs from the original Rfm behavior of these methods when accessed directly from the the Rfm::Layout instance, where the return value is always a Rfm::Resultset.
 
 	   MyModel.find(record_id)  ==  my_layout.find(record_id)[0]
 	   MyModel.any              ==  my_layout.any[0]
@@ -494,7 +500,7 @@ All of these methods return an Rfm::Resultset object (see below), and every one 
 
 For a complete list of the available options, see the "expand_options" method in the Rfm::Server object in the file named server.rb.
 
-Finally, if filemaker returns an error when executing any of these methods, an error will be raised in your ruby script. There is one exception to this, though. If a find results in no records being found (FileMaker error # 401) I just ignore it and return you a Resultset with zero records in it. If you prefer an error in this case, add :raise_on_401 => true to the options you pass the Rfm::Server when you create it.
+Finally, if filemaker returns an error when executing any of these methods, an error will be raised in your Ruby script. There is one exception to this, though. If a find results in no records being found (FileMaker error # 401) I just ignore it and return you a Resultset with zero records in it. If you prefer an error in this case, add :raise_on_401 => true to the options you pass the Rfm::Server when you create it.
 
 
 ### Resultset and Record Objects
@@ -505,7 +511,7 @@ Any method on the Layout object that returns data will return a Resultset object
 	   my_result.size  # returns '1'
 	   my_result[0]    # returns the first record (an Rfm::Record object)
 
-The Resultset object also tells you information about the fields and portals in the result. Resultset#field\_meta and Resultset#portal\_meta are both standard ruby hashes, with strings for keys. The fields hash has Rfm::Metadata::Field objects for values. The portals hash has another hash for its values. This nested hash is the fields on the portal. This would print out all the field names:
+The Resultset object also tells you information about the fields and portals in the result. Resultset#field\_meta and Resultset#portal\_meta are both standard Ruby hashes, with strings for keys. The fields hash has Rfm::Metadata::Field objects for values. The portals hash has another hash for its values. This nested hash is the fields on the portal. This would print out all the field names:
 
 	   my_result.field_meta.each { |name, field| puts name }
 	
@@ -529,7 +535,7 @@ But most importantly, the Resultset contains record objects. Rfm::Record is a su
 	   my_record = my_result[0]
 	   puts my_record["first_name"]
 
-As a convenience, if your field names are valid ruby method names (ie, they don't have spaces or odd punctuation in them), you can do this instead:
+As a convenience, if your field names are valid Ruby method names (ie, they don't have spaces or odd punctuation in them), you can do this instead:
 
 	   puts my_record.first_name
 
@@ -588,9 +594,9 @@ FileMaker's field types are coerced to Ruby types thusly:
 	   TimeStamp Field  -> DateTime object  
 	   Container Field  -> URI object  
 
-FileMaker's number field is insanely robust. The only data type in ruby that can handle the same magnitude and precision of a FileMaker number is Ruby's BigDecimal. (This is an extension class, so you have to require 'bigdecimal' to use it yourself). Unfortuantely, BigDecimal is not a "normal" ruby numeric class, so it might be really annoying that your tiny filemaker numbers have to go this route. This is a great topic for debate.
+FileMaker's number field is insanely robust. The only data type in Ruby that can handle the same magnitude and precision of a FileMaker number is Ruby's BigDecimal. (This is an extension class, so you have to require 'bigdecimal' to use it yourself). Unfortuantely, BigDecimal is not a "normal" Ruby numeric class, so it might be really annoying that your tiny filemaker numbers have to go this route. This is a great topic for debate.
 
-Also, Ruby doesn't have a Time type that stores just a normal time (with no date attached). The Time class in ruby is a lot like DateTime, or a Timestamp in FileMaker. When I get a Time field from FileMaker, I turn it into a DateTime object, and set its date to the oldest date Ruby supports. You can still compare these in all the normal ways, so this should be fine, but it will look weird if you, ie, to_s one and see an odd date attached to your time.
+Also, Ruby doesn't have a Time type that stores just a normal time (with no date attached). The Time class in Ruby is a lot like DateTime, or a Timestamp in FileMaker. When I get a Time field from FileMaker, I turn it into a DateTime object, and set its date to the oldest date Ruby supports. You can still compare these in all the normal ways, so this should be fine, but it will look weird if you, ie, to_s one and see an odd date attached to your time.
 
 Finally, container fields will come back as URI objects. You can:
 
@@ -660,7 +666,7 @@ Repeating field compatibility, more coverage of Filemaker's query syntax, more e
 
         Rfm::Resultset.load_data(file_or_string).
 
-* Compatibility fixes for ruby 1.9.
+* Compatibility fixes for Ruby 1.9.
 * Configuration `:use` option now works for all Rfm objects that respond to `config`.
 
 
@@ -702,7 +708,7 @@ You can specifiy which parser to use or let Rfm decide.
 	  Rfm.config :parser => :libxml
 
 If you're not able to install one of the faster parsers, ginjo-rfm will fall back to
-ruby's built-in REXML. Want to roll your own XML adapter? Just pass it to Rfm as a module.
+Ruby's built-in REXML. Want to roll your own XML adapter? Just pass it to Rfm as a module.
 
 	  Rfm.config :parser => MyHomeGrownAdapter
 
@@ -818,7 +824,7 @@ Rfm was primarily designed by Six Fried Rice co-founder Geoff Coffey.
 
 Other lead contributors:
 
-* Mufaddal Khumri helped architect Rfm in the most ruby-like way possible. He also contributed the outstanding error handling code and a comprehensive hierarchy of error classes.
+* Mufaddal Khumri helped architect Rfm in the most Ruby-like way possible. He also contributed the outstanding error handling code and a comprehensive hierarchy of error classes.
 * Atsushi Matsuo was an early Rfm tester, and provided outstanding feedback, critical code fixes, and a lot of web exposure.
 * Jesse Antunes helped ensure that Rfm is stable and functional.
 * Larry Sprock added ssl support, switched the xml parser to a much faster Nokogiri, added the rspec testing framework, and refined code architecture.
