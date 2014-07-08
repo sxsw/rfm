@@ -711,7 +711,7 @@ module Rfm
 			  include Handler
 			
 			  def run_parser(io)
-			  	options={:convert_special=>false}
+			  	options={:convert_special=>true}
 					case
 					when (io.is_a?(File) or io.is_a?(StringIO)); Ox.sax_parse self, io, options
 					when io.to_s[/^</]; StringIO.open(io){|f| Ox.sax_parse self, f, options}
