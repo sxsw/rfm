@@ -711,10 +711,11 @@ module Rfm
 			  include Handler
 			
 			  def run_parser(io)
+			  	options={:convert_special=>false}
 					case
-					when (io.is_a?(File) or io.is_a?(StringIO)); Ox.sax_parse self, io
-					when io.to_s[/^</]; StringIO.open(io){|f| Ox.sax_parse self, f}
-					else File.open(io){|f| Ox.sax_parse self, f}
+					when (io.is_a?(File) or io.is_a?(StringIO)); Ox.sax_parse self, io, options
+					when io.to_s[/^</]; StringIO.open(io){|f| Ox.sax_parse self, f, options}
+					else File.open(io){|f| Ox.sax_parse self, f, options}
 					end
 				end
 				
