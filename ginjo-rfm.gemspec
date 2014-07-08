@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
   s.homepage = "https://rubygems.org/gems/ginjo-rfm"
   
   s.require_paths = ["lib"]
-  s.files = Dir['lib/**/*.rb', 'lib/**/VERSION', '.yardopts']
+  s.files = Dir['lib/**/*.rb', 'lib/**/sax/*', 'lib/**/VERSION',  '.yardopts']
   
   s.rdoc_options = ["--line-numbers", "--main", "README.md"]
   s.extra_rdoc_files = [
