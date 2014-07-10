@@ -9,17 +9,14 @@ task :default => :spec
 require 'rspec/core/rake_task'
 
 # Manual
-desc "Manually run rspec 2 - works but ugly"
-task :spec do
-	puts exec("rspec -O spec/spec.opts") #RUBYOPTS=W0  # silence ruby warnings.
-end
-
-#Spec::Rake::SpecTask
-#RSpec::Core::RakeTask.new(:spec) # do |spec|
-#   spec.libs << 'lib' << 'spec'
-#   spec.spec_files = FileList['spec/**/*_spec.rb']
+# desc "Manually run rspec 2 - works but ugly"
+# task :spec do
+# 	puts exec("rspec -O spec/spec.opts") #RUBYOPTS=W0  # silence ruby warnings.
 # end
 
+RSpec::Core::RakeTask.new(:spec) do |task|
+	task.rspec_opts = '-O spec/spec.opts'
+end
 
 require 'rdoc/task'
 Rake::RDocTask.new do |rdoc|
@@ -107,26 +104,23 @@ task :sample do
 end	
 
 # Has not been updated to work with new parser in Rfm 3.0
-# desc "run specs with all parser backends"	
-# task :spec_multi do
-# 	require 'benchmark'
-# 	require 'yaml'
-# 	@records = File.read('spec/data/resultset.xml')
-# 	@layout = File.read('spec/data/layout.xml')
-# 	Benchmark.bm do |b|
-# 		[:oxsax, :libxml, :libxmlsax, :nokogirisax, :nokogiri, :hpricot, :rexml, :rexmlsax].each do |backend|
-# 			#Rfm.backend = backend
-# 			ENV['parser'] = backend.to_s
-# 			b.report("#{backend.to_s.upcase}\n") do
-# 				begin
-# 					Rake::Task["spec"].execute
-# 				rescue
-# 					#puts $1
-# 				end
-# 			end
-# 		end
-# 	end
-# end
+desc "run specs with all parser backends"	
+task :spec_multi do
+	require 'benchmark'
+	require 'yaml'
+	Benchmark.bm do |b|
+		[:ox, :libxml, :nokogiri, :rexml].each do |parser|
+			ENV['parser'] = parser.to_s
+			b.report("RSPEC with #{parser.to_s.upcase}\n") do
+				begin
+					Rake::Task["spec"].execute
+				rescue Exception
+					puts "ERROR in rspec with #{parser.to_s.upcase}: #{$!}"
+				end
+			end
+		end
+	end
+end
 
 
 
