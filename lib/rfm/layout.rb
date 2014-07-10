@@ -303,10 +303,22 @@ module Rfm
       prms = params.merge(extra_params)
       map = field_mapping.invert
       options.merge!({:field_mapping => map}) if map && !map.empty?
-      # TODO: Make this part handle string AND symbol keys.
+      # TODO: Make this part handle string AND symbol keys. (isn't this already done?)
       #map.each{|k,v| prms[k]=prms.delete(v) if prms[v]}
-      prms.dup.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
-
+      
+      #prms.dup.each_key{|k| prms[map[k.to_s]]=prms.delete(k) if map[k.to_s]}
+      prms.dup.each_key do |k|
+      	new_key = map[k.to_s] || k
+      	if prms[new_key].is_a? Array
+					prms[new_key].each_with_index do |v, i|
+	      		prms["#{new_key}(#{i+1})"]=v
+      		end
+      		prms.delete new_key
+      	else
+	      	prms[new_key]=prms.delete(k) if new_key != k
+      	end
+      end
+			
 			#c = Connection.new(action, prms, options, state.merge(:parent=>self))
 			c = Connection.new(action, prms, options, self)
 			rslt = c.parse(template || :fmresultset, Rfm::Resultset.new(self, self))
