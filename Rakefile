@@ -61,7 +61,6 @@ task :benchmark do
 			b.report("#{backend}\n") do
 				5.times do
 					Rfm::SaxParser.parse(@records, @template, @base_class.new, backend)
-					#Rfm::SaxParser::Handler.build(@layout, backend)
 				end
 			end
 		end
