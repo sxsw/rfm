@@ -14,8 +14,7 @@ elements:
   attach: none
 - name: errorcode
   attach: none
-  # TODO: Build check_for_errors method in Layout class.
-  #before_close: 'check_for_errors'
+  before_close: 'check_for_errors'
   attributes:
   - name: text
     as_name: error
@@ -29,7 +28,7 @@ elements:
   - name: NAME
     as_name: name
 - name: field
-  handler: [object.meta, handle_new_field_control, _attributes]
+  handler: [object.instance_variable_get(:@meta), handle_new_field_control, _attributes]
   attach_attributes: private
   elements:
   - name: style

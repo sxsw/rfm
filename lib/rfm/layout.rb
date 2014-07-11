@@ -386,12 +386,22 @@ module Rfm
   	###  Utility  ###
     
     def load_layout
-    	@loaded = true # This is first so parsing call to 'meta' wont cause infinite loop.
+    	#@loaded = true # This is first so parsing call to 'meta' wont cause infinite loop,
+    	# but I changed parsing template to refer directly to inst var instead of accessor method.
       connection = Connection.new('-view', {'-db' => state[:database], '-lay' => name}, {:grammar=>'FMPXMLLAYOUT'}, self)
-      rslt = connection.parse(:fmpxmllayout, self)
-      #puts ["LAYOUT#load_layout result", rslt.class].join(', ')
-			# @loaded = true
+      begin
+	      connection.parse(:fmpxmllayout, self)
+	      @loaded = true
+	    rescue
+	    	@meta.clear
+	    	raise $!
+	    end
 			@meta
+    end
+    
+    def check_for_errors(code=@meta['error'].to_i, raise_401=state[:raise_401])
+    	#puts ["\nRESULTSET#check_for_errors", code, raise_401]
+      raise Rfm::Error.getError(code) if code != 0 && (code != 401 || raise_401)
     end
     
 		def field_mapping
@@ -429,7 +439,7 @@ module Rfm
   	end
 				
     
-  	private :load_layout, :get_records, :params
+  	private :load_layout, :get_records, :params, :check_for_errors
       
       
   end # Layout

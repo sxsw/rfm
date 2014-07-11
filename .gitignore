@@ -13,4 +13,5 @@ Gemfile.lock
 *.diff
 .bundle/***
 vendor/***
-.ruby-version
+# keep ruby-version in git repo, but don't include it in gem build
+#.ruby-version
