@@ -28,6 +28,8 @@ elements:
   - name: NAME
     as_name: name
 - name: field
+  # Used to be 'object.meta', but that required sloppy 'loaded' indicator handling (or infinite loop),
+  # so now just referring to raw inst var @meta, instead of method .meta.
   handler: [object.instance_variable_get('@meta'), handle_new_field_control, _attributes]
   attach_attributes: private
   elements:

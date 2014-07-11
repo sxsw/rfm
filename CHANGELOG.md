@@ -1,5 +1,15 @@
 # Changelog
 
+## Ginjo-Rfm 3.0.4
+
+* Corrected reference to @meta in fmpxmllayout.yml. Specs now passing for Layout#load\_layout.
+* Added error checking to Layout#load\_layout.
+* Fixed setting/saving of repeating fields. Added spec to verify.
+* Fixed rspec rake task, fixed rake spec\_multi.
+* Changed Ox default parse option to not encode special characters. This is now in tune with other parsers' defaults.
+  This fixes (among other things) URLs returned from container fields.
+* Fixed error in gemspec preventing sax templates from being included in gem build.
+
 ## Ginjo-Rfm 3.0.0
 
 * Disabled default port in Connection (was 80), as it was tripping up connections where the port wasn't specified for a :use\_ssl connection on older Rubies.
