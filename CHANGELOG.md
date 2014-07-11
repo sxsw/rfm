@@ -3,7 +3,7 @@
 ## Ginjo-Rfm 3.0.0
 
 * Disabled default port in Connection (was 80), as it was tripping up connections where the port wasn't specified for a :use\_ssl connection on older Rubies.
-* Enabled :ignore\_portals option.
+* Fixes to :ignore\_portals option.
 * Removed runtime dependency on activesupport from gemspec.
 * Added check in Field#coerce to make sure a '?' is in a string before splitting on '?'. This was breaking repeating container fields.
 * Fixed case mismatch in hash key in Factory classes. Added logging of parsing template to logging of parsing backend.
@@ -17,8 +17,6 @@
 * Refined multiple :use handling in Config.
 * Using rspec 2
 * Removed SubLayout.
-* Added field-mapping awareness to :sort\_field query option.
-*	Relaxed requirement that query option keys be symbols - can now be strings.
 * Record.new now automatically creats models based on layout name. Should there be an option to disable this?
 * Removed ActiveSupport requirement (of course, ActiveSupport will load if ActiveModle is used, but that is the users' choice).
 * Removed XmlMini, XmlParser, and related code & specs.
@@ -33,6 +31,11 @@
 * Fixed bug in Config#get\_config\_file where a single file path might not be recognized.
 * Added connection.rb and moved some methods from Server to Connection.
 * Sax parsing rewrite.
+
+## Ginjo-Rfm 2.1.7
+
+* Added field\_mapping awareness to :sort\_field query option.
+* Relaxed requirement that query option keys be symbols - can now be strings.
 
 ## Ginjo-Rfm 2.1.6
 
@@ -65,9 +68,9 @@
 
 ## Ginjo-Rfm 2.1.0
 
-* Removed `:include\_portals` query option in favor of `:ignore\_portals`.
+* Removed `:include_portals` query option in favor of `:ignore_portals`.
 
-* Added `:max\_portal\_rows` query option.
+* Added `:max_portal_rows` query option.
 
 * Added field-remapping framework to allow model fields with different names than Filemaker fields.
 
@@ -192,7 +195,7 @@
 
 	Example:  
   
-	    result = fm\_server('layout').find({:username => "==#{username}"}, {:include\_portals => true})
+	    result = fm_server('layout').find({:username => "==#{username}"}, {:include_portals => true})
 	    # => This will fetch all records with portal records attached.
   
 	    result.first.portals
