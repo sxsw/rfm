@@ -64,6 +64,17 @@ describe Rfm::Layout do
 			layout.send(:get_records, '-find', {'login'=>'bill'})
 		end
 		
+		it "builds repeating-field query params from repeating-field array" do			
+			Rfm::Connection.should_receive(:new) do |*args|
+				args[1].has_key?('repeating').should be_false
+				args[1].has_key?('repeating(1)').should be_true
+				args[1].has_key?('repeating(3)').should be_true
+				args[1]['repeating(3)'].should == 'bill'
+			end.and_return(Rfm::Connection.allocate)
+			
+			layout.send(:get_records, '-edit', {'repeating'=>['mike','amy','bill']})
+		end
+		
 	end #get_records
 	
 	describe "#load_layout" do
