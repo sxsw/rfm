@@ -2,7 +2,7 @@ module Rfm
   module Metadata
   
     # The Field object represents a single FileMaker field. It *does not hold the data* in the field. Instead,
-    # it serves as a source of metadata about the field. For example, if you're script is trying to be highly
+    # it serves as a source of metadata about the field. For example, if your script is trying to be highly
     # dynamic about its field access, it may need to determine the data type of a field at run time. Here's
     # how:
     #
