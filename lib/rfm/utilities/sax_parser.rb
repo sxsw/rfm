@@ -765,15 +765,21 @@ end # Rfm
 
 class Object
 
-	# Master method to attach any object to this object.
-	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
-		#puts ["OBJECT._attach_object", self.class, obj.class, obj.to_s, args].to_yaml
-		default_options = {
+	ATTACH_OBJECT_DEFAULT_OPTIONS = {
 			:shared_variable_name => 'attributes',
 			:default_class => Hash,
 			:create_accessors => [] #:all, :private, :shared, :hash
-		}
-		options = default_options.merge(args.last.is_a?(Hash) ? args.pop : {}){|key, old, new| new || old}
+	}
+
+	# Master method to attach any object to this object.
+	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
+		#puts ["OBJECT._attach_object", self.class, obj.class, obj.to_s, args].to_yaml
+		# 	default_options = {
+		# 		:shared_variable_name => 'attributes',
+		# 		:default_class => Hash,
+		# 		:create_accessors => [] #:all, :private, :shared, :hash
+		# 	}
+		options = ATTACH_OBJECT_DEFAULT_OPTIONS.merge(args.last.is_a?(Hash) ? args.pop : {}){|key, old, new| new || old}
 		name = (args[0] || options[:name])
 		delimiter = (args[1] || options[:delimiter])
 		prefs = (args[2] || options[:prefs])

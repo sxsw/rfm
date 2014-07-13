@@ -15,3 +15,5 @@ Gemfile.lock
 vendor/***
 # keep ruby-version in git repo, but don't include it in gem build
 #.ruby-version
+ruby-prof-*.html
+ruby-prof-*.txt

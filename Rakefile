@@ -80,18 +80,29 @@ task :profile_sax do
 	require 'ruby-prof'
 	# Profile the code
 	@data = 'spec/data/resultset_large.xml'
+	min_percent=1
 	result = RubyProf.profile do
 		# The parser will choose the best available backend.
-		rr = Rfm::SaxParser.parse(@data, 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new).result
-		puts rr.class
-		puts rr.size
+		@rr = Rfm::SaxParser.parse(@data, 'fmresultset.yml', Rfm::Resultset.new).result
+		#Rfm::SaxParser.parse(@data, 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new)
 	end
+	puts @rr.class
+	puts @rr.size
 	# Print a flat profile to text
-	printer = RubyProf::FlatPrinter.new(result)
-	printer.print(STDOUT, {})
-	# Print a graph profile to text
-	printer = RubyProf::GraphPrinter.new(result)
-	printer.print(STDOUT, {})
+	flat_printer = RubyProf::FlatPrinter.new(result)
+	flat_printer.print(STDOUT, {:min_percent=>0})
+	# Print a graph profile to text. See https://github.com/ruby-prof/ruby-prof/blob/master/examples/graph.txt
+	graph_printer = RubyProf::GraphPrinter.new(result)
+	graph_printer.print(STDOUT, {:min_percent=>min_percent})
+	graph_html_printer = RubyProf::GraphHtmlPrinter.new(result)
+	File.open('ruby-prof-graph.html', 'w') do |f|
+		graph_html_printer.print(f, {:min_percent=>min_percent})
+	end
+	# Print call_tree to html
+	tree_printer = RubyProf::CallStackPrinter.new(result)
+	File.open('ruby-prof-stack.html', 'w') do |f|
+		tree_printer.print(f, {:min_percent=>min_percent})
+	end
 end
 
 desc "Run test data thru the sax parser"
