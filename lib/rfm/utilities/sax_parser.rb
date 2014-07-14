@@ -780,18 +780,28 @@ class Object
 		# 		:create_accessors => [] #:all, :private, :shared, :hash
 		# 	}
 		options = ATTACH_OBJECT_DEFAULT_OPTIONS.merge(args.last.is_a?(Hash) ? args.pop : {}){|key, old, new| new || old}
-		name = (args[0] || options[:name])
-		delimiter = (args[1] || options[:delimiter])
+		# 	name = (args[0] || options[:name])
+		# 	delimiter = (args[1] || options[:delimiter])
 		prefs = (args[2] || options[:prefs])
-		type = (args[3] || options[:type])
+		# 	type = (args[3] || options[:type])
 		#puts ['OBJECT.attach_object', type, name, self.class, obj.class, delimiter, prefs, options[:shared_variable_name], options[:default_class], options[:create_accessors]].join(', ')
-		case
-		when prefs=='none' || prefs=='cursor'; nil
-		when name
-			self._merge_object!(obj, name, delimiter, prefs, type, options)
-		else
-			self._merge_object!(obj, 'unknown_name', delimiter, prefs, type, options)
-		end
+		return if (prefs=='none' || prefs=='cursor')   #['none', 'cursor'].include? prefs ... not sure which is faster.
+		self._merge_object!(
+			obj,
+			args[0] || options[:name] || 'unknown_name',
+			args[1] || options[:delimiter],
+			prefs,
+			args[3] || options[:type],
+			options
+		)
+		
+	# 		case
+	# 		when prefs=='none' || prefs=='cursor'; nil
+	# 		when name
+	# 			self._merge_object!(obj, name, delimiter, prefs, type, options)
+	# 		else
+	# 			self._merge_object!(obj, 'unknown_name', delimiter, prefs, type, options)
+	# 		end
 	end
 	
 	# Master method to merge any object with this object
