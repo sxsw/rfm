@@ -87,25 +87,25 @@ end
 
 desc "Profile the sax parser"
 task :profile_sax do
-	# This turns on tail-call-optimization
+	# This turns on tail-call-optimization. Was needed in past for ruby 1.9, maybe not now.
 	# See http://ephoz.posterous.com/ruby-and-recursion-whats-up-in-19
-	if RUBY_VERSION[/1.9/]
-		RubyVM::InstructionSequence.compile_option = {
-		  :tailcall_optimization => true,
-		  :trace_instruction => false
-		}
-	end
+	# 	if RUBY_VERSION[/1.9/]
+	# 		RubyVM::InstructionSequence.compile_option = {
+	# 		  :tailcall_optimization => true,
+	# 		  :trace_instruction => false
+	# 		}
+	# 	end
 	require 'ruby-prof'
 	# Profile the code
 	@data = 'spec/data/resultset_large.xml'
-	min_percent=1
+	min = ENV['min']
+	min_percent= min ? min.to_i : 1
 	result = RubyProf.profile do
 		# The parser will choose the best available backend.
 		@rr = Rfm::SaxParser.parse(@data, 'fmresultset.yml', Rfm::Resultset.new).result
 		#Rfm::SaxParser.parse(@data, 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new)
 	end
-	puts @rr.class
-	puts @rr.size
+
 	# Print a flat profile to text
 	flat_printer = RubyProf::FlatPrinter.new(result)
 	flat_printer.print(STDOUT, {:min_percent=>0})
@@ -121,6 +121,10 @@ task :profile_sax do
 	File.open('ruby-prof-stack.html', 'w') do |f|
 		tree_printer.print(f, {:min_percent=>min_percent})
 	end
+	
+	puts @rr.class
+	puts @rr.size
+	puts @rr[5].to_yaml
 end
 
 desc "Run test data thru the sax parser"

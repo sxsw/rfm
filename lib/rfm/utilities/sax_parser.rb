@@ -184,9 +184,7 @@ module Rfm
 			  	Rfm.log.warn "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
 		        
-		    def receive_start_element(_tag, _attributes)
-		    # TODO: Use a case statement to separate the various tasks possible in this method
-		    	
+		    def receive_start_element(_tag, _attributes)		    	
 		    	
 		    	#puts ['START', _tag, object.class, model]
 		    	# Set newtag for other methods to use during the start_el run.
@@ -200,28 +198,36 @@ module Rfm
 		      
 		      #puts "RECEIVE_START_ELEMENT: _tag '#{_tag}'\ncurrent object '#{object.class}'\ncursor_model '#{model}'\ncursor_submodel '#{subm.to_yaml}', attributes '#{_attributes.to_a}'"
 		      
+		      case
+		      
 		      # Clean-up and return if new element is not to be attached.
-		    	if prefs == 'none'
+		    	when prefs == 'none'
 		    		# Set callbacks, since object & model of new element won't be stored.
 		    		callbacks[_tag] = lambda {run_callback(_tag, self, subm)}
 		    		#puts "Assigning attributes for attach:none on #{newtag}"
 		    		# This passes current model, since that is the model that will be accepting thiese attributes, if any.
 		    		assign_attributes(_attributes, object, model, subm)
-		    		return
-		    	end		      
+		    		return		      
 		      
-		      if handler?(subm)
-		      	code = handler?(subm)
+		      when (code = handler?(subm); code) 
 		      	obj = eval(code[0].to_s)
 		      	mthd = code[1].to_s
 		      	prms = eval(code[2].to_s)
 		      	new_element = obj.send(mthd, prms)
 		      	#puts ["\nIF_HANDLER", code, new_element.class, new_element]
-		      else
+		      	
+		      when (
+		      	tst1 = _attributes && attach_attributes?(subm) != 'none'
+		      	tst2 = prefs != 'cursor'
+		      	
+		      	tst1 || tst2
+		      	)
+		      	
 			      # Create new element.
 			      const = get_constant(subm['class'])
 			      # Needs to be duped !!!
-			      init = initialize?(subm) ? initialize?(subm).dup : []
+			      init_subm = initialize?(subm)
+			      init = init_subm ? init_subm.dup : []
 			      #puts init.to_yaml
 			      init[0] ||= :allocate
 			      init[1] = eval(init[1].to_s)
@@ -230,11 +236,11 @@ module Rfm
 			      new_element = const.send(*init.compact)
 			      #puts "Created new element of class '#{new_element.class}' for _tag '#{tag}'."
 			      
-			      # Assign attributes to new element.
-			      assign_attributes(_attributes, new_element, subm, subm) #unless attach_attributes?(subm) == 'none'
+			      # Assign attributes to new element, only if prefs != 'none'
+			      assign_attributes(_attributes, new_element, subm, subm) if tst1
 	
-						# Attach new element to cursor object
-						attach_new_object(object, new_element, newtag, model, subm, 'element') #unless prefs == 'cursor'
+						# Attach new element to current object, but only if prefs != 'cursor'.
+						attach_new_object(object, new_element, newtag, model, subm, 'element') if new_element && tst2
 		  		end
 		  		
 		  		returntag = newtag
