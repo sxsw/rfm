@@ -253,29 +253,14 @@ module Rfm
 	      	begin
 						if _tag == self.tag
 		      		# Data cleaup
-							compactor_settings = compact?
-							(compactor_settings = compact?(top.model)) unless compactor_settings # prefer local settings, or use top settings.
+							compactor_settings = compact? || compact?(top.model)
+							#(compactor_settings = compact?(top.model)) unless compactor_settings # prefer local settings, or use top settings.
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compactor_settings
 						end
-	      	
-						# 	# EXPERIMENTAL: sending model PLUS submodel prefs to _create_accessors
-						# 	# Acquire submodel definition for create accessors (EXPERIMENTAL)
-						#   subm = model_elements?(_tag) || default_class.new
-						# 	accessor_options = (create_accessors? | create_accessors?(subm))
-						# 	if accessor_options.any?
-						# 		#puts ["CREATING_ACCESSORS #{accessor_options}"]
-						#   	object._create_accessors(accessor_options)
-						#   end	      		
-	      		
-						# 		# Create accessors is specified.
-						# 		# TODO: This creates redundant calls when elements close with the same model as current. But how to get the correct model when elements close that are attach:none  ???
-						# 		if create_accessors?.any?
-						# 			#puts ['CREATING_ACCESSORS', create_accessors?]
-						#     	object._create_accessors(create_accessors?)
-						#     end
-	      	
+
 	      		# Run callback of non-stored element.
-	      		callbacks[_tag].call if callbacks[_tag]
+	      		callable_callbacks = callbacks[_tag]
+	      		callable_callbacks.call if callable_callbacks
 		      	if _tag == self.tag
 							# End-element callbacks.
 							run_callback(_tag, self)
@@ -284,14 +269,14 @@ module Rfm
 							# 	elsif before_close?.is_a?(String)
 							# 		object.send :eval, before_close?
 							# 	end
-						end
+						#end
 						
 						# return true only if matching tags
-						if _tag == self.tag
+						#if _tag == self.tag
 							return true
 						end
-# 		      rescue
-# 		      	Rfm.log.warn "Error: end_element tag '#{_tag}' failed: #{$!}"
+					#rescue
+					#  Rfm.log.debug "Error: end_element tag '#{_tag}' failed: #{$!}"
 		      end
 		    end
 
@@ -616,7 +601,8 @@ module Rfm
 	    end
 	    
 	    def element_buffer?
-	      @element_buffer[:tag] && !@element_buffer[:tag].empty?
+	    	buff_tag = @element_buffer[:tag]
+	      buff_tag && !buff_tag.empty?
 	    end
 
 
