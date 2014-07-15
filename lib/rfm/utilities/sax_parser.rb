@@ -68,7 +68,6 @@ require 'stringio'
 
 module Rfm
 	module SaxParser
-		extend Forwardable
 
 		PARSERS = {}
 		
@@ -468,7 +467,6 @@ module Rfm
 		# At the end of the parsing run the handler instance, along with it's newly parsed object,
 		# is returned to the object that originally called for the parsing run (your script/app/whatever).
 		module Handler
-			extend Forwardable
 		
 			attr_accessor :stack, :template
 			

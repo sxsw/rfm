@@ -82,10 +82,6 @@ module Rfm
 		@@logger = obj
 	end
 	
-	
-	
-	extend self
-	
 	# 	DEFAULT_CLASS = CaseInsensitiveHash
 	# 	TEMPLATE_PREFIX = File.join(File.dirname(__FILE__), 'rfm/utilities/sax/')
 	# 	TEMPLATES = {
@@ -104,6 +100,8 @@ module Rfm
 			:fmpxmlresult => 'fmpxmlresult.yml',
 			:none => nil
 		}
-	}
-
+	}	
+	
+	extend self
+	
 end # Rfm
