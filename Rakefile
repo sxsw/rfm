@@ -18,6 +18,24 @@ RSpec::Core::RakeTask.new(:spec) do |task|
 	task.rspec_opts = '-O spec/spec.opts'
 end
 
+desc "run specs with all parser backends"	
+task :spec_multi do
+	require 'benchmark'
+	require 'yaml'
+	Benchmark.bm do |b|
+		[:ox, :libxml, :nokogiri, :rexml].each do |parser|
+			ENV['parser'] = parser.to_s
+			b.report("RSPEC with #{parser.to_s.upcase}\n") do
+				begin
+					Rake::Task["spec"].execute
+				rescue Exception
+					puts "ERROR in rspec with #{parser.to_s.upcase}: #{$!}"
+				end
+			end
+		end
+	end
+end
+
 require 'rdoc/task'
 Rake::RDocTask.new do |rdoc|
 	version = Rfm::VERSION
@@ -112,27 +130,6 @@ task :sample do
 	puts r.to_yaml
 	puts r.field_meta.to_yaml
 end	
-
-# Has not been updated to work with new parser in Rfm 3.0
-desc "run specs with all parser backends"	
-task :spec_multi do
-	require 'benchmark'
-	require 'yaml'
-	Benchmark.bm do |b|
-		[:ox, :libxml, :nokogiri, :rexml].each do |parser|
-			ENV['parser'] = parser.to_s
-			b.report("RSPEC with #{parser.to_s.upcase}\n") do
-				begin
-					Rake::Task["spec"].execute
-				rescue Exception
-					puts "ERROR in rspec with #{parser.to_s.upcase}: #{$!}"
-				end
-			end
-		end
-	end
-end
-
-
 
 desc "pre-commit, build gem, tag with version, push to git, push to rubygems.org"
 task :release do
