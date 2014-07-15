@@ -59,12 +59,10 @@ module Rfm
 	end
 	
 	def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout
-	def_delegators 'Rfm::SaxParser', :backend, :backend=
-	def_delegators 'Rfm::SaxParser::Handler', :get_backend
+	#def_delegators 'Rfm::SaxParser', :backend, :backend=
+	#def_delegators 'Rfm::SaxParser::Handler', :get_backend
 	def_delegators 'Rfm::Config', :config, :get_config, :config_clear
 	def_delegators 'Rfm::Resultset', :load_data
-	alias_method		:parser, :backend
-	alias_method		:parser=, :backend=
 	
 	def models(*args)
 		Rfm::Base
@@ -92,13 +90,16 @@ module Rfm
 	
 	extend self
 	
-	SaxParser.default_class = CaseInsensitiveHash
-	SaxParser.template_prefix = File.join(File.dirname(__FILE__), 'rfm/utilities/sax/')
-	SaxParser.templates.merge!({
+	#SaxParser.default_class = CaseInsensitiveHash
+	DEFAULT_CLASS = CaseInsensitiveHash
+	#SaxParser.template_prefix = File.join(File.dirname(__FILE__), 'rfm/utilities/sax/')
+	TEMPLATE_PREFIX = File.join(File.dirname(__FILE__), 'rfm/utilities/sax/')
+	#SaxParser.templates.merge!({
+	TEMPLATES = {
 		:fmpxmllayout => 'fmpxmllayout.yml',
 		:fmresultset => 'fmresultset.yml',
 		:fmpxmlresult => 'fmpxmlresult.yml',
 		:none => nil
-	})
+	}
 
 end # Rfm

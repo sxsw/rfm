@@ -75,42 +75,58 @@ module Rfm
 		# 	OPTIONS = [:name, :elements, :attributes, :attach, :attach_elements, :attach_attributes, :compact,
 		# 						:depth, :before_close, :each_before_close, :delimiter, :as_name, :initialize, :handler
 		# 						]
-		DEFAULTS = [:default_class, :backend, :text_label, :tag_translation, :shared_instance_var, :templates, :template_prefix]
+		#DEFAULTS = [:default_class, :backend, :text_label, :tag_translation, :shared_instance_var, :templates, :template_prefix]
 		
-
-		class << self
-			attr_accessor *DEFAULTS
+		# These defaults can be set here or anywhere above
+		PARSER_DEFAULTS = {
+			:default_class => Hash,
+			:backend => nil,
+			:text_label => 'text',
+			:tag_translation => lambda {|txt| txt.gsub(/\-/, '_').downcase},
+			:shared_instance_var => 'attributes',
+			:templates => {},
+			:template_prefix => nil
+		}
+		
+		# Convert defaults to constants, available to all sub classes/modules/instances.
+		PARSER_DEFAULTS.each do |k, v|
+			k = k.to_s.upcase
+			(const_set k, v) unless eval("defined? #{k}")   #(const_defined?(k) or defined?(k))
 		end
-	
-		### Default class MUST be a descendant of Hash or respond to hash methods !!!
-		(@default_class = Hash) unless defined? @default_class
-		
-		# Use :libxml, :nokogiri, :ox, :rexml, or anything else, if you want it to always default
-		# to something other than the fastest backend found.
-		# Nil will let the SaxParser decide.
-		(@backend = nil) unless defined? @backend
-		
-		(@text_label = 'text') unless defined? @text_label
-		
-		(@tag_translation = lambda {|txt| txt.gsub(/\-/, '_').downcase}) unless defined? @tag_translation
-		
-		(@shared_instance_var = 'attributes') unless defined? @shared_instance_var		
-			
-		(@templates = {}) unless defined? @templates
+
+		# 	class << self
+		# 		attr_accessor *DEFAULTS
+		# 	end
+		# 
+		# 	### Default class MUST be a descendant of Hash or respond to hash methods !!!
+		# 	(@default_class = Hash) unless defined? @default_class
+		# 	
+		# 	# Use :libxml, :nokogiri, :ox, :rexml, or anything else, if you want it to always default
+		# 	# to something other than the fastest backend found.
+		# 	# Nil will let the SaxParser decide.
+		# 	(@backend = nil) unless defined? @backend
+		# 	
+		# 	(@text_label = 'text') unless defined? @text_label
+		# 	
+		# 	(@tag_translation = lambda {|txt| txt.gsub(/\-/, '_').downcase}) unless defined? @tag_translation
+		# 	
+		# 	(@shared_instance_var = 'attributes') unless defined? @shared_instance_var		
+		# 		
+		# 	(@templates = {}) unless defined? @templates
 		
 		def self.parse(*args)
 			Handler.build(*args)
 		end
 
-		# Installs attribute accessors for defaults
-		def self.install_defaults(klass)
-			klass.extend Forwardable		    
-	    klass.def_delegators SaxParser, *DEFAULTS
-			class << klass
-				extend Forwardable
-				def_delegators SaxParser, *DEFAULTS
-			end		
-		end
+		# 	# Installs attribute accessors for defaults
+		# 	def self.install_defaults(klass)
+		# 		klass.extend Forwardable		    
+		# 	  klass.def_delegators SaxParser, *DEFAULTS
+		# 		class << klass
+		# 			extend Forwardable
+		# 			def_delegators SaxParser, *DEFAULTS
+		# 		end		
+		# 	end
 
 
 		# A Cursor instance is created for each element encountered in the parsing run
@@ -125,11 +141,12 @@ module Rfm
 		# you will always get the last object added to the stack. Think of a cursor as
 		# a framework of tools that accompany each element's build process.
 		class Cursor
+				extend Forwardable
 		
 		    #attr_accessor :model, :object, :tag, :parent, :top, :stack, :newtag, :callbacks
 		    attr_accessor :model, :object, :tag, :newtag, :callbacks, :handler, :parent  #, :top, :stack,
 		    
-				SaxParser.install_defaults(self)
+				#SaxParser.install_defaults(self)
 				
 				def_delegators :handler, :top, :stack
 		    
@@ -139,13 +156,13 @@ module Rfm
 			  	
 			  	case
 			  	when klass.is_a?(Class); klass
-			  	when (klass=klass.to_s) == ''; default_class
+			  	when (klass=klass.to_s) == ''; DEFAULT_CLASS
 			  	when klass[/::/]; eval(klass)
 			  	when defined?(klass); const_get(klass)  ## == 'constant'; const_get(klass)
 			  	#when defined?(klass); eval(klass) # This was for 'handler' pattern.
 			  	else
 			  		Rfm.log.warn "Could not find constant '#{klass}'"
-			  		default_class
+			  		DEFAULT_CLASS
 			  	end
 
 			  end
@@ -170,7 +187,7 @@ module Rfm
 		    # Not sure if this is still used.
 			  def receive_attribute(name, value)
 			  	#puts "\nRECEIVE_ATTR '#{name}' value '#{value}' object '#{object.class}' model '#{model.keys}' subm '#{submodel.keys}' tag '#{tag}' newtag '#{newtag}'"
-			  	new_att = default_class.new.tap{|att| att[name]=value}
+			  	new_att = DEFAULT_CLASS.new.tap{|att| att[name]=value}
 			  	assign_attributes(new_att, object, model, model)
 			  rescue
 			  	Rfm.log.warn "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
@@ -185,7 +202,7 @@ module Rfm
 					@newtag = _tag
 					
 		    	# Acquire submodel definition.
-		      subm = model_elements?(@newtag) || default_class.new
+		      subm = model_elements?(@newtag) || DEFAULT_CLASS.new
 		      
 		      # Get attachment_prefs
 		      prefs = attachment_prefs(model, subm, 'element')
@@ -244,7 +261,7 @@ module Rfm
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compactor_settings
 						end
 	      	
-						# 	# EXPERIMENTAL: sending modle PLUS submodel prefs to _create_accessors
+						# 	# EXPERIMENTAL: sending model PLUS submodel prefs to _create_accessors
 						# 	# Acquire submodel definition for create accessors (EXPERIMENTAL)
 						#   subm = model_elements?(_tag) || default_class.new
 						# 	accessor_options = (create_accessors? | create_accessors?(subm))
@@ -341,7 +358,7 @@ module Rfm
 					
 					
 					#puts ["\nCURSOR.attach_new_object 1", type, label, base_object.class, new_object.class, delimiter?(new_model), prefs, shared_var_name, create_accessors].join(', ')
-					base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
+					base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>DEFAULT_CLASS, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
 					#puts ["\nCURSOR.attach_new_object 2: #{base_object.class} with ", label, delimiter?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors]
 				end
 				
@@ -459,17 +476,18 @@ module Rfm
 		# At the end of the parsing run the handler instance, along with it's newly parsed object,
 		# is returned to the object that originally called for the parsing run (your script/app/whatever).
 		module Handler
+			extend Forwardable
 		
 			attr_accessor :stack, :template
 			
-			SaxParser.install_defaults(self)
+			#SaxParser.install_defaults(self)
 
 
 			###  Class Methods  ###
 
 			# Main parsing interface (also aliased at SaxParser.parse)
 			def self.build(io, template=nil, initial_object=nil, parser=nil, options={})
-				parser = parser || options[:parser] || backend
+				parser = parser || options[:parser] || BACKEND
 				parser = get_backend(parser)
 				(Rfm.log.info "Using backend parser: #{parser}, with template: #{template}") if options[:log_parser]
 			  parser.build(io, template, initial_object)
@@ -485,7 +503,7 @@ module Rfm
 		  end # self.included
 		  
 		  # Takes backend symbol and returns custom Handler class for specified backend.
-		  def self.get_backend(parser=backend)
+		  def self.get_backend(parser=BACKEND)
 				(parser = decide_backend) unless parser
 				if parser.is_a?(String) || parser.is_a?(Symbol)
 					parser_proc = PARSERS[parser.to_sym][:proc]
@@ -510,7 +528,7 @@ module Rfm
 		  
 		  def initialize(_template=nil, initial_object=nil)
 		  	initial_object = case
-		  		when initial_object.nil?; default_class.new
+		  		when initial_object.nil?; DEFAULT_CLASS.new
 		  		when initial_object.is_a?(Class); initial_object.new
 		  		when initial_object.is_a?(String) || initial_object.is_a?(Symbol); SaxParser.get_constant(initial_object).new
 		  		else initial_object
@@ -518,7 +536,7 @@ module Rfm
 		  	#initial_object = initial_object || default_class.new || {}
 		  	@stack = []
 		  	@template = get_template(_template)
-		  	@tag_translation = tag_translation
+		  	#@tag_translation = TAG_TRANSLATION
 		  	#(@template = @template.values[0]) if @template.size == 1
 		  	#y @template
 		  	init_element_buffer
@@ -538,12 +556,13 @@ module Rfm
 				# 	end
 				# 	(templates[name] = rslt) #unless dat == rslt
 				# The above works, but this is cleaner.
-				templates[name] = templates[name] && load_template(templates[name]) || load_template(name)
+				TEMPLATES[name] = TEMPLATES[name] && load_template(TEMPLATES[name]) || load_template(name)
 			end
 			
 			# Does the heavy-lifting of template retrieval.
 			def load_template(dat)
-				prefix = defined?(template_prefix) ? template_prefix : ''
+				prefix = defined?(TEMPLATE_PREFIX) ? TEMPLATE_PREFIX : ''
+				#puts "SaxParser::Handler#load_template... 'prefix' is #{prefix}"
 		  	rslt = case
 		  		when dat.is_a?(Hash); dat
 		  		when dat.to_s[/\.y.?ml$/i]; (YAML.load_file(File.join(*[prefix, dat].compact)))
@@ -551,7 +570,7 @@ module Rfm
 		  		when dat.to_s[/\.xml$/i]; self.class.build(File.join(*[prefix, dat].compact), nil, {'compact'=>true})
 		  		when dat.to_s[/^<.*>/i]; "Convert from xml to Hash - under construction"
 		  		when dat.is_a?(String); YAML.load dat
-		  		else default_class.new
+		  		else DEFAULT_CLASS.new
 		  	end
 			end
 		  
@@ -583,18 +602,18 @@ module Rfm
 			end
 			
 			def transform(name)
-				return name unless @tag_translation.is_a?(Proc)
+				return name unless TAG_TRANSLATION.is_a?(Proc)
 				#name.to_s.gsub(*@tag_translation)
-				@tag_translation.call(name.to_s)
+				TAG_TRANSLATION.call(name.to_s)
 			end
 			
 			def init_element_buffer
-		    @element_buffer = {:tag=>nil, :attributes=>default_class.new, :text=>''}
+		    @element_buffer = {:tag=>nil, :attributes=>DEFAULT_CLASS.new, :text=>''}
 			end
 			
 			def send_element_buffer
 		    if element_buffer?
-		    	(@element_buffer[:attributes][text_label] = @element_buffer[:text]) if @element_buffer[:text].to_s[/[^\s]/]
+		    	(@element_buffer[:attributes][TEXT_LABEL] = @element_buffer[:text]) if @element_buffer[:text].to_s[/[^\s]/]
           set_cursor cursor.receive_start_element(@element_buffer[:tag], @element_buffer[:attributes])
           init_element_buffer
 	      end
@@ -614,18 +633,18 @@ module Rfm
 					# This crazy thing transforms attribute keys to underscore (or whatever).
 					#attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
 					# This works but downcases all attribute names - not good.
-					attributes = default_class.new.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}
+					attributes = DEFAULT_CLASS.new.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}
 					# This doesn't work yet, but at least it wont downcase hash keys.
 					#attributes = Hash.new.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}
 				end
-				@element_buffer.merge!({:tag=>tag, :attributes => attributes || default_class.new})
+				@element_buffer.merge!({:tag=>tag, :attributes => attributes || DEFAULT_CLASS.new})
 			end
 			
 			# Add attribute to existing element.
 			def _attribute(name, value, *args)
 				#puts "Receiving attribute '#{name}' with value '#{value}'"
 				name = transform name
-				new_att = default_class.new.tap{|att| att[name]=value}
+				new_att = DEFAULT_CLASS.new.tap{|att| att[name]=value}
 				@element_buffer[:attributes].merge!(new_att)
 			end
 			

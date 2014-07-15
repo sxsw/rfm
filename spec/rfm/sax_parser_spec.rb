@@ -10,7 +10,8 @@ describe Rfm::SaxParser::Handler do
 		subject {HANDLER.allocate} #new('local_testing/sax_parse.yml')}
 		let(:input) { Rfm::SaxParser::Cursor.new({'elements'=>{'test'=>'True'}}, {:attribute=>'data'}, 'TEST', subject) }
 		before(:each) do
-			Rfm::SaxParser.template_prefix = '.'
+			#Rfm::SaxParser.template_prefix = '.'
+			Rfm::SaxParser::TEMPLATE_PREFIX = '.'
 			subject.stack = []
 		end
 		
