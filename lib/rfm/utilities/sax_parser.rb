@@ -71,14 +71,16 @@ module Rfm
 		extend Forwardable
 
 		PARSERS = {}
-		# OPTIONS constant not yet used.
-		# 	OPTIONS = [:name, :elements, :attributes, :attach, :attach_elements, :attach_attributes, :compact,
-		# 						:depth, :before_close, :each_before_close, :delimiter, :as_name, :initialize, :handler
-		# 						]
-		#DEFAULTS = [:default_class, :backend, :text_label, :tag_translation, :shared_instance_var, :templates, :template_prefix]
 		
-		# These defaults can be set here or anywhere above
-		PARSER_DEFAULTS = {
+		# These defaults can be set here or in any ancestor/enclosing module or class,
+		# as long as the defaults or their constants can be seen from this POV.
+		#
+		#	Default class MUST be a descendant of Hash or respond to hash methods !!!
+		# 	
+		# For backend, use :libxml, :nokogiri, :ox, :rexml, or anything else, if you want it to always default
+		# to something other than the fastest backend found.
+		# Using nil will let the SaxParser decide.
+		@parser_defaults = {
 			:default_class => Hash,
 			:backend => nil,
 			:text_label => 'text',
@@ -88,31 +90,21 @@ module Rfm
 			:template_prefix => nil
 		}
 		
+		# Merge any upper-level default definitions
+		if defined? PARSER_DEFAULTS
+			tmp_defaults = PARSER_DEFAULTS.dup
+			PARSER_DEFAULTS.replace(@parser_defaults).merge!(tmp_defaults)
+		else
+			PARSER_DEFAULTS = @parser_defaults
+		end
+
+		
 		# Convert defaults to constants, available to all sub classes/modules/instances.
 		PARSER_DEFAULTS.each do |k, v|
 			k = k.to_s.upcase
 			(const_set k, v) unless eval("defined? #{k}")   #(const_defined?(k) or defined?(k))
 		end
 
-		# 	class << self
-		# 		attr_accessor *DEFAULTS
-		# 	end
-		# 
-		# 	### Default class MUST be a descendant of Hash or respond to hash methods !!!
-		# 	(@default_class = Hash) unless defined? @default_class
-		# 	
-		# 	# Use :libxml, :nokogiri, :ox, :rexml, or anything else, if you want it to always default
-		# 	# to something other than the fastest backend found.
-		# 	# Nil will let the SaxParser decide.
-		# 	(@backend = nil) unless defined? @backend
-		# 	
-		# 	(@text_label = 'text') unless defined? @text_label
-		# 	
-		# 	(@tag_translation = lambda {|txt| txt.gsub(/\-/, '_').downcase}) unless defined? @tag_translation
-		# 	
-		# 	(@shared_instance_var = 'attributes') unless defined? @shared_instance_var		
-		# 		
-		# 	(@templates = {}) unless defined? @templates
 		
 		def self.parse(*args)
 			Handler.build(*args)

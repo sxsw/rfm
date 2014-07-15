@@ -59,8 +59,6 @@ module Rfm
 	end
 	
 	def_delegators 'Rfm::Factory', :servers, :server, :db, :database, :layout
-	#def_delegators 'Rfm::SaxParser', :backend, :backend=
-	#def_delegators 'Rfm::SaxParser::Handler', :get_backend
 	def_delegators 'Rfm::Config', :config, :get_config, :config_clear
 	def_delegators 'Rfm::Resultset', :load_data
 	
@@ -73,9 +71,7 @@ module Rfm
 		Rfm::Base
 		Rfm::Factory.modelize(*args)
 	end
-	
-	#attr_accessor :log
-	
+		
 	def logger
 		@@logger ||= get_config[:logger] || Logger.new(STDOUT).tap {|l| l.formatter = proc {|severity, datetime, progname, msg| "#{datetime}: Rfm-#{severity} #{msg}\n"}}
 	end
@@ -90,16 +86,24 @@ module Rfm
 	
 	extend self
 	
-	#SaxParser.default_class = CaseInsensitiveHash
-	DEFAULT_CLASS = CaseInsensitiveHash
-	#SaxParser.template_prefix = File.join(File.dirname(__FILE__), 'rfm/utilities/sax/')
-	TEMPLATE_PREFIX = File.join(File.dirname(__FILE__), 'rfm/utilities/sax/')
-	#SaxParser.templates.merge!({
-	TEMPLATES = {
-		:fmpxmllayout => 'fmpxmllayout.yml',
-		:fmresultset => 'fmresultset.yml',
-		:fmpxmlresult => 'fmpxmlresult.yml',
-		:none => nil
+	# 	DEFAULT_CLASS = CaseInsensitiveHash
+	# 	TEMPLATE_PREFIX = File.join(File.dirname(__FILE__), 'rfm/utilities/sax/')
+	# 	TEMPLATES = {
+	# 		:fmpxmllayout => 'fmpxmllayout.yml',
+	# 		:fmresultset => 'fmresultset.yml',
+	# 		:fmpxmlresult => 'fmpxmlresult.yml',
+	# 		:none => nil
+	# 	}
+	
+	PARSER_DEFAULTS = {
+		:default_class => CaseInsensitiveHash,
+		:template_prefix => File.join(File.dirname(__FILE__), 'rfm/utilities/sax/'),
+		:templates => {
+			:fmpxmllayout => 'fmpxmllayout.yml',
+			:fmresultset => 'fmresultset.yml',
+			:fmpxmlresult => 'fmpxmlresult.yml',
+			:none => nil
+		}
 	}
 
 end # Rfm
