@@ -48,7 +48,7 @@
 #   attributes:									array of attribute hashes {'name'=>'attribute-name'} UC
 #   class: NOT USED							string-or-class: class name for new element
 #   depth:											integer: depth-of-default-class UC
-#		attach:											string: shared, _shared_name, private, hash, array, cursor, none - attach this element or attribute to parent. 
+#		attach:											string: shared, _shared_var_name, private, hash, array, cursor, none - attach this element or attribute to parent. 
 #		attach_elements:						string: same as 'attach' - for all subelements, unless they have their own 'attach' specification
 #		attach_attributes:					string: same as 'attach' - for all attributes, unless they have their own 'attach' specification
 #   before_close:								symbol (method) or string (code): run a model method before closing tag, passing in #cursor. String is eval'd in context of object.
@@ -178,15 +178,15 @@ module Rfm
 		    # Not sure if this is still used.
 			  def receive_attribute(name, value)
 			  	#puts "\nRECEIVE_ATTR '#{name}' value '#{value}' object '#{object.class}' model '#{model.keys}' subm '#{submodel.keys}' tag '#{tag}' newtag '#{newtag}'"
-			  	new_att = DEFAULT_CLASS.new.tap{|att| att[name]=value}
-			  	assign_attributes(new_att, object, model, model)
+			  	new_att = DEFAULT_CLASS[name, value]    #.new.tap{|att| att[name]=value}
+			  	assign_attributes(new_att, object, model, model)  #model_attributes?(name) || model
 			  rescue
 			  	Rfm.log.warn "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
 		        
 		    def receive_start_element(_tag, _attributes)		    	
-		    	
-		    	#puts ['START', _tag, object.class, model]
+		    	puts ["\nRECEIVE_START_ELEMENT #{_tag}", "CurrentObject: #{object.class}", "CurrentTag: #{self.tag}", "CurrentModel: #{model['name']}", "BeforeClose: #{before_close?}", "Compact: #{compact?}"]
+		    	#puts ["\nRECEIVE_START_ELEMENT", _tag, object.class, model['name']]
 		    	# Set newtag for other methods to use during the start_el run.
 					@newtag = _tag
 					
@@ -207,6 +207,7 @@ module Rfm
 		    		#puts "Assigning attributes for attach:none on #{newtag}"
 		    		# This passes current model, since that is the model that will be accepting thiese attributes, if any.
 		    		assign_attributes(_attributes, object, model, subm)
+		    				    		
 		    		return		      
 		      
 		      when (code = handler?(subm); code) 
@@ -249,7 +250,7 @@ module Rfm
 		    end # start_el
 		
 		    def receive_end_element(_tag)
-		    	#puts ["\nEND_ELEMENT #{_tag}", "CurrentObject: #{object.class}", "CurrentTag: #{self.tag}", "CurrentModel: #{model}", "BeforeClose: #{before_close?}", "Compact: #{compact?}"]
+		    	puts ["\nRECEIVE_END_ELEMENT #{_tag}", "CurrentObject: #{object.class}", "CurrentTag: #{self.tag}", "CurrentModel: #{model['name']}", "BeforeClose: #{before_close?}", "Compact: #{compact?}"]
 	      	begin
 						if _tag == self.tag
 		      		# Data cleaup
@@ -514,13 +515,10 @@ module Rfm
 		  		when initial_object.is_a?(String) || initial_object.is_a?(Symbol); SaxParser.get_constant(initial_object).new
 		  		else initial_object
 		  	end
-		  	#initial_object = initial_object || default_class.new || {}
 		  	@stack = []
 		  	@template = get_template(_template)
-		  	#@tag_translation = TAG_TRANSLATION
-		  	#(@template = @template.values[0]) if @template.size == 1
-		  	#y @template
-		  	init_element_buffer
+
+		  	#init_element_buffer
 		    set_cursor Cursor.new(@template, initial_object, 'top', self)
 		  end
 		  
@@ -588,29 +586,29 @@ module Rfm
 				TAG_TRANSLATION.call(name.to_s)
 			end
 			
-			def init_element_buffer
-		    @element_buffer = {:tag=>nil, :attributes=>DEFAULT_CLASS.new, :text=>''}
-			end
-			
-			def send_element_buffer
-		    if element_buffer?
-		    	(@element_buffer[:attributes][TEXT_LABEL] = @element_buffer[:text]) if @element_buffer[:text].to_s[/[^\s]/]
-          set_cursor cursor.receive_start_element(@element_buffer[:tag], @element_buffer[:attributes])
-          init_element_buffer
-	      end
-	    end
-	    
-	    def element_buffer?
-	    	buff_tag = @element_buffer[:tag]
-	      buff_tag && !buff_tag.empty?
-	    end
+			# def init_element_buffer
+			#   @element_buffer = {:tag=>nil, :attributes=>DEFAULT_CLASS.new, :text=>''}
+			# end
+			# 
+			# def send_element_buffer
+			#   if element_buffer?
+			#   	(@element_buffer[:attributes][TEXT_LABEL] = @element_buffer[:text]) if @element_buffer[:text].to_s[/[^\s]/]
+			#     set_cursor cursor.receive_start_element(@element_buffer[:tag], @element_buffer[:attributes])
+			#     init_element_buffer
+			#   end
+			# end
+			# 
+			# def element_buffer?
+			# 	buff_tag = @element_buffer[:tag]
+			#   buff_tag && !buff_tag.empty?
+			# end
 
 
 		  # Add a node to an existing element.
 			def _start_element(tag, attributes=nil, *args)
 				#puts ["_START_ELEMENT", tag, attributes, args].to_yaml # if tag.to_s.downcase=='fmrestulset'
 				tag = transform tag
-				send_element_buffer if element_buffer?
+				#send_element_buffer if element_buffer?
 				if attributes
 					# This crazy thing transforms attribute keys to underscore (or whatever).
 					#attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
@@ -619,29 +617,32 @@ module Rfm
 					# This doesn't work yet, but at least it wont downcase hash keys.
 					#attributes = Hash.new.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}
 				end
-				@element_buffer.merge!({:tag=>tag, :attributes => attributes || DEFAULT_CLASS.new})
+				#@element_buffer.merge!({:tag=>tag, :attributes => attributes || DEFAULT_CLASS.new})
+				set_cursor cursor.receive_start_element(tag, attributes)
 			end
 			
 			# Add attribute to existing element.
 			def _attribute(name, value, *args)
 				#puts "Receiving attribute '#{name}' with value '#{value}'"
 				name = transform name
-				new_att = DEFAULT_CLASS.new.tap{|att| att[name]=value}
-				@element_buffer[:attributes].merge!(new_att)
+				#new_att = DEFAULT_CLASS[name, value]   #.new.tap{|att| att[name]=value}
+				#@element_buffer[:attributes].merge!(new_att)
+				cursor.receive_attribute(name, value)
 			end
 			
 			# Add 'content' attribute to existing element.
 			def _text(value, *args)
 				#puts "Receiving text '#{value}'"
 				return unless value.to_s[/[^\s]/]
-			  @element_buffer[:text] << value
+			  #@element_buffer[:text] << value
+			  cursor.receive_attribute(TEXT_LABEL, value)
 			end
 			
 			# Close out an existing element.
 			def _end_element(tag, *args)
 				tag = transform tag
 				#puts "Receiving end_element '#{tag}'"
-	      send_element_buffer
+	      #send_element_buffer
 	      cursor.receive_end_element(tag) and dump_cursor
 			end
 			
