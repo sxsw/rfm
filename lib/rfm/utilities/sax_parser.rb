@@ -46,7 +46,7 @@
 #   initialize:									array: initialize new objects with this code [:method, params] instead of defaulting to 'allocate'
 #   elements:										array of element hashes [{'name'=>'element-tag'},...]
 #   attributes:									array of attribute hashes {'name'=>'attribute-name'} UC
-#   class: NOT USED							string-or-class: class name for new element
+#   class:                      string-or-class: class name for new element
 #   depth:											integer: depth-of-default-class UC
 #		attach:											string: shared, _shared_var_name, private, hash, array, cursor, none - attach this element or attribute to parent. 
 #		attach_elements:						string: same as 'attach' - for all subelements, unless they have their own 'attach' specification
@@ -54,8 +54,8 @@
 #   before_close:								symbol (method) or string (code): run a model method before closing tag, passing in #cursor. String is eval'd in context of object.
 #   as_name:										string: store element or attribute keyed as specified
 #   delimiter:									string: attribute/hash key to delineate objects with identical tags
-#		create_accessors: UC				string or array: all, private, shared, hash, none
-#		accessor:	UC								string: all, private, shared, hash, none
+#		create_accessors:   				string or array: all, private, shared, hash, none
+#		accessor:   								string: all, private, shared, hash, none
 #		handler:										array: call an object with any params [obj, method, params]. Default attach prefs are 'cursor'.
 #
 #
@@ -135,7 +135,7 @@ module Rfm
 				extend Forwardable
 		
 		    #attr_accessor :model, :object, :tag, :parent, :top, :stack, :newtag, :callbacks
-		    attr_accessor :model, :object, :tag, :newtag, :callbacks, :handler, :parent  #, :top, :stack,
+		    attr_accessor :model, :object, :tag, :newtag, :callbacks, :handler, :parent, :level  #, :top, :stack,
 		    
 				#SaxParser.install_defaults(self)
 				
@@ -167,49 +167,61 @@ module Rfm
 		    	self
 		    end
 		    
-		    def handler
-		    	@handler
-		    end
+		    # Why is this here?
+        # def handler
+        #   @handler
+        # end
+        
+        def model
+          @model || @parent.model
+        end
+        
+        def object
+          @object || @parent.object
+        end
 		    
 		    
 		    
 		    #####  SAX METHODS  #####
 		    
-		    # Not sure if this is still used.
+		    # Receive a single attribute (any named attribute or text)
 			  def receive_attribute(name, value)
-			  	#puts "\nRECEIVE_ATTR '#{name}' value '#{value}' object '#{object.class}' model '#{model.keys}' subm '#{submodel.keys}' tag '#{tag}' newtag '#{newtag}'"
+			  	puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 			  	new_att = DEFAULT_CLASS[name, value]    #.new.tap{|att| att[name]=value}
-			  	assign_attributes(new_att, object, model, model)  #model_attributes?(name) || model
+			  	assign_attributes(new_att, object, model, model_elements?(@tag) || model)
 			  rescue
 			  	Rfm.log.warn "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
-		        
+			  
 		    def receive_start_element(_tag, _attributes)		    	
-		    	puts ["\nRECEIVE_START_ELEMENT #{_tag}", "CurrentObject: #{object.class}", "CurrentTag: #{self.tag}", "CurrentModel: #{model['name']}", "BeforeClose: #{before_close?}", "Compact: #{compact?}"]
+		    	puts ["\nRECEIVE_START_ELEMENT '#{_tag}'", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 		    	#puts ["\nRECEIVE_START_ELEMENT", _tag, object.class, model['name']]
 		    	# Set newtag for other methods to use during the start_el run.
 					@newtag = _tag
 					
 		    	# Acquire submodel definition.
-		      subm = model_elements?(@newtag) || DEFAULT_CLASS.new
+		      subm = model_elements?(_tag) || DEFAULT_CLASS.new
 		      
 		      # Get attachment_prefs
 		      prefs = attachment_prefs(model, subm, 'element')
 		      
 		      #puts "RECEIVE_START_ELEMENT: _tag '#{_tag}'\ncurrent object '#{object.class}'\ncursor_model '#{model}'\ncursor_submodel '#{subm.to_yaml}', attributes '#{_attributes.to_a}'"
 		      
-		      case
+		      new_cursor = case
 		      
 		      # Clean-up and return if new element is not to be attached.
 		    	when prefs == 'none'
 		    		# Set callbacks, since object & model of new element won't be stored.
-		    		callbacks[_tag] = lambda {run_callback(_tag, self, subm)}
+		    		@callbacks[_tag] = lambda {run_callback(_tag, self, subm)}
 		    		#puts "Assigning attributes for attach:none on #{newtag}"
-		    		# This passes current model, since that is the model that will be accepting thiese attributes, if any.
-		    		assign_attributes(_attributes, object, model, subm)
-		    				    		
-		    		return		      
-		      
+		    		# This passes current model, since that is the model that will be accepting these attributes, if any.
+		    		assign_attributes(_attributes, object, model, subm)   
+		    		   
+		        Cursor.new(nil, nil, _tag, @handler)
+		        
+		        #nil
+		        
+		      # Do this if a new-element-handler exists.
 		      when (code = handler?(subm); code) 
 		      	obj = eval(code[0].to_s)
 		      	mthd = code[1].to_s
@@ -217,7 +229,9 @@ module Rfm
 		      	new_element = obj.send(mthd, prms)
 		      	#puts ["\nIF_HANDLER", code, new_element.class, new_element]
 		      	
-		      when (
+		      	Cursor.new(subm, new_element, _tag, handler)
+		      else # was when
+		        (
 		      	tst1 = _attributes && attach_attributes?(subm) != 'none'
 		      	tst2 = prefs != 'cursor'
 		      	
@@ -242,17 +256,20 @@ module Rfm
 	
 						# Attach new element to current object, but only if prefs != 'cursor'.
 						attach_new_object(object, new_element, newtag, model, subm, 'element') if new_element && tst2
+						
+						Cursor.new(subm, new_element, _tag, handler)
 		  		end
 		  		
-		  		returntag = newtag
-		  		self.newtag = nil
-		      Cursor.new(subm, new_element, returntag, handler)
+		  		#returntag = newtag
+		  		@newtag = nil
+		  		
+		      return new_cursor
 		    end # start_el
 		
 		    def receive_end_element(_tag)
-		    	puts ["\nRECEIVE_END_ELEMENT #{_tag}", "CurrentObject: #{object.class}", "CurrentTag: #{self.tag}", "CurrentModel: #{model['name']}", "BeforeClose: #{before_close?}", "Compact: #{compact?}"]
+		    	puts ["\nRECEIVE_END_ELEMENT '#{_tag}'", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 	      	begin
-						if _tag == self.tag
+						if _tag == self.tag && !@model.nil?
 		      		# Data cleaup
 							compactor_settings = compact? || compact?(top.model)
 							#(compactor_settings = compact?(top.model)) unless compactor_settings # prefer local settings, or use top settings.
@@ -262,7 +279,7 @@ module Rfm
 	      		# Run callback of non-stored element.
 	      		callable_callbacks = callbacks[_tag]
 	      		callable_callbacks.call if callable_callbacks
-		      	if _tag == self.tag
+		      	if _tag == self.tag && !@model.nil?
 							# End-element callbacks.
 							run_callback(_tag, self)
 							# 	if before_close?.is_a? Symbol
@@ -565,6 +582,7 @@ module Rfm
 				if args.is_a? Cursor
 					stack.push(args)
 					cursor.parent = stack[-2] || stack[0] #_stack[0] so methods called on parent won't bomb.
+					cursor.instance_eval do; @level = parent.level.to_i + 1; end
 					# Cursor is no longer storing top or stack, it is delegating those mehthods to main handler.
 					#cursor.top = stack[0]
 					#cursor.stack = stack

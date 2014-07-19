@@ -49,9 +49,9 @@ module Rfm
 
     
     class << self
-    	def load_data(data)
+    	def load_data(data, object=self.new)
     		Rfm::Connection
-    		Rfm::SaxParser.parse(data, :fmresultset, Rfm::Resultset.new)
+    		Rfm::SaxParser.parse(data, :fmresultset, object)
     	end
     end
     
