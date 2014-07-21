@@ -167,7 +167,7 @@ module Rfm
 		    
 		    def initialize(_tag, _handler, _parent=nil, caller_binding=nil)
 		    #def initialize(_model, _obj, _tag, _handler)
-		    	@tag     = _tag
+		    	@tag     = @newtag = _tag
 		    	@handler = _handler
 		    	@parent = _parent || self
 		    	@level = @parent.level.to_i + 1
@@ -199,6 +199,7 @@ module Rfm
 			      const.send(*init.compact)	    		
 		    	end
 		    	
+		    	@newtag = nil
 		    	self
 		    end
         
@@ -241,7 +242,7 @@ module Rfm
 		      
 		      # TODO: _attributes won't work in here - it's out of context.
 		      new_cursor.instance_exec(_attributes) do |_attributes|
-			      
+			      @newtag=@tag
 			      case
 			      
 			    	when @element_attachment_prefs == 'none'
@@ -249,7 +250,7 @@ module Rfm
 			        
 			      when handler?(@newmodel)
 
-			      else # was when
+			      else
 			        (
 			      	tst1 = _attributes && attach_attributes?(@newmodel) != 'none'
 			      	tst2 = @element_attachment_prefs != 'cursor'
@@ -262,9 +263,10 @@ module Rfm
 				      assign_attributes(_attributes, object, model, @newmodel) if tst1
 		
 							# Attach new element to current object, but only if prefs != 'cursor'.
-							attach_new_object(@parent.object, object, @tag, model, @newmodel, 'element') if object && tst2
+							attach_new_object(@parent.object, @object, @tag, @parent.model, @newmodel, 'element') if @object && tst2
 							
 			  		end
+			  		@newtag=nil
 		  		end
 		  				  		
 		  		#returntag = newtag
@@ -594,7 +596,7 @@ module Rfm
 					stack.push(args)
 					#cursor.parent = stack[-2] || stack[0] #stack[0] so methods called on parent won't bomb.
 					#cursor.instance_eval do; @level = parent.level.to_i + 1; end  # Added for debugging.
-					@stack_debug.push(args.dup.tap(){|c| c.handler = nil; c.parent = c.parent.tag})
+					@stack_debug.push(args.dup.tap(){|c| c.handler = c.handler.object_id; c.parent = c.parent.tag})
           #puts "#{cursor.level}#{'  ' * cursor.level.to_i}#{cursor.tag} #{cursor.object.class} #{cursor.model['name']}"
 				end
 				cursor
