@@ -167,7 +167,8 @@ module Rfm
 		    
 		    def initialize(_tag, _handler, _parent=nil, caller_binding=nil)
 		    #def initialize(_model, _obj, _tag, _handler)
-		    	@tag     = @newtag = _tag
+		    	@tag     =  _tag
+		    	#@newtag = @tag
 		    	@handler = _handler
 		    	@parent = _parent || self
 		    	@level = @parent.level.to_i + 1
@@ -199,7 +200,7 @@ module Rfm
 			      const.send(*init.compact)	    		
 		    	end
 		    	
-		    	@newtag = nil
+		    	#@newtag = nil
 		    	self
 		    end
         
@@ -229,7 +230,7 @@ module Rfm
 		    	#puts _tag; return    	
 
 		    	# Set newtag for other methods to use during the start_el run.
-					@newtag = _tag
+					#@newtag = _tag
 					
 					# new_element_handler = handler?(model_elements?(@newtag)) || nil
 					# if new_element_handler
@@ -242,7 +243,7 @@ module Rfm
 		      
 		      # TODO: _attributes won't work in here - it's out of context.
 		      new_cursor.instance_exec(_attributes) do |_attributes|
-			      @newtag=@tag
+			      #@newtag=@tag
 			      case
 			      
 			    	when @element_attachment_prefs == 'none'
@@ -266,11 +267,11 @@ module Rfm
 							attach_new_object(@parent.object, @object, @tag, @parent.model, @newmodel, 'element') if @object && tst2
 							
 			  		end
-			  		@newtag=nil
+			  		#@newtag=nil
 		  		end
 		  				  		
 		  		#returntag = newtag
-		  		@newtag = nil
+		  		#@newtag = nil
 		  		
 		      return new_cursor
 		    end # start_el
@@ -594,10 +595,7 @@ module Rfm
 			def set_cursor(args) # cursor_object
 				if args.is_a? Cursor
 					stack.push(args)
-					#cursor.parent = stack[-2] || stack[0] #stack[0] so methods called on parent won't bomb.
-					#cursor.instance_eval do; @level = parent.level.to_i + 1; end  # Added for debugging.
-					@stack_debug.push(args.dup.tap(){|c| c.handler = c.handler.object_id; c.parent = c.parent.tag})
-          #puts "#{cursor.level}#{'  ' * cursor.level.to_i}#{cursor.tag} #{cursor.object.class} #{cursor.model['name']}"
+					#@stack_debug.push(args.dup.tap(){|c| c.handler = c.handler.object_id; c.parent = c.parent.tag})
 				end
 				cursor
 			end
@@ -615,24 +613,6 @@ module Rfm
 				#name.to_s.gsub(*@tag_translation)
 				TAG_TRANSLATION.call(name.to_s)
 			end
-			
-			# def init_element_buffer
-			#   @element_buffer = {:tag=>nil, :attributes=>DEFAULT_CLASS.new, :text=>''}
-			# end
-			# 
-			# def send_element_buffer
-			#   if element_buffer?
-			#   	(@element_buffer[:attributes][TEXT_LABEL] = @element_buffer[:text]) if @element_buffer[:text].to_s[/[^\s]/]
-			#     set_cursor cursor.receive_start_element(@element_buffer[:tag], @element_buffer[:attributes])
-			#     init_element_buffer
-			#   end
-			# end
-			# 
-			# def element_buffer?
-			# 	buff_tag = @element_buffer[:tag]
-			#   buff_tag && !buff_tag.empty?
-			# end
-
 
 		  # Add a node to an existing element.
 			def _start_element(tag, attributes=nil, *args)
