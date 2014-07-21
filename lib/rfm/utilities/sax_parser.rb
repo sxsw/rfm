@@ -192,9 +192,9 @@ module Rfm
 			  	#puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 			  	new_att = DEFAULT_CLASS[name, value]    #.new.tap{|att| att[name]=value}
 			  	
-			  	subm = model_elements?(@tag)
-			  	subm = (subm && subm.size > 1 ? subm : model)
-			  	assign_attributes(new_att, object, model, subm)
+					# subm = model_elements?(@tag)
+					# subm = (subm && subm.size > 1 ? subm : model)
+			  	assign_attributes(new_att, object, model, @newmodel)
 			  rescue
 			  	Rfm.log.warn "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
@@ -218,7 +218,7 @@ module Rfm
 		      # Clean-up and return if new element is not to be attached.
 		    	when prefs == 'none'
 		    		# Set callbacks, since object & model of new element won't be stored.
-		    		@callbacks[_tag] = lambda {run_callback(_tag, self, subm)}
+		    		#@callbacks[_tag] = lambda {run_callback(_tag, self, subm)}
 		    		#puts "Assigning attributes for attach:none on #{newtag}"
 		    		# This passes current model, since that is the model that will be accepting these attributes, if any.
 		    		assign_attributes(_attributes, object, model, subm)   
@@ -266,6 +266,8 @@ module Rfm
 						Cursor.new(subm, new_element, _tag, handler)
 		  		end
 		  		
+		  		new_cursor.newmodel = subm
+		  		
 		  		#returntag = newtag
 		  		@newtag = nil
 		  		
@@ -304,7 +306,7 @@ module Rfm
 		      end
 		    end
 
-				def run_callback(_tag, _cursor=self, _model=_cursor.model, _object=_cursor.object )
+				def run_callback(_tag, _cursor=self, _model=_cursor.newmodel, _object=_cursor.object )
 	    		callback = before_close?(_model)
 	    		#puts ["\nRUN_CALLBACK", _tag, _cursor.tag, _object.class, callback]
 	      	if callback.is_a? Symbol
