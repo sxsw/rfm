@@ -57,6 +57,8 @@
 #		create_accessors:   				string or array: all, private, shared, hash, none
 #		accessor:   								string: all, private, shared, hash, none
 #		handler:										array: call an object with any params [obj, method, params]. Default attach prefs are 'cursor'.
+#																Use this when all new-element operations should be offloaded to custom class or module.
+#																Should return an instance of new object.
 #
 #
 # ####  See below for notes & todos  ####
@@ -135,7 +137,8 @@ module Rfm
 				extend Forwardable
 		
 		    #attr_accessor :model, :object, :tag, :parent, :top, :stack, :newtag, :callbacks
-		    attr_accessor :model, :object, :tag, :newtag, :callbacks, :handler, :parent, :level  #, :top, :stack,
+		    attr_accessor :model, :newmodel, :object, :tag, :newtag, :callbacks, :handler, :parent, :level
+		    # :level is for debugging/experimentation only.
 		    
 				#SaxParser.install_defaults(self)
 				
@@ -186,15 +189,18 @@ module Rfm
 		    
 		    # Receive a single attribute (any named attribute or text)
 			  def receive_attribute(name, value)
-			  	puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
+			  	#puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 			  	new_att = DEFAULT_CLASS[name, value]    #.new.tap{|att| att[name]=value}
-			  	assign_attributes(new_att, object, model, model_elements?(@tag) || model)
+			  	
+			  	subm = model_elements?(@tag)
+			  	subm = (subm && subm.size > 1 ? subm : model)
+			  	assign_attributes(new_att, object, model, subm)
 			  rescue
 			  	Rfm.log.warn "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
 			  
 		    def receive_start_element(_tag, _attributes)		    	
-		    	puts ["\nRECEIVE_START_ELEMENT '#{_tag}'", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
+		    	#puts ["\nRECEIVE_START_ELEMENT '#{_tag}'", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 		    	#puts ["\nRECEIVE_START_ELEMENT", _tag, object.class, model['name']]
 		    	# Set newtag for other methods to use during the start_el run.
 					@newtag = _tag
@@ -267,7 +273,7 @@ module Rfm
 		    end # start_el
 		
 		    def receive_end_element(_tag)
-		    	puts ["\nRECEIVE_END_ELEMENT '#{_tag}'", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
+		    	#puts ["\nRECEIVE_END_ELEMENT '#{_tag}'", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 	      	begin
 						if _tag == self.tag && !@model.nil?
 		      		# Data cleaup
@@ -279,7 +285,7 @@ module Rfm
 	      		# Run callback of non-stored element.
 	      		callable_callbacks = callbacks[_tag]
 	      		callable_callbacks.call if callable_callbacks
-		      	if _tag == self.tag && !@model.nil?
+		      	if _tag == self.tag #&& !@model.nil?
 							# End-element callbacks.
 							run_callback(_tag, self)
 							# 	if before_close?.is_a? Symbol
@@ -287,10 +293,10 @@ module Rfm
 							# 	elsif before_close?.is_a?(String)
 							# 		object.send :eval, before_close?
 							# 	end
-						#end
+						end
 						
 						# return true only if matching tags
-						#if _tag == self.tag
+						if _tag == self.tag
 							return true
 						end
 					#rescue
@@ -477,7 +483,7 @@ module Rfm
 		# is returned to the object that originally called for the parsing run (your script/app/whatever).
 		module Handler
 		
-			attr_accessor :stack, :template
+			attr_accessor :stack, :template, :stack_debug
 			
 			#SaxParser.install_defaults(self)
 
@@ -493,7 +499,7 @@ module Rfm
 		  end
 		  
 		  def self.included(base)
-		  	# Add a .build method to the custom handler class, when the generic Handler module is included.
+		  	# Add a .build method to the custom handler instance, when the generic Handler module is included.
 		    def base.build(io, template=nil, initial_object=nil)
 		  		handler = new(template, initial_object)
 		  		handler.run_parser(io)
@@ -533,6 +539,7 @@ module Rfm
 		  		else initial_object
 		  	end
 		  	@stack = []
+		  	@stack_debug=[]
 		  	@template = get_template(_template)
 
 		  	#init_element_buffer
@@ -581,11 +588,10 @@ module Rfm
 			def set_cursor(args) # cursor_object
 				if args.is_a? Cursor
 					stack.push(args)
-					cursor.parent = stack[-2] || stack[0] #_stack[0] so methods called on parent won't bomb.
-					cursor.instance_eval do; @level = parent.level.to_i + 1; end
-					# Cursor is no longer storing top or stack, it is delegating those mehthods to main handler.
-					#cursor.top = stack[0]
-					#cursor.stack = stack
+					cursor.parent = stack[-2] || stack[0] #stack[0] so methods called on parent won't bomb.
+					cursor.instance_eval do; @level = parent.level.to_i + 1; end  # Added for debugging.
+					@stack_debug.push(args.dup.tap(){|c| c.handler = nil; c.parent = c.parent.tag})
+          #puts "#{cursor.level}#{'  ' * cursor.level.to_i}#{cursor.tag} #{cursor.object.class} #{cursor.model['name']}"
 				end
 				cursor
 			end

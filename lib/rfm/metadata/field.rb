@@ -64,7 +64,9 @@ module Rfm
       # Initializes a field object. You'll never need to do this. Instead, get your Field objects from
       # Resultset::field_meta
 			def initialize(attributes)
-				_attach_as_instance_variables attributes
+				if attributes && attributes.size > 0
+					_attach_as_instance_variables attributes
+				end
 				self
 			end
     
@@ -88,9 +90,9 @@ module Rfm
         	end
         else nil
         end
-#       rescue
-#         puts("ERROR in Field#coerce:", name, value, result, $!)
-#         nil
+      rescue
+        puts("ERROR in Field#coerce:", name, value, result, resultset.timestamp_format, $!)
+        nil
       end
       
       def get_mapped_name
