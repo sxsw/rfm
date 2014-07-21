@@ -135,10 +135,14 @@ module Rfm
 		# a framework of tools that accompany each element's build process.
 		class Cursor
 				extend Forwardable
-		
-		    #attr_accessor :model, :object, :tag, :parent, :top, :stack, :newtag, :callbacks
-		    attr_accessor :model, :newmodel, :object, :tag, :newtag, :callbacks, :handler, :parent, :level
-		    # :level is for debugging/experimentation only.
+
+				# model - currently active model (rename to current_model)
+				# newmodel - model of this cursor's tag (rename to local_model)
+				# newtag - incoming tag of yet-to-be-created cursor. Get rid of this if you can.
+				# element_attachment_prefs - local object's attachment prefs based on local_model and current_model.
+				# level - for debugging/experimentation only.
+		    attr_accessor :model, :newmodel, :object, :tag, :newtag, :handler, :parent, :level, :element_attachment_prefs
+		    
 		    
 				#SaxParser.install_defaults(self)
 				
@@ -161,26 +165,49 @@ module Rfm
 
 			  end
 		    
-		    def initialize(_model, _obj, _tag, _handler)
+		    def initialize(_tag, _handler, _parent=nil, caller_binding=nil)
+		    #def initialize(_model, _obj, _tag, _handler)
 		    	@tag     = _tag
-		    	@model   = _model
-		    	@object  = _obj       #_obj.is_a?(String) ? get_constant(_obj).new : _obj
-		    	@callbacks = {}
 		    	@handler = _handler
+		    	@parent = _parent || self
+		    	@level = @parent.level.to_i + 1
+		    	@newmodel = model_elements?(@tag) || DEFAULT_CLASS.new
+		    	@element_attachment_prefs = attachment_prefs(@parent.model, @newmodel, 'element')
+
+		    	@model = case
+		    	when @tag == '__TOP__'; @handler.template
+		    	when @element_attachment_prefs == 'none' ; nil
+		    	else @newmodel
+		    	end
+
+		    	@object = case
+		    	when @tag == '__TOP__'; @handler.initial_object
+		    	when @element_attachment_prefs == 'none'; nil
+	    		when (code = handler?(@newmodel); code);
+						obj = eval(code[0].to_s, caller_binding)
+						mthd = code[1].to_s
+						prms = eval(code[2].to_s, caller_binding)
+						#obj, mthd, prms = *new_element_handler
+		      	obj.send(mthd, prms)	    			
+	    		else
+			      const = get_constant(@newmodel['class'])
+			      # Needs to be duped !!!
+			      init_subm = initialize?(@newmodel)
+			      init = init_subm ? init_subm.dup : []
+			      init[0] ||= :allocate
+			      init[1] = eval(init[1].to_s, caller_binding)
+			      const.send(*init.compact)	    		
+		    	end
+		    	
 		    	self
 		    end
-		    
-		    # Why is this here?
-        # def handler
-        #   @handler
-        # end
         
         def model
-          @model || @parent.model
+          @model || (@parent == self ?  @handler.template : @parent.model) # extra code prevents infinite loop
         end
         
         def object
-          @object || @parent.object
+          @object || @parent.object  #(@parent = self ? @handler.initial_object : @parent.object)
         end
 		    
 		    
@@ -191,83 +218,55 @@ module Rfm
 			  def receive_attribute(name, value)
 			  	#puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 			  	new_att = DEFAULT_CLASS[name, value]    #.new.tap{|att| att[name]=value}
-			  	
-					# subm = model_elements?(@tag)
-					# subm = (subm && subm.size > 1 ? subm : model)
+
 			  	assign_attributes(new_att, object, model, @newmodel)
 			  rescue
 			  	Rfm.log.warn "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
 			  
-		    def receive_start_element(_tag, _attributes)		    	
-		    	#puts ["\nRECEIVE_START_ELEMENT '#{_tag}'", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
-		    	#puts ["\nRECEIVE_START_ELEMENT", _tag, object.class, model['name']]
+		    def receive_start_element(_tag, _attributes)
+		    	#puts _tag; return    	
+
 		    	# Set newtag for other methods to use during the start_el run.
 					@newtag = _tag
 					
-		    	# Acquire submodel definition.
-		      subm = model_elements?(_tag) || DEFAULT_CLASS.new
+					# new_element_handler = handler?(model_elements?(@newtag)) || nil
+					# if new_element_handler
+					# 	new_element_handler[0] = eval(new_element_handler[0].to_s)
+					# 	new_element_handler[1] = new_element_handler[1].to_s
+					# 	new_element_handler[2] = eval(new_element_handler[2].to_s)
+					# end
+					
+					new_cursor = Cursor.new(_tag, @handler, self, binding)
 		      
-		      # Get attachment_prefs
-		      prefs = attachment_prefs(model, subm, 'element')
-		      
-		      #puts "RECEIVE_START_ELEMENT: _tag '#{_tag}'\ncurrent object '#{object.class}'\ncursor_model '#{model}'\ncursor_submodel '#{subm.to_yaml}', attributes '#{_attributes.to_a}'"
-		      
-		      new_cursor = case
-		      
-		      # Clean-up and return if new element is not to be attached.
-		    	when prefs == 'none'
-		    		# Set callbacks, since object & model of new element won't be stored.
-		    		#@callbacks[_tag] = lambda {run_callback(_tag, self, subm)}
-		    		#puts "Assigning attributes for attach:none on #{newtag}"
-		    		# This passes current model, since that is the model that will be accepting these attributes, if any.
-		    		assign_attributes(_attributes, object, model, subm)   
-		    		   
-		        Cursor.new(nil, nil, _tag, @handler)
-		        
-		        #nil
-		        
-		      # Do this if a new-element-handler exists.
-		      when (code = handler?(subm); code) 
-		      	obj = eval(code[0].to_s)
-		      	mthd = code[1].to_s
-		      	prms = eval(code[2].to_s)
-		      	new_element = obj.send(mthd, prms)
-		      	#puts ["\nIF_HANDLER", code, new_element.class, new_element]
-		      	
-		      	Cursor.new(subm, new_element, _tag, handler)
-		      else # was when
-		        (
-		      	tst1 = _attributes && attach_attributes?(subm) != 'none'
-		      	tst2 = prefs != 'cursor'
-		      	
-		      	tst1 || tst2
-		      	)
-		      	
-			      # Create new element.
-			      const = get_constant(subm['class'])
-			      # Needs to be duped !!!
-			      init_subm = initialize?(subm)
-			      init = init_subm ? init_subm.dup : []
-			      #puts init.to_yaml
-			      init[0] ||= :allocate
-			      init[1] = eval(init[1].to_s)
-			      #puts "Current object: #{eval('object').class}"
-			      #puts "Creating new element '#{const}' with '#{init[0]}' and '#{init[1].class}'"
-			      new_element = const.send(*init.compact)
-			      #puts "Created new element of class '#{new_element.class}' for _tag '#{tag}'."
+		      # TODO: _attributes won't work in here - it's out of context.
+		      new_cursor.instance_exec(_attributes) do |_attributes|
 			      
-			      # Assign attributes to new element, only if prefs != 'none'
-			      assign_attributes(_attributes, new_element, subm, subm) if tst1
+			      case
+			      
+			    	when @element_attachment_prefs == 'none'
+			    		assign_attributes(_attributes, object, model, @newmodel)   
+			        
+			      when handler?(@newmodel)
+
+			      else # was when
+			        (
+			      	tst1 = _attributes && attach_attributes?(@newmodel) != 'none'
+			      	tst2 = @element_attachment_prefs != 'cursor'
+			      	
+			      	tst1 || tst2
+			      	)
+			      	
 	
-						# Attach new element to current object, but only if prefs != 'cursor'.
-						attach_new_object(object, new_element, newtag, model, subm, 'element') if new_element && tst2
-						
-						Cursor.new(subm, new_element, _tag, handler)
+				      # Assign attributes to new element, only if prefs != 'none'
+				      assign_attributes(_attributes, object, model, @newmodel) if tst1
+		
+							# Attach new element to current object, but only if prefs != 'cursor'.
+							attach_new_object(@parent.object, object, @tag, model, @newmodel, 'element') if object && tst2
+							
+			  		end
 		  		end
-		  		
-		  		new_cursor.newmodel = subm
-		  		
+		  				  		
 		  		#returntag = newtag
 		  		@newtag = nil
 		  		
@@ -285,8 +284,8 @@ module Rfm
 						end
 
 	      		# Run callback of non-stored element.
-	      		callable_callbacks = callbacks[_tag]
-	      		callable_callbacks.call if callable_callbacks
+	      		#callable_callbacks = callbacks[_tag]
+	      		#callable_callbacks.call if callable_callbacks
 		      	if _tag == self.tag #&& !@model.nil?
 							# End-element callbacks.
 							run_callback(_tag, self)
@@ -412,6 +411,8 @@ module Rfm
 			  
 
 			  # Methods for submodel
+			  
+			  # This might be broken - note there is no #submodel method.
 				def label_or_tag(_tag=newtag, new_model=submodel); as_name?(new_model) || _tag; end
 
 				
@@ -485,7 +486,7 @@ module Rfm
 		# is returned to the object that originally called for the parsing run (your script/app/whatever).
 		module Handler
 		
-			attr_accessor :stack, :template, :stack_debug
+			attr_accessor :stack, :template, :initial_object, :stack_debug
 			
 			#SaxParser.install_defaults(self)
 
@@ -533,19 +534,20 @@ module Rfm
 		  
 		  ###  Instance Methods  ###
 		  
-		  def initialize(_template=nil, initial_object=nil)
-		  	initial_object = case
-		  		when initial_object.nil?; DEFAULT_CLASS.new
-		  		when initial_object.is_a?(Class); initial_object.new
-		  		when initial_object.is_a?(String) || initial_object.is_a?(Symbol); SaxParser.get_constant(initial_object).new
-		  		else initial_object
+		  def initialize(_template=nil, _initial_object=nil)
+		  	@initial_object = case
+		  		when _initial_object.nil?; DEFAULT_CLASS.new
+		  		when _initial_object.is_a?(Class); _initial_object.new
+		  		when _initial_object.is_a?(String) || _initial_object.is_a?(Symbol); SaxParser.get_constant(_initial_object).new
+		  		else _initial_object
 		  	end
 		  	@stack = []
 		  	@stack_debug=[]
 		  	@template = get_template(_template)
 
 		  	#init_element_buffer
-		    set_cursor Cursor.new(@template, initial_object, 'top', self)
+		    #set_cursor Cursor.new(@template, @initial_object, 'top', self)
+		    set_cursor Cursor.new('__TOP__', self)
 		  end
 		  
 		  # Takes string, symbol, hash, and returns a (possibly cached) parsing template.
@@ -590,8 +592,8 @@ module Rfm
 			def set_cursor(args) # cursor_object
 				if args.is_a? Cursor
 					stack.push(args)
-					cursor.parent = stack[-2] || stack[0] #stack[0] so methods called on parent won't bomb.
-					cursor.instance_eval do; @level = parent.level.to_i + 1; end  # Added for debugging.
+					#cursor.parent = stack[-2] || stack[0] #stack[0] so methods called on parent won't bomb.
+					#cursor.instance_eval do; @level = parent.level.to_i + 1; end  # Added for debugging.
 					@stack_debug.push(args.dup.tap(){|c| c.handler = nil; c.parent = c.parent.tag})
           #puts "#{cursor.level}#{'  ' * cursor.level.to_i}#{cursor.tag} #{cursor.object.class} #{cursor.model['name']}"
 				end

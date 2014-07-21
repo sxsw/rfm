@@ -22,7 +22,6 @@ elements:
     as_name: error
 - name: datasource
   attach: none
-  # This needs to work in all-elements-have-cursor scheme.
   before_close: :end_datasource_element_callback
   attributes:
   - name: total_count
