@@ -30,6 +30,7 @@ elements:
   attach: none
 - name: field_definition
   handler: [object.meta, handle_new_field, _attributes]
+  # I don't think attributes are being attached by current version of parser.
   attach_attributes: private
   before_close: :main_callback
 - name: relatedset_definition

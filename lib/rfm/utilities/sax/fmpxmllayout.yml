@@ -30,7 +30,9 @@ elements:
 - name: field
   # Used to be 'object.meta', but that required sloppy 'loaded' indicator handling (or infinite loop),
   # so now just referring to raw inst var @meta, instead of method .meta.
+  # Need to assume attributes may or may not be included in start_element call.
   handler: [object.instance_variable_get('@meta'), handle_new_field_control, _attributes]
+  # This isn't doing anything.
   attach_attributes: private
   elements:
   - name: style

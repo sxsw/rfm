@@ -194,6 +194,7 @@ module Rfm
 		      new_cursor
 		    end # receive_start_element
 		    
+		    # Decides how to attach element & attributes associated with this cursor.
 		    def process_new_element(caller_binding=binding)
 		    	case
 		    	
