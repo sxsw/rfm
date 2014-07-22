@@ -137,11 +137,11 @@ module Rfm
 				extend Forwardable
 
 				# model - currently active model (rename to current_model)
-				# newmodel - model of this cursor's tag (rename to local_model)
+				# local_model - model of this cursor's tag (rename to local_model)
 				# newtag - incoming tag of yet-to-be-created cursor. Get rid of this if you can.
 				# element_attachment_prefs - local object's attachment prefs based on local_model and current_model.
 				# level - for debugging/experimentation only.
-		    attr_accessor :model, :newmodel, :object, :tag, :newtag, :handler, :parent, :level, :element_attachment_prefs
+		    attr_accessor :model, :local_model, :object, :tag, :newtag, :handler, :parent, :level, :element_attachment_prefs, :new_element_handler, :initial_attributes
 		    
 		    
 				#SaxParser.install_defaults(self)
@@ -165,39 +165,67 @@ module Rfm
 
 			  end
 		    
-		    def initialize(_tag, _handler, _parent=nil, caller_binding=nil)
+		    def initialize(_tag, _handler, _parent=nil, _initial_attributes=nil, caller_binding=nil)
 		    #def initialize(_model, _obj, _tag, _handler)
 		    	@tag     =  _tag
 		    	#@newtag = @tag
 		    	@handler = _handler
 		    	@parent = _parent || self
+		    	@initial_attributes = _initial_attributes
 		    	@level = @parent.level.to_i + 1
-		    	@newmodel = model_elements?(@tag) || DEFAULT_CLASS.new
-		    	@element_attachment_prefs = attachment_prefs(@parent.model, @newmodel, 'element')
+		    	@local_model = model_elements?(@tag, @parent.model) || DEFAULT_CLASS.new
+		    	@element_attachment_prefs = attachment_prefs(@parent.model, @local_model, 'element')
+		    	@new_element_handler = @local_model['handler']
 
-		    	@model = case
-		    	when @tag == '__TOP__'; @handler.template
-		    	when @element_attachment_prefs == 'none' ; nil
-		    	else @newmodel
-		    	end
+          # @model = case
+          # when @tag == '__TOP__'; @handler.template
+          # when @element_attachment_prefs == 'none' ; @parent.model #nil
+          # else @local_model
+          # end
 
-		    	@object = case
-		    	when @tag == '__TOP__'; @handler.initial_object
-		    	when @element_attachment_prefs == 'none'; nil
-	    		when (code = handler?(@newmodel); code);
-						obj = eval(code[0].to_s, caller_binding)
-						mthd = code[1].to_s
-						prms = eval(code[2].to_s, caller_binding)
+          # @object = case
+          # when @tag == '__TOP__'; @handler.initial_object
+          # when @element_attachment_prefs == 'none'; @parent.object #nil
+          # when @new_element_handler
+          #   obj = eval(@new_element_handler[0].to_s, caller_binding)
+          #   mthd = @new_element_handler[1].to_s
+          #   prms = eval(@new_element_handler[2].to_s, caller_binding)
+          #   #obj, mthd, prms = *new_element_handler
+          #   obj.send(mthd, prms)            
+          # else
+          #   const = get_constant(@local_model['class'])
+          #   # Needs to be duped !!!
+          #   init_subm = initialize?(@local_model)
+          #   init = init_subm ? init_subm.dup : []
+          #   init[0] ||= :allocate
+          #   init[1] = eval(init[1].to_s, caller_binding)
+          #   const.send(*init.compact)         
+          # end
+		    	
+		    	# Sets @model and @object
+		    	case
+		    	when @tag == '__TOP__';
+		    	  @model = @handler.template
+		    	  @object = @handler.initial_object
+		    	when @element_attachment_prefs == 'none';
+		    	  @model = @parent.model #nil
+		    	  @object = @parent.object #nil
+	    		when @new_element_handler
+	    		  @model = @local_model
+						obj = eval(@new_element_handler[0].to_s, caller_binding)
+						mthd = @new_element_handler[1].to_s
+						prms = eval(@new_element_handler[2].to_s, caller_binding)
 						#obj, mthd, prms = *new_element_handler
-		      	obj.send(mthd, prms)	    			
+		      	@object = obj.send(mthd, prms)	    			
 	    		else
-			      const = get_constant(@newmodel['class'])
+	    		  @model = @local_model
+			      const = get_constant(@local_model['class'])
 			      # Needs to be duped !!!
-			      init_subm = initialize?(@newmodel)
+			      init_subm = initialize?(@local_model)
 			      init = init_subm ? init_subm.dup : []
 			      init[0] ||= :allocate
 			      init[1] = eval(init[1].to_s, caller_binding)
-			      const.send(*init.compact)	    		
+			      @object = const.send(*init.compact)	    		
 		    	end
 		    	
 		    	#@newtag = nil
@@ -221,65 +249,64 @@ module Rfm
 			  	#puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 			  	new_att = DEFAULT_CLASS[name, value]    #.new.tap{|att| att[name]=value}
 
-			  	assign_attributes(new_att, object, model, @newmodel)
+			  	assign_attributes(new_att, object, model, @local_model)
 			  rescue
 			  	Rfm.log.warn "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
 			  
 		    def receive_start_element(_tag, _attributes)
-		    	#puts _tag; return    	
-
-		    	# Set newtag for other methods to use during the start_el run.
-					#@newtag = _tag
 					
-					# new_element_handler = handler?(model_elements?(@newtag)) || nil
-					# if new_element_handler
-					# 	new_element_handler[0] = eval(new_element_handler[0].to_s)
-					# 	new_element_handler[1] = new_element_handler[1].to_s
-					# 	new_element_handler[2] = eval(new_element_handler[2].to_s)
-					# end
-					
-					new_cursor = Cursor.new(_tag, @handler, self, binding)
+					new_cursor = Cursor.new(_tag, @handler, self, _attributes, binding)
+					new_cursor.process_new_element
 		      
-		      # TODO: _attributes won't work in here - it's out of context.
-		      new_cursor.instance_exec(_attributes) do |_attributes|
-			      #@newtag=@tag
-			      case
-			      
-			    	when @element_attachment_prefs == 'none'
-			    		assign_attributes(_attributes, object, model, @newmodel)   
-			        
-			      when handler?(@newmodel)
+          # new_cursor.instance_eval do
+          # #new_cursor.instance_exec(_attributes) do |_attributes|
+          #   #@newtag=@tag
+          #   case
+          #   when @element_attachment_prefs == 'none'
+          #     assign_attributes(@initial_attributes, object, model, @local_model)   
+          #   when !@new_element_handler
+          #     (
+          #     tst1 = @initial_attributes && attach_attributes?(@local_model) != 'none'
+          #     tst2 = @element_attachment_prefs != 'cursor'
+          #     
+          #     tst1 || tst2
+          #     )
+          # 
+          #     # Assign attributes to new element, only if prefs != 'none'
+          #     assign_attributes(@initial_attributes, object, model, @local_model) if tst1
+          # 
+          #     # Attach new element to current object, but only if prefs != 'cursor'.
+          #     attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element') if @object && tst2
+          #   end
+          # end
+		      new_cursor
+		    end # receive_start_element
+		    
+		    def process_new_element
+		      case
+		    	when @element_attachment_prefs == 'none'
+		    		assign_attributes(@initial_attributes, object, model, @local_model)   
+		      when !@new_element_handler
+		        (
+		      	tst1 = @initial_attributes && attach_attributes?(@local_model) != 'none'
+		      	tst2 = @element_attachment_prefs != 'cursor'
+		      	
+		      	tst1 || tst2
+		      	)
 
-			      else
-			        (
-			      	tst1 = _attributes && attach_attributes?(@newmodel) != 'none'
-			      	tst2 = @element_attachment_prefs != 'cursor'
-			      	
-			      	tst1 || tst2
-			      	)
-			      	
+			      # Assign attributes to new element, only if prefs != 'none'
+			      assign_attributes(@initial_attributes, object, model, @local_model) if tst1
 	
-				      # Assign attributes to new element, only if prefs != 'none'
-				      assign_attributes(_attributes, object, model, @newmodel) if tst1
-		
-							# Attach new element to current object, but only if prefs != 'cursor'.
-							attach_new_object(@parent.object, @object, @tag, @parent.model, @newmodel, 'element') if @object && tst2
-							
-			  		end
-			  		#@newtag=nil
+						# Attach new element to current object, but only if prefs != 'cursor'.
+						attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element') if @object && tst2
 		  		end
-		  				  		
-		  		#returntag = newtag
-		  		#@newtag = nil
-		  		
-		      return new_cursor
-		    end # start_el
-		
+		  	end
+		    		
 		    def receive_end_element(_tag)
 		    	#puts ["\nRECEIVE_END_ELEMENT '#{_tag}'", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 	      	begin
-						if _tag == self.tag && !@model.nil?
+						if _tag == @tag && !@model.nil?
 		      		# Data cleaup
 							compactor_settings = compact? || compact?(top.model)
 							#(compactor_settings = compact?(top.model)) unless compactor_settings # prefer local settings, or use top settings.
@@ -289,7 +316,7 @@ module Rfm
 	      		# Run callback of non-stored element.
 	      		#callable_callbacks = callbacks[_tag]
 	      		#callable_callbacks.call if callable_callbacks
-		      	if _tag == self.tag #&& !@model.nil?
+		      	if _tag == @tag #&& !@model.nil?
 							# End-element callbacks.
 							run_callback(_tag, self)
 							# 	if before_close?.is_a? Symbol
@@ -300,7 +327,7 @@ module Rfm
 						end
 						
 						# return true only if matching tags
-						if _tag == self.tag
+						if _tag == @tag
 							return true
 						end
 					#rescue
@@ -308,7 +335,7 @@ module Rfm
 		      end
 		    end
 
-				def run_callback(_tag, _cursor=self, _model=_cursor.newmodel, _object=_cursor.object )
+				def run_callback(_tag, _cursor=self, _model=_cursor.local_model, _object=_cursor.object )
 	    		callback = before_close?(_model)
 	    		#puts ["\nRUN_CALLBACK", _tag, _cursor.tag, _object.class, callback]
 	      	if callback.is_a? Symbol
