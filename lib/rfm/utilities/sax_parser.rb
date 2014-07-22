@@ -141,7 +141,7 @@ module Rfm
 				# newtag - incoming tag of yet-to-be-created cursor. Get rid of this if you can.
 				# element_attachment_prefs - local object's attachment prefs based on local_model and current_model.
 				# level - for debugging/experimentation only.
-		    attr_accessor :model, :local_model, :object, :tag, :newtag, :handler, :parent, :level, :element_attachment_prefs, :new_element_handler, :initial_attributes
+		    attr_accessor :model, :local_model, :object, :tag, :handler, :parent, :level, :element_attachment_prefs, :new_element_handler, :initial_attributes  #, :newtag
 		    
 		    
 				#SaxParser.install_defaults(self)
@@ -165,10 +165,9 @@ module Rfm
 
 			  end
 		    
-		    def initialize(_tag, _handler, _parent=nil, _initial_attributes=nil, caller_binding=nil)
+		    def initialize(_tag, _handler, _parent=nil, _initial_attributes=nil) #, caller_binding=nil)
 		    #def initialize(_model, _obj, _tag, _handler)
 		    	@tag     =  _tag
-		    	#@newtag = @tag
 		    	@handler = _handler
 		    	@parent = _parent || self
 		    	@initial_attributes = _initial_attributes
@@ -177,69 +176,8 @@ module Rfm
 		    	@element_attachment_prefs = attachment_prefs(@parent.model, @local_model, 'element')
 		    	@new_element_handler = @local_model['handler']
 
-          # @model = case
-          # when @tag == '__TOP__'; @handler.template
-          # when @element_attachment_prefs == 'none' ; @parent.model #nil
-          # else @local_model
-          # end
-
-          # @object = case
-          # when @tag == '__TOP__'; @handler.initial_object
-          # when @element_attachment_prefs == 'none'; @parent.object #nil
-          # when @new_element_handler
-          #   obj = eval(@new_element_handler[0].to_s, caller_binding)
-          #   mthd = @new_element_handler[1].to_s
-          #   prms = eval(@new_element_handler[2].to_s, caller_binding)
-          #   #obj, mthd, prms = *new_element_handler
-          #   obj.send(mthd, prms)            
-          # else
-          #   const = get_constant(@local_model['class'])
-          #   # Needs to be duped !!!
-          #   init_subm = initialize?(@local_model)
-          #   init = init_subm ? init_subm.dup : []
-          #   init[0] ||= :allocate
-          #   init[1] = eval(init[1].to_s, caller_binding)
-          #   const.send(*init.compact)         
-          # end
-		    	
-		    	# Sets @model and @object
-		    	case
-		    	when @tag == '__TOP__';
-		    	  @model = @handler.template
-		    	  @object = @handler.initial_object
-		    	when @element_attachment_prefs == 'none';
-		    	  @model = @parent.model #nil
-		    	  @object = @parent.object #nil
-	    		when @new_element_handler
-	    		  @model = @local_model
-						obj = eval(@new_element_handler[0].to_s, caller_binding)
-						mthd = @new_element_handler[1].to_s
-						prms = eval(@new_element_handler[2].to_s, caller_binding)
-						#obj, mthd, prms = *new_element_handler
-		      	@object = obj.send(mthd, prms)	    			
-	    		else
-	    		  @model = @local_model
-			      const = get_constant(@local_model['class'])
-			      # Needs to be duped !!!
-			      init_subm = initialize?(@local_model)
-			      init = init_subm ? init_subm.dup : []
-			      init[0] ||= :allocate
-			      init[1] = eval(init[1].to_s, caller_binding)
-			      @object = const.send(*init.compact)	    		
-		    	end
-		    	
-		    	#@newtag = nil
 		    	self
 		    end
-        
-        def model
-          @model || (@parent == self ?  @handler.template : @parent.model) # extra code prevents infinite loop
-        end
-        
-        def object
-          @object || @parent.object  #(@parent = self ? @handler.initial_object : @parent.object)
-        end
-		    
 		    
 		    
 		    #####  SAX METHODS  #####
@@ -256,51 +194,66 @@ module Rfm
 			  
 		    def receive_start_element(_tag, _attributes)
 					
-					new_cursor = Cursor.new(_tag, @handler, self, _attributes, binding)
-					new_cursor.process_new_element
-		      
-          # new_cursor.instance_eval do
-          # #new_cursor.instance_exec(_attributes) do |_attributes|
-          #   #@newtag=@tag
-          #   case
-          #   when @element_attachment_prefs == 'none'
-          #     assign_attributes(@initial_attributes, object, model, @local_model)   
-          #   when !@new_element_handler
-          #     (
-          #     tst1 = @initial_attributes && attach_attributes?(@local_model) != 'none'
-          #     tst2 = @element_attachment_prefs != 'cursor'
-          #     
-          #     tst1 || tst2
-          #     )
-          # 
-          #     # Assign attributes to new element, only if prefs != 'none'
-          #     assign_attributes(@initial_attributes, object, model, @local_model) if tst1
-          # 
-          #     # Attach new element to current object, but only if prefs != 'cursor'.
-          #     attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element') if @object && tst2
-          #   end
-          # end
+					new_cursor = Cursor.new(_tag, @handler, self, _attributes) #, binding)
+					new_cursor.process_new_element(binding)
+
 		      new_cursor
 		    end # receive_start_element
 		    
-		    def process_new_element
-		      case
-		    	when @element_attachment_prefs == 'none'
-		    		assign_attributes(@initial_attributes, object, model, @local_model)   
-		      when !@new_element_handler
-		        (
-		      	tst1 = @initial_attributes && attach_attributes?(@local_model) != 'none'
-		      	tst2 = @element_attachment_prefs != 'cursor'
-		      	
-		      	tst1 || tst2
-		      	)
-
+		    def process_new_element(caller_binding=binding)
+		    	case
+		    	when @tag == '__TOP__';
+		    	  @model = @handler.template
+		    	  @object = @handler.initial_object
+		    	when @element_attachment_prefs == 'none';
+		    	  @model = @parent.model #nil
+		    	  @object = @parent.object #nil
+		    	  
+		    	  assign_attributes(@initial_attributes, object, model, @local_model)
+	    		when @new_element_handler
+	    		  @model = @local_model
+						obj = eval(@new_element_handler[0].to_s, caller_binding)
+						mthd = @new_element_handler[1].to_s
+						prms = eval(@new_element_handler[2].to_s, caller_binding)
+						#obj, mthd, prms = *new_element_handler
+		      	@object = obj.send(mthd, prms)
+		      	# not attaching to anything
+	    		else
+	    		  @model = @local_model
+			      const = get_constant(@local_model['class'])
+			      # Needs to be duped !!!
+			      init_subm = initialize?(@local_model)
+			      init = init_subm ? init_subm.dup : []
+			      init[0] ||= :allocate
+			      init[1] = eval(init[1].to_s, caller_binding)
+			      @object = const.send(*init.compact)
+			      
+  	      	tst1 = @initial_attributes && attach_attributes?(@local_model) != 'none'
+  	      	tst2 = @element_attachment_prefs != 'cursor'
 			      # Assign attributes to new element, only if prefs != 'none'
 			      assign_attributes(@initial_attributes, object, model, @local_model) if tst1
-	
 						# Attach new element to current object, but only if prefs != 'cursor'.
-						attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element') if @object && tst2
-		  		end
+						attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element') if @object && tst2  		
+		    	end
+
+          # case
+          # when @element_attachment_prefs == 'none'
+          #   assign_attributes(@initial_attributes, object, model, @local_model)   
+          # when !@new_element_handler
+          #   (
+          #   tst1 = @initial_attributes && attach_attributes?(@local_model) != 'none'
+          #   tst2 = @element_attachment_prefs != 'cursor'
+          #   
+          #   tst1 || tst2
+          #   )
+          # 
+          #   # Assign attributes to new element, only if prefs != 'none'
+          #   assign_attributes(@initial_attributes, object, model, @local_model) if tst1
+          # 
+          #   # Attach new element to current object, but only if prefs != 'cursor'.
+          #   attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element') if @object && tst2
+          # end
+          self
 		  	end
 		    		
 		    def receive_end_element(_tag)
@@ -577,7 +530,7 @@ module Rfm
 
 		  	#init_element_buffer
 		    #set_cursor Cursor.new(@template, @initial_object, 'top', self)
-		    set_cursor Cursor.new('__TOP__', self)
+		    set_cursor Cursor.new('__TOP__', self).process_new_element
 		  end
 		  
 		  # Takes string, symbol, hash, and returns a (possibly cached) parsing template.
