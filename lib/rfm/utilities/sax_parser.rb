@@ -31,6 +31,13 @@
 # Note: 'attach: cursor' puts the object in the cursor & stack but does not attach it to the parent.
 #       'attach: none' prevents the object from entering the cursor or stack.
 #				Both of these will still allow processing of attributes and subelements.
+#
+# Note: Attribute attachment is controlled first by the attributes' model's :attributes hash (controls individual attrs),
+#       and second by the base model's main hash. Any model's main hash :attach_attributes only controls
+#       attributes that will be attached to that model's object. So if a model's object is not attached to anything
+#       (:attach=>'none'), then the higher base-model's :attach_attributes will control the lower model's attribute attachment.
+#       Put another way: If a model is :attach=>'none', then its :attach_attributes won't be counted.
+#
 #   
 # Examples:
 #   Rfm::SaxParser.parse('some/file.xml')  # => defaults to best xml backend with no parsing configuration.
@@ -99,28 +106,15 @@ module Rfm
 			PARSER_DEFAULTS = @parser_defaults
 		end
 
-		
 		# Convert defaults to constants, available to all sub classes/modules/instances.
 		PARSER_DEFAULTS.each do |k, v|
 			k = k.to_s.upcase
 			(const_set k, v) unless eval("defined? #{k}")   #(const_defined?(k) or defined?(k))
 		end
 
-		
 		def self.parse(*args)
 			Handler.build(*args)
 		end
-
-		# 	# Installs attribute accessors for defaults
-		# 	def self.install_defaults(klass)
-		# 		klass.extend Forwardable		    
-		# 	  klass.def_delegators SaxParser, *DEFAULTS
-		# 		class << klass
-		# 			extend Forwardable
-		# 			def_delegators SaxParser, *DEFAULTS
-		# 		end		
-		# 	end
-
 
 		# A Cursor instance is created for each element encountered in the parsing run
 		# and is where the parsing result is constructed from the custom parsing template.
@@ -187,7 +181,7 @@ module Rfm
 			  	#puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 			  	new_att = DEFAULT_CLASS[name, value]    #.new.tap{|att| att[name]=value}
 
-			  	assign_attributes(new_att, object, model, @local_model)
+			  	assign_attributes(new_att, @object, @model, @local_model)
 			  rescue
 			  	Rfm.log.warn "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
@@ -202,14 +196,20 @@ module Rfm
 		    
 		    def process_new_element(caller_binding=binding)
 		    	case
+		    	
+		    	# when inital cursor, just set model & object.
 		    	when @tag == '__TOP__';
 		    	  @model = @handler.template
 		    	  @object = @handler.initial_object
+		    	
+		    	# when element is not to be attached.
 		    	when @element_attachment_prefs == 'none';
 		    	  @model = @parent.model #nil
 		    	  @object = @parent.object #nil
 		    	  
-		    	  assign_attributes(@initial_attributes, object, model, @local_model)
+		    	  assign_attributes(@initial_attributes, @object, @model, @local_model)
+		    	
+		    	# when new element has it's own handler (and will be cursor-only).
 	    		when @new_element_handler
 	    		  @model = @local_model
 						obj = eval(@new_element_handler[0].to_s, caller_binding)
@@ -218,6 +218,8 @@ module Rfm
 						#obj, mthd, prms = *new_element_handler
 		      	@object = obj.send(mthd, prms)
 		      	# not attaching to anything
+		      
+		      # all other cases (most typical cases).
 	    		else
 	    		  @model = @local_model
 			      const = get_constant(@local_model['class'])
@@ -231,52 +233,27 @@ module Rfm
   	      	tst1 = @initial_attributes && attach_attributes?(@local_model) != 'none'
   	      	tst2 = @element_attachment_prefs != 'cursor'
 			      # Assign attributes to new element, only if prefs != 'none'
-			      assign_attributes(@initial_attributes, object, model, @local_model) if tst1
+			      assign_attributes(@initial_attributes, @object, @model, @local_model) if tst1
 						# Attach new element to current object, but only if prefs != 'cursor'.
 						attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element') if @object && tst2  		
 		    	end
 
-          # case
-          # when @element_attachment_prefs == 'none'
-          #   assign_attributes(@initial_attributes, object, model, @local_model)   
-          # when !@new_element_handler
-          #   (
-          #   tst1 = @initial_attributes && attach_attributes?(@local_model) != 'none'
-          #   tst2 = @element_attachment_prefs != 'cursor'
-          #   
-          #   tst1 || tst2
-          #   )
-          # 
-          #   # Assign attributes to new element, only if prefs != 'none'
-          #   assign_attributes(@initial_attributes, object, model, @local_model) if tst1
-          # 
-          #   # Attach new element to current object, but only if prefs != 'cursor'.
-          #   attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element') if @object && tst2
-          # end
           self
 		  	end
 		    		
 		    def receive_end_element(_tag)
 		    	#puts ["\nRECEIVE_END_ELEMENT '#{_tag}'", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 	      	begin
-						if _tag == @tag && !@model.nil?
+						if _tag == @tag && (@model == @local_model)
 		      		# Data cleaup
 							compactor_settings = compact? || compact?(top.model)
 							#(compactor_settings = compact?(top.model)) unless compactor_settings # prefer local settings, or use top settings.
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compactor_settings
 						end
 
-	      		# Run callback of non-stored element.
-	      		#callable_callbacks = callbacks[_tag]
-	      		#callable_callbacks.call if callable_callbacks
-		      	if _tag == @tag #&& !@model.nil?
+		      	if _tag == @tag
 							# End-element callbacks.
 							run_callback(_tag, self)
-							# 	if before_close?.is_a? Symbol
-							# 		object.send before_close?, self
-							# 	elsif before_close?.is_a?(String)
-							# 		object.send :eval, before_close?
-							# 	end
 						end
 						
 						# return true only if matching tags
@@ -334,12 +311,7 @@ module Rfm
 					
 					prefs = attachment_prefs(base_model, new_model, type)
 					
-					# 	shared_var_name = nil
-					# 	if prefs.to_s[0,1] == "_"
-					# 		shared_var_name = prefs.to_s[1,16]
-					# 		prefs = "shared"
-					# 	end
-					shared_var_name = shared_variable_name prefs
+					shared_var_name = shared_variable_name(prefs)
 					(prefs = "shared") if shared_var_name
 					
 					# Use local create_accessors prefs first, then more general ones.
@@ -350,6 +322,9 @@ module Rfm
 					#puts ["\nCURSOR.attach_new_object 1", type, label, base_object.class, new_object.class, delimiter?(new_model), prefs, shared_var_name, create_accessors].join(', ')
 					base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>DEFAULT_CLASS, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
 					#puts ["\nCURSOR.attach_new_object 2: #{base_object.class} with ", label, delimiter?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors]
+          # if type == 'attribute'
+          #   puts ["\nATTACH_ATTR", "name: #{name}", "label: #{label}", "new_object: #{new_object.class rescue ''}", "base_object: #{base_object.class rescue ''}", "base_model: #{base_model['name'] rescue ''}", "new_model: #{new_model['name'] rescue ''}", "prefs: #{prefs}"]
+          # end
 				end
 				
 				def attachment_prefs(base_model, new_model, type)
@@ -374,29 +349,29 @@ module Rfm
 			  end
 			  
 			  # Methods for current _model
-			  def ivg(name, _object=object); _object.instance_variable_get "@#{name}"; end
-			  def ivs(name, value, _object=object); _object.instance_variable_set "@#{name}", value; end
-			  def model_elements?(which=nil, _model=model); _model && _model.has_key?('elements') && ((_model['elements'] && which) ? _model['elements'].find{|e| e['name']==which} : _model['elements']) ; end
-			  def model_attributes?(which=nil, _model=model); _model && _model.has_key?('attributes') && ((_model['attributes'] && which) ? _model['attributes'].find{|a| a['name']==which} : _model['attributes']) ; end
-			  def depth?(_model=model); _model && _model['depth']; end
-			  def before_close?(_model=model); _model && _model['before_close']; end
-			  def each_before_close?(_model=model); _model && _model['each_before_close']; end
-			  def compact?(_model=model); _model && _model['compact']; end
-			  def attach?(_model=model); _model && _model['attach']; end
-			  def attach_elements?(_model=model); _model && _model['attach_elements']; end
-			  def attach_attributes?(_model=model); _model && _model['attach_attributes']; end
-			  def delimiter?(_model=model); _model && _model['delimiter']; end
-			  def as_name?(_model=model); _model && _model['as_name']; end
-			  def initialize?(_model=model); _model && _model['initialize']; end
-			  def create_accessors?(_model=model); _model && [_model['create_accessors']].flatten.compact; end
-			  def accessor?(_model=model); _model && [_model['accessor']].flatten.compact; end
-			  def handler?(_model=model); _model && _model['handler']; end
+			  def ivg(name, _object=@object); _object.instance_variable_get "@#{name}"; end
+			  def ivs(name, value, _object=@object); _object.instance_variable_set "@#{name}", value; end
+			  def model_elements?(which=nil, _model=@model); _model && _model.has_key?('elements') && ((_model['elements'] && which) ? _model['elements'].find{|e| e['name']==which} : _model['elements']) ; end
+			  def model_attributes?(which=nil, _model=@model); _model && _model.has_key?('attributes') && ((_model['attributes'] && which) ? _model['attributes'].find{|a| a['name']==which} : _model['attributes']) ; end
+			  def depth?(_model=@model); _model && _model['depth']; end
+			  def before_close?(_model=@model); _model && _model['before_close']; end
+			  def each_before_close?(_model=@model); _model && _model['each_before_close']; end
+			  def compact?(_model=@model); _model && _model['compact']; end
+			  def attach?(_model=@model); _model && _model['attach']; end
+			  def attach_elements?(_model=@model); _model && _model['attach_elements']; end
+			  def attach_attributes?(_model=@model); _model && _model['attach_attributes']; end
+			  def delimiter?(_model=@model); _model && _model['delimiter']; end
+			  def as_name?(_model=@model); _model && _model['as_name']; end
+			  def initialize?(_model=@model); _model && _model['initialize']; end
+			  def create_accessors?(_model=@model); _model && [_model['create_accessors']].flatten.compact; end
+			  def accessor?(_model=@model); _model && [_model['accessor']].flatten.compact; end
+			  def handler?(_model=@model); _model && _model['handler']; end
 			  
 
 			  # Methods for submodel
 			  
 			  # This might be broken - note there is no #submodel method.
-				def label_or_tag(_tag=newtag, new_model=submodel); as_name?(new_model) || _tag; end
+				def label_or_tag(_tag=@tag, new_model=@local_model); as_name?(new_model) || _tag; end
 
 				
 		    def clean_members(obj=object)
