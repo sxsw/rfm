@@ -39,4 +39,9 @@ elements:
   attach: hash
   attach_attributes: hash
   delimiter: text
+# Experimental, but needs to be done.
+# - name: errorcode
+#   as_name: error
+#   attach: private
+#   compact: true
 

@@ -50,23 +50,23 @@
 #
 # YAML structure defining a SAX xml parsing template.
 # Options:
-#   initialize_with:						array: initialize new objects with this code [:method, params] instead of defaulting to 'allocate'
+#   initialize_with:						string, symbol, or array (object, method, params...). Should return new object. See Rfm::SaxParser::Cursor#get_callback.
 #   elements:										array of element hashes [{'name'=>'element-tag'},...]
 #   attributes:									array of attribute hashes {'name'=>'attribute-name'} UC
 #   class:                      string-or-class: class name for new element
-#   depth:											integer: depth-of-default-class UC
 #		attach:											string: shared, _shared_var_name, private, hash, array, cursor, none - how to attach this element or attribute to #object. 
 #		attach_elements:						string: same as 'attach' - how to attach ANY subelements to this model's object, unless they have their own 'attach' specification.
 #		attach_attributes:					string: same as 'attach' - how to attach ANY attributes to this model's object, unless they have their own 'attach' specification.
-#   before_close:								symbol (method) or string (code): run a model method before closing tag, passing in #cursor. String is eval'd in context of object.
+#   before_close:								string, symbol, or array (object, method, params...). See Rfm::SaxParser::Cursor#get_callback.
 #   as_name:										string: store element or attribute keyed as specified
 #   delimiter:									string: attribute/hash key to delineate objects with identical tags
 #		create_accessors:   				string or array: all, private, shared, hash, none
 #		accessor:   								string: all, private, shared, hash, none
-#		element_handler:										array: call an object with any params [obj, method, params]. Default attach prefs are 'cursor'.
+#		element_handler:						string, symbol, or array (object, method, params...). Should return new object. See Rfm::SaxParser::Cursor#get_callback.
+# 															Default attach prefs are 'cursor'.
 #																Use this when all new-element operations should be offloaded to custom class or module.
 #																Should return an instance of new object.
-#  translate: UC                Consider adding a 'translate' option to point to a method on the current model's object to use to translate values for attributes.
+#   translate: UC               Consider adding a 'translate' option to point to a method on the current model's object to use to translate values for attributes.
 #
 #
 # ####  See below for notes & todos  ####
