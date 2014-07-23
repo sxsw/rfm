@@ -17,3 +17,5 @@ vendor/***
 #.ruby-version
 ruby-prof-*.html
 ruby-prof-*.txt
+# hide ruby-prof output images (used in html reports)
+/*.png
