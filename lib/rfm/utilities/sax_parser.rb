@@ -214,33 +214,35 @@ module Rfm
 		    	# when new element has it's own handler (and will be cursor-only).
 	    		when @new_element_handler
 	    		  @model = @local_model
-						obj = eval(@new_element_handler[0].to_s, caller_binding)
-						mthd = @new_element_handler[1].to_s
-						prms = eval(@new_element_handler[2].to_s, caller_binding)
-						#obj, mthd, prms = *new_element_handler
-		      	@object = obj.send(mthd, prms)
+            # obj = eval(@new_element_handler[0].to_s, caller_binding)
+            # mthd = @new_element_handler[1].to_s
+            # prms = eval(@new_element_handler[2].to_s, caller_binding)
+            # @object = obj.send(mthd, prms)
+            @object = get_callback(@new_element_handler, caller_binding)
 		      	# not attaching to anything
 		      
 		      # all other cases (most typical cases).
 	    		else
 	    		  @model = @local_model
-			      const = get_constant(@local_model['class'])
-			      # Needs to be duped !!!
-            # init_subm = initialize?(@local_model)
-            # init = init_subm ? init_subm.dup : []
-            # init[0] ||= :allocate
-            # init[1] = eval(init[1].to_s, caller_binding)
-            # @object = const.send(*init.flatten.compact)
+            const = get_constant(@local_model['class'])
+            # # Needs to be duped !!!
+            # # init_subm = initialize?(@local_model)
+            # # init = init_subm ? init_subm.dup : []
+            # # init[0] ||= :allocate
+            # # init[1] = eval(init[1].to_s, caller_binding)
+            # # @object = const.send(*init.flatten.compact)
+            # 
+            # init_array = [initialize?(@local_model)].compact.flatten
+            # #puts ["\nCursor#process_new_element", init_array]
+            # init_array.each_with_index{|str,i| next if i==0; init_array[i] = eval(str, caller_binding) }
+            # if init_array[0]
+            #   init_array[1] ||= self
+            # else
+            #   init_array[0] = :allocate
+            # end
+            # @object = const.send(*init_array.flatten.compact)
             
-            init_array = [initialize?(@local_model)].compact.flatten
-            #puts ["\nCursor#process_new_element", init_array]
-            init_array.each_with_index{|str,i| next if i==0; init_array[i] = eval(str, caller_binding) }
-            if init_array[0]
-              init_array[1] ||= self
-            else
-              init_array[0] = :allocate
-            end
-            @object = const.send(*init_array.flatten.compact)
+            @object = get_callback([const, initialize?(@local_model)].flatten(1), caller_binding, {:method=>:allocate})
 			      
   	      	tst1 = @initial_attributes && attach_attributes?(@local_model) != 'none'
   	      	tst2 = @element_attachment_prefs != 'cursor'
@@ -265,7 +267,9 @@ module Rfm
 
 		      	if _tag == @tag
 							# End-element callbacks.
-							run_callback(_tag, self)
+							#run_callback(_tag, self)
+							callback = before_close?(local_model)
+							get_callback(callback, binding) if callback
 						end
 						
 						# return true only if matching tags
@@ -280,7 +284,9 @@ module Rfm
 		    # Input: string, symbol, or array of strings
 		    # Returns object, method, params
 		    # Defaults are :object, :method, :params
-		    def get_callback(input, caller_binding=binding, default={})
+		    def get_callback(callback_string_or_array, caller_binding=binding, default={})
+		      input = callback_string_or_array.is_a?(Array) ? callback_string_or_array.dup : callback_string_or_array
+		      puts "\nGET_CALLBACK tag: #{tag}, input: #{input}"
 		      params = case
 	        when input.is_a?(String)
 	          [nil, input]
@@ -290,6 +296,8 @@ module Rfm
             case
             when input[0].is_a?(Symbol) #|| input[0].is_a?(Symbol))
               [nil, input].flatten(1)
+            when input[1].is_a?(String) && input.size > 2
+              input[1] = input[1].to_sym; input
             else # when input is ['object', 'sym-or-str', 'param1',' param2', ...]
               input
             end
@@ -300,8 +308,8 @@ module Rfm
           obj = eval(params.shift.to_s, caller_binding) || default[:object] || @object
           code = params.shift || default[:method]
           params.each_with_index{|str,i| params[i] = eval(str, caller_binding) }
-          params ||= default[:params]
-          
+          params = default[:params] if params.size == 0
+          puts "\nCALLBACK_ARRAY #{obj.class}, #{code}, #{params}"
           case
           when code.is_a?(Symbol)
             obj.send(code, *params)
@@ -309,16 +317,17 @@ module Rfm
             obj.send :eval, code
           end		      
         end
-
-				def run_callback(_tag, _cursor=self, _model=_cursor.local_model, _object=_cursor.object )
-	    		callback = before_close?(_model)
-	    		#puts ["\nRUN_CALLBACK", _tag, _cursor.tag, _object.class, callback, callback.class]
-	      	if callback.is_a? Symbol
-	      		_object.send callback, _cursor
-	      	elsif callback.is_a?(String)
-	      		_object.send :eval, callback
-	      	end
-	      end
+        
+        # # Run before-close callback.
+        # def run_callback(_tag, _cursor=self, _model=_cursor.local_model, _object=_cursor.object )
+        #   callback = before_close?(_model)
+        #   #puts ["\nRUN_CALLBACK", _tag, _cursor.tag, _object.class, callback, callback.class]
+        #   if callback.is_a? Symbol
+        #     _object.send callback, _cursor
+        #   elsif callback.is_a?(String)
+        #     _object.send :eval, callback
+        #   end
+        # end
 
 
 

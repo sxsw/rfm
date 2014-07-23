@@ -16,23 +16,23 @@ elements:
 - name: product
 - name: error
   attach: none
-  before_close: 'check_for_errors'
+  before_close: check_for_errors
   attributes:
   - name: code
     as_name: error
 - name: datasource
   attach: none
-  before_close: :end_datasource_element_callback
+  before_close: [object, end_datasource_element_callback, self]
   attributes:
   - name: total_count
     accessor: none
 - name:  metadata
   attach: none
 - name: field_definition
-  handler: [object.meta, handle_new_field, _attributes]
+  handler: [ivg('meta'), handle_new_field, _attributes]
   # I don't think attributes are being attached by current version of parser.
   attach_attributes: private
-  before_close: :main_callback
+  before_close: [object, main_callback, self]
 - name: relatedset_definition
   delimiter: table
   as_name: portal_meta
@@ -44,7 +44,7 @@ elements:
     delimiter: name
     as_name: field_meta
     attach_attributes: private
-    before_close: :portal_callback
+    before_close:  [object, portal_callback, self]
 - name: resultset
   attach: none
   attributes:
@@ -60,7 +60,7 @@ elements:
     class: Rfm::Metadata::Datum
     compact: true
     attach: cursor
-    before_close: :handler_callback
+    before_close: [object, handler_callback, self]
   - name: relatedset
     class: Array
     as_name: portals
@@ -78,7 +78,7 @@ elements:
         compact: true
         class: Rfm::Metadata::Datum
         attach: cursor
-        before_close: :portal_callback
+        before_close: [object, portal_callback, self]
 
 
 
