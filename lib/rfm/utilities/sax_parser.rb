@@ -50,7 +50,7 @@
 #
 # YAML structure defining a SAX xml parsing template.
 # Options:
-#   initialize:									array: initialize new objects with this code [:method, params] instead of defaulting to 'allocate'
+#   initialize_with:						array: initialize new objects with this code [:method, params] instead of defaulting to 'allocate'
 #   elements:										array of element hashes [{'name'=>'element-tag'},...]
 #   attributes:									array of attribute hashes {'name'=>'attribute-name'} UC
 #   class:                      string-or-class: class name for new element
@@ -63,7 +63,7 @@
 #   delimiter:									string: attribute/hash key to delineate objects with identical tags
 #		create_accessors:   				string or array: all, private, shared, hash, none
 #		accessor:   								string: all, private, shared, hash, none
-#		handler:										array: call an object with any params [obj, method, params]. Default attach prefs are 'cursor'.
+#		element_handler:										array: call an object with any params [obj, method, params]. Default attach prefs are 'cursor'.
 #																Use this when all new-element operations should be offloaded to custom class or module.
 #																Should return an instance of new object.
 #  translate: UC                Consider adding a 'translate' option to point to a method on the current model's object to use to translate values for attributes.
@@ -149,10 +149,12 @@ module Rfm
 			  	
 			  	case
 			  	when klass.is_a?(Class); klass
-			  	when (klass=klass.to_s) == ''; DEFAULT_CLASS
+			  	#when (klass=klass.to_s) == ''; DEFAULT_CLASS
+  		  	when klass.nil?; DEFAULT_CLASS
+			  	when klass == ''; DEFAULT_CLASS
 			  	when klass[/::/]; eval(klass)
 			  	when defined?(klass); const_get(klass)  ## == 'constant'; const_get(klass)
-			  	#when defined?(klass); eval(klass) # This was for 'handler' pattern.
+			  	#when defined?(klass); eval(klass) # This was for 'element_handler' pattern.
 			  	else
 			  		Rfm.log.warn "Could not find constant '#{klass}'"
 			  		DEFAULT_CLASS
@@ -169,7 +171,7 @@ module Rfm
 		    	@level = @parent.level.to_i + 1
 		    	@local_model = model_elements?(@tag, @parent.model) || DEFAULT_CLASS.new
 		    	@element_attachment_prefs = attachment_prefs(@parent.model, @local_model, 'element')
-		    	@new_element_handler = @local_model['handler']
+		    	@new_element_handler = @local_model['element_handler']
 
 		    	self
 		    end
@@ -223,14 +225,21 @@ module Rfm
 	    		  @model = @local_model
 	    		  
             const = get_constant(@local_model['class'])
-            @object = get_callback([const, initialize?(@local_model)].flatten(1), caller_binding, {:method=>:allocate})
+            callback = initialize_with?(@local_model)
+            
+            @object = if callback
+              get_callback([const, callback].flatten(1), caller_binding, {:method=>:allocate})
+			      else
+			        const.send :allocate
+			      end
 			      
-  	      	tst1 = @initial_attributes && attach_attributes?(@local_model) != 'none'
-  	      	tst2 = @element_attachment_prefs != 'cursor'
-			      # Assign attributes to new element, only if prefs != 'none'
-			      assign_attributes(@initial_attributes, @object, @model, @local_model) if tst1
-						# Attach new element to current object, but only if prefs != 'cursor'.
-						attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element') if @object && tst2  		
+			      if @initial_attributes && attach_attributes?(@model) != 'none'
+			        assign_attributes(@initial_attributes, @object, @model, @local_model)
+			      end
+			      
+						if @element_attachment_prefs != 'cursor'
+  						attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element')
+  					end  		
 		    	end
 
           self
@@ -251,12 +260,17 @@ module Rfm
 							#run_callback(_tag, self)
 							callback = before_close?(local_model)
 							get_callback(callback, binding) if callback
-						end
-						
-						# return true only if matching tags
-						if _tag == @tag
+							
+							# return true only if matching tags
 							return true
 						end
+						
+            # # return true only if matching tags
+            # if _tag == @tag
+            #   return true
+            # end
+						
+						return
 					#rescue
 					#  Rfm.log.debug "Error: end_element tag '#{_tag}' failed: #{$!}"
 		      end
@@ -277,18 +291,21 @@ module Rfm
 		    #     object: <object or string>
 		    #     method: <string or symbol>
 		    #     params: <string>
-		    #     
+		    #
+		    # TODO-MAYBE: Change param order to (method, object, params),
+		    #             might help confusion with param complexities.
+		    #
 		    def get_callback(callback, caller_binding=binding, default={})
 		      input = callback.is_a?(Array) ? callback.dup : callback
 		      #puts "\nGET_CALLBACK tag: #{tag}, input: #{input}"
 		      params = case
-	        when input.is_a?(String)
+	        when input.is_a?(String) || input.is_a?(Symbol)
 	          [nil, input]
-          when input.is_a?(Symbol)
-            [nil, input]
+          # when input.is_a?(Symbol)
+          #   [nil, input]
           when input.is_a?(Array)
             case
-            when input[0].is_a?(Symbol) #|| input[0].is_a?(Symbol))
+            when input[0].is_a?(Symbol)
               [nil, input].flatten(1)
             when input[1].is_a?(String) && input.size > 2
               input[1] = input[1].to_sym; input
@@ -299,7 +316,12 @@ module Rfm
             []
           end
           
-          obj = eval(params.shift.to_s, caller_binding) || default[:object] || @object
+          obj_raw = params.shift
+          #puts "\nOBJECT_RAW: #{obj_raw}"
+          obj = if obj_raw.is_a?(String); eval(obj_raw.to_s, caller_binding); else obj_raw; end
+          if obj.nil? || obj == ''; obj = default[:object] || @object; end
+          #puts "OBJECT: #{obj}"
+            
           code = params.shift || default[:method]
           params.each_with_index{|str,i| params[i] = eval(str, caller_binding) }
           params = default[:params] if params.size == 0
@@ -416,10 +438,10 @@ module Rfm
 			  def attach_attributes?(_model=@model); _model && _model['attach_attributes']; end
 			  def delimiter?(_model=@model); _model && _model['delimiter']; end
 			  def as_name?(_model=@model); _model && _model['as_name']; end
-			  def initialize?(_model=@model); _model && _model['initialize']; end
+			  def initialize_with?(_model=@model); _model && _model['initialize_with']; end
 			  def create_accessors?(_model=@model); _model && [_model['create_accessors']].flatten.compact; end
 			  def accessor?(_model=@model); _model && [_model['accessor']].flatten.compact; end
-			  def handler?(_model=@model); _model && _model['handler']; end
+			  def element_handler?(_model=@model); _model && _model['element_handler']; end
 			  
 
 			  # Methods for submodel

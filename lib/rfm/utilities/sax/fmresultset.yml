@@ -29,7 +29,7 @@ elements:
 - name:  metadata
   attach: none
 - name: field_definition
-  handler: [ivg('meta'), handle_new_field, _attributes]
+  element_handler: [ivg('meta'), handle_new_field, _attributes]
   # I don't think attributes are being attached by current version of parser.
   attach_attributes: private
   before_close: [object, main_callback, self]
@@ -53,7 +53,7 @@ elements:
   - name: fetch_size
     accessor: none
 - name: record
-  handler: [object, handle_new_record, _attributes]
+  element_handler: [object, handle_new_record, _attributes]
   before_close: '@loaded=true'
   elements:
   - name: field

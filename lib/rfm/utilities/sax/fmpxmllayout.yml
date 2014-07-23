@@ -30,7 +30,7 @@ elements:
 - name: field
   class: Rfm::Metadata::FieldControl
   attach: cursor
-  initialize: 
+  initialize_with: 
   - :new
   - ivg(:meta)
   before_close: [object, element_close_handler, self]
@@ -42,7 +42,7 @@ elements:
   attach_attributes: private
   elements:
   - name: style
-    handler: [object, handle_style_element, _attributes]
+    element_handler: [object, handle_style_element, _attributes]
     attach: none
     attributes:
     - name: valuelist
