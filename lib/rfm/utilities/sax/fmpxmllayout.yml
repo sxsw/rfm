@@ -43,10 +43,11 @@ elements:
   elements:
   - name: style
     handler: [object, handle_style_element, _attributes]
-    # attach: none
-    # attributes:
-    # - name: valuelist
-    #   as_name: value_list_name
+    attach: none
+    attributes:
+    - name: valuelist
+      as_name: value_list_name
+      translate: translate_style_value
 - name: valuelists
   attach: none
 - name: valuelist

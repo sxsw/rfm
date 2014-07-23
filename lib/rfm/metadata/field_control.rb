@@ -43,7 +43,7 @@ module Rfm
 	  		_attach_as_instance_variables attributes, :key_translator=>method(:translate_value_list_key), :value_translator=>method(:translate_style_value)
 	  	end
 	  	
-	  	def translate_style_value(raw)
+	  	def translate_style_value(key, val)
 	  		#puts ["TRANSLATE_STYLE", raw].join(', ')
 	  		{
 	  			'EDITTEXT'	=>	:edit_box,
@@ -53,7 +53,7 @@ module Rfm
 					'POPUPLIST'	=>	:popup_list,
 					'CALENDAR'	=>	:calendar,
 					'SCROLLTEXT'	=>	:scrollable,
-	  		}[raw] || raw
+	  		}[val] || val
 	  	end
 	  	
 	  	def translate_value_list_key(raw)

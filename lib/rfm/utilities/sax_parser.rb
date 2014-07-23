@@ -55,9 +55,9 @@
 #   attributes:									array of attribute hashes {'name'=>'attribute-name'} UC
 #   class:                      string-or-class: class name for new element
 #   depth:											integer: depth-of-default-class UC
-#		attach:											string: shared, _shared_var_name, private, hash, array, cursor, none - attach this element or attribute to parent. 
-#		attach_elements:						string: same as 'attach' - for all subelements, unless they have their own 'attach' specification
-#		attach_attributes:					string: same as 'attach' - for all attributes, unless they have their own 'attach' specification
+#		attach:											string: shared, _shared_var_name, private, hash, array, cursor, none - how to attach this element or attribute to #object. 
+#		attach_elements:						string: same as 'attach' - how to attach ANY subelements to this model's object, unless they have their own 'attach' specification.
+#		attach_attributes:					string: same as 'attach' - how to attach ANY attributes to this model's object, unless they have their own 'attach' specification.
 #   before_close:								symbol (method) or string (code): run a model method before closing tag, passing in #cursor. String is eval'd in context of object.
 #   as_name:										string: store element or attribute keyed as specified
 #   delimiter:									string: attribute/hash key to delineate objects with identical tags
@@ -66,6 +66,7 @@
 #		handler:										array: call an object with any params [obj, method, params]. Default attach prefs are 'cursor'.
 #																Use this when all new-element operations should be offloaded to custom class or module.
 #																Should return an instance of new object.
+#  translate: UC                Consider adding a 'translate' option to point to a method on the current model's object to use to translate values for attributes.
 #
 #
 # ####  See below for notes & todos  ####
@@ -275,6 +276,39 @@ module Rfm
 					#  Rfm.log.debug "Error: end_element tag '#{_tag}' failed: #{$!}"
 		      end
 		    end
+		    
+		    # Input: string, symbol, or array of strings
+		    # Returns object, method, params
+		    # Defaults are :object, :method, :params
+		    def get_callback(input, caller_binding=binding, default={})
+		      params = case
+	        when input.is_a?(String)
+	          [nil, input]
+          when input.is_a?(Symbol)
+            [nil, input]
+          when input.is_a?(Array)
+            case
+            when input[0].is_a?(Symbol) #|| input[0].is_a?(Symbol))
+              [nil, input].flatten(1)
+            else # when input is ['object', 'sym-or-str', 'param1',' param2', ...]
+              input
+            end
+          else
+            []
+          end
+          
+          obj = eval(params.shift.to_s, caller_binding) || default[:object] || @object
+          code = params.shift || default[:method]
+          params.each_with_index{|str,i| params[i] = eval(str, caller_binding) }
+          params ||= default[:params]
+          
+          case
+          when code.is_a?(Symbol)
+            obj.send(code, *params)
+          when code.is_a?(String)
+            obj.send :eval, code
+          end		      
+        end
 
 				def run_callback(_tag, _cursor=self, _model=_cursor.local_model, _object=_cursor.object )
 	    		callback = before_close?(_model)
@@ -328,6 +362,12 @@ module Rfm
 					# Use local create_accessors prefs first, then more general ones.
 					create_accessors = accessor?(new_model)
 					(create_accessors = create_accessors?(base_model)) unless create_accessors && create_accessors.any?
+					
+          # # This is NEW!
+          # translator = new_model['translator']
+          # if translator
+          #   new_object = base_object.send translator, name, new_object
+          # end
 					
 					
 					#puts ["\nCURSOR.attach_new_object 1", type, label, base_object.class, new_object.class, delimiter?(new_model), prefs, shared_var_name, create_accessors].join(', ')
@@ -880,7 +920,7 @@ class Object
 		if hash.is_a? Hash
 			hash.each do |k,v|
 				(k = key_translator.call(k)) if key_translator
-				(v = value_translator.call(v)) if value_translator
+				(v = value_translator.call(k, v)) if value_translator
 				instance_variable_set("@#{k}", v)
 			end
 		end
