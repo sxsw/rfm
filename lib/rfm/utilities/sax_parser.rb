@@ -135,7 +135,7 @@ module Rfm
 				# local_model - model of this cursor's tag (rename to local_model)
 				# newtag - incoming tag of yet-to-be-created cursor. Get rid of this if you can.
 				# element_attachment_prefs - local object's attachment prefs based on local_model and current_model.
-				# level - for debugging/experimentation only.
+				# level - cursor depth
 		    attr_accessor :model, :local_model, :object, :tag, :handler, :parent, :level, :element_attachment_prefs, :new_element_handler, :initial_attributes  #, :newtag
 		    
 		    
@@ -179,7 +179,7 @@ module Rfm
 		    
 		    # Receive a single attribute (any named attribute or text)
 			  def receive_attribute(name, value)
-			  	puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
+			  	#puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 			  	new_att = DEFAULT_CLASS[name, value]    #.new.tap{|att| att[name]=value}
 
 			  	assign_attributes(new_att, @object, @model, @local_model)
@@ -214,34 +214,15 @@ module Rfm
 		    	# when new element has it's own handler (and will be cursor-only).
 	    		when @new_element_handler
 	    		  @model = @local_model
-            # obj = eval(@new_element_handler[0].to_s, caller_binding)
-            # mthd = @new_element_handler[1].to_s
-            # prms = eval(@new_element_handler[2].to_s, caller_binding)
-            # @object = obj.send(mthd, prms)
+
             @object = get_callback(@new_element_handler, caller_binding)
 		      	# not attaching to anything
 		      
 		      # all other cases (most typical cases).
 	    		else
 	    		  @model = @local_model
+	    		  
             const = get_constant(@local_model['class'])
-            # # Needs to be duped !!!
-            # # init_subm = initialize?(@local_model)
-            # # init = init_subm ? init_subm.dup : []
-            # # init[0] ||= :allocate
-            # # init[1] = eval(init[1].to_s, caller_binding)
-            # # @object = const.send(*init.flatten.compact)
-            # 
-            # init_array = [initialize?(@local_model)].compact.flatten
-            # #puts ["\nCursor#process_new_element", init_array]
-            # init_array.each_with_index{|str,i| next if i==0; init_array[i] = eval(str, caller_binding) }
-            # if init_array[0]
-            #   init_array[1] ||= self
-            # else
-            #   init_array[0] = :allocate
-            # end
-            # @object = const.send(*init_array.flatten.compact)
-            
             @object = get_callback([const, initialize?(@local_model)].flatten(1), caller_binding, {:method=>:allocate})
 			      
   	      	tst1 = @initial_attributes && attach_attributes?(@local_model) != 'none'
@@ -281,12 +262,25 @@ module Rfm
 		      end
 		    end
 		    
+		    ###  Parse callback instructions, compile & send callback method  ###
 		    # Input: string, symbol, or array of strings
-		    # Returns object, method, params
-		    # Defaults are :object, :method, :params
-		    def get_callback(callback_string_or_array, caller_binding=binding, default={})
-		      input = callback_string_or_array.is_a?(Array) ? callback_string_or_array.dup : callback_string_or_array
-		      puts "\nGET_CALLBACK tag: #{tag}, input: #{input}"
+		    # Returns: object
+		    # Default options:
+		    #   :object=>object
+		    #   :method=>'a method name string or symbol'
+		    #   :params=>"params string to be eval'd in context of cursor"
+		    # Usage:
+		    #   callback: send a method (or eval string) to an object with parameters.
+		    #   string: a string to be eval'd in context of current object.
+		    #   symbol: method to be called on current object.
+		    #   array: object, method, params.
+		    #     object: <object or string>
+		    #     method: <string or symbol>
+		    #     params: <string>
+		    #     
+		    def get_callback(callback, caller_binding=binding, default={})
+		      input = callback.is_a?(Array) ? callback.dup : callback
+		      #puts "\nGET_CALLBACK tag: #{tag}, input: #{input}"
 		      params = case
 	        when input.is_a?(String)
 	          [nil, input]
@@ -309,7 +303,7 @@ module Rfm
           code = params.shift || default[:method]
           params.each_with_index{|str,i| params[i] = eval(str, caller_binding) }
           params = default[:params] if params.size == 0
-          puts "\nCALLBACK_ARRAY #{obj.class}, #{code}, #{params}"
+          #puts "\nCALLBACK_ARRAY #{obj.class}, #{code}, #{params}"
           case
           when code.is_a?(Symbol)
             obj.send(code, *params)
