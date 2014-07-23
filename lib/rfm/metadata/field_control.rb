@@ -25,9 +25,16 @@ module Rfm
 	    attr_reader :name, :style, :value_list_name
 	    meta_attr_accessor :layout_meta
 	  
-	  	def initialize(attributes, meta)
+      # def initialize(_attributes, meta)
+      #   puts ["\nFieldControl#initialize", "_attributes: #{_attributes}", "meta: #{meta.class}"]
+      #   self.layout_meta = meta
+      #   _attach_as_instance_variables(_attributes) if _attributes
+      #   self
+      # end
+	  	
+	  	def initialize(meta)
+	  	  #puts ["\nFieldControl#initialize", "meta: #{meta.class}"]
 	  		self.layout_meta = meta
-	  		_attach_as_instance_variables attributes
 	  		self
 	  	end
 	  	
@@ -56,30 +63,10 @@ module Rfm
 	  	def value_list
 	  		layout_meta.value_lists[value_list_name]
 	  	end
-	  
-			#   def initialize(name, style, value_list_name, value_list)
-			#     @name = name
-			#     case style
-			#     when "EDITTEXT"
-			#       @style = :edit_box
-			#     when "POPUPMENU"
-			#       @style = :popup_menu
-			#     when "CHECKBOX"
-			#       @style = :checkbox_set
-			#     when "RADIOBUTTONS"
-			#       @style = :radio_button_set
-			#     when "POPUPLIST"
-			#       @style = :popup_list
-			#     when "CALENDAR"
-			#       @style = :calendar
-			#     when "SCROLLTEXT"
-			#       @style = :scrollable
-			#     else
-			#       nil
-			#     end
-			#     @value_list_name = value_list_name
-			#     rfm_metaclass.instance_variable_set :@value_list, value_list
-			#   end
+
+      def element_close_handler(_cursor)
+        layout_meta.receive_field_control(self)
+      end
 
 	  end
 	end

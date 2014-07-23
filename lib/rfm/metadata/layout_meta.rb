@@ -22,11 +22,16 @@ module Rfm
 				self['value_lists'] ||= CaseInsensitiveHash.new
 	    end
 	    
-			def handle_new_field_control(attributes)
-				name = attributes['name']
-				field_control = FieldControl.new(attributes, self)
-				field_controls[get_mapped_name(name)] = field_control
-			end
+      # def handle_new_field_control(attributes)
+      #   name = attributes['name']
+      #   field_control = FieldControl.new(attributes, self)
+      #   field_controls[get_mapped_name(name)] = field_control
+      # end
+      
+      def receive_field_control(fc)
+        #name = fc.name
+        field_controls[get_mapped_name(fc.name)] = fc        
+      end
 			
 			# Should this be in FieldControl object?
       def get_mapped_name(name)

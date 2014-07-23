@@ -178,7 +178,7 @@ module Rfm
 		    
 		    # Receive a single attribute (any named attribute or text)
 			  def receive_attribute(name, value)
-			  	#puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
+			  	puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 			  	new_att = DEFAULT_CLASS[name, value]    #.new.tap{|att| att[name]=value}
 
 			  	assign_attributes(new_att, @object, @model, @local_model)
@@ -225,11 +225,21 @@ module Rfm
 	    		  @model = @local_model
 			      const = get_constant(@local_model['class'])
 			      # Needs to be duped !!!
-			      init_subm = initialize?(@local_model)
-			      init = init_subm ? init_subm.dup : []
-			      init[0] ||= :allocate
-			      init[1] = eval(init[1].to_s, caller_binding)
-			      @object = const.send(*init.compact)
+            # init_subm = initialize?(@local_model)
+            # init = init_subm ? init_subm.dup : []
+            # init[0] ||= :allocate
+            # init[1] = eval(init[1].to_s, caller_binding)
+            # @object = const.send(*init.flatten.compact)
+            
+            init_array = [initialize?(@local_model)].compact.flatten
+            #puts ["\nCursor#process_new_element", init_array]
+            init_array.each_with_index{|str,i| next if i==0; init_array[i] = eval(str, caller_binding) }
+            if init_array[0]
+              init_array[1] ||= self
+            else
+              init_array[0] = :allocate
+            end
+            @object = const.send(*init_array.flatten.compact)
 			      
   	      	tst1 = @initial_attributes && attach_attributes?(@local_model) != 'none'
   	      	tst2 = @element_attachment_prefs != 'cursor'
@@ -268,7 +278,7 @@ module Rfm
 
 				def run_callback(_tag, _cursor=self, _model=_cursor.local_model, _object=_cursor.object )
 	    		callback = before_close?(_model)
-	    		#puts ["\nRUN_CALLBACK", _tag, _cursor.tag, _object.class, callback]
+	    		#puts ["\nRUN_CALLBACK", _tag, _cursor.tag, _object.class, callback, callback.class]
 	      	if callback.is_a? Symbol
 	      		_object.send callback, _cursor
 	      	elsif callback.is_a?(String)
