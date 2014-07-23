@@ -847,6 +847,7 @@ class Object
   end
   
 	#   # We don't know which attributes are shared, so this isn't really accurate per the options.
+	#   # But this could be useful for mass-attachment of a set of attributes (to increase performance in some situations).
 	#   def _create_accessors options=[]
 	#   	options=[options].flatten.compact
 	#   	#puts ['CREATE_ACCESSORS', self.class, options, ""]
@@ -868,7 +869,7 @@ class Object
 		meta.send(:attr_reader, name.to_sym)
 	end
   
-	# Attach hash as individual instance variables.
+	# Attach hash as individual instance variables to self.
 	# This is for manually attaching a hash of attributes to the current object.
 	# Pass in translation procs to alter the keys or values.
 	def _attach_as_instance_variables(hash, options={})
