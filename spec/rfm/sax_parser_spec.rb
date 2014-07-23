@@ -3,12 +3,12 @@
 
 describe Rfm::SaxParser::Handler do
 	#subject {Rfm::SaxParser::Handler}
-	#Rfm.get_backend :rexml
 	HANDLER = Rfm::SaxParser::Handler.get_backend :rexml
 
 	describe '#set_cursor' do
 		subject {HANDLER.allocate} #new('local_testing/sax_parse.yml')}
-		let(:input) { Rfm::SaxParser::Cursor.new({'elements'=>{'test'=>'True'}}, {:attribute=>'data'}, 'TEST', subject) }
+		#let(:input) { Rfm::SaxParser::Cursor.new({'elements'=>{'test'=>'True'}}, {:attribute=>'data'}, 'TEST', subject) }
+		let(:input) { Rfm::SaxParser::Cursor.allocate.tap{|c| c.object = Object.new}}
 		before(:each) do
 			#Rfm::SaxParser.template_prefix = '.'
 			Rfm::SaxParser::TEMPLATE_PREFIX = '.'
@@ -20,6 +20,11 @@ describe Rfm::SaxParser::Handler do
 			#subject.new(File.new('spec/data/resultset.xml'))['fmresultset']['datasource']['table'].should == 'Memo_'
 		end
 		
+		it 'adds a cursor object to the stack' do
+			5.times {subject.set_cursor(input)}
+			subject.stack.last.should == input
+			subject.stack.size.should == 5
+ 		end		
 		
 	end
 	
