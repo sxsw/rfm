@@ -237,7 +237,7 @@ module Rfm
 			        assign_attributes(@initial_attributes, @object, @model, @local_model)
 			      end
 			      
-						if @element_attachment_prefs != 'cursor'
+						if @element_attachment_prefs != 'cursor' && !delimiter?(@local_model) 
   						attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element')
   					end  		
 		    	end
@@ -254,11 +254,15 @@ module Rfm
 							#(compactor_settings = compact?(top.model)) unless compactor_settings # prefer local settings, or use top settings.
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compactor_settings
 						end
+						
+						if (delimiter = delimiter?(@local_model); delimiter)
+  						attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element')
+  					end  		
 
 		      	if _tag == @tag
 							# End-element callbacks.
 							#run_callback(_tag, self)
-							callback = before_close?(local_model)
+							callback = before_close?(@local_model)
 							get_callback(callback, binding) if callback
 							
 							# return true only if matching tags
@@ -446,11 +450,11 @@ module Rfm
 
 			  # Methods for submodel
 			  
-			  # This might be broken - note there is no #submodel method.
+			  # This might be broken.
 				def label_or_tag(_tag=@tag, new_model=@local_model); as_name?(new_model) || _tag; end
 
 				
-		    def clean_members(obj=object)
+		    def clean_members(obj=@object)
 		    	#puts ["CURSOR.clean_members: #{object.class}", "tag: #{tag}", "model-name: #{model[:name]}"]
 					# 	cursor.object = clean_member(cursor.object)
 					# 	clean_members(ivg(shared_attribute_var, obj))
@@ -816,7 +820,7 @@ class Object
 
 	# Master method to attach any object to this object.
 	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
-		#puts ["OBJECT._attach_object", self.class, obj.class, obj.to_s, args].to_yaml
+		#puts ["\n\nOBJECT._attach_object", self.class, obj.class, obj.to_s, args].to_yaml
 		# 	default_options = {
 		# 		:shared_variable_name => 'attributes',
 		# 		:default_class => Hash,
@@ -827,7 +831,6 @@ class Object
 		# 	delimiter = (args[1] || options[:delimiter])
 		prefs = (args[2] || options[:prefs])
 		# 	type = (args[3] || options[:type])
-		#puts ['OBJECT.attach_object', type, name, self.class, obj.class, delimiter, prefs, options[:shared_variable_name], options[:default_class], options[:create_accessors]].join(', ')
 		return if (prefs=='none' || prefs=='cursor')   #['none', 'cursor'].include? prefs ... not sure which is faster.
 		self._merge_object!(
 			obj,
@@ -849,7 +852,7 @@ class Object
 	
 	# Master method to merge any object with this object
 	def _merge_object!(obj, name, delimiter, prefs, type, options={})
-		#puts ["-----OBJECT._merge_object", self.class, (obj.to_s rescue obj.class), name, delimiter, prefs, type.capitalize, options].join(', ')
+		#puts ["\n-----OBJECT._merge_object", self.class, (obj.to_s rescue obj.class), name, delimiter, prefs, type.capitalize, options].join(', ')
 		if prefs=='private'
 			_merge_instance!(obj, name, delimiter, prefs, type, options)
 		else
@@ -869,11 +872,11 @@ class Object
 	
 	# Merge a named object with the specified instance variable of self.
 	def _merge_instance!(obj, name, delimiter, prefs, type, options={})
-		#puts ['_merge_instance!', self.class, obj.class, name, delimiter, prefs, type, options.keys, '_end_merge_instance!'].join(', ')
-		if instance_variable_get("@#{name}") || delimiter
+		#puts ["\n_merge_instance!", self.class, obj.class, name, delimiter, prefs, type, options.keys, '_end_merge_instance!'].join(', ')
+		rslt = if instance_variable_get("@#{name}") || delimiter
 			if delimiter
 				delimit_name = obj._get_attribute(delimiter, options[:shared_variable_name]).to_s.downcase
-				#puts ['_setting_with_delimiter', delimit_name]
+				#puts ["\n_setting_with_delimiter", delimit_name]
 				#instance_variable_set("@#{name}", instance_variable_get("@#{name}") || options[:default_class].new)[delimit_name]=obj
 				# This line is more efficient than the above line.
 				instance_variable_set("@#{name}", options[:default_class].new) unless instance_variable_get("@#{name}")
@@ -882,28 +885,30 @@ class Object
 				# In parsing terms, this is trying to handle multiple elements who's delimiter field contains the SAME delimiter data.
 				#instance_variable_get("@#{name}")._merge_object!(obj, delimit_name, nil, nil, nil)
 			else
-				#puts ['_setting_existing_instance_var', name]
+				#puts ["\_setting_existing_instance_var", name]
 				instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
 			end
 		else
-			#puts ['_setting_new_instance_var', name]
+			#puts ["\n_setting_new_instance_var", name]
 			instance_variable_set("@#{name}", obj)
 		end
 		
 		# NEW
 		_create_accessor(name) if (options[:create_accessors] & ['all','private']).any?
 		
+		rslt
 	end
 	
 	# Get an instance variable, a member of a shared instance variable, or a hash value of self.
   def _get_attribute(name, shared_var_name=nil, options={})
   	return unless name
-  	#puts ["\nOBJECT_get_attribute", self.instance_variables, name, shared_var_name, options].join(', ')
+  	#puts ["\n\n", self.to_yaml]
+  	#puts ["OBJECT_get_attribute", self.class, self.instance_variables, name, shared_var_name, options].join(', ')
   	(shared_var_name = options[:shared_variable_name]) unless shared_var_name
 		
 		rslt = case
 		when self.is_a?(Hash) && self[name]; self[name]
-		when (var= instance_variable_get("@#{shared_var_name}")) && var[name]; var[name]
+		when ((var= instance_variable_get("@#{shared_var_name}")) && var[name]); var[name]
 		else instance_variable_get("@#{name}")
 		end
 		
@@ -973,7 +978,7 @@ class Hash
 		when prefs=='private'
 			_merge_instance!(obj, name, delimiter, prefs, type, options)
 		when (self[name] || delimiter)
-			if delimiter
+			rslt = if delimiter
 				delimit_name =  obj._get_attribute(delimiter, options[:shared_variable_name]).to_s.downcase
 				#puts "MERGING delimited object with hash: self '#{self.class}' obj '#{obj.class}' name '#{name}' delim '#{delimiter}' delim_name '#{delimit_name}' options '#{options}'"
 				self[name] ||= options[:default_class].new
@@ -986,10 +991,13 @@ class Hash
 				#obj.instance_variable_set(:@_index_, self[name].last.instance_variable_get(:@_index_).to_i + 1)
 				self[name] << obj
 			end
-			_create_accessor(name) if (options[:create_accessors] & ['all','shared','hash']).any?
+			_create_accessor(name) if ((options[:create_accessors] || []) & ['all','shared','hash']).any?
+			
+			rslt
 		else
-			self[name] = obj
+			rslt = self[name] = obj
 			_create_accessor(name) if (options[:create_accessors] & ['all','shared','hash']).any?
+			rslt
 		end
 	end
 	
