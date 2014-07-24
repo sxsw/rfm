@@ -182,7 +182,7 @@ module Rfm
 		    # Receive a single attribute (any named attribute or text)
 			  def receive_attribute(name, value)
 			  	#puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
-			  	new_att = DEFAULT_CLASS[name, value]    #.new.tap{|att| att[name]=value}
+			  	new_att = Hash[name, value]    #.new.tap{|att| att[name]=value}
 
 			  	assign_attributes(new_att, @object, @model, @local_model)
 			  rescue
@@ -211,7 +211,7 @@ module Rfm
 		    	  @model = @parent.model #nil
 		    	  @object = @parent.object #nil
 		    	  
-		    	  assign_attributes(@initial_attributes, @object, @model, @local_model)
+		    	  assign_attributes(@initial_attributes, @object, @model, @local_model) if @initial_attributes && @initial_attributes.any?
 		    	
 		    	# when new element has it's own handler (and will be cursor-only).
 	    		when @new_element_handler
@@ -224,12 +224,13 @@ module Rfm
 	    		else
 	    		  @model = @local_model
 	    		  
-            const = get_constant(@local_model['class'])
             callback = initialize_with?(@local_model)
             
             @object = if callback
-              get_callback([const, callback].flatten(1), caller_binding, {:method=>:allocate})
+              #get_callback([const, callback].flatten(1), caller_binding, {:method=>:allocate})
+              get_callback(callback, caller_binding)
 			      else
+			      	const = get_constant(@local_model['class'])
 			        const.send :allocate
 			      end
 			      
@@ -358,7 +359,7 @@ module Rfm
 				def assign_attributes(_attributes, base_object, base_model, new_model)
 		      if _attributes && !_attributes.empty?
 
-		      	#puts ["\nASSIGN_ATTRIBUTES", base_object.class, base_model, new_model].join(' **** ')
+		      	#puts ["\n\nASSIGN_ATTRIBUTES", "BASE_OBJECT: #{base_object.class}", "TAG: #{@tag}", "KEYS: #{_attributes.keys}", "BASE_MODEL: #{base_model['name']}", "NEW_MODEL: #{new_model['name']}"]
 
 						# 	# This is trying to merge element set as a whole, if possible.
 						# 	# Experimental #
