@@ -28,9 +28,11 @@ elements:
   - name: NAME
     as_name: name
 - name: field
-  class: Rfm::Metadata::FieldControl
-  attach: cursor
-  initialize_with:
+  #class: Rfm::Metadata::FieldControl
+  #attach: cursor
+  #initialize_with:
+  attach:
+  - cursor
   - Rfm::Metadata::FieldControl
   - :new
   - ivg(:meta)
@@ -40,11 +42,13 @@ elements:
   # # Need to assume attributes may or may not be included in start_element call.
   # handler: [object.instance_variable_get('@meta'), handle_new_field_control, _attributes]
   # # attach_attributes isn't doing anything when used with new-element-handler.
-  attach_attributes: private
+  attach_attributes: none
   elements:
   - name: style
-    element_handler: [object, handle_style_element, _attributes]
-    attach: none
+    #element_handler: [object, handle_style_element, _attributes]
+    #attach: none
+    attach: [none, object, handle_style_element, _attributes]
+    attach_attributes: none
     attributes:
     - name: valuelist
       as_name: value_list_name
@@ -52,12 +56,14 @@ elements:
 - name: valuelists
   attach: none
 - name: valuelist
-  class: Array
+  #class: Array
+  attach: [default, Array.new]
   as_name: value_lists
   delimiter: name
   elements:
   - name: value
-    class: Rfm::Metadata::ValueListItem
+    #class: Rfm::Metadata::ValueListItem
+    attach: [default, 'Rfm::Metadata::ValueListItem', allocate]
     before_close: replace(@value.to_s)
     attach_attributes: private
     attributes:

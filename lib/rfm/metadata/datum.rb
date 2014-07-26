@@ -1,4 +1,4 @@
-require 'delegate'
+#require 'delegate'
 module Rfm
   module Metadata
   
@@ -8,6 +8,7 @@ module Rfm
       	(resultset && resultset.layout && resultset.layout.field_mapping[name]) || name
       end
       
+      # NOT sure what this method is for. Can't find a reference to it.
 			def main_callback(cursor)
 				resultset = cursor.top.object
 				name = get_mapped_name(@attributes['name'].to_s, resultset)
@@ -16,7 +17,7 @@ module Rfm
 				cursor.parent.object[name.downcase] = field.coerce(data)
 			end
 			
-			def portal_callback(cursor)
+			def portal_field_element_close_callback(cursor)
 				resultset = cursor.top.object
 				table, name = @attributes['name'].to_s.split('::')
 				#puts ['DATUM_portal_callback_01', table, name].join(', ')
@@ -29,7 +30,7 @@ module Rfm
 			end
       
       # Should return value only.
-			def handler_callback(cursor)
+			def field_element_close_callback(cursor)
 				record = cursor.parent.object
 				resultset = cursor.top.object
 
@@ -37,6 +38,7 @@ module Rfm
 				field = resultset.field_meta[name]
 				data = @attributes['data']
 				#puts ["\nDATUM", name, record.class, resultset.class, data]
+				#puts ["\nDATUM", self.to_yaml]
 				record[name] = field.coerce(data)
 			end
       

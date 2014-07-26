@@ -136,7 +136,7 @@ module Rfm
 				# newtag - incoming tag of yet-to-be-created cursor. Get rid of this if you can.
 				# element_attachment_prefs - local object's attachment prefs based on local_model and current_model.
 				# level - cursor depth
-		    attr_accessor :model, :local_model, :object, :tag, :handler, :parent, :level, :element_attachment_prefs, :new_element_handler, :initial_attributes  #, :newtag
+		    attr_accessor :model, :local_model, :object, :tag, :handler, :parent, :level, :element_attachment_prefs, :new_element_callback, :initial_attributes  #, :newtag
 		    
 		    
 				#SaxParser.install_defaults(self)
@@ -169,9 +169,17 @@ module Rfm
 		    	@parent = _parent || self
 		    	@initial_attributes = _initial_attributes
 		    	@level = @parent.level.to_i + 1
-		    	@local_model = model_elements?(@tag, @parent.model) || DEFAULT_CLASS.new
+		    	@local_model = (model_elements?(@tag, @parent.model) || DEFAULT_CLASS.new)
 		    	@element_attachment_prefs = attachment_prefs(@parent.model, @local_model, 'element')
-		    	@new_element_handler = @local_model['element_handler']
+		    	#@attribute_attachment_prefs = attachment_prefs(@parent.model, @local_model, 'attribute')
+		    	
+		    	if @element_attachment_prefs.is_a? Array
+			    	@new_element_callback = @element_attachment_prefs.dup
+			    	@element_attachment_prefs = @new_element_callback.shift
+			    	if @element_attachment_prefs.to_s == 'default'; @element_attachment_prefs = nil; end
+			    end
+			    
+			   	#puts ["\nINITIALIZE_CURSOR tag: #{@tag}", "parent.object: #{@parent.object.class}", "local_model: #{@local_model.class}", "el_prefs: #{@element_attachment_prefs}",  "new_el_callback: #{@new_element_callback}", "attributes: #{@initial_attributes}"]
 
 		    	self
 		    end
@@ -190,7 +198,7 @@ module Rfm
 			  end
 			  
 		    def receive_start_element(_tag, _attributes)
-					
+		    	#puts ["\nRECEIVE_START '#{_tag}'", "current_object: #{@object.class}", "current_model: #{model['name']}"]
 					new_cursor = Cursor.new(_tag, @handler, self, _attributes) #, binding)
 					new_cursor.process_new_element(binding)
 
@@ -199,56 +207,110 @@ module Rfm
 		    
 		    # Decides how to attach element & attributes associated with this cursor.
 		    def process_new_element(caller_binding=binding)
+		    
+		    	new_element = @new_element_callback ? get_callback(@new_element_callback, caller_binding) : nil
+		    	
 		    	case
 		    	
 		    	# when inital cursor, just set model & object.
 		    	when @tag == '__TOP__';
+						#puts "__TOP__"
 		    	  @model = @handler.template
 		    	  @object = @handler.initial_object
 		    	
-		    	# when element is not to be attached.
 		    	when @element_attachment_prefs == 'none';
+		    		#puts "__NONE__"
 		    	  @model = @parent.model #nil
 		    	  @object = @parent.object #nil
 		    	  
-		    	  assign_attributes(@initial_attributes, @object, @model, @local_model) if @initial_attributes && @initial_attributes.any?
+		    	  if @initial_attributes && @initial_attributes.any? #&& @attribute_attachment_prefs != 'none'
+			    	  assign_attributes(@initial_attributes, @object, @model, @local_model) 
+			    	end
 		    	
-		    	# when new element has it's own handler (and will be cursor-only).
-	    		when @new_element_handler
+	    		when @element_attachment_prefs == 'cursor';
+	    			#puts "__CURSOR__"
 	    		  @model = @local_model
+            @object = new_element || DEFAULT_CLASS.allocate
 
-            @object = get_callback(@new_element_handler, caller_binding)
-		      	# not attaching to anything
-		      
-		      # all other cases (most typical cases).
+						if @initial_attributes && @initial_attributes.any? #&& @attribute_attachment_prefs != 'none'
+			    	  assign_attributes(@initial_attributes, @object, @model, @local_model) 
+			    	end
+		      	
 	    		else
+	    			#puts "__OTHER__"
 	    		  @model = @local_model
-	    		  
-            callback = initialize_with?(@local_model)
-            
-            @object = if callback
-              #get_callback([const, callback].flatten(1), caller_binding, {:method=>:allocate})
-              get_callback(callback, caller_binding)
-			      else
-			      	const = get_constant(@local_model['class'])
-			        const.send :allocate
-			      end
+						@object = new_element || DEFAULT_CLASS.allocate
 			      
-			      if @initial_attributes && attach_attributes?(@model) != 'none'
-			        assign_attributes(@initial_attributes, @object, @model, @local_model)
-			      end
+						if @initial_attributes && @initial_attributes.any? #&& @attribute_attachment_prefs != 'none'
+			    	  assign_attributes(@initial_attributes, @object, @model, @local_model) 
+			    	end
 			      
-						if @element_attachment_prefs != 'cursor' && !delimiter?(@local_model) 
+						if !delimiter?(@local_model) 
   						attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element')
   					end  		
 		    	end
 
           self
 		  	end
+
+
+				# ### BACKUP ###
+				# 	def process_new_element(caller_binding=binding)
+				#   	case
+				#   	
+				#   	# when inital cursor, just set model & object.
+				#   	when @tag == '__TOP__';
+				#   	  @model = @handler.template
+				#   	  @object = @handler.initial_object
+				#   	
+				#   	# when element is not to be attached.
+				#   	when @element_attachment_prefs == 'none';
+				#   	  @model = @parent.model #nil
+				#   	  @object = @parent.object #nil
+				#   	  
+				#   	  assign_attributes(@initial_attributes, @object, @model, @local_model) if @initial_attributes && @initial_attributes.any?
+				#   	
+				#   	# when new element has it's own handler (and will be cursor-only).
+				# 		when @new_element_handler
+				# 		  @model = @local_model
+				# 
+				#       @object = get_callback(@new_element_handler, caller_binding)
+				#     	# not attaching to anything
+				#     
+				#     # all other cases (most typical cases).
+				# 		else
+				# 		  @model = @local_model
+				# 		  
+				#       callback = initialize_with?(@local_model)
+				#       
+				#       @object = if callback
+				#         #get_callback([const, callback].flatten(1), caller_binding, {:method=>:allocate})
+				#         get_callback(callback, caller_binding)
+				#       else
+				#       	const = get_constant(@local_model['class'])
+				#         const.send :allocate
+				#       end
+				#       
+				#       if @initial_attributes && attach_attributes?(@model) != 'none'
+				#         assign_attributes(@initial_attributes, @object, @model, @local_model)
+				#       end
+				#       
+				# 			if @element_attachment_prefs != 'cursor' && !delimiter?(@local_model) 
+				# 				attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element')
+				# 			end  		
+				#   	end
+				# 
+				#     self
+				# 	end
+				# ###    #####
+
+
 		    		
 		    def receive_end_element(_tag)
 		    	#puts ["\nRECEIVE_END_ELEMENT '#{_tag}'", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
+		    	#puts ["\nEND_ELEMENT_OBJECT", object.to_yaml]
 	      	begin
+	      		      	
 						if _tag == @tag && (@model == @local_model)
 		      		# Data cleaup
 							compactor_settings = compact? || compact?(top.model)
@@ -256,16 +318,18 @@ module Rfm
 							(clean_members {|v| clean_members(v){|v| clean_members(v)}}) if compactor_settings
 						end
 						
-						if (delimiter = delimiter?(@local_model); delimiter)
+	      		if (delimiter = delimiter?(@local_model); delimiter && !['none','cursor'].include?(@element_attachment_prefs.to_s))
   						attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element')
   					end  		
 
-		      	if _tag == @tag
+		      	if _tag == @tag && (@model == @local_model)
 							# End-element callbacks.
 							#run_callback(_tag, self)
 							callback = before_close?(@local_model)
 							get_callback(callback, binding) if callback
-							
+						end
+						
+						if _tag == @tag
 							# return true only if matching tags
 							return true
 						end
@@ -276,8 +340,8 @@ module Rfm
             # end
 						
 						return
-					#rescue
-					#  Rfm.log.debug "Error: end_element tag '#{_tag}' failed: #{$!}"
+# 					rescue
+# 					 Rfm.log.debug "Error: end_element tag '#{_tag}' failed: #{$!}"
 		      end
 		    end
 		    
@@ -300,7 +364,7 @@ module Rfm
 		    # TODO-MAYBE: Change param order to (method, object, params),
 		    #             might help confusion with param complexities.
 		    #
-		    def get_callback(callback, caller_binding=binding, default={})
+		    def get_callback(callback, caller_binding=binding, defaults={})
 		      input = callback.is_a?(Array) ? callback.dup : callback
 		      #puts "\nGET_CALLBACK tag: #{tag}, input: #{input}"
 		      params = case
@@ -324,14 +388,16 @@ module Rfm
           obj_raw = params.shift
           #puts "\nOBJECT_RAW: #{obj_raw}"
           obj = if obj_raw.is_a?(String); eval(obj_raw.to_s, caller_binding); else obj_raw; end
-          if obj.nil? || obj == ''; obj = default[:object] || @object; end
+          if obj.nil? || obj == ''; obj = defaults[:object] || @object; end
           #puts "OBJECT: #{obj}"
             
-          code = params.shift || default[:method]
+          code = params.shift || defaults[:method]
           params.each_with_index{|str,i| params[i] = eval(str, caller_binding) }
-          params = default[:params] if params.size == 0
-          #puts "\nCALLBACK_ARRAY #{obj.class}, #{code}, #{params}"
+          params = defaults[:params] if params.size == 0
+         	#puts ["\nGET_CALLBACK  callback: #{callback}", "obj.class: #{obj.class}", "code: #{code}", "params-class #{params.class}"]
           case
+          when (code.nil? || code=='')
+          	obj
           when code.is_a?(Symbol)
             obj.send(code, *params)
           when code.is_a?(String)
@@ -359,7 +425,7 @@ module Rfm
 				def assign_attributes(_attributes, base_object, base_model, new_model)
 		      if _attributes && !_attributes.empty?
 
-		      	#puts ["\n\nASSIGN_ATTRIBUTES", "BASE_OBJECT: #{base_object.class}", "TAG: #{@tag}", "KEYS: #{_attributes.keys}", "BASE_MODEL: #{base_model['name']}", "NEW_MODEL: #{new_model['name']}"]
+		      	#puts ["\nASSIGN_ATTRIBUTES", "BASE_OBJECT: #{base_object.class}", "TAG: #{@tag}", "BASE_MODEL: #{base_model['name']}", "NEW_MODEL: #{new_model['name']}", _attributes.to_yaml]
 
 						# 	# This is trying to merge element set as a whole, if possible.
 						# 	# Experimental #
@@ -400,9 +466,9 @@ module Rfm
           # end
 					
 					
-					#puts ["\nCURSOR.attach_new_object 1", type, label, base_object.class, new_object.class, delimiter?(new_model), prefs, shared_var_name, create_accessors].join(', ')
+					#puts ["\nATTACH_NEW_OBJECT 1", type, label, base_object.class, new_object.class, delimiter?(new_model), prefs, shared_var_name, create_accessors].join(', ')
 					base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>DEFAULT_CLASS, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
-					#puts ["\nCURSOR.attach_new_object 2: #{base_object.class} with ", label, delimiter?(new_model), prefs, type, :default_class=>default_class, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors]
+					#puts ["\nATTACH_NEW_OBJECT 2: #{base_object.class} with ", label, delimiter?(new_model), prefs, type, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors]
           # if type == 'attribute'
           #   puts ["\nATTACH_ATTR", "name: #{name}", "label: #{label}", "new_object: #{new_object.class rescue ''}", "base_object: #{base_object.class rescue ''}", "base_model: #{base_model['name'] rescue ''}", "new_model: #{new_model['name'] rescue ''}", "prefs: #{prefs}"]
           # end
@@ -821,7 +887,7 @@ class Object
 
 	# Master method to attach any object to this object.
 	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
-		#puts ["\n\nOBJECT._attach_object", self.class, obj.class, obj.to_s, args].to_yaml
+		#puts ["\n\nATTACH_OBJECT._attach_object", self.class, obj.class, obj.to_s, args].to_yaml
 		# 	default_options = {
 		# 		:shared_variable_name => 'attributes',
 		# 		:default_class => Hash,
@@ -961,7 +1027,7 @@ end # Object
 
 class Array
 	def _merge_object!(obj, name, delimiter, prefs, type, options={})
-		#puts ["\n+++++ARRAY._merge_object", self.class, (obj.to_s rescue obj.class), name, delimiter, prefs, type.titleize, options].join(', ')
+		#puts ["\n+++++ARRAY._merge_object", self.class, (obj.to_s rescue obj.class), name, delimiter, prefs, type, options].join(', ')
 		case
 		when prefs=='shared' || type == 'attribute' && prefs.to_s != 'private' ; _merge_shared!(obj, name, delimiter, prefs, type, options)
 		when prefs=='private'; _merge_instance!(obj, name, delimiter, prefs, type, options)
@@ -972,7 +1038,7 @@ end # Array
 
 class Hash
 	def _merge_object!(obj, name, delimiter, prefs, type, options={})
-		#puts ["\n*****HASH._merge_object", type, name, self.class, (obj.to_s rescue obj.class), delimiter, prefs, options].join(', ')
+		#puts ["\n*****HASH._merge_object", "type: #{type}", "name: #{name}", "self.class: #{self.class}", "new_obj: #{(obj.to_s rescue obj.class)}", "delimiter: #{delimiter}", "prefs: #{prefs}", "options: #{options}"]
 		case
 		when prefs=='shared'
 			_merge_shared!(obj, name, delimiter, prefs, type, options)
@@ -998,6 +1064,7 @@ class Hash
 		else
 			rslt = self[name] = obj
 			_create_accessor(name) if (options[:create_accessors] & ['all','shared','hash']).any?
+			#puts ["\nRESULT", self.to_yaml]
 			rslt
 		end
 	end

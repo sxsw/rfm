@@ -29,22 +29,23 @@ elements:
 - name:  metadata
   attach: none
 - name: field_definition
-  element_handler: [ivg('meta'), handle_new_field, _attributes]
-  # I don't think attributes are being attached by current version of parser.
-  attach_attributes: private
-  before_close: [object, main_callback, self]
+  #element_handler: [ivg('meta'), handle_new_field, _attributes]
+  attach: [cursor, ivg('meta'), handle_new_field, _attributes]
+  attach_attributes: none
+  before_close: [object, field_definition_element_close_callback, self]
 - name: relatedset_definition
   delimiter: table
   as_name: portal_meta
   attach_attributes: private
   elements:
   - name: field_definition
-    class: Rfm::Metadata::Field
-    attach: cursor
+    #class: Rfm::Metadata::Field
+    #attach: cursor
+    attach: [cursor, 'Rfm::Metadata::Field', allocate]
     delimiter: name
     as_name: field_meta
     attach_attributes: private
-    before_close:  [object, portal_callback, self]
+    before_close:  [object, relatedset_field_definition_element_close_callback, self]
 - name: resultset
   attach: none
   attributes:
@@ -53,36 +54,37 @@ elements:
   - name: fetch_size
     accessor: none
 - name: record
-  initialize_with: [object, handle_new_record, _attributes]
-  attach: cursor
-  attach_attributes: private
-  # This was not handling individual attribute parsing correctly
-  #element_handler: [object, handle_new_record, _attributes]
+  attach: [cursor, object, handle_new_record, _attributes]
+  attach_attributes: none
   before_close: '@loaded=true'
   elements:
   - name: field
-    class: Rfm::Metadata::Datum
+    #class: Rfm::Metadata::Datum
+    #attach: cursor
+    attach: [cursor, 'Rfm::Metadata::Datum', allocate]
     compact: true
-    attach: cursor
-    before_close: [object, handler_callback, self]
+    before_close: [object, field_element_close_callback, self]
   - name: relatedset
-    class: Array
+    #class: Array
+    #attach: private
+    attach: [private, Array, allocate]
     as_name: portals
-    attach: private
     attach_attributes: private
     create_accessors: all
     delimiter: table
     elements:
     - name: record
-      class: Rfm::Record
+      #class: Rfm::Record
+      attach: [default, 'Rfm::Record', allocate]
       attach_attributes: private
       before_close: '@loaded=true'
       elements:
       - name: field
         compact: true
-        class: Rfm::Metadata::Datum
-        attach: cursor
-        before_close: [object, portal_callback, self]
+        #class: Rfm::Metadata::Datum
+        #attach: cursor
+        attach: [cursor, 'Rfm::Metadata::Datum', allocate]
+        before_close: [object, portal_field_element_close_callback, self]
 
 
 
