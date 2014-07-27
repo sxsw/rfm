@@ -42,13 +42,15 @@ elements:
   # # Need to assume attributes may or may not be included in start_element call.
   # handler: [object.instance_variable_get('@meta'), handle_new_field_control, _attributes]
   # # attach_attributes isn't doing anything when used with new-element-handler.
-  attach_attributes: none
+  attach_attributes: private
+  delimiter: name
   elements:
+  # This config doesn't use the creation handler, so it should work with ox.
   - name: style
     #element_handler: [object, handle_style_element, _attributes]
-    #attach: none
-    attach: [none, object, handle_style_element, _attributes]
-    attach_attributes: none
+    attach: none
+    #attach: [cursor, object, handle_style_element, _attributes]
+    #attach_attributes: none
     attributes:
     - name: valuelist
       as_name: value_list_name

@@ -24,6 +24,16 @@ module Rfm
 	  class FieldControl
 	    attr_reader :name, :style, :value_list_name
 	    meta_attr_accessor :layout_meta
+	    
+	    FIELD_CONTROL_STYLE_MAP = {
+				'EDITTEXT'	=>	:edit_box,
+				'POPUPMENU'	=>	:popup_menu,
+				'CHECKBOX'	=>	:checkbox_set,
+				'RADIOBUTTONS'	=>	:radio_button_set,
+				'POPUPLIST'	=>	:popup_list,
+				'CALENDAR'	=>	:calendar,
+				'SCROLLTEXT'	=>	:scrollable,
+			}
 	  
       # def initialize(_attributes, meta)
       #   puts ["\nFieldControl#initialize", "_attributes: #{_attributes}", "meta: #{meta.class}"]
@@ -38,23 +48,23 @@ module Rfm
 	  		self
 	  	end
 	  	
-	  	# Handle manual attachment of STYLE element.
-	  	def handle_style_element(attributes)
-	  		_attach_as_instance_variables attributes, :key_translator=>method(:translate_value_list_key), :value_translator=>method(:translate_style_value)
-	  	end
-	  	
-	  	def translate_style_value(key, val)
-	  		#puts ["TRANSLATE_STYLE", raw].join(', ')
-	  		{
-	  			'EDITTEXT'	=>	:edit_box,
-					'POPUPMENU'	=>	:popup_menu,
-					'CHECKBOX'	=>	:checkbox_set,
-					'RADIOBUTTONS'	=>	:radio_button_set,
-					'POPUPLIST'	=>	:popup_list,
-					'CALENDAR'	=>	:calendar,
-					'SCROLLTEXT'	=>	:scrollable,
-	  		}[val] || val
-	  	end
+			# # Handle manual attachment of STYLE element.
+			# def handle_style_element(attributes)
+			# 	_attach_as_instance_variables attributes, :key_translator=>method(:translate_value_list_key), :value_translator=>method(:translate_style_value)
+			# end
+			# 
+			# def translate_style_value(key, val)
+			# 	#puts ["TRANSLATE_STYLE", raw].join(', ')
+			# 	{
+			# 		'EDITTEXT'	=>	:edit_box,
+			# 		'POPUPMENU'	=>	:popup_menu,
+			# 		'CHECKBOX'	=>	:checkbox_set,
+			# 		'RADIOBUTTONS'	=>	:radio_button_set,
+			# 		'POPUPLIST'	=>	:popup_list,
+			# 		'CALENDAR'	=>	:calendar,
+			# 		'SCROLLTEXT'	=>	:scrollable,
+			# 	}[val] || val
+			# end
 	  	
 	  	def translate_value_list_key(raw)
 				{'valuelist'=>'value_list_name'}[raw] || raw	  	
@@ -65,6 +75,7 @@ module Rfm
 	  	end
 
       def element_close_handler(_cursor)
+      	@type = FIELD_CONTROL_STYLE_MAP[@type] || @type
         layout_meta.receive_field_control(self)
       end
 
