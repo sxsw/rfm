@@ -66,15 +66,15 @@ module Rfm
 			# 	}[val] || val
 			# end
 	  	
-	  	def translate_value_list_key(raw)
-				{'valuelist'=>'value_list_name'}[raw] || raw	  	
-	  	end
+			# def translate_value_list_key(raw)
+			# 	{'valuelist'=>'value_list_name'}[raw] || raw	  	
+			# end
 	  	
 	  	def value_list
 	  		layout_meta.value_lists[value_list_name]
 	  	end
 
-      def element_close_handler(_cursor)
+      def element_close_handler  #(_cursor)
       	@type = FIELD_CONTROL_STYLE_MAP[@type] || @type
         layout_meta.receive_field_control(self)
       end

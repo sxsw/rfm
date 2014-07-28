@@ -30,9 +30,13 @@ elements:
   attach: none
 - name: field_definition
   #element_handler: [ivg('meta'), handle_new_field, _attributes]
-  attach: [cursor, ivg('meta'), handle_new_field, _attributes]
-  attach_attributes: none
-  before_close: [object, field_definition_element_close_callback, self]
+  #attach: [cursor, ivg('meta'), handle_new_field, _attributes]
+  #attach_attributes: none
+  attach: [_meta, 'Rfm::Metadata::Field', allocate]
+  as_name: field_meta
+  delimiter: name
+  attach_attributes: private
+  #before_close: [object, field_definition_element_close_callback, self]
 - name: relatedset_definition
   delimiter: table
   as_name: portal_meta

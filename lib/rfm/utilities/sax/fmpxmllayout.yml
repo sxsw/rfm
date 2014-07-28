@@ -36,7 +36,8 @@ elements:
   - Rfm::Metadata::FieldControl
   - :new
   - ivg(:meta)
-  before_close: [object, element_close_handler, self]
+  #before_close: [object, element_close_handler, self]
+  before_close: [object, element_close_handler]
   # # Used to be 'object.meta', but that required sloppy 'loaded' indicator handling (or infinite loop),
   # # so now just referring to raw inst var @meta, instead of method .meta.
   # # Need to assume attributes may or may not be included in start_element call.
