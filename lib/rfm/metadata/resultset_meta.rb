@@ -54,12 +54,12 @@ module Rfm
 	  		portal_meta ? portal_meta.keys : []
 	  	end
 						
-	  	def handle_new_field(attributes)
-	  		f = Field.new(attributes)
-	  		# TODO: Re-enable these when you stop using the before_close callback.
-				# 	name = attributes['name']
-				# 	self[name] = f
-	  	end
+			# def handle_new_field(attributes)
+			# 	f = Field.new(attributes)
+			# 	# TODO: Re-enable these when you stop using the before_close callback.
+			# 	# 	name = attributes['name']
+			# 	# 	self[name] = f
+			# end
 		
 		end
 	end

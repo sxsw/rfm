@@ -117,8 +117,8 @@ module Rfm
   		r
   	end
   	
-  	def end_datasource_element_callback(cursor)
-  		%w(date_format time_format timestamp_format).each{|f| convert_date_time_format(eval(f))}
+  	def end_datasource_element_callback  #(cursor)
+  		%w(date_format time_format timestamp_format).each{|f| convert_date_time_format(send(f))}
   	end
     
   private

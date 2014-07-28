@@ -22,21 +22,21 @@ elements:
     as_name: error
 - name: datasource
   attach: none
-  before_close: [object, end_datasource_element_callback, self]
+  before_close: [object, end_datasource_element_callback]
   attributes:
   - name: total_count
     accessor: none
 - name:  metadata
   attach: none
 - name: field_definition
-  #element_handler: [ivg('meta'), handle_new_field, _attributes]
-  #attach: [cursor, ivg('meta'), handle_new_field, _attributes]
-  #attach_attributes: none
-  attach: [_meta, 'Rfm::Metadata::Field', allocate]
-  as_name: field_meta
+  # These two steps can be used to create the attachment to resultset-meta automatically,
+  # but the field-mapping translation won't happen. Find a way to make it happen automatically.
+  # attach: [_meta, 'Rfm::Metadata::Field', allocate]
+  # as_name: field_meta
+  attach: cursor
   delimiter: name
   attach_attributes: private
-  #before_close: [object, field_definition_element_close_callback, self]
+  before_close: [object, field_definition_element_close_callback, self]
 - name: relatedset_definition
   delimiter: table
   as_name: portal_meta
