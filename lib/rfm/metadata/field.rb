@@ -101,7 +101,8 @@ module Rfm
             
 			def field_definition_element_close_callback(cursor)
 				self.resultset = cursor.top.object
-				resultset.field_meta[get_mapped_name.to_s.downcase] = self
+				resultset_meta = resultset.instance_variable_get(:@meta)
+				resultset_meta.field_meta[get_mapped_name.to_s.downcase] = self
 			end
 			
 			def relatedset_field_definition_element_close_callback(cursor)

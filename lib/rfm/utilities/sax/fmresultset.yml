@@ -30,10 +30,10 @@ elements:
   attach: none
 - name: field_definition
   # These two steps can be used to create the attachment to resultset-meta automatically,
-  # but the field-mapping translation won't happen. Find a way to make it happen automatically.
+  # but the field-mapping translation won't happen.
   # attach: [_meta, 'Rfm::Metadata::Field', allocate]
   # as_name: field_meta
-  attach: cursor
+  attach: [cursor, 'Rfm::Metadata::Field', allocate]
   delimiter: name
   attach_attributes: private
   before_close: [object, field_definition_element_close_callback, self]
