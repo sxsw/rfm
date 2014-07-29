@@ -117,6 +117,12 @@ module Rfm
 				(const_set k, v)
 			end
 		end
+		
+		::Object::ATTACH_OBJECT_DEFAULT_OPTIONS = {
+			:shared_variable_name => SHARED_VARIABLE_NAME,
+			:default_class => DEFAULT_CLASS,
+			:create_accessors => [] #:all, :private, :shared, :hash
+		}		
 
 		def self.parse(*args)
 			Handler.build(*args)
@@ -872,11 +878,11 @@ end # Rfm
 
 class Object
 
-		ATTACH_OBJECT_DEFAULT_OPTIONS = {
-				:shared_variable_name => Rfm::SaxParser::SHARED_VARIABLE_NAME,
-				:default_class => Rfm::SaxParser::DEFAULT_CLASS,
-				:create_accessors => [] #:all, :private, :shared, :hash
-		}		
+	# 		ATTACH_OBJECT_DEFAULT_OPTIONS = {
+	# 				:shared_variable_name => Rfm::SaxParser::SHARED_VARIABLE_NAME,
+	# 				:default_class => Rfm::SaxParser::DEFAULT_CLASS,
+	# 				:create_accessors => [] #:all, :private, :shared, :hash
+	# 		}		
 
 	# Master method to attach any object to this object.
 	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
