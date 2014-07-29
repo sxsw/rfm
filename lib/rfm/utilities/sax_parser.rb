@@ -445,7 +445,7 @@ module Rfm
 					
 					# Use local create_accessors prefs first, then more general ones.
 					create_accessors = accessor?(@local_model)
-					(create_accessors = create_accessors?(@model)) unless create_accessors && create_accessors.any?
+					(create_accessors = create_accessors?(@parent.model)) unless create_accessors && create_accessors.any?
 					
           # # This is NEW!
           # translator = new_model['translator']
@@ -455,7 +455,7 @@ module Rfm
 					
 					
 					#puts ["\nATTACH_NEW_ELEMENT 1", "type: #{type}", "label: #{label}", "base_object: #{base_object.class}", "new_object: #{new_object.class}", "delimiter: #{delimiter?(new_model)}", "prefs: #{prefs}", "shared_var_name: #{shared_var_name}", "create_accessors: #{create_accessors}"]
-					parent.object._attach_object!(new_object, label, delimiter?(@local_model), prefs, 'element', :default_class=>DEFAULT_CLASS, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
+					@parent.object._attach_object!(new_object, label, delimiter?(@local_model), prefs, 'element', :default_class=>DEFAULT_CLASS, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
 					#puts ["\nATTACH_NEW_ELEMENT 2: #{base_object.class} with ", label, delimiter?(new_model), prefs, type, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors]
           # if type == 'attribute'
           #   puts ["\nATTACH_ATTR", "name: #{name}", "label: #{label}", "new_object: #{new_object.class rescue ''}", "base_object: #{base_object.class rescue ''}", "base_model: #{base_model['name'] rescue ''}", "new_model: #{new_model['name'] rescue ''}", "prefs: #{prefs}"]
