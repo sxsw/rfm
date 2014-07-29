@@ -147,7 +147,7 @@ module Rfm
         self.merge!(@mods) unless @mods == {}
         @loaded = true
       end
-      _attach_as_instance_variables args[1]
+      _attach_as_instance_variables(args[1]) if args[1].is_a? Hash
 			#@loaded = true
 			self
     end

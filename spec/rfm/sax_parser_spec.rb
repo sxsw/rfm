@@ -3,15 +3,17 @@
 
 describe Rfm::SaxParser::Handler do
 	#subject {Rfm::SaxParser::Handler}
-	HANDLER = Rfm::SaxParser::Handler.get_backend :rexml
+	HANDLER = Rfm::SaxParser::Handler.get_backend #:rexml
+	before(:all) do; Rfm::SaxParser::TEMPLATE_PREFIX = '.'; end
 
 	describe '#set_cursor' do
+		# TODO: This seems really clumsy, clean it up.
 		subject {HANDLER.allocate} #new('local_testing/sax_parse.yml')}
 		#let(:input) { Rfm::SaxParser::Cursor.new({'elements'=>{'test'=>'True'}}, {:attribute=>'data'}, 'TEST', subject) }
 		let(:input) { Rfm::SaxParser::Cursor.allocate.tap{|c| c.object = Object.new}}
 		before(:each) do
 			#Rfm::SaxParser.template_prefix = '.'
-			Rfm::SaxParser::TEMPLATE_PREFIX = '.'
+			# Rfm::SaxParser::TEMPLATE_PREFIX = '.'
 			subject.stack = []
 		end
 		
@@ -33,6 +35,19 @@ describe Rfm::SaxParser::Handler do
 			rr = HANDLER.build('spec/data/resultset_with_portals.xml', 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new).result
 			#y r
 			rr[0].portals['ProjectLineItemsSubItems_PLI'][2]['producetotal'].to_i.should == 1
+		end
+		
+		it 'creates records with record_id and mod_id instance vars' do
+			rr = HANDLER.build('spec/data/resultset_with_portals.xml', 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new).result
+			rr[0].record_id.should == "499"
+			rr[0].mod_id.should == "86"
+		end
+		
+		it 'creates total_count, founset_count, fetch_size on resultset' do
+			rr = HANDLER.build('spec/data/resultset_with_portals.xml', 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new).result
+			rr.total_count.should == 3475
+			rr.foundset_count.should == 1
+			rr.fetch_size.should == 1
 		end
 	end
 	

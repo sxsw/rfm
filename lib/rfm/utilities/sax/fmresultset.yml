@@ -58,8 +58,10 @@ elements:
   - name: fetch_size
     accessor: none
 - name: record
-  attach: [cursor, object, handle_new_record, _attributes]
-  attach_attributes: none
+  #attach: [cursor, object, handle_new_record, _attributes]
+  #attach_attributes: none
+  attach: [array, 'Rfm::Record', new, object]
+  attach_attributes: private
   before_close: '@loaded=true'
   elements:
   - name: field

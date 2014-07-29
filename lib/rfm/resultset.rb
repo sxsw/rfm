@@ -111,6 +111,7 @@ module Rfm
 			@meta ||= Metadata::ResultsetMeta.new
 		end
 
+		# Deprecated on 7/29/2014. Stop using.
   	def handle_new_record(attributes)
   		r = Rfm::Record.new(self, attributes, {})
   		self << r
