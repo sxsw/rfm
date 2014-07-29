@@ -192,7 +192,7 @@ module Rfm
 			  	#puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
 			  	new_att = Hash[name, value]    #.new.tap{|att| att[name]=value}
 
-			  	assign_attributes(new_att, @object, @model, @local_model)
+			  	assign_attributes(new_att) #, @object, @model, @local_model)
 			  rescue
 			  	Rfm.log.warn "Error: could not assign attribute '#{name.to_s}' to element '#{self.tag.to_s}': #{$!}"
 			  end
@@ -226,7 +226,7 @@ module Rfm
 		    	  @object = @parent.object #nil
 		    	  
 		    	  if @initial_attributes && @initial_attributes.any? #&& @attribute_attachment_prefs != 'none'
-			    	  assign_attributes(@initial_attributes, @object, @model, @local_model) 
+			    	  assign_attributes(@initial_attributes) #, @object, @model, @local_model) 
 			    	end
 		    	
 	    		when @element_attachment_prefs == 'cursor';
@@ -235,7 +235,7 @@ module Rfm
             @object = new_element || DEFAULT_CLASS.allocate
 
 						if @initial_attributes && @initial_attributes.any? #&& @attribute_attachment_prefs != 'none'
-			    	  assign_attributes(@initial_attributes, @object, @model, @local_model) 
+			    	  assign_attributes(@initial_attributes) #, @object, @model, @local_model) 
 			    	end
 		      	
 	    		else
@@ -244,11 +244,12 @@ module Rfm
 						@object = new_element || DEFAULT_CLASS.allocate
 			      
 						if @initial_attributes && @initial_attributes.any? #&& @attribute_attachment_prefs != 'none'
-			    	  assign_attributes(@initial_attributes, @object, @model, @local_model) 
+			    	  assign_attributes(@initial_attributes) #, @object, @model, @local_model) 
 			    	end
 			      
 						if !delimiter?(@local_model) 
-  						attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element')
+  						#attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element')
+  						attach_new_element(@tag, @object)
   					end  		
 		    	end
 
@@ -269,7 +270,8 @@ module Rfm
 						end
 						
 	      		if (delimiter = delimiter?(@local_model); delimiter && !['none','cursor'].include?(@element_attachment_prefs.to_s))
-  						attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element')
+  						#attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element')
+  						attach_new_element(@tag, @object)
   					end  		
 
 		      	if _tag == @tag #&& (@model == @local_model)
@@ -373,48 +375,77 @@ module Rfm
 				#####  MERGE METHODS  #####
 				
 		  	# Assign attributes to element.
-				def assign_attributes(_attributes, base_object, base_model, new_model)
+				def assign_attributes(_attributes)
 		      if _attributes && !_attributes.empty?
 
-		      	#puts ["\nASSIGN_ATTRIBUTES", "base_object: #{base_object.class}", "tag: #{@tag}", "base_model: #{base_model['name']}", "new_model: #{new_model['name']}", _attributes.to_yaml]
-
-						# 	# This is trying to merge element set as a whole, if possible.
-						# 	# Experimental #
-						# 	#
-						# 	# OLD: prefs_exist = model_attributes?(nil, new_model) || attach_attributes?(base_model) || delimiter?(base_model)
-						# 	attribute_prefs =  attach_attributes?(base_model)
-						# 	case
-						# 	when !model_attributes?(nil, base_model) && attribute_prefs.to_s[/shared|_/]
-						# 		shared_var_name = shared_variable_name(attribute_prefs) || 'attributes'
-						# 		#puts ["MASS", attribute_prefs, shared_var_name, _attributes.keys].join(', ')
-						# 		#attach_new_object(base_object, _attributes, shared_var_name, base_model, new_model, 'attribute')
-						# 		#base_object._attach_object!(_attributes, shared_var_name, nil, 'private', 'attribute', :default_class=>default_class, :create_accessors=>create_accessors?(base_model))
-						# 		(var = ivg(shared_var_name, base_object)) ? var.merge!(_attributes) : ivs(shared_var_name, _attributes, base_object)
-						# 	else
-						# 		#puts "Loading attributes individually."
-						# 		#puts ["INDIVIDUAL", attribute_prefs, _attributes.keys].join(', ')
-						_attributes.each{|k,v| attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
-	 					#		end
+						_attributes.each do |k,v|
+							#attach_new_object(base_object, v, k, base_model, model_attributes?(k, new_model), 'attribute')}
+							attr_model = model_attributes?(k, @local_model)
+							
+							label = label_or_tag(k, attr_model)
+							
+							prefs = [attachment_prefs(@model, attr_model, 'attribute')].flatten(1)[0]
+							
+							shared_var_name = shared_variable_name(prefs)
+							(prefs = "shared") if shared_var_name
+							
+							# Use local create_accessors prefs first, then more general ones.
+							create_accessors = accessor?(attr_model)
+							(create_accessors = create_accessors?(@model)) unless create_accessors && create_accessors.any?
+							
+							#puts ["\nATTACH_NEW_OBJECT 1", "type: #{type}", "label: #{label}", "base_object: #{base_object.class}", "new_object: #{new_object.class}", "delimiter: #{delimiter?(new_model)}", "prefs: #{prefs}", "shared_var_name: #{shared_var_name}", "create_accessors: #{create_accessors}"]
+							@object._attach_object!(v, label, delimiter?(attr_model), prefs, 'attribute', :default_class=>DEFAULT_CLASS, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
+	 					end
+	 					
 		      end
 				end
 								
-				def attach_new_object(base_object, new_object, name, base_model, new_model, type)
-					label = label_or_tag(name, new_model)
+				# 	def attach_new_object(base_object, new_object, name, base_model, new_model, type)
+				# 		label = label_or_tag(name, new_model)
+				# 		
+				# 		# Was this, which works fine, but not as efficient:
+				# 		# prefs = [attachment_prefs(base_model, new_model, type)].flatten(1)[0]
+				# 		prefs = if type=='attribute'
+				# 			[attachment_prefs(base_model, new_model, type)].flatten(1)[0]
+				# 		else
+				# 			@element_attachment_prefs
+				# 		end
+				# 		
+				# 		shared_var_name = shared_variable_name(prefs)
+				# 		(prefs = "shared") if shared_var_name
+				# 		
+				# 		# Use local create_accessors prefs first, then more general ones.
+				# 		create_accessors = accessor?(new_model)
+				# 		(create_accessors = create_accessors?(base_model)) unless create_accessors && create_accessors.any?
+				# 		
+				#     # # This is NEW!
+				#     # translator = new_model['translator']
+				#     # if translator
+				#     #   new_object = base_object.send translator, name, new_object
+				#     # end
+				# 		
+				# 		
+				# 		#puts ["\nATTACH_NEW_OBJECT 1", "type: #{type}", "label: #{label}", "base_object: #{base_object.class}", "new_object: #{new_object.class}", "delimiter: #{delimiter?(new_model)}", "prefs: #{prefs}", "shared_var_name: #{shared_var_name}", "create_accessors: #{create_accessors}"]
+				# 		base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>DEFAULT_CLASS, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
+				# 		#puts ["\nATTACH_NEW_OBJECT 2: #{base_object.class} with ", label, delimiter?(new_model), prefs, type, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors]
+				#     # if type == 'attribute'
+				#     #   puts ["\nATTACH_ATTR", "name: #{name}", "label: #{label}", "new_object: #{new_object.class rescue ''}", "base_object: #{base_object.class rescue ''}", "base_model: #{base_model['name'] rescue ''}", "new_model: #{new_model['name'] rescue ''}", "prefs: #{prefs}"]
+				#     # end
+				# 	end
+				
+				def attach_new_element(name, new_object)   #(base_object, new_object, name, base_model, new_model, type)
+					label = label_or_tag(name, @local_model)
 					
 					# Was this, which works fine, but not as efficient:
 					# prefs = [attachment_prefs(base_model, new_model, type)].flatten(1)[0]
-					prefs = if type=='attribute'
-						[attachment_prefs(base_model, new_model, type)].flatten(1)[0]
-					else
-						@element_attachment_prefs
-					end
+					prefs = @element_attachment_prefs
 					
 					shared_var_name = shared_variable_name(prefs)
 					(prefs = "shared") if shared_var_name
 					
 					# Use local create_accessors prefs first, then more general ones.
-					create_accessors = accessor?(new_model)
-					(create_accessors = create_accessors?(base_model)) unless create_accessors && create_accessors.any?
+					create_accessors = accessor?(@local_model)
+					(create_accessors = create_accessors?(@model)) unless create_accessors && create_accessors.any?
 					
           # # This is NEW!
           # translator = new_model['translator']
@@ -423,9 +454,9 @@ module Rfm
           # end
 					
 					
-					#puts ["\nATTACH_NEW_OBJECT 1", "type: #{type}", "label: #{label}", "base_object: #{base_object.class}", "new_object: #{new_object.class}", "delimiter: #{delimiter?(new_model)}", "prefs: #{prefs}", "shared_var_name: #{shared_var_name}", "create_accessors: #{create_accessors}"]
-					base_object._attach_object!(new_object, label, delimiter?(new_model), prefs, type, :default_class=>DEFAULT_CLASS, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
-					#puts ["\nATTACH_NEW_OBJECT 2: #{base_object.class} with ", label, delimiter?(new_model), prefs, type, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors]
+					#puts ["\nATTACH_NEW_ELEMENT 1", "type: #{type}", "label: #{label}", "base_object: #{base_object.class}", "new_object: #{new_object.class}", "delimiter: #{delimiter?(new_model)}", "prefs: #{prefs}", "shared_var_name: #{shared_var_name}", "create_accessors: #{create_accessors}"]
+					parent.object._attach_object!(new_object, label, delimiter?(@local_model), prefs, 'element', :default_class=>DEFAULT_CLASS, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
+					#puts ["\nATTACH_NEW_ELEMENT 2: #{base_object.class} with ", label, delimiter?(new_model), prefs, type, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors]
           # if type == 'attribute'
           #   puts ["\nATTACH_ATTR", "name: #{name}", "label: #{label}", "new_object: #{new_object.class rescue ''}", "base_object: #{base_object.class rescue ''}", "base_model: #{base_model['name'] rescue ''}", "new_model: #{new_model['name'] rescue ''}", "prefs: #{prefs}"]
           # end

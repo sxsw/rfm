@@ -89,7 +89,7 @@ describe Rfm::Layout do
 			# This is now handled in spec_helper
 			#Rfm::Connection.any_instance.stub(:connect).and_return LAYOUT_XML
 			layout.send(:load_layout)
-			puts layout.to_yaml
+			#puts layout.to_yaml
 			layout.value_lists.has_key?('employee unique id').should be_true
 		end
 	end
