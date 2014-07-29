@@ -28,15 +28,12 @@ elements:
   - name: NAME
     as_name: name
 - name: field
-  #class: Rfm::Metadata::FieldControl
-  #attach: cursor
-  #initialize_with:
   attach:
   - cursor
   - Rfm::Metadata::FieldControl
   - :new
   - ivg(:meta)
-  #before_close: [object, element_close_handler, self]
+  # Must use before_close handler to attach, since field_mapping must be applied to value-list key name.
   before_close: [object, element_close_handler]
   # # Used to be 'object.meta', but that required sloppy 'loaded' indicator handling (or infinite loop),
   # # so now just referring to raw inst var @meta, instead of method .meta.
@@ -60,13 +57,13 @@ elements:
   attach: none
 - name: valuelist
   #class: Array
-  attach: [default, Array.new]
+  attach: [_meta, Array.new]
   as_name: value_lists
   delimiter: name
   elements:
   - name: value
     #class: Rfm::Metadata::ValueListItem
-    attach: [default, 'Rfm::Metadata::ValueListItem', allocate]
+    attach: [array, 'Rfm::Metadata::ValueListItem', allocate]
     before_close: replace(@value.to_s)
     attach_attributes: private
     attributes:

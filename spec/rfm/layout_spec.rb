@@ -78,11 +78,18 @@ describe Rfm::Layout do
 	end #get_records
 	
 	describe "#load_layout" do
-		it "loads layout meta" do
+		it "loads layout meta with field_controls" do
 			# This is now handled in spec_helper
 			#Rfm::Connection.any_instance.stub(:connect).and_return LAYOUT_XML
 			layout.send(:load_layout)
 			layout.field_controls.has_key?('stayid').should be_true
+		end
+		
+		it "loads layout meta with value_lists" do
+			# This is now handled in spec_helper
+			#Rfm::Connection.any_instance.stub(:connect).and_return LAYOUT_XML
+			layout.send(:load_layout)
+			puts layout.to_yaml
 			layout.value_lists.has_key?('employee unique id').should be_true
 		end
 	end
