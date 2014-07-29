@@ -401,7 +401,13 @@ module Rfm
 				def attach_new_object(base_object, new_object, name, base_model, new_model, type)
 					label = label_or_tag(name, new_model)
 					
-					prefs = [attachment_prefs(base_model, new_model, type)].flatten(1)[0]
+					# Was this, which works fine, but not as efficient:
+					# prefs = [attachment_prefs(base_model, new_model, type)].flatten(1)[0]
+					prefs = if type=='attribute'
+						[attachment_prefs(base_model, new_model, type)].flatten(1)[0]
+					else
+						@element_attachment_prefs
+					end
 					
 					shared_var_name = shared_variable_name(prefs)
 					(prefs = "shared") if shared_var_name

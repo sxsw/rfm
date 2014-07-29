@@ -11,6 +11,7 @@ describe Rfm::Resultset do
   	server.stub!(:state).and_return({})
   end
 
+# TODO: write specs for data loading & portal loading.
 # 	describe "#initialze" do
 # 		it "calls build_records with record-xml, resultset-obj, field-meta, layout" do
 # 			Rfm::Record.should_receive(:build_records) do  |rec,rsl,fld,lay|        #|record_xml, resultset, field_meta, layout|
