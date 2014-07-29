@@ -94,7 +94,7 @@ module Rfm
 			:backend => nil,
 			:text_label => 'text',
 			:tag_translation => lambda {|txt| txt.gsub(/\-/, '_').downcase},
-			:shared_instance_var => 'attributes',
+			:shared_variable_name => 'attributes',
 			:templates => {},
 			:template_prefix => nil
 		}
@@ -110,7 +110,12 @@ module Rfm
 		# Convert defaults to constants, available to all sub classes/modules/instances.
 		PARSER_DEFAULTS.each do |k, v|
 			k = k.to_s.upcase
-			(const_set k, v) unless eval("defined? #{k}")   #(const_defined?(k) or defined?(k))
+			#(const_set k, v) unless eval("defined? #{k}")   #(const_defined?(k) or defined?(k))
+			if eval("defined? #{k}")
+				(const_set k, eval(k))
+			else
+				(const_set k, v)
+			end
 		end
 
 		def self.parse(*args)
@@ -390,8 +395,8 @@ module Rfm
 							(prefs = "shared") if shared_var_name
 							
 							# Use local create_accessors prefs first, then more general ones.
-							create_accessors = accessor?(attr_model)
-							(create_accessors = create_accessors?(@model)) unless create_accessors && create_accessors.any?
+							create_accessors = accessor?(attr_model) || create_accessors?(@model)
+							#(create_accessors = create_accessors?(@model)) unless create_accessors && create_accessors.any?
 							
 							#puts ["\nATTACH_NEW_OBJECT 1", "type: #{type}", "label: #{label}", "base_object: #{base_object.class}", "new_object: #{new_object.class}", "delimiter: #{delimiter?(new_model)}", "prefs: #{prefs}", "shared_var_name: #{shared_var_name}", "create_accessors: #{create_accessors}"]
 							@object._attach_object!(v, label, delimiter?(attr_model), prefs, 'attribute', :default_class=>DEFAULT_CLASS, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
@@ -444,8 +449,8 @@ module Rfm
 					(prefs = "shared") if shared_var_name
 					
 					# Use local create_accessors prefs first, then more general ones.
-					create_accessors = accessor?(@local_model)
-					(create_accessors = create_accessors?(@parent.model)) unless create_accessors && create_accessors.any?
+					create_accessors = accessor?(@local_model) || create_accessors?(@parent.model)
+					#(create_accessors = create_accessors?(@parent.model)) unless create_accessors && create_accessors.any?
 					
           # # This is NEW!
           # translator = new_model['translator']
@@ -498,8 +503,8 @@ module Rfm
 			  def delimiter?(_model=@model); _model && _model['delimiter']; end
 			  def as_name?(_model=@model); _model && _model['as_name']; end
 			  def initialize_with?(_model=@model); _model && _model['initialize_with']; end
-			  def create_accessors?(_model=@model); _model && [_model['create_accessors']].flatten.compact; end
-			  def accessor?(_model=@model); _model && [_model['accessor']].flatten.compact; end
+			  def create_accessors?(_model=@model); _model && _model['create_accessors'] && [_model['create_accessors']].flatten.compact; end
+			  def accessor?(_model=@model); _model && _model['accessor'] && [_model['accessor']].flatten.compact; end
 			  def element_handler?(_model=@model); _model && _model['element_handler']; end
 			  
 
@@ -867,11 +872,11 @@ end # Rfm
 
 class Object
 
-	ATTACH_OBJECT_DEFAULT_OPTIONS = {
-			:shared_variable_name => 'attributes',
-			:default_class => Hash,
-			:create_accessors => [] #:all, :private, :shared, :hash
-	}
+		ATTACH_OBJECT_DEFAULT_OPTIONS = {
+				:shared_variable_name => Rfm::SaxParser::SHARED_VARIABLE_NAME,
+				:default_class => Rfm::SaxParser::DEFAULT_CLASS,
+				:create_accessors => [] #:all, :private, :shared, :hash
+		}		
 
 	# Master method to attach any object to this object.
 	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
@@ -922,7 +927,7 @@ class Object
 		# TODO: Figure this part out:
 		# The resetting of shared_variable_name to 'attributes' was to fix Asset.field_controls (it was not able to find the valuelive name).
 		# I think there might be a level of heirarchy that is without a proper cursor model, when using shared variables & object delimiters.
-		shared_var._merge_object!(obj, name, delimiter, nil, type, options.merge(:shared_variable_name=>'attributes'))
+		shared_var._merge_object!(obj, name, delimiter, nil, type, options.merge(:shared_variable_name=>ATTACH_OBJECT_DEFAULT_OPTIONS[:shared_variable_name]))
 	end
 	
 	# Merge a named object with the specified instance variable of self.
@@ -1046,7 +1051,7 @@ class Hash
 				#obj.instance_variable_set(:@_index_, self[name].last.instance_variable_get(:@_index_).to_i + 1)
 				self[name] << obj
 			end
-			_create_accessor(name) if ((options[:create_accessors] || []) & ['all','shared','hash']).any?
+			_create_accessor(name) if (options[:create_accessors] & ['all','shared','hash']).any?
 			
 			rslt
 		else
