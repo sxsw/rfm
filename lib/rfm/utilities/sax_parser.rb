@@ -340,8 +340,10 @@ module Rfm
             case
             when input[0].is_a?(Symbol)
               [nil, input].flatten(1)
-            when input[1].is_a?(String) && input.size > 2
-              input[1] = input[1].to_sym; input
+            when input[1].is_a?(String) && ( input.size > 2 || (remove_colon=(input[1][0,1]==":"); remove_colon) )
+            	input[1][0]='' if remove_colon
+              input[1] = input[1].to_sym
+              input
             else # when input is ['object', 'sym-or-str', 'param1',' param2', ...]
               input
             end
@@ -362,7 +364,7 @@ module Rfm
           case
           when (code.nil? || code=='')
           	obj
-          when code.is_a?(Symbol)
+          when (code.is_a?(Symbol) || params)
             obj.send(code, *params)
           when code.is_a?(String)
             obj.send :eval, code
