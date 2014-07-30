@@ -201,7 +201,7 @@ module Rfm
 		    # Receive a single attribute (any named attribute or text)
 			  def receive_attribute(name, value)
 			  	#puts ["\nRECEIVE_ATTR '#{name}'", "value: #{value}", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
-			  	new_att = Hash[name, value]    #.new.tap{|att| att[name]=value}
+			  	new_att = {name=>value}    #.new.tap{|att| att[name]=value}
 
 			  	assign_attributes(new_att) #, @object, @model, @local_model)
 			  rescue
@@ -269,7 +269,7 @@ module Rfm
 
 		    		
 		    def receive_end_element(_tag)
-		    	#puts ["\nRECEIVE_END_ELEMENT '#{_tag}'", "tag: #{@tag}", "object: #{object.class}", "model: #{model['name']}"]
+		    	#puts ["\nRECEIVE_END_ELEMENT '#{_tag}'", "tag: #{@tag}", "object: #{@object.class}", "model: #{@model['name']}", "local_model: #{@local_model['name']}"]
 		    	#puts ["\nEND_ELEMENT_OBJECT", object.to_yaml]
 	      	begin
 	      		      	

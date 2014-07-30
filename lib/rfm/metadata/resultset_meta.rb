@@ -60,6 +60,15 @@ module Rfm
 			# 	# 	name = attributes['name']
 			# 	# 	self[name] = f
 			# end
+			
+			def layout_object
+				self['layout_object']
+			end
+			
+			def attach_layout_object_from_cursor(cursor)
+				self['layout_object'] = cursor.top.object.layout
+				#puts ["\nRESULTSET_META#metadata_element_close_callback", self['layout_object']]
+			end 
 		
 		end
 	end

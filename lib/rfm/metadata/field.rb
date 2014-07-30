@@ -1,3 +1,5 @@
+require 'forwardable'
+
 module Rfm
   module Metadata
   
@@ -60,7 +62,8 @@ module Rfm
     class Field
       
       attr_reader :name, :result, :type, :max_repeats, :global
-      meta_attr_accessor :resultset
+      meta_attr_accessor :resultset_meta
+      def_delegator :resultset_meta, :layout_object, :layout_object
       # Initializes a field object. You'll never need to do this. Instead, get your Field objects from
       # Resultset::field_meta
 			def initialize(attributes)
@@ -78,11 +81,11 @@ module Rfm
         case result
         when "text"      then value
         when "number"    then BigDecimal.new(value.to_s)
-        when "date"      then Date.strptime(value, resultset.date_format)
-        when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{resultset.time_format}")
-        when "timestamp" then DateTime.strptime(value, resultset.timestamp_format)
+        when "date"      then Date.strptime(value, resultset_meta.date_format)
+        when "time"      then DateTime.strptime("1/1/-4712 #{value}", "%m/%d/%Y #{resultset_meta.time_format}")
+        when "timestamp" then DateTime.strptime(value, resultset_meta.timestamp_format)
         when "container" then
-        	resultset_meta = resultset.instance_variable_get(:@meta)
+        	#resultset_meta = resultset.instance_variable_get(:@meta)
         	if resultset_meta && resultset_meta['doctype'] && value.to_s[/\?/]
         		URI.parse(resultset_meta['doctype'].last.to_s).tap{|uri| uri.path, uri.query = value.split('?')}
         	else
@@ -91,22 +94,26 @@ module Rfm
         else nil
         end
       rescue
-        puts("ERROR in Field#coerce:", name, value, result, resultset.timestamp_format, $!)
+        puts("ERROR in Field#coerce:", name, value, result, resultset_meta.timestamp_format, $!)
         nil
       end
       
       def get_mapped_name
-      	(resultset && resultset.layout && resultset.layout.field_mapping[name]) || name
+      	#(resultset_meta && resultset_meta.layout && resultset_meta.layout.field_mapping[name]) || name
+      	layout_object.field_mapping[name] || name
       end
             
 			def field_definition_element_close_callback(cursor)
-				self.resultset = cursor.top.object
-				resultset_meta = resultset.instance_variable_get(:@meta)
+				#self.resultset = cursor.top.object
+				#resultset_meta = resultset.instance_variable_get(:@meta)
+				self.resultset_meta = cursor.top.object.instance_variable_get(:@meta)
+				#puts ["\nFIELD#field_definition_element_close_callback", resultset_meta]
 				resultset_meta.field_meta[get_mapped_name.to_s.downcase] = self
 			end
 			
 			def relatedset_field_definition_element_close_callback(cursor)
-				self.resultset = cursor.top.object
+				#self.resultset = cursor.top.object
+				self.resultset_meta = cursor.top.object.instance_variable_get(:@meta)
 				cursor.parent.object[get_mapped_name.split('::').last.to_s.downcase] = self
 				#puts ['FIELD_portal_callback', name, cursor.parent.object.object_id, cursor.parent.tag, cursor.parent.object[name.split('::').last.to_s.downcase]].join(', ')
 			end

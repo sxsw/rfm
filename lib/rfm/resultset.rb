@@ -118,8 +118,9 @@ module Rfm
   		r
   	end
   	
-  	def end_datasource_element_callback  #(cursor)
+  	def end_datasource_element_callback(cursor)
   		%w(date_format time_format timestamp_format).each{|f| convert_date_time_format(send(f))}
+  		@meta.attach_layout_object_from_cursor(cursor)
   	end
     
   private
