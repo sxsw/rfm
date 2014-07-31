@@ -9,6 +9,8 @@ require 'rfm'
 #require 'rfm/base'  # Use this to test if base.rb breaks anything, or if it's absence breaks anything.
 require 'rspec'
 
+require 'active_model/lint'
+
 # Ruby 2.1.2 with activemodel 4.1.1 throws errors if I don't require minitest,
 # but I don't think it's the reason ActiveModel Lint tests are failing.
 # Turns out minitest 5 is the culprit of Lint test failures,
