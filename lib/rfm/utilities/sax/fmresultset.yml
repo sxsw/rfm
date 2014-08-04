@@ -33,7 +33,7 @@ elements:
   # but the field-mapping translation won't happen.
   # attach: [_meta, 'Rfm::Metadata::Field', allocate]
   # as_name: field_meta
-  attach: [cursor, 'Rfm::Metadata::Field', allocate]
+  attach: [cursor, 'Rfm::Metadata::Field', ':allocate']
   delimiter: name
   attach_attributes: private
   before_close: [object, field_definition_element_close_callback, self]
@@ -43,9 +43,7 @@ elements:
   attach_attributes: private
   elements:
   - name: field_definition
-    #class: Rfm::Metadata::Field
-    #attach: cursor
-    attach: [cursor, 'Rfm::Metadata::Field', allocate]
+    attach: [cursor, 'Rfm::Metadata::Field', ':allocate']
     delimiter: name
     as_name: field_meta
     attach_attributes: private
@@ -65,15 +63,11 @@ elements:
   before_close: '@loaded=true'
   elements:
   - name: field
-    #class: Rfm::Metadata::Datum
-    #attach: cursor
-    attach: [cursor, 'Rfm::Metadata::Datum', allocate]
-    compact: true
+    attach: [cursor, 'Rfm::Metadata::Datum', ':allocate']
+    compact: false
     before_close: [object, field_element_close_callback, self]
   - name: relatedset
-    #class: Array
-    #attach: private
-    attach: [private, Array, allocate]
+    attach: [private, Array, ':allocate']
     as_name: portals
     attach_attributes: private
     create_accessors: all
@@ -81,15 +75,13 @@ elements:
     elements:
     - name: record
       #class: Rfm::Record
-      attach: [default, 'Rfm::Record', allocate]
+      attach: [default, 'Rfm::Record', ':allocate']
       attach_attributes: private
       before_close: '@loaded=true'
       elements:
       - name: field
         compact: true
-        #class: Rfm::Metadata::Datum
-        #attach: cursor
-        attach: [cursor, 'Rfm::Metadata::Datum', allocate]
+        attach: [cursor, 'Rfm::Metadata::Datum', ':allocate']
         before_close: [object, portal_field_element_close_callback, self]
 
 

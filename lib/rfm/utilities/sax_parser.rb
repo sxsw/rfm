@@ -337,13 +337,17 @@ module Rfm
           # when input.is_a?(Symbol)
           #   [nil, input]
           when input.is_a?(Array)
+          	#puts ["\nCURSOR#get_callback is an array", input]
             case
             when input[0].is_a?(Symbol)
               [nil, input].flatten(1)
             when input[1].is_a?(String) && ( input.size > 2 || (remove_colon=(input[1][0,1]==":"); remove_colon) )
-            	input[1][0]='' if remove_colon
-              input[1] = input[1].to_sym
-              input
+              code_or_method = input[1].dup
+            	code_or_method[0]='' if remove_colon
+              code_or_method = code_or_method.to_sym
+              output = [input[0], code_or_method, input[2..-1]].flatten(1)
+              #puts ["\nCURSOR#get_callback converted input[1] to symbol", output]
+              output
             else # when input is ['object', 'sym-or-str', 'param1',' param2', ...]
               input
             end
@@ -365,9 +369,12 @@ module Rfm
           when (code.nil? || code=='')
           	obj
           when (code.is_a?(Symbol) || params)
+	          #puts ["\nGET_CALLBACK sending symbol", obj.class, code] 
             obj.send(code, *params)
           when code.is_a?(String)
+          	#puts ["\nGET_CALLBACK evaling string", obj.class, code]
             obj.send :eval, code
+            #eval(code, caller_binding)
           end		      
         end
         
