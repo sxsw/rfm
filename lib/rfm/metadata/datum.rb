@@ -5,6 +5,7 @@ module Rfm
     class Datum   #< DelegateClass(Field)
     
       def get_mapped_name(name, resultset)
+      	#puts ["\nDATUM#get_mapped_name", "name: #{name}", "mapping: #{resultset.layout.field_mapping.to_yaml}"]
       	(resultset && resultset.layout && resultset.layout.field_mapping[name]) || name
       end
       
@@ -36,7 +37,7 @@ module Rfm
 
 				name = get_mapped_name(@attributes['name'].to_s, resultset)
 				field = resultset.field_meta[name]
-				data = @attributes['data']
+				data = @attributes['data'] #'data'
 				#puts ["\nDATUM", name, record.class, resultset.class, data]
 				#puts ["\nDATUM", self.to_yaml]
 				record[name] = field.coerce(data)
