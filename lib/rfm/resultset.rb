@@ -125,9 +125,9 @@ module Rfm
     
   private
     
-    def check_for_errors(code=@meta['error'].to_i, raise_401=state[:raise_401])
-    	#puts ["\nRESULTSET#check_for_errors", code, raise_401]
-      raise Rfm::Error.getError(code) if code != 0 && (code != 401 || raise_401)
+    def check_for_errors(error_code=@meta['error'].to_i, raise_401=state[:raise_401])
+    	#puts ["\nRESULTSET#check_for_errors", "meta[:error] #{@meta[:error]}", "error_code: #{error_code}", "raise_401: #{raise_401}"]
+      raise Rfm::Error.getError(error_code) if error_code != 0 && (error_code != 401 || raise_401)
     end
 
 	  def convert_date_time_format(fm_format)

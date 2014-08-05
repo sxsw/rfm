@@ -356,10 +356,10 @@ module Rfm
           end
           
           obj_raw = params.shift
-          #puts "\nOBJECT_RAW: #{obj_raw}"
+          #puts ["\nOBJECT_RAW:","class: #{obj_raw.class}", "object: #{obj_raw}"]
           obj = if obj_raw.is_a?(String); eval(obj_raw.to_s, caller_binding); else obj_raw; end
           if obj.nil? || obj == ''; obj = defaults[:object] || @object; end
-          #puts "OBJECT: #{obj}"
+          #puts ["\nOBJECT:","class: #{obj.class}", "object: #{obj}"]
             
           code = params.shift || defaults[:method]
           params.each_with_index{|str,i| if str.is_a?(String); params[i] = eval(str, caller_binding); end }
@@ -370,7 +370,7 @@ module Rfm
           	obj
           when (code.is_a?(Symbol) || params)
 	          #puts ["\nGET_CALLBACK sending symbol", obj.class, code] 
-            obj.send(code, *params)
+            obj.send *[code, params].flatten(1).compact
           when code.is_a?(String)
           	#puts ["\nGET_CALLBACK evaling string", obj.class, code]
             obj.send :eval, code
