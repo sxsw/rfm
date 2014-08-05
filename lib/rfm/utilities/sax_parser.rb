@@ -754,7 +754,7 @@ module Rfm
 			# Add 'content' attribute to existing element.
 			def _text(value, *args)
 				#puts "Receiving text '#{value}'"
-				if RUBY_VERSION[2,1].to_i > 8 && value.is_a?(String)
+				if RUBY_VERSION[0,3].to_i > 1.8 && value.is_a?(String)
 					value.force_encoding('UTF-8')
 				end
 				return unless value[/[^\s]/]
