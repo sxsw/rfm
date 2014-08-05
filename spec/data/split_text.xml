@@ -1,0 +1,9 @@
+<root>
+some text
+<element-one>
+elmt one inner téxt with special chars
+</element-one>
+more text
+<element-two></element-two>
+final text
+</root>

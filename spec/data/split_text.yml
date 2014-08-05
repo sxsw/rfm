@@ -1,0 +1,11 @@
+# encoding: UTF-8
+# See: http://stackoverflow.com/questions/11331060/international-chars-using-rspec-with-ruby-on-rails
+
+
+### Split text example, demonstrating split text handling in hash value and instance-var value.
+---
+elements:
+- name: root
+  elements:
+  - name: element_one
+    attach_attributes: private

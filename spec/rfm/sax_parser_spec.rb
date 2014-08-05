@@ -1,5 +1,5 @@
-# require 'data/sax_models'
-
+# encoding: UTF-8
+# See: http://stackoverflow.com/questions/11331060/international-chars-using-rspec-with-ruby-on-rails
 
 describe Rfm::SaxParser::Handler do
 	#subject {Rfm::SaxParser::Handler}
@@ -30,6 +30,7 @@ describe Rfm::SaxParser::Handler do
 		
 	end
 	
+	
 	describe "Functional Parse" do
 		it 'converts duplicate tags into appropriate hash or array' do
 			rr = HANDLER.build('spec/data/resultset_with_portals.xml', 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new).result
@@ -48,6 +49,12 @@ describe Rfm::SaxParser::Handler do
 			expect(rr.total_count).to eq(3475)
 			expect(rr.foundset_count).to eq(1)
 			expect(rr.fetch_size).to eq(1)
+		end
+		
+		it "collects multiple text chunks into single string" do
+			rr = HANDLER.build('spec/data/split_text.xml', 'spec/data/split_text.yml').result
+			expect(rr['root']['text'].strip).to eq("some text\n\nmore text\n\nfinal text")
+			expect(rr['root']['element_one'].instance_variable_get(:@text).strip).to eq("elmt one inner téxt with special chars")
 		end
 	end
 	

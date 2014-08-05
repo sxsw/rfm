@@ -121,6 +121,7 @@ module Rfm
 		::Object::ATTACH_OBJECT_DEFAULT_OPTIONS = {
 			:shared_variable_name => SHARED_VARIABLE_NAME,
 			:default_class => DEFAULT_CLASS,
+			:text_label => TEXT_LABEL,
 			:create_accessors => [] #:all, :private, :shared, :hash
 		}		
 
@@ -753,7 +754,10 @@ module Rfm
 			# Add 'content' attribute to existing element.
 			def _text(value, *args)
 				#puts "Receiving text '#{value}'"
-				return unless value.to_s[/[^\s]/]
+				if RUBY_VERSION[2,1].to_i > 8 && value.is_a?(String)
+					value.force_encoding('UTF-8')
+				end
+				return unless value[/[^\s]/]
 			  #@element_buffer[:text] << value
 			  cursor.receive_attribute(TEXT_LABEL, value)
 			end
@@ -961,7 +965,11 @@ class Object
 				#instance_variable_get("@#{name}")._merge_object!(obj, delimit_name, nil, nil, nil)
 			else
 				#puts ["\_setting_existing_instance_var", name]
-				instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
+				if name == options[:text_label]
+					instance_variable_get("@#{name}") << obj.to_s
+				else
+					instance_variable_set("@#{name}", [instance_variable_get("@#{name}")].flatten << obj)
+				end
 			end
 		else
 			#puts ["\n_setting_new_instance_var", name]
@@ -1062,9 +1070,12 @@ class Hash
 				#obj.instance_variable_set(:@_index_, 0)
 				#self[name]._merge_object!(obj, delimit_name, nil, nil, nil)
 			else
-				self[name] = [self[name]].flatten
-				#obj.instance_variable_set(:@_index_, self[name].last.instance_variable_get(:@_index_).to_i + 1)
-				self[name] << obj
+				if name == options[:text_label]
+					self[name] << obj.to_s
+				else
+					self[name] = [self[name]].flatten
+					self[name] << obj
+				end
 			end
 			_create_accessor(name) if (options[:create_accessors] & ['all','shared','hash']).any?
 			

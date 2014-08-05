@@ -11,7 +11,11 @@ require 'rspec'
 require 'active_model/lint'
 
 #if ENV['parser']; Rfm.backend = ENV['parser'].to_sym; end
-if ENV['parser']; Rfm::BACKEND = ENV['parser'].to_sym; end
+Rfm::BACKEND = if ENV['parser'];
+	ENV['parser'].to_sym
+else
+	:rexml
+end
 
 puts Rfm.info
 puts "RSpec: #{RSpec::Version::STRING}"
