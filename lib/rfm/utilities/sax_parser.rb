@@ -78,6 +78,8 @@ require 'stringio'
 
 module Rfm
 	module SaxParser
+	
+		RUBY_VERSION_INT = RUBY_VERSION[0,3].to_i
 
 		PARSERS = {}
 		
@@ -658,9 +660,6 @@ module Rfm
 		  	@stack = []
 		  	@stack_debug=[]
 		  	@template = get_template(_template)
-
-		  	#init_element_buffer
-		    #set_cursor Cursor.new(@template, @initial_object, 'top', self)
 		    set_cursor Cursor.new('__TOP__', self).process_new_element
 		  end
 		  
@@ -721,7 +720,6 @@ module Rfm
 			
 			def transform(name)
 				return name unless TAG_TRANSLATION.is_a?(Proc)
-				#name.to_s.gsub(*@tag_translation)
 				TAG_TRANSLATION.call(name.to_s)
 			end
 
@@ -729,7 +727,6 @@ module Rfm
 			def _start_element(tag, attributes=nil, *args)
 				#puts ["_START_ELEMENT", tag, attributes, args].to_yaml # if tag.to_s.downcase=='fmrestulset'
 				tag = transform tag
-				#send_element_buffer if element_buffer?
 				if attributes
 					# This crazy thing transforms attribute keys to underscore (or whatever).
 					#attributes = default_class[*attributes.collect{|k,v| [transform(k),v] }.flatten]
@@ -738,7 +735,6 @@ module Rfm
 					# This doesn't work yet, but at least it wont downcase hash keys.
 					#attributes = Hash.new.tap {|hash| attributes.each {|k, v| hash[transform(k)] = v}}
 				end
-				#@element_buffer.merge!({:tag=>tag, :attributes => attributes || DEFAULT_CLASS.new})
 				set_cursor cursor.receive_start_element(tag, attributes)
 			end
 			
@@ -746,19 +742,17 @@ module Rfm
 			def _attribute(name, value, *args)
 				#puts "Receiving attribute '#{name}' with value '#{value}'"
 				name = transform name
-				#new_att = DEFAULT_CLASS[name, value]   #.new.tap{|att| att[name]=value}
-				#@element_buffer[:attributes].merge!(new_att)
 				cursor.receive_attribute(name, value)
 			end
 			
 			# Add 'content' attribute to existing element.
 			def _text(value, *args)
 				#puts "Receiving text '#{value}'"
-				if RUBY_VERSION[0,3].to_i > 1.8 && value.is_a?(String)
+				if RUBY_VERSION_INT > 1.8 && value.is_a?(String)
 					value.force_encoding('UTF-8')
 				end
-				return unless value[/[^\s]/]
-			  #@element_buffer[:text] << value
+				# I think the reason this was here is no longer relevant, so I'm disabeling.
+				#return unless value[/[^\s]/]
 			  cursor.receive_attribute(TEXT_LABEL, value)
 			end
 			
@@ -766,7 +760,6 @@ module Rfm
 			def _end_element(tag, *args)
 				tag = transform tag
 				#puts "Receiving end_element '#{tag}'"
-	      #send_element_buffer
 	      cursor.receive_end_element(tag) and dump_cursor
 			end
 			
@@ -891,20 +884,9 @@ end # Rfm
 
 class Object
 
-	# 		ATTACH_OBJECT_DEFAULT_OPTIONS = {
-	# 				:shared_variable_name => Rfm::SaxParser::SHARED_VARIABLE_NAME,
-	# 				:default_class => Rfm::SaxParser::DEFAULT_CLASS,
-	# 				:create_accessors => [] #:all, :private, :shared, :hash
-	# 		}		
-
 	# Master method to attach any object to this object.
 	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
 		#puts ["\nATTACH_OBJECT._attach_object", self.class, obj.class, obj.to_s, args].to_yaml
-		# 	default_options = {
-		# 		:shared_variable_name => 'attributes',
-		# 		:default_class => Hash,
-		# 		:create_accessors => [] #:all, :private, :shared, :hash
-		# 	}
 		options = ATTACH_OBJECT_DEFAULT_OPTIONS.merge(args.last.is_a?(Hash) ? args.pop : {}){|key, old, new| new || old}
 		# 	name = (args[0] || options[:name])
 		# 	delimiter = (args[1] || options[:delimiter])
