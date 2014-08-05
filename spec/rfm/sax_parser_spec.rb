@@ -18,14 +18,14 @@ describe Rfm::SaxParser::Handler do
 		end
 		
 		it 'sends a cursor object to the stack and returns object' do
-			subject.set_cursor(input).object.should == input.object
+			expect(subject.set_cursor(input).object).to eq(input.object)
 			#subject.new(File.new('spec/data/resultset.xml'))['fmresultset']['datasource']['table'].should == 'Memo_'
 		end
 		
 		it 'adds a cursor object to the stack' do
 			5.times {subject.set_cursor(input)}
-			subject.stack.last.should == input
-			subject.stack.size.should == 5
+			expect(subject.stack.last).to eq(input)
+			expect(subject.stack.size).to eq(5)
  		end		
 		
 	end
@@ -34,20 +34,20 @@ describe Rfm::SaxParser::Handler do
 		it 'converts duplicate tags into appropriate hash or array' do
 			rr = HANDLER.build('spec/data/resultset_with_portals.xml', 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new).result
 			#y r
-			rr[0].portals['ProjectLineItemsSubItems_PLI'][2]['producetotal'].to_i.should == 1
+			expect(rr[0].portals['ProjectLineItemsSubItems_PLI'][2]['producetotal'].to_i).to eq(1)
 		end
 		
 		it 'creates records with record_id and mod_id instance vars' do
 			rr = HANDLER.build('spec/data/resultset_with_portals.xml', 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new).result
-			rr[0].record_id.should == "499"
-			rr[0].mod_id.should == "86"
+			expect(rr[0].record_id).to eq("499")
+			expect(rr[0].mod_id).to eq("86")
 		end
 		
 		it 'creates total_count, founset_count, fetch_size on resultset' do
 			rr = HANDLER.build('spec/data/resultset_with_portals.xml', 'lib/rfm/utilities/sax/fmresultset.yml', Rfm::Resultset.new).result
-			rr.total_count.should == 3475
-			rr.foundset_count.should == 1
-			rr.fetch_size.should == 1
+			expect(rr.total_count).to eq(3475)
+			expect(rr.foundset_count).to eq(1)
+			expect(rr.fetch_size).to eq(1)
 		end
 	end
 	

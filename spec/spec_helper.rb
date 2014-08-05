@@ -8,18 +8,7 @@ require 'yaml'
 require 'rfm'
 #require 'rfm/base'  # Use this to test if base.rb breaks anything, or if it's absence breaks anything.
 require 'rspec'
-
-# Ruby 2.1.2 with activemodel 4.1.1 throws errors if I don't require minitest,
-# but I don't think it's the reason ActiveModel Lint tests are failing.
-# Turns out minitest 5 is the culprit of Lint test failures,
-# but tons of rails-related gems require minitest >= 5.
-# gem 'minitest' , '~>4.0.0'
-# require 'minitest'
-# See http://www.google.com/search?safe=off&client=safari&rls=en&q=rspec+%22undefined+method+%60assertions%27%22&oq=rspec+%22undefined+method+%60assertions%27%22&gs_l=serp.3...442200.450613.0.450958.16.12.3.1.1.0.125.795.11j1.12.0....0...1c.1j2.48.serp..1.15.755.mD-2_zLGUcw
-
-
-
-
+require 'active_model/lint'
 
 #if ENV['parser']; Rfm.backend = ENV['parser'].to_sym; end
 if ENV['parser']; Rfm::BACKEND = ENV['parser'].to_sym; end
@@ -42,8 +31,6 @@ RFM_CONFIG = {
 		:layout=>'testlay1',
 	}
 }
-
-
 
 Memo = TestModel = Class.new(Rfm::Base){config :base_test}
 # SERVER = Memo.server
@@ -68,7 +55,7 @@ RSpec.configure do |config|
 
 			#@Layout.stub(:load_layout).and_return(Rfm::SaxParser.parse(LAYOUT_XML, 'fmpxmllayout.yml', @Layout).result)
 			
-			Rfm::Connection.any_instance.stub(:connect) do |*args|
+			allow_any_instance_of(Rfm::Connection).to receive(:connect) do |instance, *args|
 				#puts ["CONNECTION#connect args", args, self].flatten.join(', ')
 				case args[0].to_s
 				when /find/;
@@ -84,9 +71,9 @@ RSpec.configure do |config|
 			# See http://stackoverflow.com/questions/13893618/rspec-any-instance-return-self
 			# See http://stackoverflow.com/questions/5938049/rspec-stubbing-return-the-parameter
 			orig_new = Rfm::Connection.method(:new)
-			Rfm::Connection.stub(:new) do |*args, &block|
+			allow(Rfm::Connection).to receive(:new) do |*args, &block|
 			  orig_new.call(*args, &block).tap do |instance|
-			    instance.stub(:connect) do |*args2|
+			    allow(instance).to receive(:connect) do |*args2|
 						case instance.instance_variable_get(:@action)
 						when /find/;
 							#puts "RESULTSET"
@@ -102,6 +89,17 @@ RSpec.configure do |config|
 			
 		# end
 	end
+
+  config.mock_with :rspec do |mocks|
+    # In RSpec 3, `any_instance` implementation blocks will be yielded the receiving
+    # instance as the first block argument to allow the implementation block to use
+    # the state of the receiver.
+    # In RSpec 2.99, to maintain compatibility with RSpec 3 you need to either set
+    # this config option to `false` OR set this to `true` and update your
+    # `any_instance` implementation blocks to account for the first block argument
+    # being the receiving instance.
+    mocks.yield_receiver_to_any_instance_implementation_blocks = true
+  end
 end
 
 def rescue_from(&block)

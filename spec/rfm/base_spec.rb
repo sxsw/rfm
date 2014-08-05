@@ -19,23 +19,23 @@ describe Rfm::Base do
 # 	end
 
 	describe '.inherited' do
-		it("adds new model class to Rfm::Factory@models"){Rfm::Factory.models.include?(Memo).should be_true}
+		it("adds new model class to Rfm::Factory@models"){expect(Rfm::Factory.models.include?(Memo)).to be_truthy}
 		it("sets model @config with :parent and other config options") do
-			Memo.config[:parent].should == 'Rfm::Base'  #'parent_layout'
-			Memo.get_config[:layout].should == 'testlay1'
+			expect(Memo.config[:parent]).to eq('Rfm::Base')  #'parent_layout'
+			expect(Memo.get_config[:layout]).to eq('testlay1')
 		end
 	end
 	
 	describe '.layout' do
-		it("retrieves or creates layout object"){Memo.layout.name.should == 'testlay1'}
+		it("retrieves or creates layout object"){expect(Memo.layout.name).to eq('testlay1')}
 		it("layout object is a Layout"){Memo.layout.is_a?(Rfm::Layout)}
 	end
 	
 	describe '.find' do
 		it("passes parameters & options to Layout object") do
-			Memo.layout.should_receive(:find) do |*args|
-				args[0].should == {:field_one=>'test'}
-				args[1].should == {:max_records=>5}
+			expect(Memo.layout).to receive(:find) do |*args|
+				expect(args[0]).to eq({:field_one=>'test'})
+				expect(args[1]).to eq({:max_records=>5})
 			end
 			Memo.layout.find({:field_one=>'test'}, :max_records=>5)
 		end
@@ -43,25 +43,25 @@ describe Rfm::Base do
 	
 	describe '#update_attributes' do
 		before(:each) do
-			Rfm::Connection.any_instance.stub(:connect).and_return(LAYOUT_XML)
+			allow_any_instance_of(Rfm::Connection).to receive(:connect).and_return(LAYOUT_XML)
 			@m = Memo.new
 			@m.update_attributes :memotext=>'memotext test', :memosubject=>'memosubject test', :extra=>'extra field test'
 		end
 		
 		it "updates self with new data" do; #y Memo.layout.field_controls; end
-			@m.memotext.should == 'memotext test'
-			@m.memosubject.should == 'memosubject test'
+			expect(@m.memotext).to eq('memotext test')
+			expect(@m.memosubject).to eq('memosubject test')
 		end
 		
 		it "updates @mods with new data" do
-			@m.instance_variable_get(:@mods)['memotext'].should == 'memotext test'
-			@m.instance_variable_get(:@mods)['memosubject'].should == 'memosubject test'
+			expect(@m.instance_variable_get(:@mods)['memotext']).to eq('memotext test')
+			expect(@m.instance_variable_get(:@mods)['memosubject']).to eq('memosubject test')
 		end
 		
 		it "adds/updates instance_variables with keys that do not exist in field list" do
-			@m.instance_variable_get(:@extra).should == 'extra field test'
-			lambda {@m[:extra]}.should raise_error(Rfm::ParameterError)
-			@m.instance_variable_get(:@mods)['extra'].should == nil
+			expect(@m.instance_variable_get(:@extra)).to eq('extra field test')
+			expect {@m[:extra]}.to raise_error(Rfm::ParameterError)
+			expect(@m.instance_variable_get(:@mods)['extra']).to eq(nil)
 		end
 	end
 	
@@ -96,14 +96,14 @@ describe Rfm::Base do
 		
 		it 'creates a new record with data' do
 			subject_test = Memo.new(:memotext=>'test1')
-			subject_test.memotext.should == 'test1'
-			subject_test.class.should == Memo			
+			expect(subject_test.memotext).to eq('test1')
+			expect(subject_test.class).to eq(Memo)			
 		end
 		
 		it 'adds more data to the record' do
 			subject_test = Memo.new
 			subject_test.memosubject = 'test2'
-			subject_test.instance_variable_get(:@mods).size.should > 0
+			expect(subject_test.instance_variable_get(:@mods).size).to be > 0
 		end
 		
 		it "creates a model instance with empty fields, translating according to field_mapping" do
@@ -111,7 +111,7 @@ describe Rfm::Base do
 			layout.config :field_mapping => {'memosubject' => 'subject', 'memotext'=>'text'}
 			new_record = layout.modelize.new
 			#puts new_record.layout.field_keys
-			(new_record.keys & ['subject', 'text']).size.should == 2
+			expect((new_record.keys & ['subject', 'text']).size).to eq(2)
 		end
 
 # TODO: Fix these specs to work with newest Rfm.
