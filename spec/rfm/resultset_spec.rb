@@ -8,7 +8,7 @@ describe Rfm::Resultset do
   let(:bad_data) {File.read("spec/data/resultset_with_bad_data.xml")}
   subject      {Rfm::Resultset.new(data, layout, :server_object=>server)}
   before(:each) do
-  	server.stub!(:state).and_return({})
+  	allow(server).to receive(:state).and_return({})
   end
 
 # TODO: write specs for data loading & portal loading.
