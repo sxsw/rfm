@@ -1,5 +1,20 @@
 # Changelog
 
+## Ginjo-Rfm 3.0.5
+
+* Fixed parser handling of `<field>` element that's missing a `<data>` element.
+* Fixed coercion of repeating field data.
+* Fixed case where special characters in Filemaker data yielded array instead of string (sax parsing split text).
+* Fixed various bugs in metadata parsing.
+* Detached resultset from Rfm::MetaData::Field instance, now attaching only ResultsetMeta to Field.
+* Fixed ruby-prof rake task.
+* Updated deprecated rspec 2 specs, will now work with rspec 2 or 3.
+* Added more specs for some recently found bugs and for sax parser.
+* Fixed broken ActiveModel Lint specs in Ruby 2.1.
+* General refinements & cleanup.
+* Optimizations to sax_parser.
+* Fixed typo in field.rb that was causing bugs.
+
 ## Ginjo-Rfm 3.0.4
 
 * Corrected reference to @meta in fmpxmllayout.yml. Specs now passing for Layout#load\_layout.
