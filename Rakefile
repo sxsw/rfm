@@ -139,8 +139,13 @@ desc "pre-commit, build gem, tag with version, push to git, push to rubygems.org
 task :release do
 	gem_name = 'ginjo-rfm'
 	shell = <<-EEOOFF
+		current_branch=`git rev-parse --abbrev-ref HEAD`
+		if [ current_branch != 'master' ]; then
+			echo "Aborting: You are not on the master branch."
+			exit 1
+		end
 		echo "--- Pre-committing ---"
-			git add .; git commit -m'Committing any lingering changes in prep for release of version #{Rfm::VERSION}'
+			git add .; git commit -m'Releasing version #{Rfm::VERSION}'
 		echo "--- Building gem ---" &&
 			mkdir -p pkg &&
 			output=`gem build #{gem_name}.gemspec` &&
@@ -150,7 +155,7 @@ task :release do
 		echo "--- Tagging with git ---" &&
 			git tag -m'Releasing version #{Rfm::VERSION}' v#{Rfm::VERSION} &&
 		echo "--- Pushing to git origin ---" &&
-			git push origin &&
+			git push origin master &&
 			git push origin --tags &&
 		echo "--- Pushing to rubygems.org ---" &&
 			gem push pkg/$gemfile
