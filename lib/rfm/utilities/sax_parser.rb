@@ -1,3 +1,7 @@
+# encoding: UTF-8
+# Encoding is necessary for Ox, which appears to ignore character encoding.
+# See: http://stackoverflow.com/questions/11331060/international-chars-using-rspec-with-ruby-on-rails
+#
 # ####  A declarative SAX parser, written by William Richardson  #####
 #
 # This XML parser builds a result object from callbacks sent by any ruby sax/stream parsing
@@ -79,7 +83,7 @@ require 'stringio'
 module Rfm
 	module SaxParser
 	
-		RUBY_VERSION_INT = RUBY_VERSION[0,3].to_i
+		RUBY_VERSION_NUM = RUBY_VERSION[0,3].to_f
 
 		PARSERS = {}
 		
@@ -748,11 +752,13 @@ module Rfm
 			# Add 'content' attribute to existing element.
 			def _text(value, *args)
 				#puts "Receiving text '#{value}'"
-				if RUBY_VERSION_INT > 1.8 && value.is_a?(String)
+				#puts RUBY_VERSION_NUM
+				if RUBY_VERSION_NUM > 1.8 && value.is_a?(String)
+					#puts "Forcing utf-8"
 					value.force_encoding('UTF-8')
 				end
 				# I think the reason this was here is no longer relevant, so I'm disabeling.
-				#return unless value[/[^\s]/]
+				return unless value[/[^\s]/]
 			  cursor.receive_attribute(TEXT_LABEL, value)
 			end
 			
