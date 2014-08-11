@@ -1,3 +1,7 @@
+# @markup markdown
+# @author William Richardson
+# @comment See YARD documentation - https://github.com/lsegal/yard/wiki/GettingStarted
+
 # ginjo-rfm
 
 Rfm is a Ruby-Filemaker adapter, a Ruby Gem that provides an interface between Filemaker Server and Ruby. Query your Filemaker database, browse result records as persistent objects, and create/update/delete records with a syntax similar to ActiveRecord. Ginjo-rfm picks up from the lardawge-rfm gem and continues to refine code and fix bugs. Version 3 removes the dependency on ActiveSupport and is now a completely independent Gem, able to run most of its core features without requiring any other supporting Gems. ActiveModel features can be activated by adding activemodel to your Gemfile (or requiring activemodel manually).
@@ -14,27 +18,18 @@ Ginjo-rfm version 3 has been tested successfully on Ruby 1.8.7, 1.9.3, 2.0.0, an
 * Original homepage   <http://sixfriedrice.com/wp/products/rfm/>
 * Lardawge at github  <https://github.com/lardawge/rfm>
 
-## New in version  3.0
+## Requirements
 
-There are many changes in version 3, but most of them are under the hood. Here are some highlights.
+Ginjo-rfm should run on any machine with a standard ruby installation. Ginjo-rfm's primary function is to interact with Filemaker Server,
+however ginjo-rfm does not have to be installed on your Filemaker server - it can be installed on any machine that has network/internet access
+to your Filemaker server.
 
-* Compatibility with Ruby 2.1.2 (and 2.0.0, 1.9.3, 1.8.7).
+Ginjo-rfm will work with any Filemaker server that supports the fmresultset.xml grammar over the http protocol.
+Since Filemaker Pro client does not support this, Filemaker server is required. Follow Filemaker Server's instructions
+for setting up "Custom Web Publishing".
 
-* XML parsing rewrite.
-The entire XML parsing engine of Rfm has been rewritten to use only the sax/stream parsing schemes of the supported Ruby XML parsers (libxml-ruby, nokogiri, ox, rexml). There were two main goals in this rewrite: 1, to separate the xml parsing code from the Rfm/Filemaker objects, and 2, to remove the hard dependency on ActiveSupport. See below for parsing configuration options.
-
-* Better logging capabilities.
-Added Rfm.logger, Rfm.logger=, Config.logger, Config#logger, and config(:logger=>(...)).
-
-* Added field-mapping awareness to :sort_field query option.
-
-* Relaxed requirement that query option keys be symbols - can now be strings or symbols.
-
-* Detached resultset from record, so record doesn't drag resultset around with it.
-
-* Bug fixes and refinements in modeling, configuration, metadata access, and Rfm object instantiation.
-
-See the changelog or the commit history for more details on changes in ginjo-rfm v3.
+Ginjo-rfm works great with Rails, but it does not require Rails.
+You can write simple and powerful stand-alone ruby scripts that use ginjo-rfm to talk to a Filemaker server.
 
 ## Download & Installation
 
@@ -60,9 +55,9 @@ Note that while this gem is officially named "ginjo-rfm", you require/load it in
 
 ## Ginjo-rfm Basic Usage
 
-The first step in getting connected to your Filemaker databases with Rfm is to store your configuration settings in a yaml file or in the RFM_CONFIG hash. The second step is creating a Ruby class (often referred to as a "model" in this documentation) that represent a layout in your Filemaker database. Create as many models as you wish, each pointing to a layout/table-occurrence that you want to work with. The third step is using your new models to query, create, update, and delete records in your Filemaker database. Here's an example setup for a simple order-item table.
+The first step in getting connected to your Filemaker databases with Rfm (assuming your Filemaker Server is properly set up - see the Filemaker Server instructions for "Custom Web Publishing") is to store your configuration settings in a yaml file or in the RFM_CONFIG hash. The second step is creating a Ruby class (often referred to as a "model" in this documentation) that represent a layout in your Filemaker database. Create as many models as you wish, each pointing to a layout/table-occurrence that you want to work with. The third step is using your new models to query, create, update, and delete records in your Filemaker database. Here's an example setup for a simple order-item table.
 
-rfm.yml
+config/rfm.yml
 
 		:host: my.host.com
 		:account_name: myname
@@ -215,7 +210,7 @@ See `Rfm::Config::CONFIG_KEYS` for a list of currently allowed configuration opt
 
 ### Using Models
 
-Rfm models provide easy access, modeling, and persistence of your Filemaker data.
+Rfm models provide easy access, modeling, and persistence of your Filemaker data. A ginjo-rfm model is basically an alias to a specific layout in your Filemaker database and provides all of the query options found in a classic rfm layout object. The model and/or the layout object is where you do most of your work with rfm. For more details about what methods and options are available to a model or layout object, see the documentation for the {Rfm::Layout} and {Rfm::Base} classes.
 
 	   class User < Rfm::Base
 	     config :layout => 'my_user_layout'
@@ -637,7 +632,29 @@ Repeating field compatibility, more coverage of Filemaker's query syntax, more e
 
 
 
-## Previous Version Highlights
+## Version Highlights
+
+### Version  3.0
+
+There are many changes in version 3, but most of them are under the hood. Here are some highlights.
+
+* Compatibility with Ruby 2.1.2 (and 2.0.0, 1.9.3, 1.8.7).
+
+* XML parsing rewrite.
+The entire XML parsing engine of Rfm has been rewritten to use only the sax/stream parsing schemes of the supported Ruby XML parsers (libxml-ruby, nokogiri, ox, rexml). There were two main goals in this rewrite: 1, to separate the xml parsing code from the Rfm/Filemaker objects, and 2, to remove the hard dependency on ActiveSupport. See below for parsing configuration options.
+
+* Better logging capabilities.
+Added Rfm.logger, Rfm.logger=, Config.logger, Config#logger, and config(:logger=>(...)).
+
+* Added field-mapping awareness to :sort_field query option.
+
+* Relaxed requirement that query option keys be symbols - can now be strings or symbols.
+
+* Detached resultset from record, so record doesn't drag resultset around with it.
+
+* Bug fixes and refinements in modeling, configuration, metadata access, and Rfm object instantiation.
+
+See the changelog or the commit history for more details on changes in ginjo-rfm v3.
 
 ### Version 2.1
 
