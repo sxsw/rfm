@@ -5,8 +5,14 @@
 	whereas Markdown is just another markup language.
 	
 	Rubydoc.info uses yard and can use markdown and other markup languages.
+	To update ginjo-rfm's yard documentation from github's master branch,
+	first find 'rfm' on rubydoc.info, then in list-view click the update button
+	on the right of the screen.
+	To preview this file in yard, run 'rake yard'
 	
 	Github uses markdown or rdoc (maybe others?).
+	To preview this file in plain markdown, edit in TextMate and
+	choose Bundles/Markdown/Preview menu option.
 -->
 
 # ginjo-rfm
