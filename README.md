@@ -1,6 +1,13 @@
-# @markup markdown
-# @author William Richardson
-# @comment See YARD documentation - https://github.com/lsegal/yard/wiki/GettingStarted
+<!--
+	See YARD documentation - https://github.com/lsegal/yard/wiki/GettingStarted
+	
+	Yard is not the same as markdown - Yard is for ruby and can use any markup language,
+	whereas Markdown is just another markup language.
+	
+	Rubydoc.info uses yard and can use markdown and other markup languages.
+	
+	Github uses markdown or rdoc (maybe others?).
+-->
 
 # ginjo-rfm
 
