@@ -11,6 +11,17 @@ describe Rfm::Resultset do
   	allow(server).to receive(:state).and_return({})
   end
 
+	describe ".load_data" do
+		it "loads fmresultset.xml containing portal-meta with duplicate definitions merged" do
+			handler = Rfm::Resultset.load_data "spec/data/resultset_with_duplicate_portals.xml"
+			result = handler.result
+			expect(result.portal_meta["projectlineitemssubitems_pli"]["specialprintinginstructions"].result).to eq("text")
+			expect(result.portal_meta["projectlineitemssubitems_pli"]["proofwidth"].result).to eq("number")
+			expect(result.portal_meta["projectlineitemssubitems_pli"]["finishheight"].result).to eq("number")
+			expect(result.portal_meta["projectlineitemssubitems_pli"]["border"].result).to eq("text")
+		end
+	end
+
 # TODO: write specs for data loading & portal loading.
 # 	describe "#initialze" do
 # 		it "calls build_records with record-xml, resultset-obj, field-meta, layout" do

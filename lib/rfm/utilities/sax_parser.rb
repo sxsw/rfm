@@ -950,7 +950,7 @@ class Object
 				instance_variable_get("@#{name}")[delimit_name]=obj
 				# Trying to handle multiple portals with same table-occurance on same layout.
 				# In parsing terms, this is trying to handle multiple elements who's delimiter field contains the SAME delimiter data.
-				#instance_variable_get("@#{name}")._merge_object!(obj, delimit_name, nil, nil, nil)
+				instance_variable_get("@#{name}")._merge_delimited_object!(obj, delimit_name)
 			else
 				#puts ["\_setting_existing_instance_var", name]
 				if name == options[:text_label]
@@ -968,6 +968,15 @@ class Object
 		_create_accessor(name) if (options[:create_accessors] & ['all','private']).any?
 		
 		rslt
+	end
+	
+	def _merge_delimited_object!(obj, delimit_name)
+		case
+		when self[delimit_name].nil?; self[delimit_name] = obj
+		when self[delimit_name].is_a?(Hash); self[delimit_name].merge!(obj)
+		when self[delimit_name].is_a?(Array); self[delimit_name] << obj
+		else self[delimit_name] = [self[delimit_name], obj]
+		end
 	end
 	
 	# Get an instance variable, a member of a shared instance variable, or a hash value of self.
@@ -1041,6 +1050,7 @@ class Array
 end # Array
 
 class Hash
+	
 	def _merge_object!(obj, name, delimiter, prefs, type, options={})
 		#puts ["\n*****HASH._merge_object", "type: #{type}", "name: #{name}", "self.class: #{self.class}", "new_obj: #{(obj.to_s rescue obj.class)}", "delimiter: #{delimiter}", "prefs: #{prefs}", "options: #{options}"]
 		case
@@ -1053,10 +1063,9 @@ class Hash
 				delimit_name =  obj._get_attribute(delimiter, options[:shared_variable_name]).to_s.downcase
 				#puts "MERGING delimited object with hash: self '#{self.class}' obj '#{obj.class}' name '#{name}' delim '#{delimiter}' delim_name '#{delimit_name}' options '#{options}'"
 				self[name] ||= options[:default_class].new
-				self[name][delimit_name]=obj
+				#self[name][delimit_name]=obj
 				# This is supposed to handle multiple elements who's delimiter value is the SAME.
-				#obj.instance_variable_set(:@_index_, 0)
-				#self[name]._merge_object!(obj, delimit_name, nil, nil, nil)
+				self[name]._merge_delimited_object!(obj, delimit_name)
 			else
 				if name == options[:text_label]
 					self[name] << obj.to_s
@@ -1065,7 +1074,7 @@ class Hash
 					self[name] << obj
 				end
 			end
-			_create_accessor(name) if (options[:create_accessors] & ['all','shared','hash']).any?
+			_create_accessor(name) if (options[:create_accessors].to_a & ['all','shared','hash']).any?
 			
 			rslt
 		else

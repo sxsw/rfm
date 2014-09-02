@@ -26,7 +26,7 @@ module Rfm
 				field = resultset.portal_meta[table.downcase][name.downcase]
 				data = @attributes['data']
 				#puts ['DATUM_portal_callback_02', resultset.class, table, name, field, data].join(', ')
-				#(y resultset.portal_meta) unless field
+				#(puts resultset.portal_meta.to_yaml) unless field
 				cursor.parent.object[name.downcase] = field.coerce(data)
 			end
       
