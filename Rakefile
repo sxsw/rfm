@@ -140,10 +140,10 @@ task :release do
 	gem_name = 'ginjo-rfm'
 	shell = <<-EEOOFF
 		current_branch=`git rev-parse --abbrev-ref HEAD`
-		if [ current_branch != 'master' ]; then
+		if [ $current_branch != 'master' ]; then
 			echo "Aborting: You are not on the master branch."
 			exit 1
-		end
+		fi
 		echo "--- Pre-committing ---"
 			git add .; git commit -m'Releasing version #{Rfm::VERSION}'
 		echo "--- Building gem ---" &&
@@ -160,6 +160,10 @@ task :release do
 		echo "--- Pushing to rubygems.org ---" &&
 			gem push pkg/$gemfile
 	EEOOFF
-	#puts shell
+	puts "-----  Shell script to release gem  -----"
+	puts shell
+	puts "-----  End shell script  -----"
 	print exec(shell)
 end
+
+
