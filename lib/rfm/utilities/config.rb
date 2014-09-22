@@ -125,7 +125,7 @@ module Rfm
 				config_file_name = @config[:file_name] || (RFM_CONFIG[:file_name] rescue nil) || 'rfm.yml'
 				config_file_paths = [''] | [(@config[:file_path] || (RFM_CONFIG[:file_path] rescue nil) || %w( config/ ))].flatten
 				config_file_paths.collect do |path|
-					(YAML.load_file(File.join(path, config_file_name)) rescue {})
+					(YAML.load(ERB.new(File.read(File.join(path, config_file_name))).result) rescue {})
 				end.inject({}){|h,a| h.merge(a)}
 			) || {}
 		end
