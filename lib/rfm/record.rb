@@ -118,9 +118,11 @@ module Rfm
 			record = case
 			
 			# Get model from layout, then allocate record.
-			when args[0].is_a?(Resultset) && args[0].layout
+			# This should only use model class if the class already exists,
+			# since we don't want to create classes that aren't defined by the user - they won't be persistant.
+			when args[0].is_a?(Resultset) && args[0].layout && args[0].layout.model
 				args[0].layout.modelize.allocate
-			
+
 			# Allocate instance of Rfm::Record.	
 			else
 				self.allocate
