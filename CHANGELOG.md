@@ -1,5 +1,18 @@
 # Changelog
 
+## Ginjo-Rfm 3.0.7
+
+* Changed record creation so that generic records created from non-modelized layouts will be instances of Rfm::Record, instead of instances of a transient model class based on the layout. Transient model classes will foul up serialization and any number of other things. Records created from a user-defined model class will continue to be instances of the model class.
+		
+		my_layout.find(12345).class  ==  Rfm::Record
+		MyModel.find(12345).class    ==  MyModel
+		
+
+## Ginjo-Rfm 3.0.6
+
+* Fixed duplicate portal-name merging, added specs to test this.
+* Minor updates to gem maintenance & release tools.
+
 ## Ginjo-Rfm 3.0.5
 
 * Fixed parser handling of `<field>` element that's missing a `<data>` element.
