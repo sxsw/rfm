@@ -101,7 +101,7 @@ module Rfm
       request.set_form_data(post_data)
   
   		if state[:proxy]
-	  		connection = Net::HTTP::Proxy(state[:proxy]).new(host_name, port)
+	  		connection = Net::HTTP::Proxy(*state[:proxy]).new(host_name, port)
   		else
 	      connection = Net::HTTP.new(host_name, port)
 	    end
