@@ -32,6 +32,7 @@ module Rfm
       @defaults = {
         :host => 'localhost',
         #:port => 80,
+        :proxy=>false,
         :ssl => true,
         :root_cert => true,
         :root_cert_name => '',
@@ -99,7 +100,11 @@ module Rfm
       request.basic_auth(account_name, password)
       request.set_form_data(post_data)
   
-      connection = Net::HTTP.new(host_name, port)
+  		if state[:proxy]
+	  		connection = Net::HTTP::Proxy(state[:proxy]).new(host_name, port)
+  		else
+	      connection = Net::HTTP.new(host_name, port)
+	    end
       #ADDED LONG TIMEOUT TIMOTHY TING 05/12/2011
       connection.open_timeout = connection.read_timeout = state[:timeout]
       if state[:ssl]
