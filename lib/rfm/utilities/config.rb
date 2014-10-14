@@ -14,6 +14,7 @@ module Rfm
 			parser
 			host
 			port
+			proxy
 			account_name
 			password
 			database
