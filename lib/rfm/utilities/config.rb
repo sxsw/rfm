@@ -7,6 +7,7 @@ module Rfm
 	#
   module Config
   	require 'yaml'
+  	require 'erb'
   	
 		CONFIG_KEYS = %w(
 			file_name
