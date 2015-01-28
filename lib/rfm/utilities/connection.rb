@@ -32,7 +32,7 @@ module Rfm
       @defaults = {
         :host => 'localhost',
         #:port => 80,
-        :proxy=>false,
+        :proxy=>false,  # array of (p_addr, p_port = nil, p_user = nil, p_pass = nil)
         :ssl => true,
         :root_cert => true,
         :root_cert_name => '',

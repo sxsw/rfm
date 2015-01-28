@@ -205,6 +205,7 @@ See `Rfm::Config::CONFIG_KEYS` for a list of currently allowed configuration opt
 	   :root_cert_path   => '/'
 	   :account_name     => ''
 	   :password         => ''
+	   :proxy            => false                         # Pass an array of Net::HTTP::Proxy options (p_addr, p_port = nil, p_user = nil, p_pass = nil).
 	   :log_actions      => false
 	   :log_responses    => false
 	   :log_parser       => false
@@ -212,13 +213,18 @@ See `Rfm::Config::CONFIG_KEYS` for a list of currently allowed configuration opt
 	   :raise_on_401     => false
 	   :timeout          => 60
 	   
-	   :use                                               # use configuration subgroups, or filter configuration subgoups
-	   :layout                                            # specify the name of the layout to use
-	   :parent           => 'Rfm::Config'                 # the parent configuration object of the current configuration object, as string
-	   :file_name        => 'rfm.yml                      # name of configuration file to load yaml from
-	   :file_path        => ['', 'config/']               # array of additional file paths to look for configuration file
-	   :parser                                            # Prefferred XML parser (you must also require the parsing gem or specify it in your gemfile, if not using the built-in Ruby XML parser REXML). Can be :libxml, :nokogiri, :ox, :rexml.
-	   :ignore_bad_data  => nil                           # Instruct Rfm to ignore data mismatch errors when loading a resultset
+	   :use                                               # Use configuration subgroups, or filter configuration subgoups.
+	   :layout                                            # Specify the name of the layout to use.
+	   :parent           => 'Rfm::Config'                 # The parent configuration object of the current configuration object, as string.
+	   :file_name        => 'rfm.yml                      # Name of configuration file to load yaml from.
+	   :file_path        => ['', 'config/']               # Array of additional file paths to look for configuration file.
+	   :parser                                            # Prefferred XML parser. Can be :libxml, :nokogiri, :ox, :rexml.
+	                                                      # You must also require the parsing gem or specify it in your gemfile,
+	                                                      # if not using the built-in Ruby XML parser REXML. 
+	                                                      # You only need to use this option if you have multiple
+	                                                      # parsing gems loaded and want to use a specfic one. 
+	                                                      # Otherwise, Rfm will use the best parser it can find amongst your currently loaded parsing gems.
+	   :ignore_bad_data  => nil                           # Instruct Rfm to ignore data mismatch errors when loading a resultset.
 	
 
 ### Using Models
