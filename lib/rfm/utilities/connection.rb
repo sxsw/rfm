@@ -69,6 +69,8 @@ module Rfm
     def select_grammar(post, options={})
 			grammar = state(options)[:grammar] || 'fmresultset'
 			if grammar.to_s.downcase == 'auto'
+				# TODO: Build grammar parser in new sax engine templates to handle FMPXMLRESULT.
+				return "fmresultset"
 				post.keys.find(){|k| %w(-find -findall -dbnames -layoutnames -scriptnames).include? k.to_s} ? "FMPXMLRESULT" : "fmresultset"   
     	else
     		grammar

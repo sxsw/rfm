@@ -289,8 +289,7 @@ module Rfm
     end
     
     def get_records(action, extra_params = {}, options = {})
-    	# TODO: The grammar stuff here won't work properly until you handle config between
-    	# models/sublayouts/layout/server (Is this done now?).
+    	# TODO: See auto-grammar bypbass in connection.rb.
     	grammar_option = state(options)[:grammar]
     	options.merge!(:grammar=>grammar_option) if grammar_option
     	template = options.delete :template
