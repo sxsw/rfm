@@ -13,8 +13,8 @@ Gemfile.lock
 *.diff
 .bundle/***
 vendor/***
-# keep ruby-version in git repo, but don't include it in gem build
-#.ruby-version
+# you can keep ruby-version in git repo, but don't include it in gem build.
+.ruby-version
 ruby-prof-*.html
 ruby-prof-*.txt
 # hide ruby-prof output images (used in html reports)

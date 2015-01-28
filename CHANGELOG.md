@@ -1,5 +1,16 @@
 # Changelog
 
+## Ginjo-Rfm 3.0.8
+
+* Implemented proxy option for database connections thru a proxy server.
+
+	  config :proxy=>['my.proxy.com', 8888]
+	
+* Implemented erb parsing of config.yml
+	
+* Disabled ```:grammar => :auto``` option. The current xml parser cannot yet use the FMPXMLRESULT grammar for general queries.
+
+
 ## Ginjo-Rfm 3.0.7
 
 * Changed record creation so that generic records created from non-modelized layouts will be instances of Rfm::Record, instead of instances of a transient model class based on the layout. Transient model classes will foul up serialization and any number of other things. Records created from a user-defined model class will continue to be instances of the model class.
