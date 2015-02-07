@@ -4,7 +4,7 @@
 
 * Implemented proxy option for database connections thru a proxy server.
 
-	  config :proxy=>['my.proxy.com', 8888]
+		config :proxy=>['my.proxy.com', 8888]
 	
 * Implemented erb parsing of config.yml
 	
@@ -212,8 +212,8 @@
 
 	Example:  
   
-	    server.db.all #=> ['dbname1', 'dbname2', ...]
-	    server.db     #=> a DbFactory object (descendant of Hash), containing 0 or more Database objects
+		server.db.all #=> ['dbname1', 'dbname2', ...]
+		server.db     #=> a DbFactory object (descendant of Hash), containing 0 or more Database objects
 
 ## Lardawge-Rfm 1.4.2 (unreleased)
   
@@ -221,8 +221,8 @@
   
 	Example:
  
-	    Old: record.john #=> "" 
-	    New: record.john #=> nil
+		Old: record.john #=> "" 
+		New: record.john #=> nil
    
 ## Lardawge-Rfm 1.4.1.2
 
@@ -244,11 +244,11 @@
 
 	Example:  
   
-	    result = fm_server('layout').find({:username => "==#{username}"}, {:include_portals => true})
-	    # => This will fetch all records with portal records attached.
-  
-	    result.first.portals
-	    # => would return an empty hash by default.
+		result = fm_server('layout').find({:username => "==#{username}"}, {:include_portals => true})
+		# => This will fetch all records with portal records attached.
+
+		result.first.portals
+		# => would return an empty hash by default.
     
 * Internal file restructuring. Some classes have changed but it should be nothing a developer would use API wise. Please let me know if it is.
 
