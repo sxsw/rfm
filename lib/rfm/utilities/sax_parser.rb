@@ -685,10 +685,12 @@ module Rfm
 			
 			# Does the heavy-lifting of template retrieval.
 			def load_template(dat)
+				#puts "DAT: #{dat}, class #{dat.class}"
 				prefix = defined?(TEMPLATE_PREFIX) ? TEMPLATE_PREFIX : ''
 				#puts "SaxParser::Handler#load_template... 'prefix' is #{prefix}"
 		  	rslt = case
 		  		when dat.is_a?(Hash); dat
+		  		when (dat.is_a?(String) && dat[/^\//]); YAML.load_file dat
 		  		when dat.to_s[/\.y.?ml$/i]; (YAML.load_file(File.join(*[prefix, dat].compact)))
 		  		# This line might cause an infinite loop.
 		  		when dat.to_s[/\.xml$/i]; self.class.build(File.join(*[prefix, dat].compact), nil, {'compact'=>true})
@@ -696,6 +698,8 @@ module Rfm
 		  		when dat.is_a?(String); YAML.load dat
 		  		else DEFAULT_CLASS.new
 		  	end
+		  	#puts rslt
+		  	rslt
 			end
 		  
 		  def result
