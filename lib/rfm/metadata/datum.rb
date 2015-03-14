@@ -21,11 +21,11 @@ module Rfm
 			def portal_field_element_close_callback(cursor)
 				resultset = cursor.top.object
 				table, name = @attributes['name'].to_s.split('::')
-				#puts ['DATUM_portal_callback_01', table, name].join(', ')
+				#puts ['DATUM_portal_field_element_close_callback_01', table, name].join(', ')
 				name = get_mapped_name(name, resultset)
 				field = resultset.portal_meta[table.downcase][name.downcase]
 				data = @attributes['data']
-				#puts ['DATUM_portal_callback_02', resultset.class, table, name, field, data].join(', ')
+				#puts ['DATUM_portal_field_element_close_callback_02', "cursor.parent.object.class: #{cursor.parent.object.class}", "resultset.class: #{resultset.class}", "table: #{table}", "name: #{name}", "field: #{field}", "data: #{data}"]
 				#(puts resultset.portal_meta.to_yaml) unless field
 				cursor.parent.object[name.downcase] = field.coerce(data)
 			end

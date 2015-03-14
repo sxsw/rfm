@@ -1,6 +1,11 @@
 ### Run this from the command line with 'rspec -O spec/spec.opts'
 ### Run this with 'RUBYOPT=W0 -O spec/spec.opts' to silence warnings.
 
+### To run a single rspec test:
+### rake spec SPEC=spec/rfm/sax_parser_spec.rb SPEC_OPTS="-e \"loads each portal array with instances of Rfm::Record\""
+
+
+
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 

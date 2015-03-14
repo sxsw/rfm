@@ -316,6 +316,7 @@ module Rfm
       	else
 	      	prms[new_key]=prms.delete(k) if new_key != k
       	end
+      	#puts "PRMS: #{new_key} #{prms[new_key].class} #{prms[new_key]}"
       end
 			
 			#c = Connection.new(action, prms, options, state.merge(:parent=>self))

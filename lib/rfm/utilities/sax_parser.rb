@@ -54,11 +54,12 @@
 #
 # YAML structure defining a SAX xml parsing template.
 # Options:
-#   initialize_with:						string, symbol, or array (object, method, params...). Should return new object. See Rfm::SaxParser::Cursor#get_callback.
+#   initialize_with:	OBSOLETE?	string, symbol, or array (object, method, params...). Should return new object. See Rfm::SaxParser::Cursor#get_callback.
 #   elements:										array of element hashes [{'name'=>'element-tag'},...]
 #   attributes:									array of attribute hashes {'name'=>'attribute-name'} UC
-#   class:                      string-or-class: class name for new element
+#   class:											string-or-class: class name for new element
 #		attach:											string: shared, _shared_var_name, private, hash, array, cursor, none - how to attach this element or attribute to #object. 
+#																array: [0]string of above, [1..-1]new_element_callback options (see get_callback method).
 #		attach_elements:						string: same as 'attach' - how to attach ANY subelements to this model's object, unless they have their own 'attach' specification.
 #		attach_attributes:					string: same as 'attach' - how to attach ANY attributes to this model's object, unless they have their own 'attach' specification.
 #   before_close:								string, symbol, or array (object, method, params...). See Rfm::SaxParser::Cursor#get_callback.
@@ -66,7 +67,7 @@
 #   delimiter:									string: attribute/hash key to delineate objects with identical tags
 #		create_accessors:   				string or array: all, private, shared, hash, none
 #		accessor:   								string: all, private, shared, hash, none
-#		element_handler:						string, symbol, or array (object, method, params...). Should return new object. See Rfm::SaxParser::Cursor#get_callback.
+#		element_handler:	NOT-USED?	string, symbol, or array (object, method, params...). Should return new object. See Rfm::SaxParser::Cursor#get_callback.
 # 															Default attach prefs are 'cursor'.
 #																Use this when all new-element operations should be offloaded to custom class or module.
 #																Should return an instance of new object.
@@ -216,7 +217,7 @@ module Rfm
 			  end
 			  
 		    def receive_start_element(_tag, _attributes)
-			    #puts ["\nRECEIVE_START '#{_tag}'", "current_object: #{@object.class}", "current_model: #{@model}"]
+			    #puts ["\nRECEIVE_START '#{_tag}'", "current_object: #{@object.class}", "current_model: #{@model['name']}", "attributes #{_attributes}"]
 					new_cursor = Cursor.new(_tag, @handler, self, _attributes) #, binding)
 					new_cursor.process_new_element(binding)
 
@@ -262,11 +263,15 @@ module Rfm
 						@object = new_element || DEFAULT_CLASS.allocate
 			      
 						if @initial_attributes && @initial_attributes.any? #&& @attribute_attachment_prefs != 'none'
+							#puts "PROCESS_NEW_ELEMENT calling assign_attributes with ATTRIBUTES #{@initial_attributes}"
 			    	  assign_attributes(@initial_attributes) #, @object, @model, @local_model) 
 			    	end
 			      
+			      # If @local_model has a delimiter, defer attach_new_element until later.
+			      #puts "PROCESS_NEW_ELEMENT delimiter of @local_model #{delimiter?(@local_model)}"
 						if !delimiter?(@local_model) 
   						#attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element')
+  						#puts "PROCESS_NEW_ELEMENT calling attach_new_element with TAG #{@tag} and OBJECT #{@object}"
   						attach_new_element(@tag, @object)
   					end  		
 		    	end
@@ -289,6 +294,7 @@ module Rfm
 						
 	      		if (delimiter = delimiter?(@local_model); delimiter && !['none','cursor'].include?(@element_attachment_prefs.to_s))
   						#attach_new_object(@parent.object, @object, @tag, @parent.model, @local_model, 'element')
+  						#puts "RECEIVE_END_ELEMENT attaching new element TAG (#{@tag}) OBJECT (#{@object.class}) #{@object.to_yaml} WITH LOCAL MODEL #{@local_model.to_yaml} TO PARENT (#{@parent.object.class}) #{@parent.object.to_yaml} PARENT MODEL #{@parent.model.to_yaml}"
   						attach_new_element(@tag, @object)
   					end  		
 
@@ -316,21 +322,22 @@ module Rfm
 		    end
 		    
 		    ###  Parse callback instructions, compile & send callback method  ###
+		    ###  TODO: This is way too convoluted. Document it better, or refactor!!!
 		    # This method will send a method to an object, with parameters, and return a new object.
-		    # Input: string, symbol, or array of strings
+		    # Input (first param): string, symbol, or array of strings
 		    # Returns: object
 		    # Default options:
 		    #   :object=>object
 		    #   :method=>'a method name string or symbol'
 		    #   :params=>"params string to be eval'd in context of cursor"
 		    # Usage:
-		    #   callback: send a method (or eval string) to an object with parameters.
-		    #   string: a string to be eval'd in context of current object.
-		    #   symbol: method to be called on current object.
-		    #   array: object, method, params.
-		    #     object: <object or string>
-		    #     method: <string or symbol>
-		    #     params: <string>
+		    #   callback: send a method (or eval string) to an object with parameters, consisting of...
+				# 	  string: a string to be eval'd in context of current object.
+				# 	  or symbol: method to be called on current object.
+				# 	  or array: object, method, params.
+				# 	    object: <object or string>
+				# 	    method: <string or symbol>
+				# 	    params: <string>
 		    #
 		    # TODO-MAYBE: Change param order to (method, object, params),
 		    #             might help confusion with param complexities.
@@ -460,7 +467,7 @@ module Rfm
 				#     # end
 				# 	end
 				
-				def attach_new_element(name, new_object)   #(base_object, new_object, name, base_model, new_model, type)
+				def attach_new_element(name, new_object)   #old params (base_object, new_object, name, base_model, new_model, type)
 					label = label_or_tag(name, @local_model)
 					
 					# Was this, which works fine, but not as efficient:
@@ -481,9 +488,8 @@ module Rfm
           # end
 					
 					
-					#puts ["\nATTACH_NEW_ELEMENT 1", "type: #{type}", "label: #{label}", "base_object: #{base_object.class}", "new_object: #{new_object.class}", "delimiter: #{delimiter?(new_model)}", "prefs: #{prefs}", "shared_var_name: #{shared_var_name}", "create_accessors: #{create_accessors}"]
+					#puts ["\nATTACH_NEW_ELEMENT 1", "new_object: #{new_object}", "parent_object: #{@parent.object}", "label: #{label}", "delimiter: #{delimiter?(@local_model)}", "prefs: #{prefs}", "shared_var_name: #{shared_var_name}", "create_accessors: #{create_accessors}"]
 					@parent.object._attach_object!(new_object, label, delimiter?(@local_model), prefs, 'element', :default_class=>DEFAULT_CLASS, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors)
-					#puts ["\nATTACH_NEW_ELEMENT 2: #{base_object.class} with ", label, delimiter?(new_model), prefs, type, :shared_variable_name=>shared_var_name, :create_accessors=>create_accessors]
           # if type == 'attribute'
           #   puts ["\nATTACH_ATTR", "name: #{name}", "label: #{label}", "new_object: #{new_object.class rescue ''}", "base_object: #{base_object.class rescue ''}", "base_model: #{base_model['name'] rescue ''}", "new_model: #{new_model['name'] rescue ''}", "prefs: #{prefs}"]
           # end
@@ -896,7 +902,7 @@ class Object
 
 	# Master method to attach any object to this object.
 	def _attach_object!(obj, *args) # name/label, collision-delimiter, attachment-prefs, type, *options: <options>
-		#puts ["\nATTACH_OBJECT._attach_object", self.class, obj.class, obj.to_s, args].to_yaml
+		#puts ["\nATTACH_OBJECT._attach_object", "self.class: #{self.class}", "obj.class: #{obj.class}", "obj.to_s: #{obj.to_s}", "args: #{args}"]
 		options = ATTACH_OBJECT_DEFAULT_OPTIONS.merge(args.last.is_a?(Hash) ? args.pop : {}){|key, old, new| new || old}
 		# 	name = (args[0] || options[:name])
 		# 	delimiter = (args[1] || options[:delimiter])
@@ -919,6 +925,8 @@ class Object
 	# 		else
 	# 			self._merge_object!(obj, 'unknown_name', delimiter, prefs, type, options)
 	# 		end
+	#puts ["\nATTACH_OBJECT RESULT", self.to_yaml]
+	#puts ["\nATTACH_OBJECT RESULT PORTALS", (self.portals.to_yaml rescue 'no portals')]
 	end
 	
 	# Master method to merge any object with this object
@@ -943,7 +951,7 @@ class Object
 	
 	# Merge a named object with the specified instance variable of self.
 	def _merge_instance!(obj, name, delimiter, prefs, type, options={})
-		#puts ["\n_merge_instance!", self.class, obj.class, name, delimiter, prefs, type, options.keys, '_end_merge_instance!'].join(', ')
+		#puts ["\nOBJECT._merge_instance!", "self.class: #{self.class}", "obj.class: #{obj.class}", "name: #{name}", "delimiter: #{delimiter}", "prefs: #{prefs}", "type: #{type}", "options.keys: #{options.keys}", '_end_merge_instance!']  #.join(', ')
 		rslt = if instance_variable_get("@#{name}") || delimiter
 			if delimiter
 				delimit_name = obj._get_attribute(delimiter, options[:shared_variable_name]).to_s.downcase
@@ -951,7 +959,13 @@ class Object
 				#instance_variable_set("@#{name}", instance_variable_get("@#{name}") || options[:default_class].new)[delimit_name]=obj
 				# This line is more efficient than the above line.
 				instance_variable_set("@#{name}", options[:default_class].new) unless instance_variable_get("@#{name}")
-				instance_variable_get("@#{name}")[delimit_name]=obj
+				
+				# This line was active in 3.0.9.pre01, but it was inserting each portal array as an element in the array,
+				# after all the Rfm::Record instances had been added. This was causing an potential infinite recursion situation.
+				# I don't think this line was supposed to be here - was probably an older piece of code.
+				#instance_variable_get("@#{name}")[delimit_name]=obj
+				
+				#instance_variable_get("@#{name}")._merge_object!(obj, delimit_name, nil, nil, nil)
 				# Trying to handle multiple portals with same table-occurance on same layout.
 				# In parsing terms, this is trying to handle multiple elements who's delimiter field contains the SAME delimiter data.
 				instance_variable_get("@#{name}")._merge_delimited_object!(obj, delimit_name)
@@ -975,6 +989,8 @@ class Object
 	end
 	
 	def _merge_delimited_object!(obj, delimit_name)
+		#puts "MERGING DELIMITED OBJECT self #{self.class} obj #{obj.class} delimit_name #{delimit_name}"
+
 		case
 		when self[delimit_name].nil?; self[delimit_name] = obj
 		when self[delimit_name].is_a?(Hash); self[delimit_name].merge!(obj)
@@ -1057,7 +1073,7 @@ class Hash
 	
 	def _merge_object!(obj, name, delimiter, prefs, type, options={})
 		#puts ["\n*****HASH._merge_object", "type: #{type}", "name: #{name}", "self.class: #{self.class}", "new_obj: #{(obj.to_s rescue obj.class)}", "delimiter: #{delimiter}", "prefs: #{prefs}", "options: #{options}"]
-		case
+		output = case
 		when prefs=='shared'
 			_merge_shared!(obj, name, delimiter, prefs, type, options)
 		when prefs=='private'
@@ -1067,6 +1083,7 @@ class Hash
 				delimit_name =  obj._get_attribute(delimiter, options[:shared_variable_name]).to_s.downcase
 				#puts "MERGING delimited object with hash: self '#{self.class}' obj '#{obj.class}' name '#{name}' delim '#{delimiter}' delim_name '#{delimit_name}' options '#{options}'"
 				self[name] ||= options[:default_class].new
+				
 				#self[name][delimit_name]=obj
 				# This is supposed to handle multiple elements who's delimiter value is the SAME.
 				self[name]._merge_delimited_object!(obj, delimit_name)
@@ -1084,9 +1101,11 @@ class Hash
 		else
 			rslt = self[name] = obj
 			_create_accessor(name) if (options[:create_accessors] & ['all','shared','hash']).any?
-			#puts ["\nRESULT", self.to_yaml]
 			rslt
 		end
+		#puts ["\n*****HASH._merge_object! RESULT", self.to_yaml]
+		#puts ["\n*****HASH._merge_object! RESULT PORTALS", (self.portals.to_yaml rescue 'no portals')]
+		output
 	end
 	
 	# 	def _create_accessors options=[]
