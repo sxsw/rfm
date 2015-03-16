@@ -46,6 +46,7 @@ module Rfm
         :raise_on_401 => false,
         :timeout => 60,
         :ignore_bad_data => false,
+        :template => 'fmresultset',
         :grammar => 'fmresultset'
       }   #.merge(options)
 	
@@ -78,7 +79,8 @@ module Rfm
     end
     
     def parse(template=nil, initial_object=nil, parser=nil, options={})
-    	(template =  'fmresultset.yml') unless template
+    	template ||= state[:template]
+    	#(template =  'fmresultset.yml') unless template
     	#(template = File.join(File.dirname(__FILE__), '../sax/', template)) if template.is_a? String
     	Rfm::SaxParser.parse(connect.body, template, initial_object, parser, state(*options)).result
     end

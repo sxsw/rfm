@@ -33,6 +33,7 @@ module Rfm
 			log_parser
 			use
 			parent
+			template
 			grammar
 			field_mapping
 			capture_strings_with

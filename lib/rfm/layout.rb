@@ -321,7 +321,8 @@ module Rfm
 			
 			#c = Connection.new(action, prms, options, state.merge(:parent=>self))
 			c = Connection.new(action, prms, options, self)
-			rslt = c.parse(template || :fmresultset, Rfm::Resultset.new(self, self))
+			#rslt = c.parse(template || :fmresultset, Rfm::Resultset.new(self, self))
+			rslt = c.parse(template, Rfm::Resultset.new(self, self))
 			capture_resultset_meta(rslt) unless @resultset_meta
 			rslt
     end

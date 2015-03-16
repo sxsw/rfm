@@ -1,5 +1,11 @@
 # Changelog
 
+## Ginjo-Rfm 3.0.9
+
+* Fixed bug in parser that was appending each portal array recursively to itself.
+
+* Sax parser template option :template now takes a full-path string.
+
 ## Ginjo-Rfm 3.0.8
 
 * Implemented proxy option for database connections thru a proxy server.

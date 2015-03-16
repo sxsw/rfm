@@ -691,9 +691,9 @@ module Rfm
 			
 			# Does the heavy-lifting of template retrieval.
 			def load_template(dat)
-				#puts "DAT: #{dat}, class #{dat.class}"
+				puts "DAT: #{dat}, class #{dat.class}"
 				prefix = defined?(TEMPLATE_PREFIX) ? TEMPLATE_PREFIX : ''
-				#puts "SaxParser::Handler#load_template... 'prefix' is #{prefix}"
+				puts "SaxParser::Handler#load_template... 'prefix' is #{prefix}"
 		  	rslt = case
 		  		when dat.is_a?(Hash); dat
 		  		when (dat.is_a?(String) && dat[/^\//]); YAML.load_file dat
