@@ -46,7 +46,7 @@ module Rfm
         :raise_on_401 => false,
         :timeout => 60,
         :ignore_bad_data => false,
-        :template => 'fmresultset',
+        :template => :fmresultset,
         :grammar => 'fmresultset'
       }   #.merge(options)
 	

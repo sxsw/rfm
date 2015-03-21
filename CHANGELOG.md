@@ -8,6 +8,8 @@
 
 * Compatible with dm-filemaker-adapter (for DataMapper ORM).
 
+* Config now recognizes :template option, allowing alternative parsing templates.
+
 ## Ginjo-Rfm 3.0.8
 
 * Implemented proxy option for database connections thru a proxy server.

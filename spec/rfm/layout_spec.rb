@@ -44,7 +44,7 @@ describe Rfm::Layout do
 				expect(args[0]).to eq(:fmresultset)
 				expect(args[1].class).to eq(Rfm::Resultset)
 			end
-			layout.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst'})
+			layout.send(:get_records, '-find', {:prms=>'tst'}, {:opts=>'tst', :template=>:fmresultset})
 		end
 		
 		it "returns instance of Resultset" do
