@@ -6,6 +6,8 @@
 
 * Sax parser template option :template now takes a full-path string.
 
+* Compatible with dm-filemaker-adapter (for DataMapper ORM).
+
 ## Ginjo-Rfm 3.0.8
 
 * Implemented proxy option for database connections thru a proxy server.
