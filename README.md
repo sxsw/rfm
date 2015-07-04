@@ -512,7 +512,7 @@ All of these methods return an Rfm::Resultset object (see below), and every one 
 
 	   my_layout.find({:state => "AZ"}, {:max_records => 10, :skip_records => 100})
 
-For a complete list of the available options, see the "expand_options" method in the Rfm::Server object in the file named server.rb.
+For a complete list of the available options, see the "Common Options" section in the layout.rb file.
 
 Finally, if filemaker returns an error when executing any of these methods, an error will be raised in your Ruby script. There is one exception to this, though. If a find results in no records being found (FileMaker error # 401) I just ignore it and return you a Resultset with zero records in it. If you prefer an error in this case, add :raise_on_401 => true to the options you pass the Rfm::Server when you create it.
 
