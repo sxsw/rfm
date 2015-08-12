@@ -1,38 +1,38 @@
 module Rfm
-  
+
   # Error is the base for the error hierarchy representing errors returned by Filemaker.
-  # 
+  #
   # One could raise a FileMakerError by doing:
   #   raise Rfm::Error.getError(102)
   #
   # It also takes an optional argument to give a more discriptive error message:
   #   err = Rfm::Error.getError(102, 'add description with more detail here')
-  # 
+  #
   # The above code would return a FieldMissing instance. Your could use this instance to raise that appropriate
   # exception:
-  # 
-  #   raise err 
-  # 
+  #
+  #   raise err
+  #
   # You could access the specific error code by accessing:
-  #   
+  #
   #   err.code
   module Error
-    
+
     class RfmError < StandardError #:nodoc:
       attr_reader :code
-      
+
       def initialize(code, message=nil)
         @code = code
         super(message)
       end
     end
 
-    class UnknownError < RfmError 
+    class UnknownError < RfmError
     end
-    
+
     class SystemError  < RfmError
     end
-    
+
     class MissingError < RfmError
     end
 
@@ -42,10 +42,10 @@ module Rfm
     class FieldMissingError  < MissingError #:nodoc:
     end
 
-    class ScriptMissingError < MissingError #:nodoc: 
+    class ScriptMissingError < MissingError #:nodoc:
     end
 
-    class LayoutMissingError < MissingError #:nodoc: 
+    class LayoutMissingError < MissingError #:nodoc:
     end
 
     class TableMissingError  < MissingError #:nodoc:
@@ -82,7 +82,7 @@ module Rfm
     end
 
     class ValidationError < RfmError #:nodoc:
-    end 
+    end
 
     class DateValidationError < ValidationError #:nodoc:
     end
@@ -90,7 +90,7 @@ module Rfm
     class TimeValidationError < ValidationError #:nodoc:
     end
 
-    class NumberValidationError < ValidationError #:nodoc: 
+    class NumberValidationError < ValidationError #:nodoc:
     end
 
     class RangeValidationError < ValidationError #:nodoc:
@@ -115,11 +115,11 @@ module Rfm
     end
 
     class FileError < RfmError #:nodoc:
-    end 
+    end
 
     class UnableToOpenFileError < FileError #:nodoc:
     end
-    
+
     extend self
     # This method returns the appropriate FileMaker object depending on the error code passed to it. It
     # also accepts an optional message.
@@ -129,15 +129,15 @@ module Rfm
       error   = klass.new(code, message)
       error
     end
-    
+
     def build_message(klass, code, message=nil) #:nodoc:
       msg =  ": #{message}"
       msg << " " unless message.nil?
       msg << "(FileMaker Error ##{code})"
-      
+
       "#{klass.to_s.gsub(/Rfm::Error::/, '')} occurred#{msg}"
     end
-    
+
     def find_by_code(code) #:nodoc:
       case code
       when 0..99 then SystemError
@@ -159,8 +159,8 @@ module Rfm
         elsif code == 306; RecordModIdDoesNotMatchError
         else; ConcurrencyError; end
       when 400..499
-       if code == 401; NoRecordsFoundError
-       else; GeneralError; end
+        if code == 401; NoRecordsFoundError
+        else; GeneralError; end
       when 500..599
         if code == 500; DateValidationError
         elsif code == 501; TimeValidationError
@@ -182,5 +182,5 @@ module Rfm
       end
     end
   end
-  
+
 end

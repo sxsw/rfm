@@ -71,13 +71,13 @@ module Rfm
   #
   # This code iterates through the rows of the _Orders_ portal.
   #
-  #	As a convenience, you can call a specific portal as a method on your record, if the table occurrence name does
+  #  As a convenience, you can call a specific portal as a method on your record, if the table occurrence name does
   # not have any characters that are prohibited in ruby method names, just as you can call a field with a method:
-	# 	
-	#   myRecord.orders.each {|portal_row|
-	#   	puts portal_row["Order Number"]
-	#   }
-	#   
+  #   
+  #   myRecord.orders.each {|portal_row|
+  #     puts portal_row["Order Number"]
+  #   }
+  #   
   # =Field Types and Ruby Types
   #
   # RFM automatically converts data from FileMaker into a Ruby object with the most reasonable type possible. The 
@@ -107,41 +107,40 @@ module Rfm
   #   changes so you can tell if the Record object you're looking at is up-to-date as compared to another
   #   copy of the same record
   class Record < Rfm::CaseInsensitiveHash
-    
+
     attr_accessor :layout #, :resultset
     attr_reader :record_id, :mod_id, :portals
     def_delegators :layout, :db, :database, :server, :field_meta, :portal_meta, :field_names, :portal_names
-    
+
     # This is called during the parsing process, but only to allow creation of the correct type of model instance.
     # This is also called by the end-user when constructing a new empty record, but it is called from the model subclass.
-		def self.new(*args) # resultset
-			record = case
-			
-			# Get model from layout, then allocate record.
-			# This should only use model class if the class already exists,
-			# since we don't want to create classes that aren't defined by the user - they won't be persistant.
-			when args[0].is_a?(Resultset) && args[0].layout && args[0].layout.model
-				args[0].layout.modelize.allocate
+    def self.new(*args) # resultset
+      record = case
+        # Get model from layout, then allocate record.
+        # This should only use model class if the class already exists,
+        # since we don't want to create classes that aren't defined by the user - they won't be persistant.
+      when args[0].is_a?(Resultset) && args[0].layout && args[0].layout.model
+        args[0].layout.modelize.allocate
+        # Allocate instance of Rfm::Record.
+      else
+        self.allocate
+      end
 
-			# Allocate instance of Rfm::Record.	
-			else
-				self.allocate
-			end
-			record.send(:initialize, *args)
-			record
-			# rescue
-			# 	puts "Record.new bombed and is defaulting to super.new. Error: #{$!}"
-			# 	super
-		end
+      record.send(:initialize, *args)
+      record
+      # rescue
+      #   puts "Record.new bombed and is defaulting to super.new. Error: #{$!}"
+      #   super
+    end
 
     def initialize(*args) # resultset, attributes
-      @mods						||= {}
+      @mods            ||= {}
       @portals        ||= Rfm::CaseInsensitiveHash.new
-			options = args.rfm_extract_options!
-			if args[0].is_a?(Resultset)
-				@layout = args[0].layout
-			elsif self.is_a?(Base)
-				@layout = self.class.layout
+      options = args.rfm_extract_options!
+      if args[0].is_a?(Resultset)
+        @layout = args[0].layout
+      elsif self.is_a?(Base)
+        @layout = self.class.layout
         @layout.field_keys.each do |field|
           self[field] = nil
         end
@@ -150,8 +149,8 @@ module Rfm
         @loaded = true
       end
       _attach_as_instance_variables(args[1]) if args[1].is_a? Hash
-			#@loaded = true
-			self
+      #@loaded = true
+      self
     end
 
     # Saves local changes to the Record object back to Filemaker. For example:
@@ -181,7 +180,7 @@ module Rfm
       self.replace_with_fresh_data(layout.edit(@record_id, @mods, {:modification_id => @mod_id})[0]) if @mods.size > 0
       @mods.clear
     end
-    
+
     # Gets the value of a field from the record. For example:
     #
     #   first = myRecord["First Name"]
@@ -195,19 +194,19 @@ module Rfm
     #
     # When you do, the change is noted, but *the data is not updated in FileMaker*. You must call
     # Record::save or Record::save_if_not_modified to actually save the data.
-  	def [](key)
-  		# Added by wbr, 2013-03-31
-  		return super unless @loaded
-  		return fetch(key.to_s.downcase)
-  	rescue IndexError
-    	raise Rfm::ParameterError, "#{key} does not exists as a field in the current Filemaker layout." unless key.to_s == '' #unless (!layout or self.key?(key_string))
-  	end
+    def [](key)
+      # Added by wbr, 2013-03-31
+      return super unless @loaded
+      return fetch(key.to_s.downcase)
+    rescue IndexError
+      raise Rfm::ParameterError, "#{key} does not exists as a field in the current Filemaker layout." unless key.to_s == '' #unless (!layout or self.key?(key_string))
+    end
 
     def respond_to?(symbol, include_private = false)
       return true if self.include?(symbol.to_s)
       super
     end
-    
+
     def []=(key, val)
       key_string = key.to_s.downcase
       return super unless @loaded # is this needed?
@@ -215,45 +214,49 @@ module Rfm
       # @mods[key_string] = val
       # TODO: This needs cleaning up.
       # TODO: can we get field_type from record instead?
-			@mods[key_string] = if [Date, Time, DateTime].member?(val.class)
-				field_type = layout.field_meta[key_string.to_sym].result
-				case field_type
-					when 'time'; val.strftime(layout.time_format)
-					when 'date'; val.strftime(layout.date_format)
-					when 'timestamp'; val.strftime(layout.timestamp_format)
-				else val
-				end
-			else val
-			end
+      @mods[key_string] = if [Date, Time, DateTime].member?(val.class)
+        field_type = layout.field_meta[key_string.to_sym].result
+        case field_type
+        when 'time'
+          val.strftime(layout.time_format)
+        when 'date'
+          val.strftime(layout.date_format)
+        when 'timestamp'
+          val.strftime(layout.timestamp_format)
+        else
+          val
+        end
+      else
+        val
+      end
       super(key, val)
     end
-		  
-	  def field_names
-    	layout.field_names
+
+    def field_names
+      layout.field_names
     end
-    
+
     def replace_with_fresh_data(record)
-			self.replace record
-			[:@mod_id, :@record_id, :@portals, :@mods].each do |var|
-				self.instance_variable_set var, record.instance_variable_get(var) || {}
-			end
-			self
-		end
-		
-		
+      self.replace record
+      [:@mod_id, :@record_id, :@portals, :@mods].each do |var|
+        self.instance_variable_set var, record.instance_variable_get(var) || {}
+      end
+      self
+    end
 
-  private
 
-  	def method_missing (symbol, *attrs, &block)
-  	  method = symbol.to_s
-  	  return self[method] if self.key?(method)
-  	  return @portals[method] if @portals and @portals.key?(method)
+    private
 
-  	  if method =~ /(=)$/
-  	    return self[$`] = attrs.first if self.key?($`)
-  	  end
-  	  super
-		end
-  	
+    def method_missing (symbol, *attrs, &block)
+      method = symbol.to_s
+      return self[method] if self.key?(method)
+      return @portals[method] if @portals and @portals.key?(method)
+
+      if method =~ /(=)$/
+        return self[$`] = attrs.first if self.key?($`)
+      end
+      super
+    end
+
   end # Record
 end # Rfm
