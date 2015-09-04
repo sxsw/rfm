@@ -28,6 +28,7 @@ module Rfm
   autoload :CompoundQuery,'rfm/utilities/compound_query'
   autoload :VERSION,      'rfm/version'
   autoload :Connection,   'rfm/utilities/connection.rb'
+  autoload :Scope,        'rfm/utilities/scope.rb'
 
 	module Metadata
 		autoload :Script,         'rfm/metadata/script'
