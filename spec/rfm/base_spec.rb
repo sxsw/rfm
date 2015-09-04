@@ -37,7 +37,7 @@ describe Rfm::Base do
 				expect(args[0]).to eq({:field_one=>'test'})
 				expect(args[1]).to eq({:max_records=>5})
 			end
-			Memo.layout.find({:field_one=>'test'}, :max_records=>5)
+			Memo.find({:field_one=>'test'}, :max_records=>5)
 		end
 	end
 	
