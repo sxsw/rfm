@@ -9,15 +9,16 @@ require 'date'
 
 Gem::Specification.new do |s|
   s.name = "ginjo-rfm"
-  s.summary = "Ruby to Filemaker adapter"
+  s.summary = "Ruby Filemaker adapter"
   s.version = File.read('./lib/rfm/VERSION') #Rfm::VERSION
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
+  #s.authors = ["Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock", "Bill Richardson"]
+  s.authors = ["Bill Richardson", "Geoff Coffey", "Mufaddal Khumri", "Atsushi Matsuo", "Larry Sprock"]
   s.date = Date.today.to_s
-  s.description = "Rfm lets your Ruby scripts and Rails applications talk directly to your Filemaker server. Ginjo-rfm includes ActiveModel compatibility, multiple XML parsers, compound Filemaker find requests, and a configuration API."
+  s.description = "Rfm is a standalone database adapter for Filemaker server. Ginjo-rfm features multiple xml parser support, ActiveModel integration, field mapping, compound queries, logging, scoping, and a configuration framework."
   s.email = "http://groups.google.com/group/rfmcommunity"
-  s.homepage = "https://rubygems.org/gems/ginjo-rfm"
+  s.homepage = "https://github.com/ginjo/rfm"
   
   s.require_paths = ["lib"]
   s.files = Dir['lib/**/*.rb', 'lib/**/sax/*', 'lib/**/VERSION',  '.yardopts']

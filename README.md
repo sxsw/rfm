@@ -24,12 +24,12 @@ Ginjo-rfm version 3 has been tested successfully on Ruby 1.8.7 thru 2.1.3.
 
 ## Documentation & Links
 
-* Ginjo-rfm rubygem   <https://rubygems.org/gems/ginjo-rfm>
-* Rdoc location       <http://rubydoc.info/github/ginjo/rfm/frames>
+* Gem                 <https://rubygems.org/gems/ginjo-rfm>
+* Rdoc                <http://rubydoc.info/github/ginjo/rfm>
+* Github              <https://github.com/ginjo/rfm>
 * Discussion          <http://groups.google.com/group/rfmcommunity>
-* Ginjo at github     <https://github.com/ginjo/rfm>
-* Original homepage   <http://sixfriedrice.com/wp/products/rfm/>
-* Lardawge at github  <https://github.com/lardawge/rfm>
+* Original            <http://sixfriedrice.com/wp/products/rfm/>
+* Lardawge            <https://github.com/lardawge/rfm>
 
 ## Requirements
 
@@ -864,6 +864,6 @@ Other lead contributors:
 * Atsushi Matsuo was an early Rfm tester, and provided outstanding feedback, critical code fixes, and a lot of web exposure.
 * Jesse Antunes helped ensure that Rfm is stable and functional.
 * Larry Sprock added ssl support, switched the xml parser to a much faster Nokogiri, added the rspec testing framework, and refined code architecture.
-* William Richardson is the current maintainer of the ginjo-rfm fork and added support for multiple xml parsers, ActiveModel integration, field mapping, compound queries, logging, and a configuration framework.
+* William Richardson is the current maintainer of the ginjo-rfm fork and added support for multiple xml parsers, ActiveModel integration, field mapping, compound queries, logging, scoping, and a configuration framework.
 
 

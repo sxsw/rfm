@@ -1,20 +1,11 @@
 describe 'Rfm::Scope' do
-  let(:server)   {(Rfm::Server).allocate}
-  let(:database) {(Rfm::Database).allocate}
-  #let(:name)     {'test_layout'}
-  #let(:layout)   {Rfm::Layout.new(name, database)}
-	before(:each) do
-		allow(server).to receive(:state).and_return({})
-		allow(database).to receive(:server).and_return(server)
-	end
+
 	before(:all) do
 		require 'rfm/utilities/scope'
-		ScopedModel = Class.new(Rfm::Base){config :scoped_model_layout}
+		ScopedModel = Class.new(Rfm::Base){config :fictitious_layout}
 	end
 	
-	# See spec for Layout#find for more examples that could be testing with scope here.
-
-	
+	# See spec for Layout#find for more examples that could be testing with scope here.	
 	
 	it "adds default empty SCOPE to Rfm::Base" do
 		expect(Rfm::Base.const_defined?(:SCOPE)).to be_truthy
