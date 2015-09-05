@@ -1,5 +1,24 @@
 # Changelog
 
+## Ginjo-Rfm 3.0.10
+
+* Added scoping support
+
+    scope = {:person_id => current_user.person_id}
+    Order.find([{:status => ['open', 'processing']}, {:omit => true, :item_count => "<1"}], :scope => scope)
+
+    class Orders < Rfm::Base
+      SCOPE = Proc.new { {:expired => "=" } }
+    end
+    Order.find({:user_id => '12345'})
+    
+    class Orders < Rfm::Base
+      SCOPE = Proc.new {|args| {:user_id => args} }
+    end
+    Order.find([{:status => ['open', 'processing']}, {:omit => true, :item_count => "<1"}], :scope_args => current_user.id)
+
+* Minor fixes & cleanup
+
 ## Ginjo-Rfm 3.0.9
 
 * Fixed bug in parser that was appending each portal array recursively to itself.
