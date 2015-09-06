@@ -183,7 +183,7 @@ You can also include or extend the Rfm::Config module in any object in your proj
 	     # using :parent to set where this object inherits config settings from
 	   end
 
-Use `get_config` to view the compiled configuration settings for any object. Configuration compilation will start at the top (rfm.yml), then work down the heirarchy of objects to wherever you call the `get_config` method, merging in all global settings along the way. Subgroupings of settings will also be merged, if they are specified in a subgroup filter. A subgroup filter occurs any time you put `:use => :subgroup` in your configuration setting. You can have multiple subgroup filters, and when configuration compilation occurs, all subgroup filters are stacked up into an array and processed in order (as if you typed `:use=>[:subgroup1, :subgroup2, subgroup3, ...]` which is also allowed). `get_config` returns a compiled configuration hash, leaving all configuration settings in all modules and classes un-touched.
+Use `get_config` to view the compiled configuration settings for any object. Configuration compilation will start at the top (rfm.yml), then work down the hierarchy of objects to wherever you call the `get_config` method, merging in all global settings along the way. Subgroupings of settings will also be merged, if they are specified in a subgroup filter. A subgroup filter occurs any time you put `:use => :subgroup` in your configuration setting. You can have multiple subgroup filters, and when configuration compilation occurs, all subgroup filters are stacked up into an array and processed in order (as if you typed `:use=>[:subgroup1, :subgroup2, subgroup3, ...]` which is also allowed). `get_config` returns a compiled configuration hash, leaving all configuration settings in all modules and classes un-touched.
 
 	   Person.get_config
 	
@@ -512,7 +512,7 @@ All of these methods return an Rfm::Resultset object (see below), and every one 
 
 	   my_layout.find({:state => "AZ"}, {:max_records => 10, :skip_records => 100})
 
-For a complete list of the available options, see the "expand_options" method in the Rfm::Server object in the file named server.rb.
+For a complete list of the available options, see the "Common Options" section in the layout.rb file.
 
 Finally, if filemaker returns an error when executing any of these methods, an error will be raised in your Ruby script. There is one exception to this, though. If a find results in no records being found (FileMaker error # 401) I just ignore it and return you a Resultset with zero records in it. If you prefer an error in this case, add :raise_on_401 => true to the options you pass the Rfm::Server when you create it.
 
