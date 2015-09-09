@@ -323,7 +323,7 @@ module Rfm
 			c = Connection.new(action, prms, options, self)
 			#rslt = c.parse(template || :fmresultset, Rfm::Resultset.new(self, self))
 			rslt = c.parse(template, Rfm::Resultset.new(self, self))
-			capture_resultset_meta(rslt) unless @resultset_meta
+			capture_resultset_meta(rslt) unless resultset_meta_valid? #(@resultset_meta && @resultset_meta.error != '401')
 			rslt
     end
     
@@ -341,21 +341,23 @@ module Rfm
     def meta
     	@loaded ? @meta : load_layout
     end
-    
+
   	def field_names
-  		case
-  		when @loaded; meta.field_names
-  		when @resultset_meta; resultset_meta.field_names
-  		else meta.field_names
-  		end
+			# case
+			# when @loaded; meta.field_names
+			# when @resultset_meta; resultset_meta.field_names
+			# else meta.field_names
+			# end
+			meta.field_names
   	end
   	
   	def field_keys
-  		case
-  		when @loaded; @meta.field_keys
-  		when @resultset_meta; @resultset_meta.field_keys
-  		else meta.field_keys
-  		end
+			# case
+			# when @loaded; @meta.field_keys
+			# when @resultset_meta; @resultset_meta.field_keys
+			# else meta.field_keys
+			# end
+			meta.field_keys
   	end
   	
   	
@@ -364,7 +366,14 @@ module Rfm
     ###  Metadata from Resultset  ###
     
 		def resultset_meta
-			@resultset_meta || view.meta
+			#@resultset_meta || view.meta
+			resultset_meta_valid? ? @resultset_meta : view.meta
+		end
+		
+		def resultset_meta_valid?
+			if @resultset_meta && @resultset_meta.error != '401'
+				true
+			end
 		end
 		
   	# Should always refresh
