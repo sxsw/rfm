@@ -99,7 +99,7 @@ module Rfm
       :fmpxmlresult => 'fmpxmlresult.yml',
       :none => nil
     }
-  }	
+  }
 
   extend self
 

@@ -322,23 +322,13 @@ module Rfm
         end
         #puts "PRMS: #{new_key} #{prms[new_key].class} #{prms[new_key]}"
       end
-<<<<<<< HEAD
-			
-			#c = Connection.new(action, prms, options, state.merge(:parent=>self))
-			c = Connection.new(action, prms, options, self)
-			#rslt = c.parse(template || :fmresultset, Rfm::Resultset.new(self, self))
-			rslt = c.parse(template, Rfm::Resultset.new(self, self))
-			capture_resultset_meta(rslt) unless resultset_meta_valid? #(@resultset_meta && @resultset_meta.error != '401')
-			rslt
-=======
 
       #c = Connection.new(action, prms, options, state.merge(:parent=>self))
       c = Connection.new(action, prms, options, self)
       #rslt = c.parse(template || :fmresultset, Rfm::Resultset.new(self, self))
       rslt = c.parse(template, Rfm::Resultset.new(self, self))
-      capture_resultset_meta(rslt) unless @resultset_meta
+      capture_resultset_meta(rslt) unless resultset_meta_valid? #(@resultset_meta && @resultset_meta.error != '401')
       rslt
->>>>>>> c633119ec4203164e7149fcb9f97597f520119af
     end
 
     def params
@@ -366,78 +356,37 @@ module Rfm
       end
     end
 
-<<<<<<< HEAD
-  	def field_names
-			# case
-			# when @loaded; meta.field_names
-			# when @resultset_meta; resultset_meta.field_names
-			# else meta.field_names
-			# end
-			meta.field_names
-  	end
-  	
-  	def field_keys
-			# case
-			# when @loaded; @meta.field_keys
-			# when @resultset_meta; @resultset_meta.field_keys
-			# else meta.field_keys
-			# end
-			meta.field_keys
-  	end
-  	
-  	
-  	
-  		  
-    ###  Metadata from Resultset  ###
-    
-		def resultset_meta
-			#@resultset_meta || view.meta
-			resultset_meta_valid? ? @resultset_meta : view.meta
-		end
-		
-		def resultset_meta_valid?
-			if @resultset_meta && @resultset_meta.error != '401'
-				true
-			end
-		end
-		
-  	# Should always refresh
-  	def total_count
-  		view.total_count
-  	end
-		
-		def capture_resultset_meta(resultset)
-			(@resultset_meta = resultset.clone.replace([])) #unless @resultset_meta
-			@resultset_meta = resultset.meta
-		end
-		
-  	def portal_names
-  		return 'UNDER-CONTSTRUCTION'
-  	end
-
-  	
-  	
-  	
-  	###  Utility  ###
-    
-=======
-    def field_keys
-      case
-      when @loaded
-        @meta.field_keys
-      when @resultset_meta
-        @resultset_meta.field_keys
-      else meta.field_keys
-      end
+    def field_names
+      # case
+      # when @loaded; meta.field_names
+      # when @resultset_meta; resultset_meta.field_names
+      # else meta.field_names
+      # end
+      meta.field_names
     end
 
+    def field_keys
+      # case
+      # when @loaded; @meta.field_keys
+      # when @resultset_meta; @resultset_meta.field_keys
+      # else meta.field_keys
+      # end
+      meta.field_keys
+    end
 
 
 
     ###  Metadata from Resultset  ###
 
     def resultset_meta
-      @resultset_meta || view.meta
+      #@resultset_meta || view.meta
+      resultset_meta_valid? ? @resultset_meta : view.meta
+    end
+
+    def resultset_meta_valid?
+      if @resultset_meta && @resultset_meta.error != '401'
+        true
+      end
     end
 
     # Should always refresh
@@ -451,7 +400,7 @@ module Rfm
     end
 
     def portal_names
-      'UNDER-CONSTRUCTION'
+      return 'UNDER-CONTSTRUCTION'
     end
 
 
@@ -459,7 +408,6 @@ module Rfm
 
     ###  Utility  ###
 
->>>>>>> c633119ec4203164e7149fcb9f97597f520119af
     def load_layout
       #@loaded = true # This is first so parsing call to 'meta' wont cause infinite loop,
       # but I changed parsing template to refer directly to inst var instead of accessor method.

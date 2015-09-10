@@ -17,9 +17,9 @@ require 'active_model/lint'
 
 #if ENV['parser']; Rfm.backend = ENV['parser'].to_sym; end
 Rfm::BACKEND = if ENV['parser'];
-	ENV['parser'].to_sym
+  ENV['parser'].to_sym
 else
-	:rexml
+  :rexml
 end
 
 puts Rfm.info
@@ -27,18 +27,18 @@ puts "RSpec: #{RSpec::Version::STRING}"
 #puts "Ruby #{RUBY_VERSION}"
 
 RFM_CONFIG = {
-	:ignore_bad_data => true,
-	:host=>'host1',
-	:group1=>{
-		:database=>'db1'
-	},
-	:group2=>{
-		:database=>'db2'
-	},
-	:base_test=>{
-		:database=>'testdb1',
-		:layout=>'testlay1',
-	}
+  :ignore_bad_data => true,
+  :host=>'host1',
+  :group1=>{
+    :database=>'db1'
+  },
+  :group2=>{
+    :database=>'db2'
+  },
+  :base_test=>{
+    :database=>'testdb1',
+    :layout=>'testlay1',
+  }
 }
 
 Memo = TestModel = Class.new(Rfm::Base){config :base_test}
@@ -54,50 +54,50 @@ RESULTSET_PORTALS_XML = File.read('spec/data/resultset_with_portals.xml')
 #$VERBOSE=W0 # Silence ruby warnings.
 
 RSpec.configure do |config|
-	config.before(:each) do
-		# See http://stackoverflow.com/questions/5591509/suppress-ruby-warnings-when-running-specs
-		# Kernel.silence_warnings do
-			#Memo = TestModel = Class.new(Rfm::Base){self.config :base_test}
-			# NOTE the capitalization of these instance variables.
-			@Layout = Memo.layout   #.parent_layout
-			@Server = Memo.server
+  config.before(:each) do
+    # See http://stackoverflow.com/questions/5591509/suppress-ruby-warnings-when-running-specs
+    # Kernel.silence_warnings do
+      #Memo = TestModel = Class.new(Rfm::Base){self.config :base_test}
+      # NOTE the capitalization of these instance variables.
+      @Layout = Memo.layout   #.parent_layout
+      @Server = Memo.server
 
-			#@Layout.stub(:load_layout).and_return(Rfm::SaxParser.parse(LAYOUT_XML, 'fmpxmllayout.yml', @Layout).result)
-			
-			allow_any_instance_of(Rfm::Connection).to receive(:connect) do |instance, *args|
-				#puts ["CONNECTION#connect args", args, self].flatten.join(', ')
-				case args[0].to_s
-				when /find/;
-					#puts "RESULTSET"
-					RESULTSET_XML
-				when /view/
-					#puts "LAYOUT"
-					LAYOUT_XML
-				end
-			end
-			
-			# Enhanced workaround for #any_instance.stub {self}
-			# See http://stackoverflow.com/questions/13893618/rspec-any-instance-return-self
-			# See http://stackoverflow.com/questions/5938049/rspec-stubbing-return-the-parameter
-			orig_new = Rfm::Connection.method(:new)
-			allow(Rfm::Connection).to receive(:new) do |*args, &block|
-			  orig_new.call(*args, &block).tap do |instance|
-			    allow(instance).to receive(:connect) do |*args2|
-						case instance.instance_variable_get(:@action)
-						when /find/;
-							#puts "RESULTSET"
-							RESULTSET_XML
-						when /view/
-							#puts "LAYOUT"
-							LAYOUT_XML
-						end
-					end
-			  end
-			end
-			
-			
-		# end
-	end
+      #@Layout.stub(:load_layout).and_return(Rfm::SaxParser.parse(LAYOUT_XML, 'fmpxmllayout.yml', @Layout).result)
+      
+      allow_any_instance_of(Rfm::Connection).to receive(:connect) do |instance, *args|
+        #puts ["CONNECTION#connect args", args, self].flatten.join(', ')
+        case args[0].to_s
+        when /find/;
+          #puts "RESULTSET"
+          RESULTSET_XML
+        when /view/
+          #puts "LAYOUT"
+          LAYOUT_XML
+        end
+      end
+      
+      # Enhanced workaround for #any_instance.stub {self}
+      # See http://stackoverflow.com/questions/13893618/rspec-any-instance-return-self
+      # See http://stackoverflow.com/questions/5938049/rspec-stubbing-return-the-parameter
+      orig_new = Rfm::Connection.method(:new)
+      allow(Rfm::Connection).to receive(:new) do |*args, &block|
+        orig_new.call(*args, &block).tap do |instance|
+          allow(instance).to receive(:connect) do |*args2|
+            case instance.instance_variable_get(:@action)
+            when /find/;
+              #puts "RESULTSET"
+              RESULTSET_XML
+            when /view/
+              #puts "LAYOUT"
+              LAYOUT_XML
+            end
+          end
+        end
+      end
+      
+      
+    # end
+  end
 
   config.mock_with :rspec do |mocks|
     # In RSpec 3, `any_instance` implementation blocks will be yielded the receiving
