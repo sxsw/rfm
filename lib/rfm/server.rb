@@ -1,5 +1,6 @@
 require 'net/https'
 require 'cgi'
+
 module Rfm
   # This class represents a single FileMaker server. It is initialized with basic
   # connection information, including the hostname, port number, and default database
@@ -45,9 +46,9 @@ module Rfm
   # * *host_name* is the host name this server points to
   # * *port* is the port number this server communicates on
   # * *state* is a hash of all server options used to initialize this server
-  
-  
-  
+
+
+
   # The Database object represents a single FileMaker Pro database. When you retrieve a Database
   # object from a server, its account name and password are set to the account name and password you 
   # used when initializing the Server object. You can override this of course:
@@ -108,8 +109,8 @@ module Rfm
   # * *state* is a hash of all server options used to initialize this server
   class Server
     include Config
-    
-  
+
+
     # To create a Server object, you typically need at least a host name:
     # 
     #   myServer = Rfm::Server.new({:host => 'my.host.com'})
@@ -195,11 +196,11 @@ module Rfm
     #            :root_cert_path => '/usr/cert_file/'
     #            })
     def initialize(*args)
-    	config(*args)
-    	raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{state[:host]}'.") if state[:host].to_s == ''
+      config(*args)
+      raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Server has no host name. Attempted name '#{state[:host]}'.") if state[:host].to_s == ''
       @databases = Rfm::Factory::DbFactory.new(self)
     end
-   	
+
     # Access the database object representing a database on the server. For example:
     #
     #   myServer['Customers']
@@ -212,25 +213,32 @@ module Rfm
     # get no error at this point if the database you access doesn't exist. Instead, you'll
     # receive an error when you actually try to perform some action on a layout from this
     # database.
-		#     def [](dbname, acnt=nil, pass=nil)
-		#       self.db[dbname, acnt, pass]
-		#     end
+    #     def [](dbname, acnt=nil, pass=nil)
+    #       self.db[dbname, acnt, pass]
+    #     end
     def_delegator :databases, :[]
-    
+
     attr_reader :databases #, :host_name, :port, :scheme, :state
     # Legacy Rfm method to get/create databases from server object
     alias_method :db, :databases
-    
+
     def config(*args)
-    	super(:capture_strings_with=>[:host, :account_name, :password]) 
-    	super(*args)
+      super(:capture_strings_with=>[:host, :account_name, :password])
+      super(*args)
     end
- 
-    
-	  def host_name; state[:host]; end
-	  def scheme; state[:ssl] ? "https" : "http"; end
-	  def port; state[:ssl] && state[:port].nil? ? 443 : state[:port]; end
-    
+
+    def host_name
+      state[:host]
+    end
+
+    def scheme
+      state[:ssl] ? "https" : "http"
+    end
+
+    def port
+      state[:ssl] && state[:port].nil? ? 443 : state[:port]
+    end
+
     # Performs a raw FileMaker action. You will generally not call this method directly, but it
     # is exposed in case you need to do something "under the hood."
     # 
@@ -258,6 +266,6 @@ module Rfm
     #     },
     #     { :max_records => 20 }
     #   )
-    
+
   end
 end

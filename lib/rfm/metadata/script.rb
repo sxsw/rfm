@@ -13,10 +13,10 @@ module Rfm
         @name = name
         self.db = db_obj
       end
-      
+
       meta_attr_accessor :db
       attr_reader :name
     end # Script
-    
+
   end # Metadata
 end # Rfm
