@@ -26,7 +26,7 @@ describe 'Rfm::Scope' do
     expect(ScopedModel.layout).to receive(:get_records) do |action, query, options|
       #puts query.to_yaml
       expect(action).to eq('-findquery')
-      expect(['(q0,q2,q3);(q1,q2,q3);!(q4)', '(q0,q1,q3);(q0,q2,q3);!(q4)'].include?(query['-query'])).to be_truthy
+      expect(['(q0,q2,q3);(q1,q2,q3);!(q4)', '(q0,q1,q3);(q0,q2,q3);!(q4)', '(q0,q1,q2);(q0,q1,q3);!(q4)'].include?(query['-query'])).to be_truthy
       #expect(query['-q3']).to eq(:companyid)
       #expect(query['-q3.value']).to eq('12345')
       expect(query.values.include?(:companyid)).to be_truthy
