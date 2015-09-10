@@ -21,9 +21,9 @@ shared_examples_for "ActiveModel" do
 
   attr_accessor :assertions
 
-  def initialize
+  def initialize(args)
     self.assertions = 0
-    super
+    super(args)
   end
 
   ActiveModel::Lint::Tests.public_instance_methods.map{|m| m.to_s}.grep(/^test/).each do |m|
