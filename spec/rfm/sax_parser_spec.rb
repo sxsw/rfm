@@ -4,7 +4,9 @@
 describe Rfm::SaxParser::Handler do
   #subject {Rfm::SaxParser::Handler}
   HANDLER = Rfm::SaxParser::Handler.get_backend #:rexml
-  before(:all) do; Rfm::SaxParser::TEMPLATE_PREFIX.replace('.'); end
+  before(:all) do
+    Rfm::SaxParser::TEMPLATE_PREFIX.replace('.')
+  end
 
   describe '#set_cursor' do
     # TODO: This seems really clumsy, clean it up.

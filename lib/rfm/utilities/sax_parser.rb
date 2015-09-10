@@ -194,7 +194,9 @@ module Rfm
         if @element_attachment_prefs.is_a? Array
           @new_element_callback = @element_attachment_prefs[1..-1]
           @element_attachment_prefs = @element_attachment_prefs[0]
-          if @element_attachment_prefs.to_s == 'default'; @element_attachment_prefs = nil; end
+          if @element_attachment_prefs.to_s == 'default'
+            @element_attachment_prefs = nil
+          end
         end
 
         #puts ["\nINITIALIZE_CURSOR tag: #{@tag}", "parent.object: #{@parent.object.class}", "local_model: #{@local_model.class}", "el_prefs: #{@element_attachment_prefs}",  "new_el_callback: #{@new_element_callback}", "attributes: #{@initial_attributes}"]
@@ -366,12 +368,22 @@ module Rfm
 
         obj_raw = params.shift
         #puts ["\nOBJECT_RAW:","class: #{obj_raw.class}", "object: #{obj_raw}"]
-        obj = if obj_raw.is_a?(String); eval(obj_raw.to_s, caller_binding); else obj_raw; end
-        if obj.nil? || obj == ''; obj = defaults[:object] || @object; end
+        obj = if obj_raw.is_a?(String)
+                eval(obj_raw.to_s, caller_binding)
+              else
+                obj_raw
+              end
+        if obj.nil? || obj == ''
+          obj = defaults[:object] || @object
+        end
         #puts ["\nOBJECT:","class: #{obj.class}", "object: #{obj}"]
 
         code = params.shift || defaults[:method]
-        params.each_with_index{|str,i| if str.is_a?(String); params[i] = eval(str, caller_binding); end }
+        params.each_with_index do |str, i|
+          if str.is_a?(String)
+            params[i] = eval(str, caller_binding)
+          end
+        end
         params = defaults[:params] if params.size == 0
         #puts ["\nGET_CALLBACK tag: #{@tag}" ,"callback: #{callback}", "obj.class: #{obj.class}", "code: #{code}", "params-class #{params.class}"]
         case

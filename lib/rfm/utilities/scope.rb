@@ -3,25 +3,29 @@ require 'rfm/base'
 
 module Rfm
   module Scope
-  
+
     SCOPE = Proc.new {[]}
-  
+
     # Add scoping to Rfm::Base class methods for querying fmp records.
-    # Usage: class MyModel < Rfm::Base; SCOPE = proc {|optional-scope-args| <single-or-array-of-fmp-request-hashes>}; end
+    # Usage:
+    #   class MyModel < Rfm::Base
+    #     SCOPE = proc { |optional-scope-args| <single-or-array-of-fmp-request-hashes> }
+    #   end
+    #
     # Optionally pass :scope=>fmp-request-hash-or-array or :scope_args=>anything
     # in the FMP request options hash, to be used at scoping time,
     # instead of above scope constant.
-      
+
     def find(*args)
       new_args = apply_scope(*args)
       super(*new_args)
     end
-    
+
     def count(*args)
       new_args = apply_scope(*args)
       super(*new_args)
     end
-    
+
     # Mix scope requests with user requests (sorta like a cross-join of requests).
     def apply_scope(*args)
       opts = (args.size > 1 && args.last.is_a?(Hash) ? args.pop : {})
@@ -36,17 +40,17 @@ module Rfm
       scoped_query = [scoped_requests, opts]
       scoped_query
     end
-    
+
     # def self.extended(base)
     #   puts "Extending #{base} with Scope"
     # end
 
   end # Scope
-  
+
 
   class Base
     SCOPE = Scope::SCOPE
-    
+
     class << self
       # When Rfm::Base is inherited, the inheritor will extend this Scope module
       alias_method :inherited_orig, :inherited
@@ -56,5 +60,5 @@ module Rfm
       end
     end
   end
-  
+
 end # Rfm

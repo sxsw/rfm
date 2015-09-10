@@ -49,7 +49,13 @@ RESULTSET_XML = File.read('spec/data/resultset.xml')
 RESULTSET_PORTALS_XML = File.read('spec/data/resultset_with_portals.xml')
 
 # Give each of these a body method that returns self.
-[LAYOUT_XML, RESULTSET_XML, RESULTSET_PORTALS_XML].each{|c| class << c; def body; self; end; end}
+[LAYOUT_XML, RESULTSET_XML, RESULTSET_PORTALS_XML].each do |c|
+  class << c
+    def body
+      self
+    end
+  end
+end
 
 #$VERBOSE=W0 # Silence ruby warnings.
 
