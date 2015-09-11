@@ -4,18 +4,18 @@
 
 * Added scoping support
 
-		scope = {:person_id => current_user.person_id}
-		Order.find([{:status => ['open', 'processing']}, {:omit => true, :item_count => "<1"}], :scope => scope)
+        scope = {:person_id => current_user.person_id}
+        Order.find([{:status => ['open', 'processing']}, {:omit => true, :item_count => "<1"}], :scope => scope)
 
-		class Orders < Rfm::Base
-			SCOPE = Proc.new { {:expired => "=" } }
-		end
-		Order.find({:user_id => '12345'})
-		
-		class Orders < Rfm::Base
-			SCOPE = Proc.new {|args| {:user_id => args} }
-		end
-		Order.find([{:status => ['open', 'processing']}, {:omit => true, :item_count => "<1"}], :scope_args => current_user.id)
+        class Orders < Rfm::Base
+          SCOPE = Proc.new { {:expired => "=" } }
+        end
+        Order.find({:user_id => '12345'})
+    
+        class Orders < Rfm::Base
+          SCOPE = Proc.new {|args| {:user_id => args} }
+        end
+        Order.find([{:status => ['open', 'processing']}, {:omit => true, :item_count => "<1"}], :scope_args => current_user.id)
 
 * Minor fixes & cleanup
 
@@ -33,20 +33,20 @@
 
 * Implemented proxy option for database connections thru a proxy server.
 
-		config :proxy=>['my.proxy.com', 8888]
-	
+    config :proxy=>['my.proxy.com', 8888]
+  
 * Implemented erb parsing of config.yml
-	
+  
 * Disabled ```:grammar => :auto``` option. The current xml parser cannot yet use the FMPXMLRESULT grammar for general queries.
 
 
 ## Ginjo-Rfm 3.0.7
 
 * Changed record creation so that generic records created from non-modelized layouts will be instances of Rfm::Record, instead of instances of a transient model class based on the layout. Transient model classes will foul up serialization and any number of other things. Records created from a user-defined model class will continue to be instances of the model class.
-		
-		my_layout.find(12345).class  ==  Rfm::Record
-		MyModel.find(12345).class    ==  MyModel
-		
+    
+        my_layout.find(12345).class  ==  Rfm::Record
+        MyModel.find(12345).class    ==  MyModel
+    
 
 ## Ginjo-Rfm 3.0.6
 
@@ -55,7 +55,7 @@
 
 ## Ginjo-Rfm 3.0.5
 
-* Fixed parser handling of `<field>` element that's missing a `<data>` element.
+* Fixed parser handling of ```<field>``` element that's missing a ```<data>``` element.
 * Fixed coercion of repeating field data.
 * Fixed case where special characters in Filemaker data yielded array instead of string (sax parsing split text).
 * Fixed various bugs in metadata parsing.
@@ -98,10 +98,10 @@
 * Record.new now automatically creats models based on layout name. Should there be an option to disable this?
 * Removed ActiveSupport requirement (of course, ActiveSupport will load if ActiveModle is used, but that is the users' choice).
 * Removed XmlMini, XmlParser, and related code & specs.
-*	Detached resultset from record, so record doesn't drag resultset around with it.
+* Detached resultset from record, so record doesn't drag resultset around with it.
 * Disabled automatic model creation from a table-name in a new Rfm::Record when initializing.
-*	Consolidated Base.new, Base#inititalize into Rfm::Record.
-*	Fixed validation callbacks issue.
+* Consolidated Base.new, Base#inititalize into Rfm::Record.
+* Fixed validation callbacks issue.
 * Fixed: Resultset will politely return [] when asked for non-existent portal\_names.
 * Mods to rakefile benchmarking/profiling.
 * Refactored Resultset metadata methods.
@@ -136,7 +136,7 @@
 ## Ginjo-Rfm 2.1.2
 
 * Fixed config.rb so that :file\_path (to user-defined yml config file) can be specified as a single path string
-	or as an array of path strings.
+  or as an array of path strings.
 
 ## Ginjo-Rfm 2.1.1
 
@@ -146,9 +146,9 @@
 
 ## Ginjo-Rfm 2.1.0
 
-* Removed `:include_portals` query option in favor of `:ignore_portals`.
+* Removed ```:include_portals``` query option in favor of ```:ignore_portals```.
 
-* Added `:max_portal_rows` query option.
+* Added ```:max_portal_rows``` query option.
 
 * Added field-remapping framework to allow model fields with different names than Filemaker fields.
 
@@ -157,11 +157,11 @@
 * Detached new Server objects from Factory.servers hash, so wont reuse or stack-up servers.
 
 * Added grammar translation layer between xml parser and Rfm, allowing all supported xml grammars to be used with Rfm.
-	This will also streamline changes/additions to Filemaker's xml grammar(s).
-	
+  This will also streamline changes/additions to Filemaker's xml grammar(s).
+  
 * Fixed case statement for ruby 1.9
  
-* Configuration `:use` option now works for all Rfm objects that respond to `config`.
+* Configuration ```:use``` option now works for all Rfm objects that respond to ```config```.
 
 ## Ginjo-Rfm 2.0.2
 
@@ -211,47 +211,47 @@
 
 * Re-implemented:  
   
-	Layout#field\_controls
+  Layout#field\_controls
 
-	Layout#value\_lists  
+  Layout#value\_lists  
   
 * Enhanced:  
 
-	ValueListItem handles both display & data items now.
+  ValueListItem handles both display & data items now.
 
-	Timeout feature from timting (github/timting/rfm).
+  Timeout feature from timting (github/timting/rfm).
 
-	Added specs for Record#save.  
+  Added specs for Record#save.  
   
 * Fixed:  
 
-	[Bug] Getting & setting fields with symbol-based keys was producing error.
+  [Bug] Getting & setting fields with symbol-based keys was producing error.
 
-	[Bug] Setting fields would not update main record hash.
+  [Bug] Setting fields would not update main record hash.
 
-	[Bug] Record#save wasn't merging back into self.  
+  [Bug] Record#save wasn't merging back into self.  
 
 * Partial Fix:  
 
-	server.db.all
-	db.layout.all
-	db.script.all  
+  server.db.all
+  db.layout.all
+  db.script.all  
   
-	Note: the "#all" method returns object names (as keys) only. The receiver of the method maintains the full object collection.  
+  Note: the "#all" method returns object names (as keys) only. The receiver of the method maintains the full object collection.  
 
-	Example:  
+  Example:  
   
-		server.db.all #=> ['dbname1', 'dbname2', ...]
-		server.db     #=> a DbFactory object (descendant of Hash), containing 0 or more Database objects
+        server.db.all #=> ['dbname1', 'dbname2', ...]
+        server.db     #=> a DbFactory object (descendant of Hash), containing 0 or more Database objects
 
 ## Lardawge-Rfm 1.4.2 (unreleased)
   
 * Made nil default on fields with no value.  
   
-	Example:
+  Example:
  
-		Old: record.john #=> "" 
-		New: record.john #=> nil
+        Old: record.john #=> "" 
+        New: record.john #=> nil
    
 ## Lardawge-Rfm 1.4.1.2
 
@@ -271,13 +271,13 @@
 
 * Added an option to load portal records which defaults to false. This significantly speeds up load time when portals are present on the layout.
 
-	Example:  
+  Example:  
   
-		result = fm_server('layout').find({:username => "==#{username}"}, {:include_portals => true})
-		# => This will fetch all records with portal records attached.
+        result = fm_server('layout').find({:username => "==#{username}"}, {:include_portals => true})
+        # => This will fetch all records with portal records attached.
 
-		result.first.portals
-		# => would return an empty hash by default.
+        result.first.portals
+        # => would return an empty hash by default.
     
 * Internal file restructuring. Some classes have changed but it should be nothing a developer would use API wise. Please let me know if it is.
 

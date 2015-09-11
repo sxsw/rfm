@@ -957,7 +957,7 @@ class Object
     #puts "\n-----OBJECT._merge_shared: self '#{self.class}' obj '#{obj.class}' name '#{name}' delimiter '#{delimiter}' type '#{type}' shared_var '#{options[:shared_variable_name]} - #{shared_var.class}'"
     # TODO: Figure this part out:
     # The resetting of shared_variable_name to 'attributes' was to fix Asset.field_controls (it was not able to find the valuelive name).
-    # I think there might be a level of heirarchy that is without a proper cursor model, when using shared variables & object delimiters.
+    # I think there might be a level of hierarchy that is without a proper cursor model, when using shared variables & object delimiters.
     shared_var._merge_object!(obj, name, delimiter, nil, type, options.merge(:shared_variable_name=>ATTACH_OBJECT_DEFAULT_OPTIONS[:shared_variable_name]))
   end
 

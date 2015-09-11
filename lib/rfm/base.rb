@@ -86,7 +86,7 @@ module Rfm
         name = get_config[:layout] || 'test'   # The 'test' was added to help active-model-lint tests pass.
         @layout = Rfm::Factory.layout(name, self) #.sublayout
 
-        # Added by wbr to give config heirarchy: layout -> model -> sublayout
+        # Added by wbr to give config hierarchy: layout -> model -> sublayout
         #config :parent=>'parent_layout'
         #config :parent=>'Rfm::Config'
         #@layout.config model
