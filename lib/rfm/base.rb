@@ -201,14 +201,19 @@ module Rfm
       else
         self.create
       end
+    rescue
+      (self.errors[:base] rescue []) << $!
+      raise $!     
     end
 
     # Same as save!, but will not raise error.
     def save
       save!
+    # rescue
+    #   (self.errors[:base] rescue []) << $!
+    #   return nil
     rescue
-      (self.errors[:base] rescue []) << $!
-      return nil
+      nil
     end
 
     # Just like Layout#save_if_not_modified, but with callbacks & validations.
