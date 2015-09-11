@@ -75,6 +75,7 @@ module Rfm
       input_hash.each do |key,val|
         query_tag = []
         val = val.rfm_force_array
+        val << nil if val.empty?
         val.each do |v|
           @key_values["-q#{key_counter}"] = field_mapping[key] || key
           @key_values["-q#{key_counter}.value"] = v
