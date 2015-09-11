@@ -5,30 +5,31 @@
 
 require 'net/https'
 require 'cgi'
+
 module Rfm
-# These have been moved to rfm.rb.
-# 	SaxParser.default_class = CaseInsensitiveHash
-# 	SaxParser.template_prefix = File.join(File.dirname(__FILE__), './sax/')
-# 	SaxParser.templates.merge!({
-# 		:fmpxmllayout => 'fmpxmllayout.yml',
-# 		:fmresultset => 'fmresultset.yml',
-# 		:fmpxmlresult => 'fmpxmlresult.yml',
-# 		:none => nil
-# 	})
-	
+  # These have been moved to rfm.rb.
+  #   SaxParser.default_class = CaseInsensitiveHash
+  #   SaxParser.template_prefix = File.join(File.dirname(__FILE__), './sax/')
+  #   SaxParser.templates.merge!({
+  #     :fmpxmllayout => 'fmpxmllayout.yml',
+  #     :fmresultset => 'fmresultset.yml',
+  #     :fmpxmlresult => 'fmpxmlresult.yml',
+  #     :none => nil
+  #   })
+
   class Connection
-  	include Config  	
-  
-		def initialize(action, params, request_options={},  *args)
-    	config *args
-      
+    include Config
+
+    def initialize(action, params, request_options={},  *args)
+      config(*args)
+
       # Action sent to FMS
       @action = action
       # Query params sent to FMS
       @params = params
       # Additional options sent to FMS
       @request_options = request_options
-      
+
       @defaults = {
         :host => 'localhost',
         #:port => 80,
@@ -49,66 +50,73 @@ module Rfm
         :template => :fmresultset,
         :grammar => 'fmresultset'
       }   #.merge(options)
-	
     end
 
     def state(*args)
-    	@defaults.merge(super(*args))
+      @defaults.merge(super(*args))
     end
-    
-	  def host_name; state[:host]; end
-	  def scheme; state[:ssl] ? "https" : "http"; end
-	  def port; state[:ssl] && state[:port].nil? ? 443 : state[:port]; end
+
+    def host_name
+      state[:host]
+    end
+
+    def scheme
+      state[:ssl] ? "https" : "http"
+    end
+
+    def port
+      state[:ssl] && state[:port].nil? ? 443 : state[:port]
+    end
 
     def connect(action=@action, params=@params, request_options = @request_options, account_name=state[:account_name], password=state[:password])
-    	grammar_option = request_options.delete(:grammar)
+      grammar_option = request_options.delete(:grammar)
       post = params.merge(expand_options(request_options)).merge({action => ''})
       grammar = select_grammar(post, :grammar=>grammar_option)
       http_fetch(host_name, port, "/fmi/xml/#{grammar}.xml", account_name, password, post)
     end
 
     def select_grammar(post, options={})
-			grammar = state(options)[:grammar] || 'fmresultset'
-			if grammar.to_s.downcase == 'auto'
-				# TODO: Build grammar parser in new sax engine templates to handle FMPXMLRESULT.
-				return "fmresultset"
-				post.keys.find(){|k| %w(-find -findall -dbnames -layoutnames -scriptnames).include? k.to_s} ? "FMPXMLRESULT" : "fmresultset"   
-    	else
-    		grammar
-    	end
+      grammar = state(options)[:grammar] || 'fmresultset'
+      if grammar.to_s.downcase == 'auto'
+        # TODO: Build grammar parser in new sax engine templates to handle FMPXMLRESULT.
+        return "fmresultset"
+        # post.keys.find(){|k| %w(-find -findall -dbnames -layoutnames -scriptnames).include? k.to_s} ? "FMPXMLRESULT" : "fmresultset"   
+      else
+        grammar
+      end
     end
-    
+
     def parse(template=nil, initial_object=nil, parser=nil, options={})
-    	template ||= state[:template]
-    	#(template =  'fmresultset.yml') unless template
-    	#(template = File.join(File.dirname(__FILE__), '../sax/', template)) if template.is_a? String
-    	Rfm::SaxParser.parse(connect.body, template, initial_object, parser, state(*options)).result
+      template ||= state[:template]
+      #(template =  'fmresultset.yml') unless template
+      #(template = File.join(File.dirname(__FILE__), '../sax/', template)) if template.is_a? String
+      Rfm::SaxParser.parse(connect.body, template, initial_object, parser, state(*options)).result
     end
 
 
 
 
-  private
-  
+    private
+
     def http_fetch(host_name, port, path, account_name, password, post_data, limit=10)
       raise Rfm::CommunicationError.new("While trying to reach the Web Publishing Engine, RFM was redirected too many times.") if limit == 0
-  
+
       if state[:log_actions] == true
         #qs = post_data.collect{|key,val| "#{CGI::escape(key.to_s)}=#{CGI::escape(val.to_s)}"}.join("&")
         qs_unescaped = post_data.collect{|key,val| "#{key.to_s}=#{val.to_s}"}.join("&")
         #warn "#{@scheme}://#{@host_name}:#{@port}#{path}?#{qs}"
         log.info "#{scheme}://#{host_name}:#{port}#{path}?#{qs_unescaped}"
       end
-  
+
       request = Net::HTTP::Post.new(path)
       request.basic_auth(account_name, password)
       request.set_form_data(post_data)
-  
-  		if state[:proxy]
-	  		connection = Net::HTTP::Proxy(*state[:proxy]).new(host_name, port)
-  		else
-	      connection = Net::HTTP.new(host_name, port)
-	    end
+
+      if state[:proxy]
+        connection = Net::HTTP::Proxy(*state[:proxy]).new(host_name, port)
+      else
+        connection = Net::HTTP.new(host_name, port)
+      end
       #ADDED LONG TIMEOUT TIMOTHY TING 05/12/2011
       connection.open_timeout = connection.read_timeout = state[:timeout]
       if state[:ssl]
@@ -120,20 +128,20 @@ module Rfm
           connection.verify_mode = OpenSSL::SSL::VERIFY_NONE
         end
       end
-  
+
       response = connection.start { |http| http.request(request) }
       if state[:log_responses] == true
         response.to_hash.each { |key, value| log.info "#{key}: #{value}" }
         log.info response.body
       end
-  
+
       case response
       when Net::HTTPSuccess
         response
       when Net::HTTPRedirection
         if state[:warn_on_redirect]
           log.warn "The web server redirected to " + response['location'] + 
-          ". You should revise your connection hostname or fix your server configuration if possible to improve performance."
+            ". You should revise your connection hostname or fix your server configuration if possible to improve performance."
         end
         newloc = URI.parse(response['location'])
         http_fetch(newloc.host, newloc.port, newloc.request_uri, account_name, password, post_data, limit - 1)
@@ -148,18 +156,18 @@ module Rfm
         raise Rfm::CommunicationError.new(msg)
       end
     end
-  
+
     def expand_options(options)
       result = {}
       field_mapping = options.delete(:field_mapping) || {}
       options.each do |key,value|
         case key.to_sym
         when :max_portal_rows
-        	result['-relatedsets.max'] = value
-        	result['-relatedsets.filter'] = 'layout'
+          result['-relatedsets.max'] = value
+          result['-relatedsets.filter'] = 'layout'
         when :ignore_portals
-        	result['-relatedsets.max'] = 0
-        	result['-relatedsets.filter'] = 'layout'
+          result['-relatedsets.max'] = 0
+          result['-relatedsets.filter'] = 'layout'
         when :max_records
           result['-max'] = value
         when :skip_records
@@ -211,8 +219,8 @@ module Rfm
       end
       return result
     end  
-  
+
   end # Connection
 
-  
+
 end # Rfm

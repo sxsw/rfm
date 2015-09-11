@@ -58,8 +58,8 @@ module Rfm
   # * *name* is the name of this database
   # * *state* is a hash of all server options used to initialize this server
   class Database
-  	include Config
-  
+    include Config
+
     # Initialize a database object. You never really need to do this. Instead, just do this:
     # 
     #   myServer = Rfm::Server.new(...)
@@ -67,12 +67,12 @@ module Rfm
     #
     # This sample code gets a database object representing the Customers database on the FileMaker server.
     def initialize(*args) #name, server_obj, acnt=nil, pass=nil
-			config(*args)
+      config(*args)
       raise Rfm::Error::RfmError.new(0, "New instance of Rfm::Database has no name. Attempted name '#{state[:database]}'.") if state[:database].to_s == ''
       @layouts = Rfm::Factory::LayoutFactory.new(server, self)
       @scripts = Rfm::Factory::ScriptFactory.new(server, self)
     end
-    
+
     meta_attr_accessor :server
     attr_reader :layouts, :scripts
     # Not sure if these writers are ever used
@@ -80,25 +80,39 @@ module Rfm
     # Legacy methods
     alias_method :layout, :layouts
     alias_method :script, :scripts
-    
-    def name; state[:database].to_s; end
-    def account_name; state[:account_name]; end
-    def account_name=(x); config :account_name=>x; end
-    def password; state[:password]; end
-    def password=(x); config :password=>x; end
-    
-    def config(*args)
-    	super(:capture_strings_with=>[:database, :account_name, :password])
-    	super(*args) do |params|
-    		(self.server = params[:objects][0]) if params && params[:objects] && params[:objects][0] && params[:objects][0].is_a?(Rfm::Server)
-    	end
+
+    def name
+      state[:database].to_s
     end
-    
+
+    def account_name
+      state[:account_name]
+    end
+
+    def account_name=(x)
+      config :account_name=>x
+    end
+
+    def password
+      state[:password]
+    end
+
+    def password=(x)
+      config :password=>x
+    end
+
+    def config(*args)
+      super(:capture_strings_with=>[:database, :account_name, :password])
+      super(*args) do |params|
+        (self.server = params[:objects][0]) if params && params[:objects] && params[:objects][0] && params[:objects][0].is_a?(Rfm::Server)
+      end
+    end
+
     alias_method :server_orig, :server
-  	def server
-  		server_orig || (self.server = Rfm::Server.new(state[:host], state[:account_name], state[:password], self))
-  	end
-    
+    def server
+      server_orig || (self.server = Rfm::Server.new(state[:host], state[:account_name], state[:password], self))
+    end
+
 
     # Access the Layout object representing a layout in this database. For example:
     #
@@ -111,9 +125,9 @@ module Rfm
     # returned is created on the fly and assumed to refer to a valid layout, but you will
     # get no error at this point if the layout you specify doesn't exist. Instead, you'll
     # receive an error when you actually try to perform some action it.
-		#     def [](layout_name)
-		#       self.layout[layout_name]
-		#     end
+    #     def [](layout_name)
+    #       self.layout[layout_name]
+    #     end
     def_delegators :layouts, :[], :modelize, :models # modelize & models acquired from Rfm::Base
 
   end
