@@ -2,6 +2,8 @@
 
 ## Ginjo-Rfm 3.0.10
 
+* Fixed bug where missing metadata would cause errors when creating/editing records.
+
 * Added scoping support
 
         scope = {:person_id => current_user.person_id}
@@ -17,7 +19,7 @@
         end
         Order.find([{:status => ['open', 'processing']}, {:omit => true, :item_count => "<1"}], :scope_args => current_user.id)
 
-* Minor fixes & cleanup
+* Code cleanup
 
 ## Ginjo-Rfm 3.0.9
 
