@@ -46,6 +46,9 @@
 		<FIELD NAME="CreatorName">
 			<STYLE TYPE="POPUPLIST" VALUELIST="Employee Unique ID"/>
 		</FIELD>
+		<FIELD NAME="FakeRelationship::FakeField">
+			<STYLE TYPE="EDITTEXT" VALUELIST=""/>
+		</FIELD>
 	</LAYOUT>
 	<VALUELISTS>
 		<VALUELIST NAME="Department">

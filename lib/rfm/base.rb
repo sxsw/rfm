@@ -151,7 +151,7 @@ module Rfm
     def update_attributes(new_attr)
       new_attr.each do |k,v|
         k = k.to_s.downcase
-        if keys.include?(k)
+        if key?(k) || (layout.field_keys.include?(k.split('.')[0]) rescue nil)
           @mods[k] = v
           self[k] = v
         else

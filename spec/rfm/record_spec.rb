@@ -120,10 +120,18 @@ describe Rfm::Record do
 
     it "raises an Rfm::ParameterError if a value is set on a key that does not exist" do
       record.instance_variable_set(:@loaded, true)
-
       ex = rescue_from { record['tester2'] = 'error' }
       expect(ex.class).to eql(Rfm::ParameterError)
-      expect(ex.message).to match(/You attempted to modify a field.*that does not exist in the current Filemaker layout/)
+      expect(ex.message).to match(/You attempted.*Filemaker layout/)
+    end
+    
+    it "accepts portal-write notation for portal fields" do
+      layout.instance_variable_set(:@meta, Rfm::Metadata::LayoutMeta.new(layout).merge!({'field_controls' => {'fakerelationship::fakefield' => Rfm::Metadata::FieldControl.new({'name' => 'FakeRelationship::FakeField'})}}))
+      record.layout = layout
+      record.instance_variable_set(:@loaded, true)
+      record['fakerelationship::fakefield.0'] = 'new portal record'
+      expect(record['fakerelationship::fakefield.0']).to eq('new portal record')
+      expect(record.instance_variable_get(:@mods)['fakerelationship::fakefield.0']).to eq('new portal record')
     end
   end #[]=
 

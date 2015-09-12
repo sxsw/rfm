@@ -60,6 +60,12 @@ describe Rfm::Base do
       expect {@m[:extra]}.to raise_error(Rfm::ParameterError)
       expect(@m.instance_variable_get(:@mods)['extra']).to eq(nil)
     end
+    
+    it "accepts portal-write notation for portal fields" do
+      @m.update_attributes 'fakerelationship::fakefield.0' => 'new portal record'
+      expect(@m['fakerelationship::fakefield.0']).to eq('new portal record')
+      expect(@m.instance_variable_get(:@mods)['fakerelationship::fakefield.0']).to eq('new portal record')
+    end
   end
 
   # describe '.create_from_instance'
