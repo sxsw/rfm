@@ -34,5 +34,19 @@ describe 'Rfm::Scope' do
     end
     ScopedModel.find([{:memotext=>['one','two'], :memosubject=>'three'}, {:omit=>true, :memotext=>'test'}])
   end
+  
+  it "adds scope omits to end of request array" do
+    ScopedModel::SCOPE = Proc.new {|scope_args| {:companyid=>'12345', :omit=>true} }
+    expect(ScopedModel.layout).to receive(:get_records) do |action, query, options|
+      #puts query.to_yaml
+      expect(action).to eq('-findquery')
+      expect(['(q0,q2);(q1,q2);!(q3)'].include?(query['-query'])).to be_truthy
+      expect(query.values.include?(:companyid)).to be_truthy
+      expect(query.values.include?(:memotext)).to be_truthy
+      expect(query.values.include?(:memosubject)).to be_truthy
+      expect(query.values.include?('12345')).to be_truthy
+    end
+    ScopedModel.find(:memotext=>['one','two'], :memosubject=>'three')  
+  end
 
 end

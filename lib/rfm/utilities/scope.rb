@@ -29,15 +29,26 @@ module Rfm
     # Mix scope requests with user requests (sorta like a cross-join of requests).
     def apply_scope(*args)
       opts = (args.size > 1 && args.last.is_a?(Hash) ? args.pop : {})
-      scope = [opts.delete(:scope) || self::SCOPE.call(opts.delete(:scope_args))].flatten
+      
+      #scope = [opts.delete(:scope) || self::SCOPE.call(opts.delete(:scope_args))].flatten
+      scope_args = opts.delete(:scope_args) || self
+      raw_scope = opts.delete(:scope) || self::SCOPE
+      scope = [raw_scope.is_a?(Proc) ? raw_scope.call(scope_args) : scope].flatten
+      
       return [args].flatten(1).push(opts) if !(args[0].is_a?(Array) || args[0].is_a?(Hash)) || scope.size < 1
       scoped_requests = []
+      scope_omits = []
       scope.each do |scope_req|
+        if scope_req[:omit]
+          scope_omits.push scope_req
+          next
+        end
         [args].flatten.each do |req|
           scoped_requests.push(req[:omit] ? req : req.merge(scope_req))
         end
       end
-      scoped_query = [scoped_requests, opts]
+      scoped_requests = [args].flatten if scoped_requests.empty? 
+      scoped_query = [scoped_requests | scope_omits, opts]
       scoped_query
     end
 
