@@ -17,23 +17,24 @@ module Rfm
     # instead of above scope constant.
 
     def find(*args)
-      new_args = apply_scope(*args)
+      new_args = apply_scope(args)
       super(*new_args)
     end
 
     def count(*args)
-      new_args = apply_scope(*args)
+      new_args = apply_scope(args)
       super(*new_args)
     end
 
-    # Mix scope requests with user requests (sorta like a cross-join of requests).
-    def apply_scope(*args)
+    # Mix scope requests with user requests with a constraining AND logic.
+    # Also handles request options.
+    def apply_scope(args, input_scope=nil)
+      #puts "APPLY_SCOPE args:#{args} input_scope:#{input_scope}"
       opts = (args.size > 1 && args.last.is_a?(Hash) ? args.pop : {})
-      
-      #scope = [opts.delete(:scope) || self::SCOPE.call(opts.delete(:scope_args))].flatten
       scope_args = opts.delete(:scope_args) || self
-      raw_scope = opts.delete(:scope) || self::SCOPE
-      scope = [raw_scope.is_a?(Proc) ? raw_scope.call(scope_args) : scope].flatten
+      raw_scope = input_scope || opts.delete(:scope) || self::SCOPE
+      scope = [raw_scope.is_a?(Proc) ? raw_scope.call(scope_args) : raw_scope].flatten.compact
+      #puts "APPLY_SCOPE scope:#{scope}"
       
       return [args].flatten(1).push(opts) if !(args[0].is_a?(Array) || args[0].is_a?(Hash)) || scope.size < 1
       scoped_requests = []
@@ -49,6 +50,7 @@ module Rfm
       end
       scoped_requests = [args].flatten if scoped_requests.empty? 
       scoped_query = [scoped_requests | scope_omits, opts]
+      #puts "APPLY SCOPE output:#{scoped_query}"
       scoped_query
     end
 
