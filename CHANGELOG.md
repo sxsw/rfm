@@ -1,5 +1,26 @@
 # Changelog
 
+## Ginjo-Rfm 3.0.11
+
+* Scoping fixes, changes, additions:
+
+  Now takes proc or array of hashes or hash.
+  
+  Scope_args for scope proc now defaults to model instance.
+
+  Now handles omits - puts them at end of request array.
+
+* Support for rom-fmp 0.0.4 - query chaining with compound fm queries.
+
+* Basic support for portal field writes.
+    
+        record['my_relationship::my_field.0'] = 'Adds a new portal record with data for my_field, if auto-create enabled'
+        record.update_attributes! 'my_relationship::my_field.3' => 'Updates my_field in 3rd portal record, if exists'
+
+* Fix Base#save! to store raised exceptions in errors, if possible.
+
+* Fix CompoundQuery to handle nil values in query params.
+
 ## Ginjo-Rfm 3.0.10
 
 * Fixed bug where missing metadata would cause errors when creating/editing records.
