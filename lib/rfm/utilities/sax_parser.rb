@@ -53,6 +53,8 @@
 # ####  CONFIGURATION  #####
 #
 # YAML structure defining a SAX xml parsing template.
+# An element may contain these config directives.
+# An attribute may contain some of these config directives.
 # Options:
 #   initialize_with:  OBSOLETE?  string, symbol, or array (object, method, params...). Should return new object. See Rfm::SaxParser::Cursor#get_callback.
 #   elements:                    array of element hashes [{'name'=>'element-tag'},...]
