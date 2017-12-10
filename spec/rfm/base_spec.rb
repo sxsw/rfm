@@ -95,7 +95,7 @@ describe Rfm::Base do
   # describe '#merge_rfm_result'
 
 
-  describe 'Functional Tests -' do
+  describe 'Functional Tests' do
 
     it 'creates a new record with data' do
       subject_test = Memo.new(:memotext=>'test1')
