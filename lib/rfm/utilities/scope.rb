@@ -30,7 +30,7 @@ module Rfm
       options = (request.last.is_a?(Hash) && request.size > 1) ? request.pop : {}
       query = request.pop || {}
       action = request.pop || (query.size==0 ? :all : :find)
-      puts "DELINEATE_QUERY action:#{action} query:#{query} options:#{options}"
+      #puts "DELINEATE_QUERY action:#{action} query:#{query} options:#{options}"
       [action, query, options]
     end
 
@@ -52,8 +52,8 @@ module Rfm
       target_query.delete_if{|q| target_omits.push(q) if q[:omit]}
       scope_query.delete_if{|q| scope_omits.push(q) if q[:omit]}
       
-      puts "APPLY_SCOPE TARGET query:#{target_query} omits:#{target_omits} opts:#{target_opts}"
-      puts "APPLY_SCOPE SCOPE query:#{scope_query} omits:#{scope_omits} opts:#{scope_opts}"
+      #puts "APPLY_SCOPE TARGET query:#{target_query} omits:#{target_omits} opts:#{target_opts}"
+      #puts "APPLY_SCOPE SCOPE query:#{scope_query} omits:#{scope_omits} opts:#{scope_opts}"
 
       # Return original request if no scoping can be done.
       return target_request unless (target_query.is_a?(Array) || target_query.is_a?(Hash)) && (scope_query.size > 0 || scope_omits.size > 0 || scope_opts.size > 0)
@@ -67,7 +67,7 @@ module Rfm
       end
       scoped_omits = (target_omits | scope_omits)
       
-      puts "APPLY_SCOPE OUTPUT #{[scoped_queries | scoped_omits, target_opts.merge(scope_opts)]}"
+      #puts "APPLY_SCOPE OUTPUT #{[scoped_queries | scoped_omits, target_opts.merge(scope_opts)]}"
       
       [scoped_queries | scoped_omits, target_opts.merge(scope_opts)]
     end

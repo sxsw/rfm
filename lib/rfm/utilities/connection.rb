@@ -214,7 +214,11 @@ module Rfm
         when :modification_id
           result['-modid'] = value
         else
-          raise Rfm::ParameterError.new("Invalid option: #{key} (are you using a string instead of a symbol?)")
+          if state.keys.member?(key.to_sym)
+            state(key.to_sym=>value)
+          else
+            raise Rfm::ParameterError.new("Invalid option: #{key} (are you using a string instead of a symbol?)")
+          end
         end
       end
       return result
